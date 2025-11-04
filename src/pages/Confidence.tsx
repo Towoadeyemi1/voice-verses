@@ -16,26 +16,22 @@ const Confidence = () => {
         setCurrentVerse(verse);
         
         if (verse) {
-          // Get next 2 verses
-          const next: { ref: string; snippet: string }[] = [];
+          // Get next verse
+          const nextVerse = BibleParser.getVerse(
+            verse.book,
+            verse.chapter,
+            verse.verse + 1
+          );
           
-          for (let i = 1; i <= 2; i++) {
-            const nextVerse = BibleParser.getVerse(
-              verse.book,
-              verse.chapter,
-              verse.verse + i
-            );
-            
-            if (nextVerse) {
-              const words = nextVerse.text.split(' ').slice(0, 7).join(' ');
-              next.push({
-                ref: `${nextVerse.book} ${nextVerse.chapter}:${nextVerse.verse}`,
-                snippet: words + '...'
-              });
-            }
+          if (nextVerse) {
+            const words = nextVerse.text.split(' ').slice(0, 7).join(' ');
+            setNextVerses([{
+              ref: `${nextVerse.book} ${nextVerse.chapter}:${nextVerse.verse}`,
+              snippet: words + '...'
+            }]);
+          } else {
+            setNextVerses([]);
           }
-          
-          setNextVerses(next);
         } else {
           setNextVerses([]);
         }
