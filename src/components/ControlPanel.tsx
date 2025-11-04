@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { AudioVisualizer } from './AudioVisualizer';
 import { TranscriptWindow } from './TranscriptWindow';
@@ -9,6 +9,9 @@ import { BibleParser } from '@/lib/bibleParser';
 import { DisplayedVerse, AudioStatus } from '@/types/bible';
 import { Maximize2, Settings } from 'lucide-react';
 import { toast } from 'sonner';
+import { syncService } from '@/lib/syncService';
+import { AudioRecorder } from '@/lib/audioRecorder';
+import { RealtimeAPI } from '@/lib/realtimeAPI';
 
 interface ControlPanelProps {
   onOpenProjection: () => void;
@@ -25,42 +28,96 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
   const [currentVerse, setCurrentVerse] = useState<DisplayedVerse | null>(null);
   const [recentVerses, setRecentVerses] = useState<DisplayedVerse[]>([]);
   const [showSettings, setShowSettings] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  
+  const audioRecorder = useRef<AudioRecorder | null>(null);
+  const realtimeAPI = useRef<RealtimeAPI | null>(null);
 
-  // Simulate audio volume changes
+  // Cleanup on unmount
   useEffect(() => {
-    if (audioStatus.isListening) {
-      const interval = setInterval(() => {
-        setAudioStatus(prev => ({
-          ...prev,
-          volume: Math.floor(Math.random() * 60) + 20,
-        }));
-      }, 200);
-      return () => clearInterval(interval);
+    return () => {
+      handleStopListening();
+    };
+  }, []);
+
+  const handleStartListening = async () => {
+    const savedApiKey = localStorage.getItem('openai_api_key');
+    
+    if (!savedApiKey && !apiKey) {
+      setShowApiKeyInput(true);
+      toast.error('OpenAI API Key Required', {
+        description: 'Please enter your OpenAI API key to use speech recognition',
+      });
+      return;
     }
-  }, [audioStatus.isListening]);
 
-  const handleStartListening = () => {
-    setAudioStatus(prev => ({ ...prev, isListening: true, status: 'listening' }));
-    toast.success('Listening started', {
-      description: 'Ready to capture scripture references',
-    });
+    const keyToUse = apiKey || savedApiKey || '';
+    
+    try {
+      setAudioStatus(prev => ({ ...prev, isListening: true, status: 'listening' }));
+      
+      // Initialize Realtime API
+      realtimeAPI.current = new RealtimeAPI(
+        keyToUse,
+        (text) => setTranscript(text),
+        (verse) => {
+          if (verse) {
+            processTranscript('', verse);
+          }
+        }
+      );
+      
+      realtimeAPI.current.connect();
 
-    // Demo: Simulate detecting "John chapter 3 verse 16"
-    setTimeout(() => {
-      const demoTranscript = 'John chapter 3 verse 16';
-      setTranscript(demoTranscript);
-      processTranscript(demoTranscript);
-    }, 2000);
+      // Initialize Audio Recorder
+      audioRecorder.current = new AudioRecorder((audioData) => {
+        if (realtimeAPI.current) {
+          realtimeAPI.current.sendAudio(audioData);
+        }
+        
+        // Calculate volume for visualization
+        let sum = 0;
+        for (let i = 0; i < audioData.length; i++) {
+          sum += audioData[i] * audioData[i];
+        }
+        const rms = Math.sqrt(sum / audioData.length);
+        const volume = Math.min(100, Math.floor(rms * 100 * 10));
+        setAudioStatus(prev => ({ ...prev, volume }));
+      });
+
+      await audioRecorder.current.start();
+      
+      toast.success('Listening started', {
+        description: 'Speak a Bible verse reference',
+      });
+    } catch (error) {
+      console.error('Error starting listening:', error);
+      toast.error('Failed to start listening', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+      setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle' }));
+    }
   };
 
   const handleStopListening = () => {
-    setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle' }));
+    if (audioRecorder.current) {
+      audioRecorder.current.stop();
+      audioRecorder.current = null;
+    }
+    
+    if (realtimeAPI.current) {
+      realtimeAPI.current.disconnect();
+      realtimeAPI.current = null;
+    }
+    
+    setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle', volume: 0 }));
     toast.info('Listening stopped');
   };
 
-  const processTranscript = (text: string) => {
+  const processTranscript = (text: string, verseOverride?: any) => {
     const startTime = performance.now();
-    const verse = BibleParser.parseReference(text);
+    const verse = verseOverride || BibleParser.parseReference(text);
     const endTime = performance.now();
     const latency = Math.round(endTime - startTime);
 
@@ -74,8 +131,28 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
       setCurrentVerse(displayedVerse);
       setRecentVerses(prev => [displayedVerse, ...prev].slice(0, 5));
 
+      // Broadcast to projection display
+      syncService.broadcast({
+        type: 'VERSE_UPDATE',
+        data: {
+          verse: displayedVerse,
+          timestamp: displayedVerse.timestamp,
+          latency: displayedVerse.latency,
+        },
+      });
+
       toast.success('Verse found!', {
         description: `${verse.book} ${verse.chapter}:${verse.verse}`,
+      });
+    }
+  };
+
+  const handleSaveApiKey = () => {
+    if (apiKey) {
+      localStorage.setItem('openai_api_key', apiKey);
+      setShowApiKeyInput(false);
+      toast.success('API Key saved', {
+        description: 'You can now start listening',
       });
     }
   };
@@ -110,6 +187,32 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
             </Button>
           </div>
         </div>
+
+        {/* API Key Input */}
+        {showApiKeyInput && (
+          <div className="animate-fade-in bg-card border border-border rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-2 text-foreground">OpenAI API Key Required</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Enter your OpenAI API key to enable real-time speech recognition.
+              Get your key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary underline">OpenAI Platform</a>
+            </p>
+            <div className="flex gap-3">
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-..."
+                className="flex-1 px-4 py-2 bg-background border border-border rounded-lg text-foreground"
+              />
+              <Button onClick={handleSaveApiKey} disabled={!apiKey}>
+                Save Key
+              </Button>
+              <Button variant="outline" onClick={() => setShowApiKeyInput(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Settings Panel */}
         {showSettings && (

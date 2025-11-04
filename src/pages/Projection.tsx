@@ -1,16 +1,24 @@
+import { useState, useEffect } from 'react';
 import { ProjectionDisplay } from '@/components/ProjectionDisplay';
 import { BibleVerse } from '@/types/bible';
+import { syncService } from '@/lib/syncService';
 
 const Projection = () => {
-  // In a real app, this would sync with the control panel via WebSocket or shared state
-  const mockVerse: BibleVerse = {
-    book: 'John',
-    chapter: 3,
-    verse: 16,
-    text: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
-  };
+  const [verse, setVerse] = useState<BibleVerse | null>(null);
 
-  return <ProjectionDisplay verse={mockVerse} />;
+  useEffect(() => {
+    const unsubscribe = syncService.subscribe((message) => {
+      if (message.type === 'VERSE_UPDATE' && message.data.verse) {
+        setVerse(message.data.verse);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  return <ProjectionDisplay verse={verse} />;
 };
 
 export default Projection;
