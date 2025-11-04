@@ -30,7 +30,13 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
   const [showSettings, setShowSettings] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   
+  // Verse range tracking
+  const [verseRange, setVerseRange] = useState<{ start: number; end: number } | null>(null);
+  const [lastTranscriptSegment, setLastTranscriptSegment] = useState('');
+  const [readingMode, setReadingMode] = useState<'reading' | 'explaining' | 'idle'>('idle');
+  
   const realtimeChat = useRef<RealtimeWebRTC | null>(null);
+  const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -38,6 +44,13 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
       handleStopListening();
     };
   }, []);
+
+  // Process transcript whenever it changes
+  useEffect(() => {
+    if (transcript && audioStatus.isListening) {
+      processTranscript(transcript);
+    }
+  }, [transcript]);
 
   const handleStartListening = async () => {
     try {
@@ -63,6 +76,7 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
       await realtimeChat.current.init();
       
       setIsConnecting(false);
+      setReadingMode('idle');
       toast.success('Listening started', {
         description: 'Ready to detect Bible references',
       });
@@ -77,17 +91,87 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
   };
 
   const handleStopListening = () => {
+    if (autoAdvanceTimer.current) {
+      clearTimeout(autoAdvanceTimer.current);
+      autoAdvanceTimer.current = null;
+    }
+    
     if (realtimeChat.current) {
       realtimeChat.current.disconnect();
       realtimeChat.current = null;
     }
     
     setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle', volume: 0 }));
+    setReadingMode('idle');
+    setVerseRange(null);
     toast.info('Listening stopped');
+  };
+
+  const analyzeReadingMode = (text: string, currentVerseText?: string): 'reading' | 'explaining' => {
+    if (!currentVerseText) return 'explaining';
+    
+    // Check if transcript contains significant portions of current verse text
+    const verseWords = currentVerseText.toLowerCase().split(' ').filter(w => w.length > 3);
+    const transcriptLower = text.toLowerCase();
+    
+    let matchCount = 0;
+    verseWords.forEach(word => {
+      if (transcriptLower.includes(word)) matchCount++;
+    });
+    
+    const matchRatio = matchCount / verseWords.length;
+    
+    // If more than 30% of verse words are in transcript, likely reading
+    return matchRatio > 0.3 ? 'reading' : 'explaining';
+  };
+
+  const checkForNextVerseText = (text: string, nextVerse: BibleVerse | null): boolean => {
+    if (!nextVerse) return false;
+    
+    // Check if transcript contains beginning of next verse
+    const nextVerseWords = nextVerse.text.toLowerCase().split(' ').slice(0, 5);
+    const transcriptLower = text.toLowerCase();
+    
+    let matchCount = 0;
+    nextVerseWords.forEach(word => {
+      if (word.length > 3 && transcriptLower.includes(word)) matchCount++;
+    });
+    
+    return matchCount >= 3;
   };
 
   const processTranscript = (text: string, verseOverride?: any) => {
     const startTime = performance.now();
+    
+    // Clear any pending auto-advance
+    if (autoAdvanceTimer.current) {
+      clearTimeout(autoAdvanceTimer.current);
+      autoAdvanceTimer.current = null;
+    }
+    
+    // Check for explicit "next" command
+    if (/\b(next|next verse)\b/i.test(text) && currentVerse) {
+      const nextVerse = BibleParser.getVerse(
+        currentVerse.book,
+        currentVerse.chapter,
+        currentVerse.verse + 1
+      );
+      
+      if (nextVerse) {
+        verseOverride = nextVerse;
+        setReadingMode('reading');
+      }
+    }
+    
+    // Check for range specifications (e.g., "1 to 10", "1 to end")
+    const rangeMatch = text.match(/(\d+)\s+(?:to|through|-)\s+(?:(\d+)|end)/i);
+    if (rangeMatch) {
+      const start = parseInt(rangeMatch[1]);
+      const end = rangeMatch[2] ? parseInt(rangeMatch[2]) : 999;
+      setVerseRange({ start, end });
+      console.log('Range detected:', { start, end });
+    }
+    
     const verse = verseOverride || BibleParser.parseReference(text);
     const endTime = performance.now();
     const latency = Math.round(endTime - startTime);
@@ -115,6 +199,56 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
       toast.success('Verse found!', {
         description: `${verse.book} ${verse.chapter}:${verse.verse}`,
       });
+      
+      // If range is set, enter reading mode
+      if (verseRange) {
+        setReadingMode('reading');
+      }
+      return;
+    }
+    
+    // Analyze current transcript for reading vs explaining
+    if (currentVerse && text !== lastTranscriptSegment) {
+      setLastTranscriptSegment(text);
+      
+      const mode = analyzeReadingMode(text, currentVerse.text);
+      console.log('Reading mode:', mode, 'Text:', text);
+      
+      if (mode === 'reading') {
+        setReadingMode('reading');
+        
+        // Check if next verse is being read
+        const nextVerse = BibleParser.getVerse(
+          currentVerse.book,
+          currentVerse.chapter,
+          currentVerse.verse + 1
+        );
+        
+        if (checkForNextVerseText(text, nextVerse)) {
+          console.log('Detected next verse being read, auto-advancing...');
+          processTranscript('', nextVerse);
+          return;
+        }
+        
+        // If in range and reading mode, schedule auto-advance after brief pause
+        if (verseRange && currentVerse.verse < verseRange.end) {
+          autoAdvanceTimer.current = setTimeout(() => {
+            const next = BibleParser.getVerse(
+              currentVerse.book,
+              currentVerse.chapter,
+              currentVerse.verse + 1
+            );
+            
+            if (next && readingMode === 'reading') {
+              console.log('Auto-advancing to next verse in range...');
+              processTranscript('', next);
+            }
+          }, 2000); // Wait 2 seconds of silence before advancing
+        }
+      } else {
+        setReadingMode('explaining');
+        console.log('Speaker is explaining, staying on current verse');
+      }
     }
   };
 
