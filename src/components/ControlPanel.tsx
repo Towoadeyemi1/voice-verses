@@ -8,11 +8,10 @@ import { SettingsPanel } from './SettingsPanel';
 import { ManualSearch } from './ManualSearch';
 import { BibleParser } from '@/lib/bibleParser';
 import { DisplayedVerse, AudioStatus, BibleVerse } from '@/types/bible';
-import { Maximize2, Settings } from 'lucide-react';
+import { Maximize2, Settings, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncService } from '@/lib/syncService';
-import { AudioRecorder } from '@/lib/audioRecorder';
-import { RealtimeAPI } from '@/lib/realtimeAPI';
+import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
 
 interface ControlPanelProps {
   onOpenProjection: () => void;
@@ -29,11 +28,9 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
   const [currentVerse, setCurrentVerse] = useState<DisplayedVerse | null>(null);
   const [recentVerses, setRecentVerses] = useState<DisplayedVerse[]>([]);
   const [showSettings, setShowSettings] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   
-  const audioRecorder = useRef<AudioRecorder | null>(null);
-  const realtimeAPI = useRef<RealtimeAPI | null>(null);
+  const realtimeChat = useRef<RealtimeWebRTC | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -43,57 +40,35 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
   }, []);
 
   const handleStartListening = async () => {
-    const savedApiKey = localStorage.getItem('openai_api_key');
-    
-    if (!savedApiKey && !apiKey) {
-      setShowApiKeyInput(true);
-      toast.error('OpenAI API Key Required', {
-        description: 'Please enter your OpenAI API key to use speech recognition',
-      });
-      return;
-    }
-
-    const keyToUse = apiKey || savedApiKey || '';
-    
     try {
+      setIsConnecting(true);
       setAudioStatus(prev => ({ ...prev, isListening: true, status: 'listening' }));
       
-      // Initialize Realtime API
-      realtimeAPI.current = new RealtimeAPI(
-        keyToUse,
-        (text) => setTranscript(text),
+      // Initialize WebRTC Realtime Chat
+      realtimeChat.current = new RealtimeWebRTC(
+        (text) => {
+          console.log('Transcript received:', text);
+          setTranscript(text);
+        },
         (verse) => {
           if (verse) {
             processTranscript('', verse);
           }
+        },
+        (volume) => {
+          setAudioStatus(prev => ({ ...prev, volume }));
         }
       );
-      
-      realtimeAPI.current.connect();
 
-      // Initialize Audio Recorder
-      audioRecorder.current = new AudioRecorder((audioData) => {
-        if (realtimeAPI.current) {
-          realtimeAPI.current.sendAudio(audioData);
-        }
-        
-        // Calculate volume for visualization
-        let sum = 0;
-        for (let i = 0; i < audioData.length; i++) {
-          sum += audioData[i] * audioData[i];
-        }
-        const rms = Math.sqrt(sum / audioData.length);
-        const volume = Math.min(100, Math.floor(rms * 100 * 10));
-        setAudioStatus(prev => ({ ...prev, volume }));
-      });
-
-      await audioRecorder.current.start();
+      await realtimeChat.current.init();
       
+      setIsConnecting(false);
       toast.success('Listening started', {
-        description: 'Speak a Bible verse reference',
+        description: 'Ready to detect Bible references',
       });
     } catch (error) {
       console.error('Error starting listening:', error);
+      setIsConnecting(false);
       toast.error('Failed to start listening', {
         description: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -102,14 +77,9 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
   };
 
   const handleStopListening = () => {
-    if (audioRecorder.current) {
-      audioRecorder.current.stop();
-      audioRecorder.current = null;
-    }
-    
-    if (realtimeAPI.current) {
-      realtimeAPI.current.disconnect();
-      realtimeAPI.current = null;
+    if (realtimeChat.current) {
+      realtimeChat.current.disconnect();
+      realtimeChat.current = null;
     }
     
     setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle', volume: 0 }));
@@ -144,16 +114,6 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
 
       toast.success('Verse found!', {
         description: `${verse.book} ${verse.chapter}:${verse.verse}`,
-      });
-    }
-  };
-
-  const handleSaveApiKey = () => {
-    if (apiKey) {
-      localStorage.setItem('openai_api_key', apiKey);
-      setShowApiKeyInput(false);
-      toast.success('API Key saved', {
-        description: 'You can now start listening',
       });
     }
   };
@@ -193,32 +153,6 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
           </div>
         </div>
 
-        {/* API Key Input */}
-        {showApiKeyInput && (
-          <div className="animate-fade-in bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-2 text-foreground">OpenAI API Key Required</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Enter your OpenAI API key to enable real-time speech recognition.
-              Get your key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary underline">OpenAI Platform</a>
-            </p>
-            <div className="flex gap-3">
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-..."
-                className="flex-1 px-4 py-2 bg-background border border-border rounded-lg text-foreground"
-              />
-              <Button onClick={handleSaveApiKey} disabled={!apiKey}>
-                Save Key
-              </Button>
-              <Button variant="outline" onClick={() => setShowApiKeyInput(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Settings Panel */}
         {showSettings && (
           <div className="animate-fade-in">
@@ -252,8 +186,20 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
             {/* Control Buttons */}
             <div className="flex gap-4">
               {!audioStatus.isListening ? (
-                <Button onClick={handleStartListening} size="lg" className="flex-1 gradient-divine">
-                  Start Listening
+                <Button 
+                  onClick={handleStartListening} 
+                  size="lg" 
+                  className="flex-1 gradient-divine"
+                  disabled={isConnecting}
+                >
+                  {isConnecting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    'Start Listening'
+                  )}
                 </Button>
               ) : (
                 <Button onClick={handleStopListening} size="lg" variant="destructive" className="flex-1">
