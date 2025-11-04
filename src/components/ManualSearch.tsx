@@ -1,68 +1,63 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, BookOpen } from 'lucide-react';
+import { Search, CheckCircle2, AlertCircle } from 'lucide-react';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVerse } from '@/types/bible';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 
 interface ManualSearchProps {
   onVerseSelect: (verse: BibleVerse) => void;
 }
 
 export const ManualSearch = ({ onVerseSelect }: ManualSearchProps) => {
-  const [selectedBook, setSelectedBook] = useState('');
-  const [chapter, setChapter] = useState('');
-  const [verse, setVerse] = useState('');
-  const [bookOpen, setBookOpen] = useState(false);
-  const [books] = useState(BibleParser.getAllBooks());
-
-  const handleSearch = () => {
-    if (!selectedBook || !chapter || !verse) {
-      return;
-    }
-
-    const verseData = BibleParser.getVerse(
-      selectedBook,
-      parseInt(chapter),
-      parseInt(verse)
-    );
-
-    if (verseData) {
-      onVerseSelect(verseData);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
+  const [input, setInput] = useState('');
+  const [preview, setPreview] = useState<BibleVerse | null>(null);
+  const [error, setError] = useState<string>('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleGlobalKeyPress = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setBookOpen(true);
+        inputRef.current?.focus();
       }
     };
 
     window.addEventListener('keydown', handleGlobalKeyPress);
     return () => window.removeEventListener('keydown', handleGlobalKeyPress);
   }, []);
+
+  const parseAndPreview = (text: string) => {
+    if (!text.trim()) {
+      setPreview(null);
+      setError('');
+      return;
+    }
+
+    const verse = BibleParser.parseReference(text);
+    
+    if (verse) {
+      setPreview(verse);
+      setError('');
+    } else {
+      setPreview(null);
+      setError('Format: "John 3:16" or "john3:16" or "john 3 16"');
+    }
+  };
+
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    parseAndPreview(value);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && preview) {
+      onVerseSelect(preview);
+      setInput('');
+      setPreview(null);
+      setError('');
+    }
+  };
 
   return (
     <Card className="p-6 border-border bg-card">
@@ -71,79 +66,59 @@ export const ManualSearch = ({ onVerseSelect }: ManualSearchProps) => {
           <div className="p-2 rounded-lg bg-muted text-muted-foreground">
             <Search className="w-5 h-5" />
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground">Manual Search</h3>
-            <p className="text-sm text-muted-foreground">Quick verse lookup (Ctrl+K)</p>
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground">Quick Search</h3>
+            <p className="text-sm text-muted-foreground">
+              Type verse reference (Ctrl+K) • Try: john3:16, psalm23:1
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-[2fr,1fr,1fr,auto] gap-3">
-          {/* Book Selector */}
-          <Popover open={bookOpen} onOpenChange={setBookOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={bookOpen}
-                className="justify-between"
-              >
-                {selectedBook || "Select book..."}
-                <BookOpen className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0">
-              <Command>
-                <CommandInput placeholder="Search books..." />
-                <CommandList>
-                  <CommandEmpty>No book found.</CommandEmpty>
-                  <CommandGroup>
-                    {books.map((book) => (
-                      <CommandItem
-                        key={book}
-                        value={book}
-                        onSelect={(value) => {
-                          setSelectedBook(value);
-                          setBookOpen(false);
-                        }}
-                      >
-                        {book}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-
-          {/* Chapter Input */}
+        <div className="relative">
           <Input
-            type="number"
-            placeholder="Ch"
-            value={chapter}
-            onChange={(e) => setChapter(e.target.value)}
+            ref={inputRef}
+            type="text"
+            placeholder="e.g., John 3:16 or john3:16 or john 3 16"
+            value={input}
+            onChange={(e) => handleInputChange(e.target.value)}
             onKeyPress={handleKeyPress}
-            min="1"
+            className="pr-10"
           />
-
-          {/* Verse Input */}
-          <Input
-            type="number"
-            placeholder="Vs"
-            value={verse}
-            onChange={(e) => setVerse(e.target.value)}
-            onKeyPress={handleKeyPress}
-            min="1"
-          />
-
-          {/* Search Button */}
-          <Button
-            onClick={handleSearch}
-            disabled={!selectedBook || !chapter || !verse}
-            className="gradient-divine"
-          >
-            Go
-          </Button>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {preview && (
+              <CheckCircle2 className="w-5 h-5 text-success" />
+            )}
+            {error && !preview && input && (
+              <AlertCircle className="w-5 h-5 text-destructive" />
+            )}
+          </div>
         </div>
+
+        {/* Preview */}
+        {preview && (
+          <div className="animate-fade-in p-4 rounded-lg bg-muted/30 border border-primary/20">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-primary mb-1">
+                  {preview.book} {preview.chapter}:{preview.verse}
+                </div>
+                <p className="text-sm text-foreground leading-relaxed line-clamp-2">
+                  "{preview.text}"
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 text-xs text-muted-foreground">
+              Press <kbd className="px-2 py-0.5 bg-background rounded border border-border">Enter</kbd> to display
+            </div>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !preview && input && (
+          <div className="animate-fade-in p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
       </div>
     </Card>
   );

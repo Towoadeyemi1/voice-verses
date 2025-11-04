@@ -13,9 +13,13 @@ export class BibleParser {
   private static context: BibleContext | null = null;
 
   static parseReference(text: string): BibleVerse | null {
-    // Pattern 1: Full reference (e.g., "John chapter 3 verse 16", "John 3:16")
-    const fullPattern = /(\w+(?:\s+\w+)?)\s*(?:chapter\s*)?(\d+)[:\s]+(?:verse\s*)?(\d+)/i;
-    const fullMatch = text.match(fullPattern);
+    // Clean up the input
+    const cleanText = text.trim();
+    
+    // Pattern 1: Full reference with various formats
+    // Matches: "John 3:16", "john3:16", "John 3 16", "john3,16", "1 John 3:16", "1john3:16"
+    const fullPattern = /^(\d?\s*\w+(?:\s+\w+)?)\s*[:\s,]+(\d+)\s*[:\s,]+(\d+)$/i;
+    const fullMatch = cleanText.match(fullPattern);
 
     if (fullMatch) {
       const [, book, chapter, verse] = fullMatch;
@@ -24,10 +28,39 @@ export class BibleParser {
       return this.getVerse(normalizedBook, parseInt(chapter), parseInt(verse));
     }
 
-    // Pattern 2: Verse only (e.g., "verse 17", "17")
+    // Pattern 2: Compact format without separators (e.g., "john316", "psalm231")
+    const compactPattern = /^(\d?\s*\w+)(\d{1,3})(\d{1,3})$/i;
+    const compactMatch = cleanText.match(compactPattern);
+    
+    if (compactMatch) {
+      const [, book, chapter, verse] = compactMatch;
+      const normalizedBook = this.normalizeBook(book.trim());
+      // Try to parse - if chapter is too large, it might be invalid
+      const chapterNum = parseInt(chapter);
+      const verseNum = parseInt(verse);
+      
+      if (chapterNum > 0 && chapterNum <= 150 && verseNum > 0) {
+        this.context = { book: normalizedBook, chapter: chapterNum };
+        return this.getVerse(normalizedBook, chapterNum, verseNum);
+      }
+    }
+
+    // Pattern 3: Chapter only format (e.g., "john 3" - sets context but doesn't return verse)
+    const chapterOnlyPattern = /^(\d?\s*\w+(?:\s+\w+)?)\s+(\d+)$/i;
+    const chapterMatch = cleanText.match(chapterOnlyPattern);
+    
+    if (chapterMatch) {
+      const [, book, chapter] = chapterMatch;
+      const normalizedBook = this.normalizeBook(book.trim());
+      this.context = { book: normalizedBook, chapter: parseInt(chapter) };
+      // Return first verse of chapter
+      return this.getVerse(normalizedBook, parseInt(chapter), 1);
+    }
+
+    // Pattern 4: Verse only (e.g., "verse 17", "17") - uses context
     if (this.context) {
-      const versePattern = /(?:verse\s*)?(\d+)/i;
-      const verseMatch = text.match(versePattern);
+      const versePattern = /^(?:verse\s*)?(\d+)$/i;
+      const verseMatch = cleanText.match(versePattern);
       
       if (verseMatch) {
         const verse = parseInt(verseMatch[1]);
