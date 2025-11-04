@@ -75,7 +75,7 @@ export class RealtimeWebRTC {
 
   constructor(
     private onTranscript: (text: string) => void,
-    private onVerseDetected: (verse: BibleVerse | null) => void,
+    private onVerseDetected: (verse: BibleVerse | null, detectionInfo?: { method: string; description?: string; confidence?: string }) => void,
     private onVolumeUpdate: (volume: number) => void
   ) {
     this.audioEl = document.createElement("audio");
@@ -254,9 +254,29 @@ export class RealtimeWebRTC {
         const params = JSON.parse(args);
         const verse = BibleParser.getVerse(params.book, params.chapter, params.verse);
         console.log('Function call - display verse:', verse);
-        this.onVerseDetected(verse);
+        this.onVerseDetected(verse, { method: 'explicit' });
       } catch (error) {
         console.error('Error parsing function call arguments:', error);
+      }
+    } else if (name === 'suggest_verse_from_description') {
+      try {
+        const params = JSON.parse(args);
+        const verse = BibleParser.getVerse(params.book, params.chapter, params.verse);
+        console.log('Function call - suggest verse from description:', {
+          verse,
+          description: params.description,
+          confidence: params.confidence
+        });
+        
+        if (verse) {
+          this.onVerseDetected(verse, { 
+            method: 'description',
+            description: params.description,
+            confidence: params.confidence
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing suggest verse arguments:', error);
       }
     }
   }

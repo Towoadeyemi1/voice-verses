@@ -63,9 +63,17 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
           console.log('Transcript received:', text);
           setTranscript(text);
         },
-        (verse) => {
+        (verse, detectionInfo) => {
           if (verse) {
             processTranscript('', verse);
+            
+            // Show different notifications based on detection method
+            if (detectionInfo?.method === 'description') {
+              toast.success('Verse detected from description!', {
+                description: `${verse.book} ${verse.chapter}:${verse.verse} - ${detectionInfo.description} (${detectionInfo.confidence} confidence)`,
+                duration: 5000,
+              });
+            }
           }
         },
         (volume) => {
