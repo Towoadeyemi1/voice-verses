@@ -1,0 +1,41 @@
+{
+  "John": {
+    "3": {
+      "16": "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+      "17": "For God sent not his Son into the world to condemn the world; but that the world through him might be saved.",
+      "18": "He that believeth on him is not condemned: but he that believeth not is condemned already, because he hath not believed in the name of the only begotten Son of God."
+    }
+  },
+  "Psalm": {
+    "23": {
+      "1": "The Lord is my shepherd; I shall not want.",
+      "2": "He maketh me to lie down in green pastures: he leadeth me beside the still waters.",
+      "3": "He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.",
+      "4": "Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.",
+      "5": "Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.",
+      "6": "Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the Lord for ever."
+    }
+  },
+  "Romans": {
+    "8": {
+      "28": "And we know that all things work together for good to them that love God, to them who are the called according to his purpose.",
+      "31": "What shall we then say to these things? If God be for us, who can be against us?",
+      "37": "Nay, in all these things we are more than conquerors through him that loved us.",
+      "38": "For I am persuaded, that neither death, nor life, nor angels, nor principalities, nor powers, nor things present, nor things to come,",
+      "39": "Nor height, nor depth, nor any other creature, shall be able to separate us from the love of God, which is in Christ Jesus our Lord."
+    }
+  },
+  "Philippians": {
+    "4": {
+      "13": "I can do all things through Christ which strengtheneth me.",
+      "6": "Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God.",
+      "7": "And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus."
+    }
+  },
+  "Proverbs": {
+    "3": {
+      "5": "Trust in the Lord with all thine heart; and lean not unto thine own understanding.",
+      "6": "In all thy ways acknowledge him, and he shall direct thy paths."
+    }
+  }
+}
