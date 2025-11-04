@@ -5,8 +5,9 @@ import { TranscriptWindow } from './TranscriptWindow';
 import { VerseDisplay } from './VerseDisplay';
 import { ContextTracker } from './ContextTracker';
 import { SettingsPanel } from './SettingsPanel';
+import { ManualSearch } from './ManualSearch';
 import { BibleParser } from '@/lib/bibleParser';
-import { DisplayedVerse, AudioStatus } from '@/types/bible';
+import { DisplayedVerse, AudioStatus, BibleVerse } from '@/types/bible';
 import { Maximize2, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncService } from '@/lib/syncService';
@@ -157,6 +158,10 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
     }
   };
 
+  const handleManualVerseSelect = (verse: BibleVerse) => {
+    processTranscript('', verse);
+  };
+
   const context = BibleParser.getCurrentContext();
 
   return (
@@ -225,6 +230,8 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
+            <ManualSearch onVerseSelect={handleManualVerseSelect} />
+
             <AudioVisualizer
               isListening={audioStatus.isListening}
               volume={audioStatus.volume}

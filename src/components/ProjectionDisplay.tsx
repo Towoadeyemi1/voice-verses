@@ -7,6 +7,8 @@ interface ProjectionDisplayProps {
 
 export const ProjectionDisplay = ({ verse }: ProjectionDisplayProps) => {
   const [show, setShow] = useState(false);
+  const [fontSize, setFontSize] = useState(72);
+  const [showReference, setShowReference] = useState(true);
 
   useEffect(() => {
     if (verse) {
@@ -14,6 +16,32 @@ export const ProjectionDisplay = ({ verse }: ProjectionDisplayProps) => {
       setTimeout(() => setShow(true), 50);
     }
   }, [verse]);
+
+  useEffect(() => {
+    // Load settings
+    const loadSettings = () => {
+      const savedSettings = localStorage.getItem('cornerstone-settings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        setFontSize(settings.fontSize || 72);
+        setShowReference(settings.showReference ?? true);
+      }
+    };
+
+    loadSettings();
+
+    // Listen for settings updates
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      const settings = event.detail;
+      setFontSize(settings.fontSize || 72);
+      setShowReference(settings.showReference ?? true);
+    };
+
+    window.addEventListener('settings-updated', handleSettingsUpdate as EventListener);
+    return () => {
+      window.removeEventListener('settings-updated', handleSettingsUpdate as EventListener);
+    };
+  }, []);
 
   if (!verse) {
     return (
@@ -47,18 +75,31 @@ export const ProjectionDisplay = ({ verse }: ProjectionDisplayProps) => {
       >
         {/* Verse Text */}
         <div className="text-center">
-          <p className="text-5xl md:text-6xl lg:text-7xl leading-relaxed font-serif text-projection-text">
+          <p 
+            className="leading-relaxed font-serif text-projection-text"
+            style={{ fontSize: `${fontSize}px` }}
+          >
             "{verse.text}"
           </p>
         </div>
 
         {/* Reference */}
-        <div className="text-center pt-8 border-t border-projection-accent/20">
-          <p className="text-3xl md:text-4xl font-semibold text-projection-accent">
-            {verse.book} {verse.chapter}:{verse.verse}
-          </p>
-          <p className="text-xl text-projection-text/60 mt-2">King James Version</p>
-        </div>
+        {showReference && (
+          <div className="text-center pt-8 border-t border-projection-accent/20">
+            <p 
+              className="font-semibold text-projection-accent"
+              style={{ fontSize: `${Math.floor(fontSize * 0.5)}px` }}
+            >
+              {verse.book} {verse.chapter}:{verse.verse}
+            </p>
+            <p 
+              className="text-projection-text/60 mt-2"
+              style={{ fontSize: `${Math.floor(fontSize * 0.3)}px` }}
+            >
+              King James Version
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
