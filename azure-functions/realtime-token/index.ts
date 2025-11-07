@@ -1,25 +1,34 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
+  // Handle CORS
+  context.res = {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    }
+  };
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    context.res.status = 204;
+    return;
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY is not set');
-      throw new Error('OPENAI_API_KEY is not configured');
+      context.log.error('OPENAI_API_KEY is not set');
+      context.res = {
+        status: 500,
+        body: { error: 'OPENAI_API_KEY is not configured' },
+        headers: context.res.headers
+      };
+      return;
     }
 
-    console.log('Requesting ephemeral token from OpenAI...');
+    context.log('Requesting ephemeral token from OpenAI...');
 
     // Request an ephemeral token from OpenAI
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
@@ -134,23 +143,39 @@ You are a Bible expert. Use your knowledge to identify verses from any descripti
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      context.log.error('OpenAI API error:', response.status, errorText);
+      context.res = {
+        status: 500,
+        body: { error: `OpenAI API error: ${response.status} - ${errorText}` },
+        headers: context.res.headers
+      };
+      return;
     }
 
     const data = await response.json();
-    console.log('Ephemeral token created successfully');
+    context.log('Ephemeral token created successfully');
 
-    return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    context.res = {
+      status: 200,
+      body: data,
+      headers: {
+        ...context.res.headers,
+        'Content-Type': 'application/json'
+      }
+    };
   } catch (error) {
-    console.error("Error creating ephemeral token:", error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    }), {
+    context.log.error("Error creating ephemeral token:", error);
+    context.res = {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      body: { 
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      },
+      headers: {
+        ...context.res.headers,
+        'Content-Type': 'application/json'
+      }
+    };
   }
-});
+};
+
+export default httpTrigger;

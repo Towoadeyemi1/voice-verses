@@ -86,14 +86,16 @@ export class RealtimeWebRTC {
     try {
       console.log('Initializing WebRTC connection...');
 
-      // Get ephemeral token from edge function
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      if (!SUPABASE_URL) {
-        throw new Error('VITE_SUPABASE_URL not configured');
+      // Get ephemeral token from Azure Function
+      // TODO: Replace with your actual Azure Function URL after deployment
+      const AZURE_FUNCTION_URL = 'YOUR_AZURE_FUNCTION_URL_HERE'; // e.g., https://bible-verse-detector-func.azurewebsites.net/api/realtime-token
+      
+      if (AZURE_FUNCTION_URL === 'YOUR_AZURE_FUNCTION_URL_HERE') {
+        throw new Error('Please update AZURE_FUNCTION_URL in realtimeWebRTC.ts with your deployed Azure Function URL');
       }
 
       console.log('Fetching ephemeral token...');
-      const tokenResponse = await fetch(`${SUPABASE_URL}/functions/v1/realtime-token`, {
+      const tokenResponse = await fetch(AZURE_FUNCTION_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
