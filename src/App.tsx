@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Projection from "./pages/Projection";
 import LowerThird from "./pages/LowerThird";
 import Confidence from "./pages/Confidence";
+import DisplayManager from "./pages/DisplayManager";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/projection" element={<Projection />} />
           <Route path="/lower-third" element={<LowerThird />} />
           <Route path="/confidence" element={<Confidence />} />
+          <Route path="/display-manager" element={<DisplayManager />} />
           <Route path="/install" element={<Install />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
