@@ -10,21 +10,33 @@ import { Image, Music, Plus, Trash2, Search, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { SongSelectImport } from '@/components/SongSelectImport';
+import { PowerPointImport } from '@/components/PowerPointImport';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const MediaLibrary = () => {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'image' | 'song'>('all');
+  const [filter, setFilter] = useState<'all' | 'image' | 'song' | 'presentation'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showUpload, setShowUpload] = useState(false);
   const [editingSong, setEditingSong] = useState<MediaItem | null>(null);
   const [editLyrics, setEditLyrics] = useState('');
+  const [newCategory, setNewCategory] = useState('');
   const navigate = useNavigate();
+
+  const categories = ['all', ...new Set(media.map(m => m.category).filter(Boolean))] as string[];
 
   useEffect(() => {
     loadMedia();
@@ -128,7 +140,8 @@ const MediaLibrary = () => {
   const filteredMedia = media.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filter === 'all' || m.type === filter;
-    return matchesSearch && matchesFilter;
+    const matchesCategory = categoryFilter === 'all' || m.category === categoryFilter;
+    return matchesSearch && matchesFilter && matchesCategory;
   });
 
   return (
@@ -163,16 +176,18 @@ const MediaLibrary = () => {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <Button
                 variant={filter === 'all' ? 'default' : 'outline'}
                 onClick={() => setFilter('all')}
+                size="sm"
               >
                 All
               </Button>
               <Button
                 variant={filter === 'image' ? 'default' : 'outline'}
                 onClick={() => setFilter('image')}
+                size="sm"
               >
                 <Image className="w-4 h-4 mr-2" />
                 Images
@@ -180,10 +195,24 @@ const MediaLibrary = () => {
               <Button
                 variant={filter === 'song' ? 'default' : 'outline'}
                 onClick={() => setFilter('song')}
+                size="sm"
               >
                 <Music className="w-4 h-4 mr-2" />
                 Songs
               </Button>
+              
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat === 'all' ? 'All Categories' : cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button onClick={() => setShowUpload(!showUpload)}>
               <Plus className="w-4 h-4 mr-2" />
@@ -222,7 +251,10 @@ const MediaLibrary = () => {
         )}
 
         {/* SongSelect Integration */}
-        <SongSelectImport onImportComplete={loadMedia} />
+        <div className="space-y-4">
+          <SongSelectImport onImportComplete={loadMedia} />
+          <PowerPointImport onImportComplete={loadMedia} />
+        </div>
 
         {/* Media Grid */}
         {filteredMedia.length === 0 ? (

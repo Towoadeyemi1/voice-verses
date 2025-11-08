@@ -6,6 +6,16 @@ export interface BaseSlide {
   id: string;
   type: SlideType;
   title: string;
+  backgroundMedia?: {
+    type: 'image' | 'video';
+    url: string;
+    opacity?: number;
+  };
+  textFormatting?: {
+    linesPerSlide?: number;
+    fontSize?: 'small' | 'medium' | 'large' | 'xlarge';
+    alignment?: 'left' | 'center' | 'right';
+  };
 }
 
 export interface ScriptureSlide extends BaseSlide {
@@ -50,7 +60,7 @@ export interface Service {
 
 export interface MediaItem {
   id: string;
-  type: 'image' | 'song';
+  type: 'image' | 'song' | 'presentation';
   name: string;
   category?: string;
   tags?: string[];
@@ -60,6 +70,8 @@ export interface MediaItem {
   // For songs
   lyrics?: string;
   slides?: LyricsSlide[];
+  // For presentations (PowerPoint imports)
+  presentationSlides?: ImageSlide[];
 }
 
 export interface PresentationMode {

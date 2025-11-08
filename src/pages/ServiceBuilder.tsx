@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, AnnouncementSlide } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
-import { Book, Music, Image as ImageIcon, MessageSquare, Plus, Trash2, GripVertical, Save } from 'lucide-react';
+import { Book, Music, Image as ImageIcon, MessageSquare, Plus, Trash2, GripVertical, Save, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { SlideConfiguration } from '@/components/SlideConfiguration';
 
 const ServiceBuilder = () => {
   const { serviceId } = useParams();
@@ -166,6 +167,27 @@ const ServiceBuilder = () => {
     });
   };
 
+  const handleDuplicateSlide = (slide: Slide) => {
+    const duplicated: Slide = {
+      ...slide,
+      id: Date.now().toString(),
+    };
+    
+    setService(prev => prev ? {
+      ...prev,
+      slides: [...prev.slides, duplicated],
+    } : null);
+    toast.success('Slide duplicated');
+  };
+
+  const handleUpdateSlide = (updatedSlide: Slide) => {
+    setService(prev => prev ? {
+      ...prev,
+      slides: prev.slides.map(s => s.id === updatedSlide.id ? updatedSlide : s),
+    } : null);
+    toast.success('Slide updated');
+  };
+
   if (!service) return <div>Loading...</div>;
 
   return (
@@ -270,13 +292,26 @@ const ServiceBuilder = () => {
                         </div>
                       </div>
 
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteSlide(slide.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <SlideConfiguration 
+                          slide={slide} 
+                          onUpdate={handleUpdateSlide}
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDuplicateSlide(slide)}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteSlide(slide.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 ))}

@@ -14,35 +14,65 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
     );
   }
 
+  const fontSize = slide.textFormatting?.fontSize || 'large';
+  const alignment = slide.textFormatting?.alignment || 'center';
+  const fontSizeClasses = {
+    small: 'text-3xl',
+    medium: 'text-4xl',
+    large: 'text-5xl',
+    xlarge: 'text-6xl',
+  };
+  const alignmentClasses = {
+    left: 'text-left',
+    center: 'text-center',
+    right: 'text-right',
+  };
+
+  const backgroundStyle = slide.backgroundMedia ? {
+    backgroundImage: `url(${slide.backgroundMedia.url})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  } : {};
+
   switch (slide.type) {
     case 'scripture':
       return (
-        <div className={`flex flex-col items-center justify-center h-full p-12 ${className}`}>
-          <div className="text-3xl font-bold text-primary mb-8">
-            {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
-          </div>
-          <div className="text-5xl leading-relaxed text-center max-w-5xl">
-            {slide.verse.text}
+        <div className={`relative flex flex-col items-center justify-center h-full p-12 ${className}`} style={backgroundStyle}>
+          {slide.backgroundMedia && (
+            <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
+          )}
+          <div className="relative z-10 flex flex-col items-center justify-center">
+            <div className={`text-3xl font-bold text-primary mb-8 ${alignmentClasses[alignment]}`}>
+              {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
+            </div>
+            <div className={`${fontSizeClasses[fontSize]} leading-relaxed ${alignmentClasses[alignment]} max-w-5xl`}>
+              {slide.verse.text}
+            </div>
           </div>
         </div>
       );
 
     case 'lyrics':
       return (
-        <div className={`flex flex-col items-center justify-center h-full p-12 ${className}`}>
-          <div className="text-2xl font-semibold text-primary mb-4">
-            {slide.songTitle}
-          </div>
-          {slide.section && (
-            <div className="text-xl text-muted-foreground mb-6 uppercase">
-              {slide.section}
-            </div>
+        <div className={`relative flex flex-col items-center justify-center h-full p-12 ${className}`} style={backgroundStyle}>
+          {slide.backgroundMedia && (
+            <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="text-5xl leading-relaxed text-center max-w-4xl whitespace-pre-line">
-            {slide.content}
-          </div>
-          <div className="text-lg text-muted-foreground mt-8">
-            {slide.slideNumber} / {slide.totalSlides}
+          <div className="relative z-10 flex flex-col items-center justify-center">
+            <div className={`text-2xl font-semibold text-primary mb-4 ${alignmentClasses[alignment]}`}>
+              {slide.songTitle}
+            </div>
+            {slide.section && (
+              <div className={`text-xl text-muted-foreground mb-6 uppercase ${alignmentClasses[alignment]}`}>
+                {slide.section}
+              </div>
+            )}
+            <div className={`${fontSizeClasses[fontSize]} leading-relaxed ${alignmentClasses[alignment]} max-w-4xl whitespace-pre-line`}>
+              {slide.content}
+            </div>
+            <div className="text-lg text-muted-foreground mt-8">
+              {slide.slideNumber} / {slide.totalSlides}
+            </div>
           </div>
         </div>
       );
