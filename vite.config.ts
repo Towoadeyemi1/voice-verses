@@ -46,8 +46,10 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Exclude large Bible JSON files from precaching
+        globIgnores: ['**/node_modules/**/*'],
+        maximumFileSizeToCacheInBytes: 25 * 1024 * 1024, // 25 MB to accommodate Bible files
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -71,5 +73,17 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'bible-kjv': ['./src/data/kjv-complete.json'],
+          'bible-asv': ['./src/data/asv-complete.json'],
+          'bible-web': ['./src/data/web-complete.json'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 2000, // Increase to 2MB to avoid warnings for Bible files
   },
 }));
