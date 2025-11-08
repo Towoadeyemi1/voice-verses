@@ -6,12 +6,15 @@ import { VerseDisplay } from './VerseDisplay';
 import { ContextTracker } from './ContextTracker';
 import { SettingsPanel } from './SettingsPanel';
 import { ManualSearch } from './ManualSearch';
+import { DisplayMonitor } from './DisplayMonitor';
 import { BibleParser } from '@/lib/bibleParser';
 import { DisplayedVerse, AudioStatus, BibleVerse } from '@/types/bible';
-import { Maximize2, Settings, Loader2, MonitorPlay, LayoutGrid } from 'lucide-react';
+import { Maximize2, Settings, Loader2, MonitorPlay, LayoutGrid, Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncService } from '@/lib/syncService';
 import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Card } from '@/components/ui/card';
 
 interface ControlPanelProps {
   onOpenProjection: () => void;
@@ -42,6 +45,10 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
 
   const handleOpenLowerThird = () => {
     window.open('/lower-third', '_blank', 'width=1280,height=720');
+  };
+
+  const handleOpenDisplayManagerWindow = () => {
+    window.open('/display-manager', '_blank', 'width=1400,height=900');
   };
 
   // Cleanup on unmount
@@ -369,13 +376,61 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            <ContextTracker
-              currentBook={context?.book}
-              currentChapter={context?.chapter}
-              recentVerses={recentVerses}
-            />
+          {/* Right Column - Sidebar */}
+          <div className="space-y-4">
+            {/* Display Monitor Section */}
+            {showDisplayMonitor && (
+              <Card className="p-4 animate-fade-in">
+                <Collapsible defaultOpen>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Monitor className="w-4 h-4 text-primary" />
+                      <h3 className="font-semibold text-sm">Display Monitor</h3>
+                      <span className="text-xs text-muted-foreground">Live</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={handleOpenDisplayManagerWindow}
+                        className="h-7 px-2"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                        </Button>
+                      </CollapsibleTrigger>
+                    </div>
+                  </div>
+                  <CollapsibleContent>
+                    <DisplayMonitor />
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            )}
+
+            {/* Context Tracker Section */}
+            <Card className="p-4">
+              <Collapsible defaultOpen>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-sm">Active Content</h3>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                      <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent>
+                  <ContextTracker
+                    currentBook={context?.book}
+                    currentChapter={context?.chapter}
+                    recentVerses={recentVerses}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
           </div>
         </div>
       </div>
