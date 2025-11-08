@@ -40,7 +40,9 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
 
     // Get audio devices
     navigator.mediaDevices.enumerateDevices().then((devices) => {
-      const audioInputs = devices.filter((device) => device.kind === 'audioinput');
+      const audioInputs = devices.filter((device) => 
+        device.kind === 'audioinput' && device.deviceId !== ''
+      );
       setAudioDevices(audioInputs);
     });
   }, []);
