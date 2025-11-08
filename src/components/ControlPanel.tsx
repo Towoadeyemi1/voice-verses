@@ -380,25 +380,26 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
           <div className="space-y-4">
             {/* Display Monitor Section */}
             {showDisplayMonitor && (
-              <Card className="p-4 animate-fade-in">
+              <Card className="p-5 animate-fade-in">
                 <Collapsible defaultOpen>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Monitor className="w-4 h-4 text-primary" />
                       <h3 className="font-semibold text-sm">Display Monitor</h3>
-                      <span className="text-xs text-muted-foreground">Live</span>
+                      <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-primary/10 rounded">Live</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button 
                         variant="ghost" 
                         size="sm"
                         onClick={handleOpenDisplayManagerWindow}
-                        className="h-7 px-2"
+                        className="h-7 px-2 hover:bg-primary/10"
+                        title="Open in window"
                       >
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink className="w-3.5 h-3.5" />
                       </Button>
                       <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
                           <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
                         </Button>
                       </CollapsibleTrigger>
@@ -412,12 +413,12 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
             )}
 
             {/* Context Tracker Section */}
-            <Card className="p-4">
+            <Card className="p-5">
               <Collapsible defaultOpen>
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-sm">Active Content</h3>
                   <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
                       <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
                     </Button>
                   </CollapsibleTrigger>

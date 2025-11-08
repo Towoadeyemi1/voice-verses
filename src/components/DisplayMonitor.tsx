@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BibleVerse } from '@/types/bible';
 import { syncService } from '@/lib/syncService';
-import { Card } from '@/components/ui/card';
 import { Monitor, MonitorPlay, TvMinimalPlay } from 'lucide-react';
 
 export const DisplayMonitor = () => {
@@ -39,28 +38,31 @@ export const DisplayMonitor = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div className="space-y-3">
       {/* Projection Display Preview */}
-      <Card className="p-3 space-y-2">
-        <div className="flex items-center gap-2 pb-2 border-b">
-          <MonitorPlay className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-sm">Main Projection</h3>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MonitorPlay className="w-3.5 h-3.5 text-primary" />
+            <h4 className="font-medium text-xs">Main Projection</h4>
+          </div>
+          <span className="text-[10px] text-muted-foreground">SDI 1 • 1920×1080</span>
         </div>
-        <div className="aspect-video bg-projection-bg rounded-lg overflow-hidden border-2 border-border">
-          <div className="h-full flex flex-col items-center justify-center p-4 text-projection-text">
+        <div className="aspect-video bg-projection-bg rounded-md overflow-hidden border border-border/50">
+          <div className="h-full flex flex-col items-center justify-center p-3 text-projection-text">
             {verse ? (
-              <div className="space-y-3 text-center">
+              <div className="space-y-2 text-center w-full">
                 <p 
-                  className="font-serif leading-relaxed"
-                  style={{ fontSize: `${(projectionSettings?.fontSize || 72) / 6}px` }}
+                  className="font-serif leading-snug line-clamp-3"
+                  style={{ fontSize: '10px' }}
                 >
                   "{verse.text}"
                 </p>
                 {(projectionSettings?.showReference ?? true) && (
-                  <div className="pt-2 border-t border-projection-accent/20">
+                  <div className="pt-1.5 border-t border-projection-accent/20">
                     <p 
                       className="font-semibold text-projection-accent"
-                      style={{ fontSize: `${(projectionSettings?.fontSize || 72) / 12}px` }}
+                      style={{ fontSize: '8px' }}
                     >
                       {verse.book} {verse.chapter}:{verse.verse}
                     </p>
@@ -68,29 +70,29 @@ export const DisplayMonitor = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center space-y-2">
-                <Monitor className="w-8 h-8 mx-auto text-projection-accent/60" />
-                <p className="text-projection-text/60 text-xs">Waiting for verse...</p>
+              <div className="text-center space-y-1.5">
+                <Monitor className="w-6 h-6 mx-auto text-projection-accent/40" />
+                <p className="text-projection-text/50 text-[10px]">Waiting for verse...</p>
               </div>
             )}
           </div>
         </div>
-        <div className="text-xs text-muted-foreground">
-          SDI 1 • 1920x1080
-        </div>
-      </Card>
+      </div>
 
       {/* Lower Third Preview */}
-      <Card className="p-3 space-y-2">
-        <div className="flex items-center gap-2 pb-2 border-b">
-          <TvMinimalPlay className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-sm">Lower Third</h3>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TvMinimalPlay className="w-3.5 h-3.5 text-primary" />
+            <h4 className="font-medium text-xs">Lower Third</h4>
+          </div>
+          <span className="text-[10px] text-muted-foreground">SDI 2 • Chroma Key</span>
         </div>
-        <div className="aspect-video bg-[#00FF00] rounded-lg overflow-hidden border-2 border-border relative">
+        <div className="aspect-video bg-[#00FF00] rounded-md overflow-hidden border border-border/50 relative">
           <div className="absolute inset-0 flex items-end justify-center p-2">
             {verse && lowerThirdSettings?.showBackground ? (
               <div 
-                className="rounded-lg px-4 py-2 max-w-4xl"
+                className="rounded px-3 py-1.5 max-w-full"
                 style={{
                   backgroundColor: `${lowerThirdSettings.backgroundColor}${Math.round((lowerThirdSettings.backgroundOpacity || 90) * 2.55).toString(16).padStart(2, '0')}`,
                 }}
@@ -98,21 +100,21 @@ export const DisplayMonitor = () => {
                 <p 
                   className="font-semibold text-center"
                   style={{ 
-                    fontSize: `${(lowerThirdSettings?.fontSize || 48) / 6}px`,
+                    fontSize: '8px',
                     color: lowerThirdSettings?.textColor || '#FFFFFF'
                   }}
                 >
                   {verse.book} {verse.chapter}:{verse.verse}
                 </p>
                 <p 
-                  className="text-center mt-1"
+                  className="text-center mt-0.5 line-clamp-1"
                   style={{ 
-                    fontSize: `${(lowerThirdSettings?.fontSize || 48) / 9}px`,
+                    fontSize: '7px',
                     color: lowerThirdSettings?.textColor || '#FFFFFF',
                     opacity: 0.9
                   }}
                 >
-                  {verse.text.substring(0, 80)}...
+                  {verse.text.substring(0, 60)}...
                 </p>
               </div>
             ) : (
@@ -121,9 +123,9 @@ export const DisplayMonitor = () => {
                   <p 
                     className="font-bold"
                     style={{ 
-                      fontSize: `${(lowerThirdSettings?.fontSize || 48) / 6}px`,
+                      fontSize: '8px',
                       color: lowerThirdSettings?.textColor || '#FFFFFF',
-                      textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
                     }}
                   >
                     {verse.book} {verse.chapter}:{verse.verse}
@@ -133,40 +135,37 @@ export const DisplayMonitor = () => {
             )}
           </div>
         </div>
-        <div className="text-xs text-muted-foreground">
-          SDI 2 • Chroma Key
-        </div>
-      </Card>
+      </div>
 
       {/* Confidence Monitor Preview */}
-      <Card className="p-3 space-y-2">
-        <div className="flex items-center gap-2 pb-2 border-b">
-          <Monitor className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-sm">Confidence</h3>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Monitor className="w-3.5 h-3.5 text-primary" />
+            <h4 className="font-medium text-xs">Confidence</h4>
+          </div>
+          <span className="text-[10px] text-muted-foreground">SDI 3 • 1920×1080</span>
         </div>
-        <div className="aspect-video bg-background rounded-lg overflow-hidden border-2 border-border">
-          <div className="h-full flex items-center justify-center p-3">
+        <div className="aspect-video bg-background rounded-md overflow-hidden border border-border/50">
+          <div className="h-full flex items-center justify-center p-2.5">
             {verse ? (
-              <div className="text-center space-y-1">
-                <p className="font-bold text-sm">
+              <div className="text-center space-y-1 w-full">
+                <p className="font-bold text-[10px]">
                   {verse.book} {verse.chapter}:{verse.verse}
                 </p>
-                <p className="text-xs text-muted-foreground line-clamp-2">
+                <p className="text-[9px] text-muted-foreground line-clamp-2 leading-tight">
                   {verse.text}
                 </p>
               </div>
             ) : (
-              <div className="text-center space-y-2">
-                <Monitor className="w-8 h-8 mx-auto text-muted-foreground" />
-                <p className="text-muted-foreground text-xs">No verse</p>
+              <div className="text-center space-y-1.5">
+                <Monitor className="w-6 h-6 mx-auto text-muted-foreground/40" />
+                <p className="text-muted-foreground text-[10px]">No verse</p>
               </div>
             )}
           </div>
         </div>
-        <div className="text-xs text-muted-foreground">
-          SDI 3 • 1920x1080
-        </div>
-      </Card>
+      </div>
     </div>
   );
 };
