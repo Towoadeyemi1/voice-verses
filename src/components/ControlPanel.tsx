@@ -377,7 +377,7 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="space-y-4 lg:w-full xl:w-auto 2xl:min-w-[600px]">
+          <div className="space-y-4 lg:w-full xl:w-auto 2xl:min-w-[700px]">
             {/* Display Monitor Section */}
             {showDisplayMonitor && (
               <Card className="p-5 animate-fade-in">

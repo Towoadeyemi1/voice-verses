@@ -38,7 +38,7 @@ export const DisplayMonitor = () => {
   }, []);
 
   return (
-    <div className="space-y-3 2xl:grid 2xl:grid-cols-2 2xl:gap-3 2xl:space-y-0">
+    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3 auto-rows-fr">
       {/* Projection Display Preview */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -138,7 +138,7 @@ export const DisplayMonitor = () => {
       </div>
 
       {/* Confidence Monitor Preview */}
-      <div className="space-y-2 2xl:col-span-2">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Monitor className="w-3.5 h-3.5 text-primary" />
