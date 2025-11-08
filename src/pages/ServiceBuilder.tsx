@@ -349,10 +349,21 @@ const ServiceBuilder = () => {
   };
 
   const handleEditSlide = (sectionId: string, subsectionId: string, slide: Slide) => {
-    setEditingSlide({
-      ...slide,
-      _editContext: { sectionId, subsectionId }
-    } as any);
+    // For blank slides, let user choose the slide type first
+    if (slide.type === 'blank') {
+      setEditingSlide({
+        id: slide.id,
+        type: 'blank',
+        title: slide.title,
+        _editContext: { sectionId, subsectionId },
+        _isConverting: true,
+      } as any);
+    } else {
+      setEditingSlide({
+        ...slide,
+        _editContext: { sectionId, subsectionId }
+      } as any);
+    }
   };
 
   const handleSaveLyricsSlide = () => {
@@ -973,7 +984,7 @@ const ServiceBuilder = () => {
       )}
 
       {/* Announcement Editor Dialog */}
-      {editingSlide?.type === 'announcement' && (
+      {editingSlide?.type === 'announcement' && !(editingSlide as any)._isConverting && (
         <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -1007,7 +1018,7 @@ const ServiceBuilder = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select image" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background z-50">
                     <SelectItem value="">No image</SelectItem>
                     {media.filter(m => m.type === 'image').map(m => (
                       <SelectItem key={m.id} value={m.url || ''}>{m.name}</SelectItem>
@@ -1019,6 +1030,156 @@ const ServiceBuilder = () => {
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
               <Button onClick={handleSaveAnnouncementSlide}>Save Announcement</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Blank Slide Conversion Dialog */}
+      {editingSlide?.type === 'blank' && (editingSlide as any)._isConverting && (
+        <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Convert Blank Slide</DialogTitle>
+              <DialogDescription>Choose what type of content this slide should contain</DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-3 py-4">
+              <Button
+                variant="outline"
+                className="h-24 flex flex-col gap-2"
+                onClick={() => setEditingSlide({
+                  ...editingSlide,
+                  type: 'scripture',
+                  _isConverting: false,
+                  _needsScriptureInput: true,
+                } as any)}
+              >
+                <Book className="w-8 h-8" />
+                <span>Scripture</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-24 flex flex-col gap-2"
+                onClick={() => setEditingSlide({
+                  ...editingSlide,
+                  type: 'lyrics',
+                  _isConverting: false,
+                  songTitle: '',
+                  content: '',
+                } as any)}
+              >
+                <Music className="w-8 h-8" />
+                <span>Song Lyrics</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-24 flex flex-col gap-2"
+                onClick={() => setEditingSlide({
+                  ...editingSlide,
+                  type: 'announcement',
+                  _isConverting: false,
+                  content: '',
+                } as any)}
+              >
+                <MessageSquare className="w-8 h-8" />
+                <span>Announcement</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-24 flex flex-col gap-2"
+                onClick={() => setEditingSlide({
+                  ...editingSlide,
+                  type: 'image',
+                  _isConverting: false,
+                  _needsImageSelection: true,
+                } as any)}
+              >
+                <ImageIcon className="w-8 h-8" />
+                <span>Image</span>
+              </Button>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Scripture Input for Blank Slide Conversion */}
+      {editingSlide?.type === 'scripture' && (editingSlide as any)._needsScriptureInput && (
+        <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Scripture Reference</DialogTitle>
+              <DialogDescription>Enter the Bible verse reference</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <ManualSearch 
+                onVerseSelect={async (verse) => {
+                  const context = (editingSlide as any)._editContext;
+                  if (context) {
+                    const convertedSlide: ScriptureSlide = {
+                      id: editingSlide.id!,
+                      type: 'scripture',
+                      title: `${verse.book} ${verse.chapter}:${verse.verse}`,
+                      verse,
+                    };
+                    handleUpdateSlide(context.sectionId, context.subsectionId, convertedSlide);
+                  }
+                  setEditingSlide(null);
+                }}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Image Selection for Blank Slide Conversion */}
+      {editingSlide?.type === 'image' && (editingSlide as any)._needsImageSelection && (
+        <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Select Image</DialogTitle>
+              <DialogDescription>Choose an image from your media library</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 py-4">
+              <Label>Select Image</Label>
+              <Select 
+                onValueChange={(value) => {
+                  const context = (editingSlide as any)._editContext;
+                  const selectedImage = media.find(m => m.url === value);
+                  if (context && selectedImage) {
+                    const convertedSlide: ImageSlide = {
+                      id: editingSlide.id!,
+                      type: 'image',
+                      title: selectedImage.name,
+                      imageUrl: value,
+                    };
+                    handleUpdateSlide(context.sectionId, context.subsectionId, convertedSlide);
+                    setEditingSlide(null);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose an image" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {media.filter(m => m.type === 'image').map(m => (
+                    <SelectItem key={m.id} value={m.url || ''}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {media.filter(m => m.type === 'image').length === 0 && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  No images available. Upload images in Media Library first.
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
