@@ -20,6 +20,7 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
   const [isUploading, setIsUploading] = useState(false);
   const [isTestingEsv, setIsTestingEsv] = useState(false);
   const [isTestingNlt, setIsTestingNlt] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleVersionChange = (version: BibleVersionType) => {
     setSelectedVersion(version);
@@ -157,6 +158,48 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
     }
   };
 
+  const handleExportVersion = () => {
+    if (selectedVersion === 'esv' || selectedVersion === 'nlt') {
+      toast.error('Cannot export API-based versions', {
+        description: 'Only offline versions (KJV, ASV, WEB) can be exported',
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const data = BibleParser.exportCurrentVersion();
+      if (!data) {
+        toast.error('No data to export');
+        return;
+      }
+
+      // Create downloadable JSON file
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${selectedVersion}-bible-export.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success('Bible version exported!', {
+        description: `${selectedVersion.toUpperCase()} downloaded successfully`,
+      });
+    } catch (error) {
+      toast.error('Export failed', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -191,6 +234,20 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
           <p className="text-xs text-muted-foreground">
             Select your preferred Bible translation
           </p>
+          
+          {/* Export Button for Offline Versions */}
+          {(selectedVersion === 'kjv' || selectedVersion === 'asv' || selectedVersion === 'web' || selectedVersion === 'custom') && (
+            <Button 
+              onClick={handleExportVersion} 
+              variant="outline" 
+              size="sm"
+              disabled={isExporting}
+              className="w-full mt-2"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {isExporting ? 'Exporting...' : `Export ${selectedVersion.toUpperCase()}`}
+            </Button>
+          )}
         </div>
 
         {/* ESV API Key Section */}

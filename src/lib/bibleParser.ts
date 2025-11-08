@@ -487,4 +487,23 @@ export class BibleParser {
     if (esvKey) esvApiKey = esvKey;
     if (nltKey) nltApiKey = nltKey;
   }
+
+  static exportCurrentVersion(): any {
+    if (currentVersion === 'esv' || currentVersion === 'nlt') {
+      console.error('Cannot export API-based versions');
+      return null;
+    }
+
+    if (currentVersion === 'custom' && customBibleData) {
+      return {
+        version: 'custom',
+        data: customBibleData,
+      };
+    }
+
+    return {
+      version: currentVersion,
+      data: getBibleData(),
+    };
+  }
 }
