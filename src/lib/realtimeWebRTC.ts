@@ -237,19 +237,19 @@ export class RealtimeWebRTC {
     }
   }
 
-  private processTranscript(text: string) {
-    const verse = BibleParser.parseReference(text);
+  private async processTranscript(text: string) {
+    const verse = await BibleParser.parseReference(text);
     if (verse) {
       console.log('Verse detected from transcript:', verse);
       this.onVerseDetected(verse);
     }
   }
 
-  private handleFunctionCall(name: string, args: string) {
+  private async handleFunctionCall(name: string, args: string) {
     if (name === 'display_verse') {
       try {
         const params = JSON.parse(args);
-        const verse = BibleParser.getVerse(params.book, params.chapter, params.verse);
+        const verse = await BibleParser.getVerse(params.book, params.chapter, params.verse);
         console.log('Function call - display verse:', verse);
         this.onVerseDetected(verse, { method: 'explicit' });
       } catch (error) {
@@ -258,7 +258,7 @@ export class RealtimeWebRTC {
     } else if (name === 'suggest_verse_from_description') {
       try {
         const params = JSON.parse(args);
-        const verse = BibleParser.getVerse(params.book, params.chapter, params.verse);
+        const verse = await BibleParser.getVerse(params.book, params.chapter, params.verse);
         console.log('Function call - suggest verse from description:', {
           verse,
           description: params.description,

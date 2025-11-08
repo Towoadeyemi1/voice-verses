@@ -10,14 +10,14 @@ const Confidence = () => {
 
   useEffect(() => {
     // Subscribe to verse updates
-    const unsubscribe = syncService.subscribe((message) => {
+    const unsubscribe = syncService.subscribe(async (message) => {
       if (message.type === 'VERSE_UPDATE' && message.data.verse !== undefined) {
         const verse = message.data.verse;
         setCurrentVerse(verse);
         
         if (verse) {
           // Get next verse
-          const nextVerse = BibleParser.getVerse(
+          const nextVerse = await BibleParser.getVerse(
             verse.book,
             verse.chapter,
             verse.verse + 1

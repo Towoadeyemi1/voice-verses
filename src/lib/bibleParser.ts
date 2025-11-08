@@ -17,6 +17,8 @@ const webData = convertBibleSuperSearchToStandard(webRawData as any);
 
 let currentVersion: BibleVersionType = 'kjv';
 let customBibleData: BibleBook[] | null = null;
+let esvApiKey: string | null = null;
+let nltApiKey: string | null = null;
 
 const getBibleData = (): BibleBook[] => {
   if (currentVersion === 'custom' && customBibleData) {
@@ -39,7 +41,7 @@ const bibleBooks = kjvData as BibleBook[];
 export class BibleParser {
   private static context: BibleContext | null = null;
 
-  static parseReference(text: string): BibleVerse | null {
+  static async parseReference(text: string): Promise<BibleVerse | null> {
     // Clean up the input
     const cleanText = text.trim();
     
@@ -52,7 +54,7 @@ export class BibleParser {
       const [, book, chapter, verse] = fullMatch;
       const normalizedBook = this.normalizeBook(book.trim());
       this.context = { book: normalizedBook, chapter: parseInt(chapter) };
-      return this.getVerse(normalizedBook, parseInt(chapter), parseInt(verse));
+      return await this.getVerse(normalizedBook, parseInt(chapter), parseInt(verse));
     }
 
     // Pattern 2: Compact format without separators (e.g., "john316", "psalm231")
@@ -68,7 +70,7 @@ export class BibleParser {
       
       if (chapterNum > 0 && chapterNum <= 150 && verseNum > 0) {
         this.context = { book: normalizedBook, chapter: chapterNum };
-        return this.getVerse(normalizedBook, chapterNum, verseNum);
+        return await this.getVerse(normalizedBook, chapterNum, verseNum);
       }
     }
 
@@ -81,7 +83,7 @@ export class BibleParser {
       const normalizedBook = this.normalizeBook(book.trim());
       this.context = { book: normalizedBook, chapter: parseInt(chapter) };
       // Return first verse of chapter
-      return this.getVerse(normalizedBook, parseInt(chapter), 1);
+      return await this.getVerse(normalizedBook, parseInt(chapter), 1);
     }
 
     // Pattern 4: Verse only (e.g., "verse 17", "17") - uses context
@@ -91,14 +93,23 @@ export class BibleParser {
       
       if (verseMatch) {
         const verse = parseInt(verseMatch[1]);
-        return this.getVerse(this.context.book, this.context.chapter, verse);
+        return await this.getVerse(this.context.book, this.context.chapter, verse);
       }
     }
 
     return null;
   }
 
-  static getVerse(bookName: string, chapterNum: number, verseNum: number): BibleVerse | null {
+  static async getVerse(bookName: string, chapterNum: number, verseNum: number): Promise<BibleVerse | null> {
+    // Handle API versions
+    if (currentVersion === 'esv') {
+      return await this.getVerseFromESV(bookName, chapterNum, verseNum);
+    }
+    if (currentVersion === 'nlt') {
+      return await this.getVerseFromNLT(bookName, chapterNum, verseNum);
+    }
+
+    // Handle offline versions
     const books = getBibleData();
     const book = books.find(b => 
       b.name.toLowerCase() === bookName.toLowerCase() || 
@@ -128,6 +139,84 @@ export class BibleParser {
       verse: verseNum,
       text: verseText,
     };
+  }
+
+  private static async getVerseFromESV(bookName: string, chapterNum: number, verseNum: number): Promise<BibleVerse | null> {
+    if (!esvApiKey) {
+      console.error('ESV API key not configured');
+      return null;
+    }
+
+    try {
+      const reference = `${bookName} ${chapterNum}:${verseNum}`;
+      const response = await fetch(
+        `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(reference)}&include-headings=false&include-footnotes=false&include-verse-numbers=false&include-short-copyright=false&include-passage-references=false`,
+        {
+          headers: {
+            'Authorization': `Token ${esvApiKey}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error('ESV API error:', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      const text = data.passages?.[0]?.trim();
+      
+      if (!text) {
+        console.error('No text returned from ESV API');
+        return null;
+      }
+
+      return {
+        book: bookName,
+        chapter: chapterNum,
+        verse: verseNum,
+        text: text,
+      };
+    } catch (error) {
+      console.error('Error fetching from ESV API:', error);
+      return null;
+    }
+  }
+
+  private static async getVerseFromNLT(bookName: string, chapterNum: number, verseNum: number): Promise<BibleVerse | null> {
+    if (!nltApiKey) {
+      console.error('NLT API key not configured');
+      return null;
+    }
+
+    try {
+      const reference = `${bookName} ${chapterNum}:${verseNum}`;
+      const response = await fetch(
+        `https://api.nlt.to/api/passages?ref=${encodeURIComponent(reference)}&key=${nltApiKey}&version=NLT`
+      );
+
+      if (!response.ok) {
+        console.error('NLT API error:', response.status);
+        return null;
+      }
+
+      const text = await response.text();
+      
+      if (!text) {
+        console.error('No text returned from NLT API');
+        return null;
+      }
+
+      return {
+        book: bookName,
+        chapter: chapterNum,
+        verse: verseNum,
+        text: text.trim(),
+      };
+    } catch (error) {
+      console.error('Error fetching from NLT API:', error);
+      return null;
+    }
   }
 
   static normalizeBook(book: string): string {
@@ -327,5 +416,27 @@ export class BibleParser {
   static initializeVersion(): void {
     this.getVersion();
     this.loadCustomBible();
+    this.loadApiKeys();
+  }
+
+  static setApiKey(version: 'esv' | 'nlt', apiKey: string): void {
+    if (version === 'esv') {
+      esvApiKey = apiKey;
+      localStorage.setItem('cornerstone-esv-api-key', apiKey);
+    } else if (version === 'nlt') {
+      nltApiKey = apiKey;
+      localStorage.setItem('cornerstone-nlt-api-key', apiKey);
+    }
+  }
+
+  static getApiKey(version: 'esv' | 'nlt'): string | null {
+    return version === 'esv' ? esvApiKey : nltApiKey;
+  }
+
+  static loadApiKeys(): void {
+    const esvKey = localStorage.getItem('cornerstone-esv-api-key');
+    const nltKey = localStorage.getItem('cornerstone-nlt-api-key');
+    if (esvKey) esvApiKey = esvKey;
+    if (nltKey) nltApiKey = nltKey;
   }
 }

@@ -27,14 +27,14 @@ export const ManualSearch = ({ onVerseSelect }: ManualSearchProps) => {
     return () => window.removeEventListener('keydown', handleGlobalKeyPress);
   }, []);
 
-  const parseAndPreview = (text: string) => {
+  const parseAndPreview = async (text: string) => {
     if (!text.trim()) {
       setPreview(null);
       setError('');
       return;
     }
 
-    const verse = BibleParser.parseReference(text);
+    const verse = await BibleParser.parseReference(text);
     
     if (verse) {
       setPreview(verse);

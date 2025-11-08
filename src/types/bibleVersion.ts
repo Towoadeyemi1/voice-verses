@@ -1,4 +1,4 @@
-export type BibleVersionType = 'kjv' | 'asv' | 'web' | 'api' | 'custom';
+export type BibleVersionType = 'kjv' | 'asv' | 'web' | 'esv' | 'nlt' | 'custom';
 
 export interface BibleVersionInfo {
   id: BibleVersionType;
@@ -29,11 +29,20 @@ export const BIBLE_VERSIONS: BibleVersionInfo[] = [
     isOffline: true,
   },
   {
-    id: 'api',
-    name: 'API',
-    fullName: 'Bible API (ESV, NIV, etc.)',
+    id: 'esv',
+    name: 'ESV',
+    fullName: 'English Standard Version (Online)',
     isOffline: false,
     requiresApi: true,
+    apiName: 'ESV API (api.esv.org)',
+  },
+  {
+    id: 'nlt',
+    name: 'NLT',
+    fullName: 'New Living Translation (Online)',
+    isOffline: false,
+    requiresApi: true,
+    apiName: 'NLT API (api.nlt.to)',
   },
   {
     id: 'custom',

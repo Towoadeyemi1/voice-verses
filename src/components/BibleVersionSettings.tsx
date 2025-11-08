@@ -15,7 +15,8 @@ interface BibleVersionSettingsProps {
 
 export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleVersionSettingsProps) => {
   const [selectedVersion, setSelectedVersion] = useState<BibleVersionType>(currentVersion);
-  const [apiKey, setApiKey] = useState('');
+  const [esvApiKey, setEsvApiKey] = useState('');
+  const [nltApiKey, setNltApiKey] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
   const handleVersionChange = (version: BibleVersionType) => {
@@ -65,19 +66,18 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
     }
   };
 
-  const handleSaveApiKey = () => {
-    if (!apiKey.trim()) {
-      toast.error('API key required', {
-        description: 'Please enter your Bible API key',
-      });
-      return;
+  const handleSaveEsvApiKey = () => {
+    if (esvApiKey.trim()) {
+      BibleParser.setApiKey('esv', esvApiKey);
+      toast.success('ESV API key saved');
     }
+  };
 
-    localStorage.setItem('cornerstone-bible-api-key', apiKey);
-    toast.success('API key saved', {
-      description: 'You can now use API-based translations',
-    });
-    setApiKey('');
+  const handleSaveNltApiKey = () => {
+    if (nltApiKey.trim()) {
+      BibleParser.setApiKey('nlt', nltApiKey);
+      toast.success('NLT API key saved');
+    }
   };
 
   return (
@@ -116,22 +116,22 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
           </p>
         </div>
 
-        {/* API Key Section */}
-        {selectedVersion === 'api' && (
+        {/* ESV API Key Section */}
+        {selectedVersion === 'esv' && (
           <div className="space-y-2 p-4 border border-border rounded-lg bg-muted/20">
             <div className="flex items-center gap-2 mb-2">
               <Key className="w-4 h-4 text-primary" />
-              <Label htmlFor="api-key">Bible API Key</Label>
+              <Label htmlFor="esv-api-key">ESV API Key</Label>
             </div>
             <div className="flex gap-2">
               <Input
-                id="api-key"
+                id="esv-api-key"
                 type="password"
-                placeholder="Enter your ESV or Bible.com API key"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your ESV API key"
+                value={esvApiKey}
+                onChange={(e) => setEsvApiKey(e.target.value)}
               />
-              <Button onClick={handleSaveApiKey} size="sm">
+              <Button onClick={handleSaveEsvApiKey} size="sm">
                 Save
               </Button>
             </div>
@@ -143,17 +143,43 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                ESV API
+                api.esv.org
               </a>
-              {' '}or{' '}
+              {' '}(free for non-commercial/church use)
+            </p>
+          </div>
+        )}
+
+        {/* NLT API Key Section */}
+        {selectedVersion === 'nlt' && (
+          <div className="space-y-2 p-4 border border-border rounded-lg bg-muted/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Key className="w-4 h-4 text-primary" />
+              <Label htmlFor="nlt-api-key">NLT API Key</Label>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                id="nlt-api-key"
+                type="password"
+                placeholder="Enter your NLT API key"
+                value={nltApiKey}
+                onChange={(e) => setNltApiKey(e.target.value)}
+              />
+              <Button onClick={handleSaveNltApiKey} size="sm">
+                Save
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Get a free API key from{' '}
               <a 
-                href="https://scripture.api.bible" 
+                href="https://api.nlt.to" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                Bible.com API
+                api.nlt.to
               </a>
+              {' '}(free for non-commercial/church use)
             </p>
           </div>
         )}

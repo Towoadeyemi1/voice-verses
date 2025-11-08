@@ -161,7 +161,7 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
     return matchCount >= 3;
   };
 
-  const processTranscript = (text: string, verseOverride?: any) => {
+  const processTranscript = async (text: string, verseOverride?: any) => {
     const startTime = performance.now();
     
     // Clear any pending auto-advance
@@ -193,7 +193,7 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
       console.log('Range detected:', { start, end });
     }
     
-    const verse = verseOverride || BibleParser.parseReference(text);
+    const verse = verseOverride || await BibleParser.parseReference(text);
     const endTime = performance.now();
     const latency = Math.round(endTime - startTime);
 
@@ -239,7 +239,7 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
         setReadingMode('reading');
         
         // Check if next verse is being read
-        const nextVerse = BibleParser.getVerse(
+        const nextVerse = await BibleParser.getVerse(
           currentVerse.book,
           currentVerse.chapter,
           currentVerse.verse + 1
@@ -253,8 +253,8 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
         
         // If in range and reading mode, schedule auto-advance after brief pause
         if (verseRange && currentVerse.verse < verseRange.end) {
-          autoAdvanceTimer.current = setTimeout(() => {
-            const next = BibleParser.getVerse(
+          autoAdvanceTimer.current = setTimeout(async () => {
+            const next = await BibleParser.getVerse(
               currentVerse.book,
               currentVerse.chapter,
               currentVerse.verse + 1
