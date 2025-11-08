@@ -8,7 +8,7 @@ import { SettingsPanel } from './SettingsPanel';
 import { ManualSearch } from './ManualSearch';
 import { BibleParser } from '@/lib/bibleParser';
 import { DisplayedVerse, AudioStatus, BibleVerse } from '@/types/bible';
-import { Maximize2, Settings, Loader2 } from 'lucide-react';
+import { Maximize2, Settings, Loader2, MonitorPlay } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncService } from '@/lib/syncService';
 import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
@@ -37,6 +37,10 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
   
   const realtimeChat = useRef<RealtimeWebRTC | null>(null);
   const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleOpenLowerThird = () => {
+    window.open('/lower-third', '_blank', 'width=1280,height=720');
+  };
 
   // Cleanup on unmount
   useEffect(() => {
@@ -287,6 +291,10 @@ export const ControlPanel = ({ onOpenProjection }: ControlPanelProps) => {
             >
               <Settings className="w-5 h-5 mr-2" />
               Settings
+            </Button>
+            <Button onClick={handleOpenLowerThird} variant="outline" size="lg">
+              <MonitorPlay className="w-5 h-5 mr-2" />
+              Lower Third
             </Button>
             <Button onClick={onOpenProjection} size="lg" className="gradient-divine">
               <Maximize2 className="w-5 h-5 mr-2" />

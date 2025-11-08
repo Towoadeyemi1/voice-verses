@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Projection from "./pages/Projection";
+import LowerThird from "./pages/LowerThird";
 import Confidence from "./pages/Confidence";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
@@ -20,6 +21,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/projection" element={<Projection />} />
+          <Route path="/lower-third" element={<LowerThird />} />
           <Route path="/confidence" element={<Confidence />} />
           <Route path="/install" element={<Install />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
