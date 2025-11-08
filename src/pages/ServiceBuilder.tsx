@@ -476,6 +476,149 @@ const ServiceBuilder = () => {
     slides.forEach(slide => addSlideToSubsection(slide));
   };
 
+  const handleDownloadTemplate = () => {
+    const template = `Song Title,Lyrics
+"Amazing Grace","Verse 1
+Amazing grace how sweet the sound
+That saved a wretch like me
+
+Chorus
+I once was lost but now I'm found
+Was blind but now I see
+
+Verse 2
+Through many dangers toils and snares
+I have already come"
+"Example Song 2","Verse 1
+First verse line 1
+First verse line 2
+
+Chorus
+Chorus line 1
+Chorus line 2"`;
+
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'worship-songs-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Template downloaded');
+  };
+
+  const handleImportWorshipSongs = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Please upload a CSV file');
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n');
+      
+      // Skip header row
+      const dataLines = lines.slice(1).filter(line => line.trim());
+      
+      if (dataLines.length === 0) {
+        toast.error('No songs found in template');
+        return;
+      }
+
+      // Find or create Worship section
+      let worshipSection = service?.sections?.find(s => s.name.toLowerCase() === 'worship');
+      
+      if (!worshipSection) {
+        worshipSection = {
+          id: `section-${Date.now()}`,
+          name: 'Worship',
+          subsections: [],
+        };
+      }
+
+      const parsedSongs: ServiceSubsection[] = [];
+
+      dataLines.forEach((line, index) => {
+        // Simple CSV parsing (handles quoted fields)
+        const match = line.match(/^"([^"]+)","([^"]+)"$/);
+        if (!match) return;
+
+        const [, songTitle, lyrics] = match;
+        
+        // Parse lyrics into slides (separated by blank lines)
+        const sections = lyrics.split(/\n\n+/).filter(s => s.trim());
+        const slides: LyricsSlide[] = sections.map((section, slideIndex) => {
+          const lines = section.trim().split('\n');
+          const sectionName = lines[0].toLowerCase().includes('verse') ? 'verse' :
+                             lines[0].toLowerCase().includes('chorus') ? 'chorus' :
+                             lines[0].toLowerCase().includes('bridge') ? 'bridge' : undefined;
+          const content = sectionName ? lines.slice(1).join('\n') : section;
+          
+          return {
+            id: `slide-import-${Date.now()}-${index}-${slideIndex}`,
+            type: 'lyrics',
+            title: `${songTitle} - Slide ${slideIndex + 1}`,
+            songTitle,
+            slideNumber: slideIndex + 1,
+            totalSlides: sections.length,
+            content: content.trim(),
+            section: sectionName,
+          };
+        });
+
+        parsedSongs.push({
+          id: `subsection-import-${Date.now()}-${index}`,
+          name: songTitle,
+          slides,
+        });
+      });
+
+      // Update service with imported songs
+      setService(prev => {
+        if (!prev) return null;
+        
+        const existingSection = prev.sections?.find(s => s.name.toLowerCase() === 'worship');
+        
+        if (existingSection) {
+          // Add to existing Worship section
+          return {
+            ...prev,
+            sections: prev.sections.map(s => 
+              s.id === existingSection.id 
+                ? { ...s, subsections: [...s.subsections, ...parsedSongs] }
+                : s
+            ),
+          };
+        } else {
+          // Create new Worship section
+          return {
+            ...prev,
+            sections: [
+              ...(prev.sections || []),
+              { ...worshipSection!, subsections: parsedSongs }
+            ],
+          };
+        }
+      });
+
+      toast.success(`Imported ${parsedSongs.length} song(s) to Worship section`);
+    };
+
+    reader.onerror = () => {
+      toast.error('Failed to read file');
+    };
+
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
   const addSlideToSubsection = (slide: Slide) => {
     if (!selectedSubsection) return;
     setService(prev => prev ? {
@@ -733,6 +876,29 @@ const ServiceBuilder = () => {
                   <FolderPlus className="w-4 h-4 mr-2" />
                   Add Main Section
                 </Button>
+              </div>
+
+              <div className="border-t pt-4">
+                <Label className="mb-2 block">Worship Team Import</Label>
+                <div className="space-y-2">
+                  <Button onClick={handleDownloadTemplate} variant="outline" className="w-full justify-start" size="sm">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Download Template
+                  </Button>
+                  <Label htmlFor="worship-import" className="cursor-pointer">
+                    <div className="flex items-center justify-start w-full px-4 py-2 text-sm font-medium border rounded-md hover:bg-accent">
+                      <Music className="w-4 h-4 mr-2" />
+                      Import Worship Songs
+                    </div>
+                  </Label>
+                  <Input
+                    id="worship-import"
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={handleImportWorshipSongs}
+                  />
+                </div>
               </div>
 
               {selectedSection && (
