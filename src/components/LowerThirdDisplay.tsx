@@ -6,7 +6,10 @@ interface LowerThirdDisplayProps {
 }
 
 export type LowerThirdTemplate = 'classic' | 'modern' | 'minimal' | 'elegant' | 'bold';
-export type LowerThirdPosition = 'bottom-left' | 'bottom-center' | 'bottom-right';
+export type LowerThirdPosition = 
+  | 'top-left' | 'top-center' | 'top-right'
+  | 'middle-left' | 'middle-center' | 'middle-right'
+  | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
 export interface LowerThirdSettings {
   template: LowerThirdTemplate;
@@ -62,14 +65,35 @@ export const LowerThirdDisplay = ({ verse }: LowerThirdDisplayProps) => {
   }, []);
 
   const getPositionClasses = () => {
+    const padding = 'p-16';
+    
     switch (settings.position) {
+      // Top positions
+      case 'top-left':
+        return `items-start justify-start ${padding}`;
+      case 'top-center':
+        return `items-start justify-center ${padding}`;
+      case 'top-right':
+        return `items-start justify-end ${padding}`;
+      
+      // Middle positions
+      case 'middle-left':
+        return `items-center justify-start ${padding}`;
+      case 'middle-center':
+        return `items-center justify-center ${padding}`;
+      case 'middle-right':
+        return `items-center justify-end ${padding}`;
+      
+      // Bottom positions
       case 'bottom-left':
-        return 'items-end justify-start pb-16 pl-16';
-      case 'bottom-right':
-        return 'items-end justify-end pb-16 pr-16';
+        return `items-end justify-start ${padding}`;
       case 'bottom-center':
+        return `items-end justify-center ${padding}`;
+      case 'bottom-right':
+        return `items-end justify-end ${padding}`;
+      
       default:
-        return 'items-end justify-center pb-16';
+        return `items-end justify-center ${padding}`;
     }
   };
 

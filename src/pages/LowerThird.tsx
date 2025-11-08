@@ -106,7 +106,13 @@ const LowerThird = () => {
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px]">
+                <SelectItem value="top-left">Top Left</SelectItem>
+                <SelectItem value="top-center">Top Center</SelectItem>
+                <SelectItem value="top-right">Top Right</SelectItem>
+                <SelectItem value="middle-left">Middle Left</SelectItem>
+                <SelectItem value="middle-center">Middle Center</SelectItem>
+                <SelectItem value="middle-right">Middle Right</SelectItem>
                 <SelectItem value="bottom-left">Bottom Left</SelectItem>
                 <SelectItem value="bottom-center">Bottom Center</SelectItem>
                 <SelectItem value="bottom-right">Bottom Right</SelectItem>
