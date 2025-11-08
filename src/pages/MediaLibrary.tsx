@@ -6,16 +6,24 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
-import { Image, Music, Plus, Trash2, Search } from 'lucide-react';
+import { Image, Music, Plus, Trash2, Search, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { SongSelectImport } from '@/components/SongSelectImport';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const MediaLibrary = () => {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'image' | 'song'>('all');
   const [showUpload, setShowUpload] = useState(false);
+  const [editingSong, setEditingSong] = useState<MediaItem | null>(null);
+  const [editLyrics, setEditLyrics] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,6 +69,60 @@ const MediaLibrary = () => {
     ServiceStorage.deleteMediaItem(id);
     loadMedia();
     toast.success('Media deleted');
+  };
+
+  const handleEditSong = (song: MediaItem) => {
+    setEditingSong(song);
+    setEditLyrics(song.lyrics || '');
+  };
+
+  const handleSaveLyrics = () => {
+    if (!editingSong) return;
+
+    const updatedSong: MediaItem = {
+      ...editingSong,
+      lyrics: editLyrics,
+      slides: parseLyricsToSlides(editLyrics, editingSong.name),
+    };
+
+    ServiceStorage.saveMediaItem(updatedSong);
+    loadMedia();
+    setEditingSong(null);
+    toast.success('Lyrics updated');
+  };
+
+  const parseLyricsToSlides = (lyrics: string, songTitle: string) => {
+    const sections = lyrics.split(/\n\s*\n/);
+    const slides: any[] = [];
+    
+    sections.forEach((section, index) => {
+      const trimmed = section.trim();
+      if (!trimmed) return;
+      
+      let sectionType: 'verse' | 'chorus' | 'bridge' | 'outro' | undefined;
+      const sectionLower = trimmed.toLowerCase();
+      if (sectionLower.includes('verse')) sectionType = 'verse';
+      else if (sectionLower.includes('chorus')) sectionType = 'chorus';
+      else if (sectionLower.includes('bridge')) sectionType = 'bridge';
+      else if (sectionLower.includes('outro')) sectionType = 'outro';
+      
+      slides.push({
+        id: `${songTitle}-slide-${index}`,
+        type: 'lyrics',
+        title: songTitle,
+        songTitle,
+        slideNumber: slides.length + 1,
+        totalSlides: 0,
+        content: trimmed,
+        section: sectionType,
+      });
+    });
+    
+    slides.forEach(slide => {
+      slide.totalSlides = slides.length;
+    });
+    
+    return slides;
   };
 
   const filteredMedia = media.filter(m => {
@@ -196,8 +258,24 @@ const MediaLibrary = () => {
                   </div>
                 )}
                 {item.type === 'song' && (
-                  <div className="aspect-video bg-primary/10 flex items-center justify-center">
+                  <div className="aspect-video bg-primary/10 flex items-center justify-center relative">
                     <Music className="w-12 h-12 text-primary" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleEditSong(item)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteMedia(item.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
                 <div className="p-3">
@@ -210,6 +288,37 @@ const MediaLibrary = () => {
             ))}
           </div>
         )}
+
+        {/* Edit Lyrics Dialog */}
+        <Dialog open={!!editingSong} onOpenChange={() => setEditingSong(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Edit Lyrics - {editingSong?.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Lyrics</Label>
+                <Textarea
+                  value={editLyrics}
+                  onChange={(e) => setEditLyrics(e.target.value)}
+                  placeholder="Paste lyrics here... Separate sections with blank lines"
+                  className="min-h-[400px] font-mono"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Tip: Separate sections with blank lines. Include labels like "Verse 1", "Chorus", etc.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditingSong(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveLyrics}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

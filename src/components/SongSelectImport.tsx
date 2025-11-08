@@ -62,16 +62,19 @@ export const SongSelectImport = ({ onImportComplete }: SongSelectImportProps) =>
     setIsSearching(true);
     
     try {
-      // Note: SongSelect API requires authentication
-      // This is a placeholder - actual implementation would need backend edge function
-      toast.info('SongSelect Integration', {
-        description: 'Opening SongSelect to retrieve lyrics. Please copy the lyrics and paste them in the Media Library.',
+      // TODO: Call edge function with CCLI credentials
+      // const response = await fetch('/api/songselect/import', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ ccliNumber })
+      // });
+      // const data = await response.json();
+      
+      toast.info('API Integration Pending', {
+        description: 'Please provide your SongSelect API credentials to enable automatic import.',
         duration: 5000,
       });
-      
-      window.open(`https://songselect.ccli.com/songs/${ccliNumber}`, '_blank');
     } catch (error) {
-      toast.error('Failed to open SongSelect');
+      toast.error('Failed to import song');
     } finally {
       setIsSearching(false);
     }
@@ -86,14 +89,19 @@ export const SongSelectImport = ({ onImportComplete }: SongSelectImportProps) =>
     setIsSearching(true);
     
     try {
-      toast.info('SongSelect Integration', {
-        description: 'Opening SongSelect search. Please copy the lyrics and paste them in the Media Library.',
+      // TODO: Call edge function with SongSelect API
+      // const response = await fetch('/api/songselect/search', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ query: searchQuery })
+      // });
+      // const results = await response.json();
+      
+      toast.info('API Integration Pending', {
+        description: 'Please provide your SongSelect API credentials to enable search.',
         duration: 5000,
       });
-      
-      window.open(`https://songselect.ccli.com/search/results?SearchText=${encodeURIComponent(searchQuery)}`, '_blank');
     } catch (error) {
-      toast.error('Failed to open SongSelect');
+      toast.error('Failed to search');
     } finally {
       setIsSearching(false);
     }
@@ -154,8 +162,8 @@ export const SongSelectImport = ({ onImportComplete }: SongSelectImportProps) =>
         </div>
 
         <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-          <p className="font-medium mb-1">Note:</p>
-          <p>This will open SongSelect in a new tab. Copy the lyrics and paste them when adding a new song in the Media Library. A full API integration can be added with your CCLI credentials.</p>
+          <p className="font-medium mb-1">Setup Required:</p>
+          <p>Provide your SongSelect API credentials to enable automatic song import with lyrics, metadata, and CCLI information.</p>
         </div>
       </div>
     </Card>
