@@ -9,7 +9,7 @@ import { MediaItem, LyricsSlide } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 
 interface SongSelectImportProps {
-  onImportComplete?: (item: MediaItem) => void;
+  onImportComplete?: (songTitle: string, slides: LyricsSlide[]) => void;
 }
 
 export const SongSelectImport = ({ onImportComplete }: SongSelectImportProps) => {
@@ -63,14 +63,22 @@ export const SongSelectImport = ({ onImportComplete }: SongSelectImportProps) =>
     
     try {
       // TODO: Call edge function with CCLI credentials
-      // const response = await fetch('/api/songselect/import', {
+      // When implemented:
+      // const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/songselect-import`, {
       //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+      //   },
       //   body: JSON.stringify({ ccliNumber })
       // });
       // const data = await response.json();
+      // const slides = parseLyricsToSlides(data.lyrics, data.title);
+      // onImportComplete?.(data.title, slides);
+      // setCcliNumber('');
       
-      toast.info('API Integration Pending', {
-        description: 'Please provide your SongSelect API credentials to enable automatic import.',
+      toast.info('SongSelect API Integration Required', {
+        description: 'Contact your admin to configure SongSelect API credentials. Once setup, songs will be automatically imported as subsections.',
         duration: 5000,
       });
     } catch (error) {
@@ -90,14 +98,21 @@ export const SongSelectImport = ({ onImportComplete }: SongSelectImportProps) =>
     
     try {
       // TODO: Call edge function with SongSelect API
-      // const response = await fetch('/api/songselect/search', {
+      // When implemented:
+      // const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/songselect-search`, {
       //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+      //   },
       //   body: JSON.stringify({ query: searchQuery })
       // });
       // const results = await response.json();
+      // Show results in a dialog and let user select one
+      // When selected, parse lyrics and call onImportComplete
       
-      toast.info('API Integration Pending', {
-        description: 'Please provide your SongSelect API credentials to enable search.',
+      toast.info('SongSelect API Integration Required', {
+        description: 'Contact your admin to configure SongSelect API credentials. Search will return songs that can be imported as subsections.',
         duration: 5000,
       });
     } catch (error) {
@@ -108,15 +123,11 @@ export const SongSelectImport = ({ onImportComplete }: SongSelectImportProps) =>
   };
 
   return (
-    <Card className="p-6">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">SongSelect Import</h3>
-            <p className="text-sm text-muted-foreground">Import songs using your CCLI SongSelect license</p>
-          </div>
-          <ExternalLink className="w-5 h-5 text-muted-foreground" />
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <ExternalLink className="w-4 h-4 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Import from CCLI SongSelect</p>
+      </div>
 
         {/* CCLI Number Import */}
         <div className="space-y-2">
@@ -161,11 +172,10 @@ export const SongSelectImport = ({ onImportComplete }: SongSelectImportProps) =>
           </div>
         </div>
 
-        <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-          <p className="font-medium mb-1">Setup Required:</p>
-          <p>Provide your SongSelect API credentials to enable automatic song import with lyrics, metadata, and CCLI information.</p>
-        </div>
+      <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+        <p className="font-medium mb-1">Setup Required:</p>
+        <p>Contact admin to configure SongSelect API. Songs will be imported as subsections with slides in the active or Worship section.</p>
       </div>
-    </Card>
+    </div>
   );
 };

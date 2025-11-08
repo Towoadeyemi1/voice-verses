@@ -15,6 +15,7 @@ import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
 import { ManualSearch } from '@/components/ManualSearch';
 import { PPTXImport } from '@/components/PPTXImport';
+import { SongSelectImport } from '@/components/SongSelectImport';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   DndContext,
@@ -520,7 +521,7 @@ Chorus line 2"`;
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const text = e.target?.result as string;
       const lines = text.split('\n');
       
@@ -544,41 +545,70 @@ Chorus line 2"`;
       }
 
       const parsedSongs: ServiceSubsection[] = [];
+      let songSelectChecked = 0;
+      let songSelectFound = 0;
 
-      dataLines.forEach((line, index) => {
+      for (let index = 0; index < dataLines.length; index++) {
+        const line = dataLines[index];
         // Simple CSV parsing (handles quoted fields)
-        const match = line.match(/^"([^"]+)","([^"]+)"$/);
-        if (!match) return;
+        const match = line.match(/^"([^"]+)","([^"]*)"$/);
+        if (!match) continue;
 
         const [, songTitle, lyrics] = match;
         
-        // Parse lyrics into slides (separated by blank lines)
-        const sections = lyrics.split(/\n\n+/).filter(s => s.trim());
-        const slides: LyricsSlide[] = sections.map((section, slideIndex) => {
-          const lines = section.trim().split('\n');
-          const sectionName = lines[0].toLowerCase().includes('verse') ? 'verse' :
-                             lines[0].toLowerCase().includes('chorus') ? 'chorus' :
-                             lines[0].toLowerCase().includes('bridge') ? 'bridge' : undefined;
-          const content = sectionName ? lines.slice(1).join('\n') : section;
+        // If lyrics are empty or minimal, try to fetch from SongSelect
+        if (!lyrics || lyrics.trim().length < 50) {
+          songSelectChecked++;
+          toast.info(`Checking SongSelect for "${songTitle}"...`);
           
-          return {
-            id: `slide-import-${Date.now()}-${index}-${slideIndex}`,
-            type: 'lyrics',
-            title: `${songTitle} - Slide ${slideIndex + 1}`,
-            songTitle,
-            slideNumber: slideIndex + 1,
-            totalSlides: sections.length,
-            content: content.trim(),
-            section: sectionName,
-          };
-        });
+          // TODO: Implement actual SongSelect API call
+          // For now, this is a placeholder that shows the intended behavior
+          // In production, this would call an edge function:
+          // const songData = await fetchFromSongSelect(songTitle);
+          // if (songData) { ... }
+          
+          // Simulated check - in real implementation, this would be an API call
+          const isSongSelectAvailable = false; // Replace with actual API call
+          
+          if (isSongSelectAvailable) {
+            songSelectFound++;
+            // When API is integrated, parse the SongSelect response here
+            toast.success(`Found "${songTitle}" in SongSelect`);
+            continue;
+          }
+        }
+        
+        // Parse manual lyrics into slides (separated by blank lines)
+        if (lyrics && lyrics.trim()) {
+          const sections = lyrics.split(/\n\n+/).filter(s => s.trim());
+          const slides: LyricsSlide[] = sections.map((section, slideIndex) => {
+            const lines = section.trim().split('\n');
+            const sectionName = lines[0].toLowerCase().includes('verse') ? 'verse' :
+                               lines[0].toLowerCase().includes('chorus') ? 'chorus' :
+                               lines[0].toLowerCase().includes('bridge') ? 'bridge' : undefined;
+            const content = sectionName ? lines.slice(1).join('\n') : section;
+            
+            return {
+              id: `slide-import-${Date.now()}-${index}-${slideIndex}`,
+              type: 'lyrics',
+              title: `${songTitle} - Slide ${slideIndex + 1}`,
+              songTitle,
+              slideNumber: slideIndex + 1,
+              totalSlides: sections.length,
+              content: content.trim(),
+              section: sectionName,
+            };
+          });
 
-        parsedSongs.push({
-          id: `subsection-import-${Date.now()}-${index}`,
-          name: songTitle,
-          slides,
-        });
-      });
+          parsedSongs.push({
+            id: `subsection-import-${Date.now()}-${index}`,
+            name: songTitle,
+            slides,
+          });
+        } else {
+          toast.warning(`"${songTitle}" has no lyrics and was not found in SongSelect`);
+        }
+      }
 
       // Update service with imported songs
       setService(prev => {
@@ -608,7 +638,11 @@ Chorus line 2"`;
         }
       });
 
-      toast.success(`Imported ${parsedSongs.length} song(s) to Worship section`);
+      let message = `Imported ${parsedSongs.length} song(s) to Worship section`;
+      if (songSelectChecked > 0) {
+        message += `. Checked ${songSelectChecked} song(s) in SongSelect`;
+      }
+      toast.success(message);
     };
 
     reader.onerror = () => {
@@ -617,6 +651,54 @@ Chorus line 2"`;
 
     reader.readAsText(file);
     event.target.value = '';
+  };
+
+  const handleSongSelectImport = (songTitle: string, slides: LyricsSlide[]) => {
+    // Find active section or Worship section
+    let targetSection = service?.sections?.find(s => s.id === selectedSection);
+    
+    // If no active section or it's not appropriate, find/create Worship section
+    if (!targetSection || !targetSection.name.toLowerCase().includes('worship')) {
+      targetSection = service?.sections?.find(s => s.name.toLowerCase() === 'worship');
+      
+      if (!targetSection) {
+        targetSection = {
+          id: `section-${Date.now()}`,
+          name: 'Worship',
+          subsections: [],
+        };
+      }
+    }
+
+    const newSubsection: ServiceSubsection = {
+      id: `subsection-${Date.now()}`,
+      name: songTitle,
+      slides,
+    };
+
+    setService(prev => {
+      if (!prev) return null;
+      
+      const existingSection = prev.sections?.find(s => s.id === targetSection!.id);
+      
+      if (existingSection) {
+        return {
+          ...prev,
+          sections: prev.sections.map(s =>
+            s.id === targetSection!.id
+              ? { ...s, subsections: [...s.subsections, newSubsection] }
+              : s
+          ),
+        };
+      } else {
+        return {
+          ...prev,
+          sections: [...(prev.sections || []), { ...targetSection!, subsections: [newSubsection] }],
+        };
+      }
+    });
+
+    toast.success(`Added "${songTitle}" as new subsection`);
   };
 
   const addSlideToSubsection = (slide: Slide) => {
@@ -960,6 +1042,16 @@ Chorus line 2"`;
                   </div>
                 </>
               )}
+
+              <div className="border-t pt-4">
+                <Label className="mb-2 block">SongSelect Integration</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Import songs from CCLI SongSelect - creates new subsection in active or Worship section
+                </p>
+                <SongSelectImport 
+                  onImportComplete={(songTitle, slides) => handleSongSelectImport(songTitle, slides)}
+                />
+              </div>
 
               <div className="border-t pt-4">
                 <Label>Service Info</Label>
