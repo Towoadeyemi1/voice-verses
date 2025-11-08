@@ -35,7 +35,7 @@ const ServicePlanner = () => {
       name: 'New Service',
       date: selectedDate,
       startTime: '10:00',
-      slides: [],
+      sections: [],
       isTemplate: false,
     };
     ServiceStorage.saveService(newService);
@@ -151,7 +151,7 @@ const ServicePlanner = () => {
                           {service.name}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {service.startTime} • {service.slides.length} slides
+                          {service.startTime} • {service.sections?.length || 0} sections
                         </div>
                       </div>
                       
@@ -195,7 +195,7 @@ const ServicePlanner = () => {
                 <Card key={template.id} className="p-4">
                   <div className="font-semibold mb-2">{template.templateName}</div>
                   <div className="text-sm text-muted-foreground mb-3">
-                    {template.slides.length} slides
+                    {template.sections?.length || 0} sections
                   </div>
                   <Button
                     size="sm"

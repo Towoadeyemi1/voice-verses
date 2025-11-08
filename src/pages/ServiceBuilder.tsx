@@ -5,18 +5,24 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, AnnouncementSlide } from '@/types/service';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, ServiceSection, ServiceSubsection } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
-import { Book, Music, Image as ImageIcon, MessageSquare, Plus, Trash2, GripVertical, Save, Copy } from 'lucide-react';
+import { Book, Music, Image as ImageIcon, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
+import { CountdownConfiguration } from '@/components/CountdownConfig';
+import { PPTXImport } from '@/components/PPTXImport';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const ServiceBuilder = () => {
   const { serviceId } = useParams();
   const navigate = useNavigate();
   const [service, setService] = useState<Service | null>(null);
   const [editingSlide, setEditingSlide] = useState<Partial<Slide> | null>(null);
+  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const [selectedSubsection, setSelectedSubsection] = useState<string | null>(null);
   const media = ServiceStorage.getMedia();
 
   useEffect(() => {
@@ -25,6 +31,13 @@ const ServiceBuilder = () => {
       const found = services.find(s => s.id === serviceId);
       if (found) {
         setService(found);
+        // Auto-select first section/subsection
+        if (found.sections?.length > 0) {
+          setSelectedSection(found.sections[0].id);
+          if (found.sections[0].subsections?.length > 0) {
+            setSelectedSubsection(found.sections[0].subsections[0].id);
+          }
+        }
       } else {
         toast.error('Service not found');
         navigate('/service-planner');
@@ -39,7 +52,69 @@ const ServiceBuilder = () => {
     }
   };
 
+  const handleSaveAsTemplate = () => {
+    if (!service) return;
+    
+    const templateName = prompt('Enter template name:');
+    if (!templateName) return;
+
+    const template: Service = {
+      ...service,
+      id: `template-${Date.now()}`,
+      isTemplate: true,
+      templateName,
+    };
+    
+    ServiceStorage.saveService(template);
+    toast.success('Template saved');
+  };
+
+  const handleAddSection = () => {
+    const name = prompt('Enter section name (e.g., "Worship", "Sermon"):');
+    if (!name) return;
+
+    const newSection: ServiceSection = {
+      id: Date.now().toString(),
+      name,
+      subsections: [],
+    };
+
+    setService(prev => prev ? {
+      ...prev,
+      sections: [...(prev.sections || []), newSection],
+    } : null);
+    toast.success('Section added');
+  };
+
+  const handleAddSubsection = (sectionId: string) => {
+    const name = prompt('Enter subsection name (e.g., song title, testimony name):');
+    if (!name) return;
+
+    const newSubsection: ServiceSubsection = {
+      id: Date.now().toString(),
+      name,
+      slides: [],
+    };
+
+    setService(prev => prev ? {
+      ...prev,
+      sections: prev.sections?.map(section =>
+        section.id === sectionId
+          ? { ...section, subsections: [...section.subsections, newSubsection] }
+          : section
+      ) || [],
+    } : null);
+    
+    setSelectedSubsection(newSubsection.id);
+    toast.success('Subsection added');
+  };
+
   const handleAddScriptureSlide = async () => {
+    if (!selectedSubsection) {
+      toast.error('Please select a subsection first');
+      return;
+    }
+
     const reference = prompt('Enter scripture reference (e.g., John 3:16):');
     if (!reference) return;
 
@@ -56,14 +131,15 @@ const ServiceBuilder = () => {
       verse,
     };
 
-    setService(prev => prev ? {
-      ...prev,
-      slides: [...prev.slides, newSlide],
-    } : null);
+    addSlideToSubsection(newSlide);
     toast.success('Scripture slide added');
   };
 
   const handleAddLyricsSlide = () => {
+    if (!selectedSubsection) {
+      toast.error('Please select a subsection first');
+      return;
+    }
     setEditingSlide({
       type: 'lyrics',
       songTitle: '',
@@ -98,16 +174,17 @@ const ServiceBuilder = () => {
       slides.push(slide);
     });
 
-    setService(prev => prev ? {
-      ...prev,
-      slides: [...prev.slides, ...slides],
-    } : null);
-
+    slides.forEach(slide => addSlideToSubsection(slide));
     setEditingSlide(null);
     toast.success('Lyrics slides added');
   };
 
   const handleAddImageSlide = () => {
+    if (!selectedSubsection) {
+      toast.error('Please select a subsection first');
+      return;
+    }
+
     if (media.filter(m => m.type === 'image').length === 0) {
       toast.error('No images in library', {
         description: 'Upload images in Media Library first',
@@ -136,59 +213,125 @@ const ServiceBuilder = () => {
       imageUrl: selectedImage.url,
     };
 
-    setService(prev => prev ? {
-      ...prev,
-      slides: [...prev.slides, newSlide],
-    } : null);
+    addSlideToSubsection(newSlide);
     toast.success('Image slide added');
   };
 
-  const handleDeleteSlide = (id: string) => {
+  const handlePPTXImport = (slides: ImageSlide[]) => {
+    if (!selectedSubsection) {
+      toast.error('Please select a subsection first');
+      return;
+    }
+    slides.forEach(slide => addSlideToSubsection(slide));
+  };
+
+  const addSlideToSubsection = (slide: Slide) => {
+    if (!selectedSubsection) return;
+
     setService(prev => prev ? {
       ...prev,
-      slides: prev.slides.filter(s => s.id !== id),
+      sections: prev.sections?.map(section => ({
+        ...section,
+        subsections: section.subsections.map(sub =>
+          sub.id === selectedSubsection
+            ? { ...sub, slides: [...sub.slides, slide] }
+            : sub
+        ),
+      })) || [],
+    } : null);
+  };
+
+  const handleDeleteSlide = (sectionId: string, subsectionId: string, slideId: string) => {
+    setService(prev => prev ? {
+      ...prev,
+      sections: prev.sections?.map(section =>
+        section.id === sectionId
+          ? {
+              ...section,
+              subsections: section.subsections.map(sub =>
+                sub.id === subsectionId
+                  ? { ...sub, slides: sub.slides.filter(s => s.id !== slideId) }
+                  : sub
+              ),
+            }
+          : section
+      ) || [],
     } : null);
     toast.success('Slide deleted');
   };
 
-  const moveSlide = (index: number, direction: 'up' | 'down') => {
-    if (!service) return;
-    
-    const newSlides = [...service.slides];
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    if (newIndex < 0 || newIndex >= newSlides.length) return;
-    
-    [newSlides[index], newSlides[newIndex]] = [newSlides[newIndex], newSlides[index]];
-    
-    setService({
-      ...service,
-      slides: newSlides,
-    });
-  };
-
-  const handleDuplicateSlide = (slide: Slide) => {
-    const duplicated: Slide = {
-      ...slide,
-      id: Date.now().toString(),
-    };
-    
+  const handleDeleteSubsection = (sectionId: string, subsectionId: string) => {
     setService(prev => prev ? {
       ...prev,
-      slides: [...prev.slides, duplicated],
+      sections: prev.sections?.map(section =>
+        section.id === sectionId
+          ? {
+              ...section,
+              subsections: section.subsections.filter(sub => sub.id !== subsectionId),
+            }
+          : section
+      ) || [],
     } : null);
-    toast.success('Slide duplicated');
+    toast.success('Subsection deleted');
   };
 
-  const handleUpdateSlide = (updatedSlide: Slide) => {
+  const handleDeleteSection = (sectionId: string) => {
     setService(prev => prev ? {
       ...prev,
-      slides: prev.slides.map(s => s.id === updatedSlide.id ? updatedSlide : s),
+      sections: prev.sections?.filter(s => s.id !== sectionId) || [],
+    } : null);
+    toast.success('Section deleted');
+  };
+
+  const toggleSectionCollapse = (sectionId: string) => {
+    setService(prev => prev ? {
+      ...prev,
+      sections: prev.sections?.map(section =>
+        section.id === sectionId
+          ? { ...section, collapsed: !section.collapsed }
+          : section
+      ) || [],
+    } : null);
+  };
+
+  const handleUpdateSlide = (sectionId: string, subsectionId: string, updatedSlide: Slide) => {
+    setService(prev => prev ? {
+      ...prev,
+      sections: prev.sections?.map(section =>
+        section.id === sectionId
+          ? {
+              ...section,
+              subsections: section.subsections.map(sub =>
+                sub.id === subsectionId
+                  ? { ...sub, slides: sub.slides.map(s => s.id === updatedSlide.id ? updatedSlide : s) }
+                  : sub
+              ),
+            }
+          : section
+      ) || [],
     } : null);
     toast.success('Slide updated');
   };
 
-  if (!service) return <div>Loading...</div>;
+  const handleUpdateCountdown = (sectionId: string, subsectionId: string, countdown: any) => {
+    setService(prev => prev ? {
+      ...prev,
+      sections: prev.sections?.map(section =>
+        section.id === sectionId
+          ? {
+              ...section,
+              subsections: section.subsections.map(sub =>
+                sub.id === subsectionId
+                  ? { ...sub, countdown }
+                  : sub
+              ),
+            }
+          : section
+      ) || [],
+    } : null);
+  };
+
+  if (!service) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -199,6 +342,9 @@ const ServiceBuilder = () => {
             <p className="text-muted-foreground">{service.name}</p>
           </div>
           <div className="flex gap-2">
+            <Button onClick={handleSaveAsTemplate} variant="outline">
+              Save as Template
+            </Button>
             <Button onClick={handleSave}>
               <Save className="w-4 h-4 mr-2" />
               Save
@@ -210,110 +356,189 @@ const ServiceBuilder = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Add Slide Buttons */}
+          {/* Left Panel - Add Content */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Add Slide</h2>
-            <div className="space-y-2">
-              <Button onClick={handleAddScriptureSlide} className="w-full justify-start">
-                <Book className="w-4 h-4 mr-2" />
-                Scripture
-              </Button>
-              <Button onClick={handleAddLyricsSlide} className="w-full justify-start">
-                <Music className="w-4 h-4 mr-2" />
-                Song Lyrics
-              </Button>
-              <Button onClick={handleAddImageSlide} className="w-full justify-start">
-                <ImageIcon className="w-4 h-4 mr-2" />
-                Image
-              </Button>
-            </div>
+            <h2 className="text-xl font-semibold mb-4">Add Content</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <Label className="mb-2 block">Sections</Label>
+                <Button onClick={handleAddSection} variant="outline" className="w-full justify-start">
+                  <FolderPlus className="w-4 h-4 mr-2" />
+                  Add Main Section
+                </Button>
+              </div>
 
-            <div className="mt-6 pt-6 border-t">
-              <Label>Service Info</Label>
-              <Input
-                value={service.name}
-                onChange={(e) => setService({...service, name: e.target.value})}
-                className="mt-2 mb-2"
-                placeholder="Service name"
-              />
-              <Input
-                type="time"
-                value={service.startTime}
-                onChange={(e) => setService({...service, startTime: e.target.value})}
-                className="mt-2"
-              />
+              {selectedSection && (
+                <div>
+                  <Label className="mb-2 block">Subsections</Label>
+                  <Button
+                    onClick={() => handleAddSubsection(selectedSection)}
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    <FilePlus className="w-4 h-4 mr-2" />
+                    Add Subsection
+                  </Button>
+                </div>
+              )}
+
+              {selectedSubsection && (
+                <>
+                  <div className="border-t pt-4">
+                    <Label className="mb-2 block">Add Slides</Label>
+                    <div className="space-y-2">
+                      <Button onClick={handleAddScriptureSlide} variant="outline" className="w-full justify-start">
+                        <Book className="w-4 h-4 mr-2" />
+                        Scripture
+                      </Button>
+                      <Button onClick={handleAddLyricsSlide} variant="outline" className="w-full justify-start">
+                        <Music className="w-4 h-4 mr-2" />
+                        Song Lyrics
+                      </Button>
+                      <Button onClick={handleAddImageSlide} variant="outline" className="w-full justify-start">
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Image
+                      </Button>
+                      <PPTXImport onImport={handlePPTXImport} />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="border-t pt-4">
+                <Label>Service Info</Label>
+                <Input
+                  value={service.name}
+                  onChange={(e) => setService({...service, name: e.target.value})}
+                  className="mt-2 mb-2"
+                  placeholder="Service name"
+                />
+                <Input
+                  type="time"
+                  value={service.startTime}
+                  onChange={(e) => setService({...service, startTime: e.target.value})}
+                  className="mt-2"
+                />
+              </div>
             </div>
           </Card>
 
-          {/* Slides List */}
+          {/* Right Panel - Service Structure */}
           <Card className="p-6 lg:col-span-2">
             <h2 className="text-xl font-semibold mb-4">
-              Slides ({service.slides.length})
+              Service Structure
             </h2>
 
-            {service.slides.length === 0 ? (
+            {(!service.sections || service.sections.length === 0) ? (
               <div className="text-center py-12 text-muted-foreground">
-                No slides yet. Add your first slide using the buttons on the left.
+                No sections yet. Add your first section to get started.
               </div>
             ) : (
-              <div className="space-y-2">
-                {service.slides.map((slide, index) => (
-                  <Card key={slide.id} className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => moveSlide(index, 'up')}
-                          disabled={index === 0}
-                        >
-                          ↑
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => moveSlide(index, 'down')}
-                          disabled={index === service.slides.length - 1}
-                        >
-                          ↓
-                        </Button>
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          {slide.type === 'scripture' && <Book className="w-4 h-4 text-primary" />}
-                          {slide.type === 'lyrics' && <Music className="w-4 h-4 text-primary" />}
-                          {slide.type === 'image' && <ImageIcon className="w-4 h-4 text-primary" />}
-                          {slide.type === 'announcement' && <MessageSquare className="w-4 h-4 text-primary" />}
-                          <span className="font-medium">{slide.title}</span>
+              <div className="space-y-3">
+                {service.sections.map((section) => (
+                  <Collapsible
+                    key={section.id}
+                    open={!section.collapsed}
+                    onOpenChange={() => toggleSectionCollapse(section.id)}
+                  >
+                    <Card className={`${selectedSection === section.id ? 'border-primary' : ''}`}>
+                      <div className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-1">
+                            <CollapsibleTrigger asChild>
+                              <Button size="sm" variant="ghost">
+                                {section.collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                              </Button>
+                            </CollapsibleTrigger>
+                            <button
+                              onClick={() => setSelectedSection(section.id)}
+                              className="flex-1 text-left font-semibold text-lg"
+                            >
+                              {section.name}
+                            </button>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleAddSubsection(section.id)}
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteSection(section.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground capitalize">
-                          {slide.type}
-                        </div>
-                      </div>
 
-                      <div className="flex gap-1">
-                        <SlideConfiguration 
-                          slide={slide} 
-                          onUpdate={handleUpdateSlide}
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDuplicateSlide(slide)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteSlide(slide.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <CollapsibleContent className="mt-4">
+                          <div className="space-y-2 ml-8">
+                            {section.subsections.map((subsection) => (
+                              <Card
+                                key={subsection.id}
+                                className={`p-3 ${selectedSubsection === subsection.id ? 'border-primary bg-primary/5' : ''}`}
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <button
+                                    onClick={() => setSelectedSubsection(subsection.id)}
+                                    className="flex-1 text-left font-medium"
+                                  >
+                                    {subsection.name}
+                                  </button>
+                                  <div className="flex gap-1">
+                                    <CountdownConfiguration
+                                      config={subsection.countdown}
+                                      onUpdate={(config) => handleUpdateCountdown(section.id, subsection.id, config)}
+                                    />
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => handleDeleteSubsection(section.id, subsection.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                {subsection.slides.length > 0 && (
+                                  <div className="space-y-1 mt-2 pl-4 border-l-2 border-border">
+                                    {subsection.slides.map((slide) => (
+                                      <div key={slide.id} className="flex items-center justify-between p-2 rounded hover:bg-muted/50">
+                                        <div className="flex items-center gap-2 flex-1">
+                                          {slide.type === 'scripture' && <Book className="w-3 h-3 text-primary" />}
+                                          {slide.type === 'lyrics' && <Music className="w-3 h-3 text-primary" />}
+                                          {slide.type === 'image' && <ImageIcon className="w-3 h-3 text-primary" />}
+                                          <span className="text-sm">{slide.title}</span>
+                                        </div>
+                                        <div className="flex gap-1">
+                                          <SlideConfiguration
+                                            slide={slide}
+                                            onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)}
+                                          />
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)}
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </Card>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
                       </div>
-                    </div>
-                  </Card>
+                    </Card>
+                  </Collapsible>
                 ))}
               </div>
             )}

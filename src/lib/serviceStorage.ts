@@ -9,10 +9,28 @@ export class ServiceStorage {
     if (!data) return [];
     const services = JSON.parse(data);
     // Convert date strings back to Date objects
-    return services.map((s: any) => ({
-      ...s,
-      date: new Date(s.date),
-    }));
+    return services.map((s: any) => {
+      // Migrate old structure to new section-based structure
+      if (s.slides && !s.sections) {
+        return {
+          ...s,
+          date: new Date(s.date),
+          sections: [{
+            id: 'legacy',
+            name: 'Service',
+            subsections: [{
+              id: 'legacy-main',
+              name: 'Main',
+              slides: s.slides,
+            }],
+          }],
+        };
+      }
+      return {
+        ...s,
+        date: new Date(s.date),
+      };
+    });
   }
 
   static saveService(service: Service): void {

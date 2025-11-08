@@ -2,6 +2,15 @@ import { BibleVerse } from './bible';
 
 export type SlideType = 'scripture' | 'lyrics' | 'image' | 'announcement';
 
+export interface CountdownConfig {
+  enabled: boolean;
+  durationMinutes: number;
+  displayTargets: ('main' | 'confidence' | 'stream')[];
+  alertEnabled: boolean;
+  alertType?: 'yellow' | 'red';
+  alertThresholdSeconds?: number;
+}
+
 export interface BaseSlide {
   id: string;
   type: SlideType;
@@ -48,14 +57,31 @@ export interface AnnouncementSlide extends BaseSlide {
 
 export type Slide = ScriptureSlide | LyricsSlide | ImageSlide | AnnouncementSlide;
 
+export interface ServiceSubsection {
+  id: string;
+  name: string;
+  slides: Slide[];
+  countdown?: CountdownConfig;
+  autoStartCountdown?: boolean; // for songs vs manual testimonies
+}
+
+export interface ServiceSection {
+  id: string;
+  name: string;
+  subsections: ServiceSubsection[];
+  collapsed?: boolean;
+}
+
 export interface Service {
   id: string;
   name: string;
   date: Date;
   startTime: string;
-  slides: Slide[];
+  sections: ServiceSection[];
   isTemplate: boolean;
   templateName?: string;
+  // Legacy support
+  slides?: Slide[];
 }
 
 export interface MediaItem {
