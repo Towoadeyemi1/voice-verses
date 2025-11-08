@@ -9,6 +9,9 @@ import LowerThird from "./pages/LowerThird";
 import Confidence from "./pages/Confidence";
 import DisplayManager from "./pages/DisplayManager";
 import Install from "./pages/Install";
+import ServicePlanner from "./pages/ServicePlanner";
+import ServiceBuilder from "./pages/ServiceBuilder";
+import MediaLibrary from "./pages/MediaLibrary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +28,9 @@ const App = () => (
           <Route path="/lower-third" element={<LowerThird />} />
           <Route path="/confidence" element={<Confidence />} />
           <Route path="/display-manager" element={<DisplayManager />} />
+          <Route path="/service-planner" element={<ServicePlanner />} />
+          <Route path="/service-builder/:serviceId" element={<ServiceBuilder />} />
+          <Route path="/media-library" element={<MediaLibrary />} />
           <Route path="/install" element={<Install />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

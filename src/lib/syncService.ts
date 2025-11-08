@@ -1,13 +1,16 @@
 import { BibleVerse } from '@/types/bible';
+import { Slide } from '@/types/service';
 
 export type SyncMessage = {
-  type: 'VERSE_UPDATE' | 'STATUS_UPDATE';
+  type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE';
   data: {
     verse?: BibleVerse | null;
     timestamp?: Date;
     latency?: number;
     isListening?: boolean;
     transcript?: string;
+    slide?: Slide | null;
+    index?: number;
   };
 };
 
