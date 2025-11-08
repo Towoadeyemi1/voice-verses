@@ -1,11 +1,38 @@
 import kjvData from '@/data/kjv-complete.json';
+import asvRawData from '@/data/asv-complete.json';
+import webRawData from '@/data/web-complete.json';
 import { BibleVerse, BibleContext } from '@/types/bible';
+import { BibleVersionType } from '@/types/bibleVersion';
+import { convertBibleSuperSearchToStandard } from './bibleConverter';
 
 interface BibleBook {
   abbrev: string;
   name: string;
   chapters: string[][];
 }
+
+// Convert ASV and WEB to standard format on load
+const asvData = convertBibleSuperSearchToStandard(asvRawData as any);
+const webData = convertBibleSuperSearchToStandard(webRawData as any);
+
+let currentVersion: BibleVersionType = 'kjv';
+let customBibleData: BibleBook[] | null = null;
+
+const getBibleData = (): BibleBook[] => {
+  if (currentVersion === 'custom' && customBibleData) {
+    return customBibleData;
+  }
+  
+  switch (currentVersion) {
+    case 'asv':
+      return asvData;
+    case 'web':
+      return webData;
+    case 'kjv':
+    default:
+      return kjvData as BibleBook[];
+  }
+};
 
 const bibleBooks = kjvData as BibleBook[];
 
@@ -72,7 +99,8 @@ export class BibleParser {
   }
 
   static getVerse(bookName: string, chapterNum: number, verseNum: number): BibleVerse | null {
-    const book = bibleBooks.find(b => 
+    const books = getBibleData();
+    const book = books.find(b => 
       b.name.toLowerCase() === bookName.toLowerCase() || 
       b.abbrev.toLowerCase() === bookName.toLowerCase()
     );
@@ -246,7 +274,8 @@ export class BibleParser {
     if (normalized) return normalized;
     
     // Try to find book by partial match
-    const found = bibleBooks.find(b => 
+    const books = getBibleData();
+    const found = books.find(b => 
       b.name.toLowerCase().startsWith(book.toLowerCase())
     );
     
@@ -262,11 +291,41 @@ export class BibleParser {
   }
 
   static getAllBooks(): string[] {
-    return bibleBooks.map(b => b.name);
+    const books = getBibleData();
+    return books.map(b => b.name);
   }
 
   static getBookChapterCount(bookName: string): number {
-    const book = bibleBooks.find(b => b.name.toLowerCase() === bookName.toLowerCase());
+    const books = getBibleData();
+    const book = books.find(b => b.name.toLowerCase() === bookName.toLowerCase());
     return book ? book.chapters.length : 0;
+  }
+
+  static setVersion(version: BibleVersionType): void {
+    currentVersion = version;
+    localStorage.setItem('cornerstone-bible-version', version);
+  }
+
+  static getVersion(): BibleVersionType {
+    const saved = localStorage.getItem('cornerstone-bible-version');
+    currentVersion = (saved as BibleVersionType) || 'kjv';
+    return currentVersion;
+  }
+
+  static setCustomBible(data: BibleBook[]): void {
+    customBibleData = data;
+    localStorage.setItem('cornerstone-custom-bible', JSON.stringify(data));
+  }
+
+  static loadCustomBible(): void {
+    const saved = localStorage.getItem('cornerstone-custom-bible');
+    if (saved) {
+      customBibleData = JSON.parse(saved);
+    }
+  }
+
+  static initializeVersion(): void {
+    this.getVersion();
+    this.loadCustomBible();
   }
 }

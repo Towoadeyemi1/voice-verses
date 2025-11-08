@@ -13,6 +13,9 @@ import {
 } from '@/components/ui/select';
 import { X, Mic, Type, Palette } from 'lucide-react';
 import { toast } from 'sonner';
+import { BibleVersionSettings } from './BibleVersionSettings';
+import { BibleParser } from '@/lib/bibleParser';
+import { BibleVersionType } from '@/types/bibleVersion';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -25,8 +28,13 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [autoScroll, setAutoScroll] = useState(true);
   const [showReference, setShowReference] = useState(true);
+  const [bibleVersion, setBibleVersion] = useState<BibleVersionType>('kjv');
 
   useEffect(() => {
+    // Initialize Bible version
+    BibleParser.initializeVersion();
+    setBibleVersion(BibleParser.getVersion());
+
     // Load saved settings
     const savedSettings = localStorage.getItem('cornerstone-settings');
     if (savedSettings) {
@@ -162,6 +170,12 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
             </div>
           </div>
         </div>
+
+        {/* Bible Version Settings */}
+        <BibleVersionSettings 
+          currentVersion={bibleVersion}
+          onVersionChange={setBibleVersion}
+        />
 
         {/* Theme Settings */}
         <div className="space-y-4">
