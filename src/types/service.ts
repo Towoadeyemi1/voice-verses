@@ -1,6 +1,6 @@
 import { BibleVerse } from './bible';
 
-export type SlideType = 'scripture' | 'lyrics' | 'image' | 'announcement';
+export type SlideType = 'scripture' | 'lyrics' | 'image' | 'announcement' | 'blank';
 
 export interface CountdownConfig {
   enabled: boolean;
@@ -56,7 +56,12 @@ export interface AnnouncementSlide extends BaseSlide {
   imageUrl?: string;
 }
 
-export type Slide = ScriptureSlide | LyricsSlide | ImageSlide | AnnouncementSlide;
+export interface BlankSlide extends BaseSlide {
+  type: 'blank';
+  placeholder?: string;
+}
+
+export type Slide = ScriptureSlide | LyricsSlide | ImageSlide | AnnouncementSlide | BlankSlide;
 
 export interface ServiceSubsection {
   id: string;

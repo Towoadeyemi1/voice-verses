@@ -5,13 +5,15 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, ServiceSection, ServiceSubsection } from '@/types/service';
+import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, AnnouncementSlide, BlankSlide, ServiceSection, ServiceSubsection } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
-import { Book, Music, Image as ImageIcon, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote } from 'lucide-react';
+import { BibleVerse } from '@/types/bible';
+import { Book, Music, Image as ImageIcon, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
+import { ManualSearch } from '@/components/ManualSearch';
 import { PPTXImport } from '@/components/PPTXImport';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -22,6 +24,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -39,6 +43,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Sortable wrapper for sections
 function SortableSection({ section, children }: { section: ServiceSection; children: React.ReactNode }) {
@@ -53,7 +64,7 @@ function SortableSection({ section, children }: { section: ServiceSection; child
   return (
     <div ref={setNodeRef} style={style}>
       <div className="flex items-start gap-2">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mt-4">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mt-4 hover:text-primary">
           <GripVertical className="w-5 h-5 text-muted-foreground" />
         </div>
         <div className="flex-1">{children}</div>
@@ -75,7 +86,7 @@ function SortableSubsection({ subsection, children }: { subsection: ServiceSubse
   return (
     <div ref={setNodeRef} style={style}>
       <div className="flex items-start gap-2">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mt-3">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mt-3 hover:text-primary">
           <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
         <div className="flex-1">{children}</div>
@@ -97,7 +108,7 @@ function SortableSlide({ slide, children }: { slide: Slide; children: React.Reac
   return (
     <div ref={setNodeRef} style={style}>
       <div className="flex items-center gap-2">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing hover:text-primary">
           <GripVertical className="w-3 h-3 text-muted-foreground" />
         </div>
         <div className="flex-1">{children}</div>
@@ -115,6 +126,7 @@ const ServiceBuilder = () => {
   const [selectedSubsection, setSelectedSubsection] = useState<string | null>(null);
   const [notesDialog, setNotesDialog] = useState<{ type: 'section' | 'subsection' | 'slide'; id: string; sectionId?: string; subsectionId?: string } | null>(null);
   const [notesContent, setNotesContent] = useState('');
+  const [activeId, setActiveId] = useState<string | null>(null);
   const media = ServiceStorage.getMedia();
 
   const sensors = useSensors(
@@ -165,14 +177,14 @@ const ServiceBuilder = () => {
   };
 
   const handleAddSection = () => {
-    const name = prompt('Enter section name (e.g., "Worship", "Sermon"):');
-    if (!name) return;
+    const name = prompt('Enter section name (e.g., "Worship", "Sermon"):') || 'New Section';
     const newSection: ServiceSection = {
       id: `section-${Date.now()}`,
       name,
       subsections: [],
     };
     setService(prev => prev ? { ...prev, sections: [...(prev.sections || []), newSection] } : null);
+    setSelectedSection(newSection.id);
     toast.success('Section added');
   };
 
@@ -198,8 +210,7 @@ const ServiceBuilder = () => {
   };
 
   const handleAddSubsection = (sectionId: string) => {
-    const name = prompt('Enter subsection name (e.g., song title, testimony name):');
-    if (!name) return;
+    const name = prompt('Enter subsection name (e.g., song title, testimony name):') || 'New Subsection';
     const newSubsection: ServiceSubsection = {
       id: `subsection-${Date.now()}`,
       name,
@@ -269,6 +280,21 @@ const ServiceBuilder = () => {
     event.target.value = '';
   };
 
+  const handleVerseSelect = (verse: BibleVerse) => {
+    if (!selectedSubsection) {
+      toast.error('Please select a subsection first');
+      return;
+    }
+    const newSlide: ScriptureSlide = {
+      id: `slide-${Date.now()}`,
+      type: 'scripture',
+      title: `${verse.book} ${verse.chapter}:${verse.verse}`,
+      verse,
+    };
+    addSlideToSubsection(newSlide);
+    toast.success('Scripture slide added');
+  };
+
   const handleAddScriptureSlide = async () => {
     if (!selectedSubsection) {
       toast.error('Please select a subsection first');
@@ -299,8 +325,54 @@ const ServiceBuilder = () => {
     setEditingSlide({ type: 'lyrics', songTitle: '', content: '' });
   };
 
+  const handleAddAnnouncementSlide = () => {
+    if (!selectedSubsection) {
+      toast.error('Please select a subsection first');
+      return;
+    }
+    setEditingSlide({ type: 'announcement', title: '', content: '' });
+  };
+
+  const handleAddBlankSlide = () => {
+    if (!selectedSubsection) {
+      toast.error('Please select a subsection first');
+      return;
+    }
+    const newSlide: BlankSlide = {
+      id: `slide-${Date.now()}`,
+      type: 'blank',
+      title: 'Blank Slide',
+      placeholder: 'Click edit to set content',
+    };
+    addSlideToSubsection(newSlide);
+    toast.success('Blank slide added');
+  };
+
+  const handleEditSlide = (sectionId: string, subsectionId: string, slide: Slide) => {
+    setEditingSlide({
+      ...slide,
+      _editContext: { sectionId, subsectionId }
+    } as any);
+  };
+
   const handleSaveLyricsSlide = () => {
     if (!editingSlide || editingSlide.type !== 'lyrics') return;
+    
+    const context = (editingSlide as any)._editContext;
+    
+    // If editing existing slide
+    if (editingSlide.id && context) {
+      const updatedSlide: LyricsSlide = {
+        ...(editingSlide as LyricsSlide),
+        songTitle: editingSlide.songTitle || 'Untitled',
+        content: editingSlide.content || '',
+      };
+      handleUpdateSlide(context.sectionId, context.subsectionId, updatedSlide);
+      setEditingSlide(null);
+      return;
+    }
+
+    // Creating new slides
     const slides: LyricsSlide[] = [];
     const sections = editingSlide.content?.split('\n\n') || [];
     sections.forEach((section, index) => {
@@ -324,6 +396,36 @@ const ServiceBuilder = () => {
     slides.forEach(slide => addSlideToSubsection(slide));
     setEditingSlide(null);
     toast.success('Lyrics slides added');
+  };
+
+  const handleSaveAnnouncementSlide = () => {
+    if (!editingSlide || editingSlide.type !== 'announcement') return;
+    
+    const context = (editingSlide as any)._editContext;
+    
+    // If editing existing slide
+    if (editingSlide.id && context) {
+      const updatedSlide: AnnouncementSlide = {
+        ...(editingSlide as AnnouncementSlide),
+        title: editingSlide.title || 'Announcement',
+        content: editingSlide.content || '',
+      };
+      handleUpdateSlide(context.sectionId, context.subsectionId, updatedSlide);
+      setEditingSlide(null);
+      return;
+    }
+
+    // Creating new slide
+    const newSlide: AnnouncementSlide = {
+      id: `slide-${Date.now()}`,
+      type: 'announcement',
+      title: editingSlide.title || 'Announcement',
+      content: editingSlide.content || '',
+      imageUrl: editingSlide.imageUrl,
+    };
+    addSlideToSubsection(newSlide);
+    setEditingSlide(null);
+    toast.success('Announcement slide added');
   };
 
   const handleAddImageSlide = () => {
@@ -528,8 +630,13 @@ const ServiceBuilder = () => {
     toast.success('Notes saved');
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent, context: 'section' | 'subsection' | 'slide', sectionId?: string, subsectionId?: string) => {
     const { active, over } = event;
+    setActiveId(null);
     if (!over || active.id === over.id) return;
 
     setService(prev => {
@@ -568,6 +675,17 @@ const ServiceBuilder = () => {
       }
       return prev;
     });
+  };
+
+  const getSlideIcon = (slide: Slide) => {
+    switch (slide.type) {
+      case 'scripture': return <Book className="w-3 h-3" />;
+      case 'lyrics': return <Music className="w-3 h-3" />;
+      case 'image': return <ImageIcon className="w-3 h-3" />;
+      case 'announcement': return <MessageSquare className="w-3 h-3" />;
+      case 'blank': return <FileQuestion className="w-3 h-3" />;
+      default: return null;
+    }
   };
 
   if (!service) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -619,8 +737,12 @@ const ServiceBuilder = () => {
               {selectedSubsection && (
                 <>
                   <div className="border-t pt-4">
-                    <Label className="mb-2 block">Add Slides</Label>
+                    <Label className="mb-3 block">Add Slides</Label>
                     <div className="space-y-2">
+                      <Button onClick={handleAddBlankSlide} variant="outline" className="w-full justify-start">
+                        <FileQuestion className="w-4 h-4 mr-2" />
+                        Blank Slide
+                      </Button>
                       <Button onClick={handleAddScriptureSlide} variant="outline" className="w-full justify-start">
                         <Book className="w-4 h-4 mr-2" />
                         Scripture
@@ -628,6 +750,10 @@ const ServiceBuilder = () => {
                       <Button onClick={handleAddLyricsSlide} variant="outline" className="w-full justify-start">
                         <Music className="w-4 h-4 mr-2" />
                         Song Lyrics
+                      </Button>
+                      <Button onClick={handleAddAnnouncementSlide} variant="outline" className="w-full justify-start">
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Announcement
                       </Button>
                       <Button onClick={handleAddImageSlide} variant="outline" className="w-full justify-start">
                         <ImageIcon className="w-4 h-4 mr-2" />
@@ -649,6 +775,11 @@ const ServiceBuilder = () => {
                         onChange={handleFileUpload}
                       />
                     </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <Label className="mb-2 block">Quick Scripture Search</Label>
+                    <ManualSearch onVerseSelect={handleVerseSelect} />
                   </div>
                 </>
               )}
@@ -678,13 +809,18 @@ const ServiceBuilder = () => {
                 No sections yet. Add your first section to get started.
               </div>
             ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'section')}>
+              <DndContext 
+                sensors={sensors} 
+                collisionDetection={closestCenter} 
+                onDragStart={handleDragStart}
+                onDragEnd={(e) => handleDragEnd(e, 'section')}
+              >
                 <SortableContext items={service.sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-3">
                     {service.sections.map((section) => (
                       <SortableSection key={section.id} section={section}>
                         <Collapsible open={!section.collapsed} onOpenChange={() => toggleSectionCollapse(section.id)}>
-                          <Card className={`${selectedSection === section.id ? 'border-primary' : ''}`}>
+                          <Card className={`${selectedSection === section.id ? 'border-primary' : ''} ${activeId === section.id ? 'ring-2 ring-primary' : ''}`}>
                             <div className="p-4">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 flex-1">
@@ -698,63 +834,79 @@ const ServiceBuilder = () => {
                                   </button>
                                 </div>
                                 <div className="flex gap-1">
-                                  <Button size="sm" variant="outline" onClick={() => openNotesDialog('section', section.id)}>
+                                  <Button size="sm" variant="outline" onClick={() => openNotesDialog('section', section.id)} title="Operator Notes">
                                     <StickyNote className="w-4 h-4" />
                                   </Button>
-                                  <Button size="sm" variant="outline" onClick={() => handleDuplicateSection(section)}>
+                                  <Button size="sm" variant="outline" onClick={() => handleDuplicateSection(section)} title="Duplicate Section">
                                     <Copy className="w-4 h-4" />
                                   </Button>
-                                  <Button size="sm" variant="outline" onClick={() => handleAddSubsection(section.id)}>
+                                  <Button size="sm" variant="outline" onClick={() => handleAddSubsection(section.id)} title="Add Subsection">
                                     <Plus className="w-4 h-4" />
                                   </Button>
-                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteSection(section.id)}>
+                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteSection(section.id)} title="Delete Section">
                                     <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </div>
                               </div>
 
                               <CollapsibleContent className="mt-4">
-                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'subsection', section.id)}>
+                                <DndContext 
+                                  sensors={sensors} 
+                                  collisionDetection={closestCenter} 
+                                  onDragStart={handleDragStart}
+                                  onDragEnd={(e) => handleDragEnd(e, 'subsection', section.id)}
+                                >
                                   <SortableContext items={section.subsections.map(sub => sub.id)} strategy={verticalListSortingStrategy}>
                                     <div className="space-y-2 ml-8">
                                       {section.subsections.map((subsection) => (
                                         <SortableSubsection key={subsection.id} subsection={subsection}>
-                                          <Card className={`p-3 ${selectedSubsection === subsection.id ? 'border-primary bg-primary/5' : ''}`}>
+                                          <Card className={`p-3 ${selectedSubsection === subsection.id ? 'border-primary bg-primary/5' : ''} ${activeId === subsection.id ? 'ring-2 ring-primary' : ''}`}>
                                             <div className="flex items-center justify-between mb-2">
                                               <button onClick={() => setSelectedSubsection(subsection.id)} className="flex-1 text-left font-medium">
                                                 {subsection.name}
                                               </button>
                                               <div className="flex gap-1">
-                                                <Button size="sm" variant="ghost" onClick={() => openNotesDialog('subsection', subsection.id, section.id)}>
+                                                <Button size="sm" variant="ghost" onClick={() => openNotesDialog('subsection', subsection.id, section.id)} title="Presenter Notes">
                                                   <StickyNote className="w-3 h-3" />
                                                 </Button>
-                                                <Button size="sm" variant="ghost" onClick={() => handleDuplicateSubsection(section.id, subsection)}>
+                                                <Button size="sm" variant="ghost" onClick={() => handleDuplicateSubsection(section.id, subsection)} title="Duplicate">
                                                   <Copy className="w-3 h-3" />
                                                 </Button>
                                                 <CountdownConfiguration
                                                   config={subsection.countdown}
                                                   onUpdate={(countdown) => handleUpdateCountdown(section.id, subsection.id, countdown)}
                                                 />
-                                                <Button size="sm" variant="ghost" onClick={() => handleDeleteSubsection(section.id, subsection.id)}>
+                                                <Button size="sm" variant="ghost" onClick={() => handleDeleteSubsection(section.id, subsection.id)} title="Delete">
                                                   <Trash2 className="w-3 h-3" />
                                                 </Button>
                                               </div>
                                             </div>
 
                                             {subsection.slides.length > 0 && (
-                                              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'slide', section.id, subsection.id)}>
+                                              <DndContext 
+                                                sensors={sensors} 
+                                                collisionDetection={closestCenter} 
+                                                onDragStart={handleDragStart}
+                                                onDragEnd={(e) => handleDragEnd(e, 'slide', section.id, subsection.id)}
+                                              >
                                                 <SortableContext items={subsection.slides.map(slide => slide.id)} strategy={verticalListSortingStrategy}>
                                                   <div className="ml-4 space-y-1">
                                                     {subsection.slides.map((slide) => (
                                                       <SortableSlide key={slide.id} slide={slide}>
-                                                        <div className="flex items-center justify-between text-sm py-1">
-                                                          <span className="truncate flex-1">{slide.title}</span>
+                                                        <div className={`flex items-center justify-between text-sm py-1 px-2 rounded ${activeId === slide.id ? 'bg-primary/10 ring-1 ring-primary' : ''}`}>
+                                                          <div className="flex items-center gap-2 flex-1 truncate">
+                                                            {getSlideIcon(slide)}
+                                                            <span className="truncate">{slide.title}</span>
+                                                          </div>
                                                           <div className="flex gap-1">
-                                                            <Button size="sm" variant="ghost" onClick={() => openNotesDialog('slide', slide.id, section.id, subsection.id)}>
+                                                            <Button size="sm" variant="ghost" onClick={() => openNotesDialog('slide', slide.id, section.id, subsection.id)} title="Slide Notes">
                                                               <StickyNote className="w-3 h-3" />
                                                             </Button>
+                                                            <Button size="sm" variant="ghost" onClick={() => handleEditSlide(section.id, subsection.id, slide)} title="Edit Slide">
+                                                              <Pencil className="w-3 h-3" />
+                                                            </Button>
                                                             <SlideConfiguration slide={slide} onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)} />
-                                                            <Button size="sm" variant="ghost" onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)}>
+                                                            <Button size="sm" variant="ghost" onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)} title="Delete">
                                                               <Trash2 className="w-3 h-3" />
                                                             </Button>
                                                           </div>
@@ -785,11 +937,12 @@ const ServiceBuilder = () => {
         </div>
       </div>
 
+      {/* Lyrics Editor Dialog */}
       {editingSlide?.type === 'lyrics' && (
         <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Add Song Lyrics</DialogTitle>
+              <DialogTitle>{editingSlide.id ? 'Edit Song Lyrics' : 'Add Song Lyrics'}</DialogTitle>
               <DialogDescription>Separate verses/sections with blank lines</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -819,6 +972,59 @@ const ServiceBuilder = () => {
         </Dialog>
       )}
 
+      {/* Announcement Editor Dialog */}
+      {editingSlide?.type === 'announcement' && (
+        <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{editingSlide.id ? 'Edit Announcement' : 'Add Announcement'}</DialogTitle>
+              <DialogDescription>Create an announcement slide</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Title</Label>
+                <Input
+                  value={editingSlide.title || ''}
+                  onChange={(e) => setEditingSlide({...editingSlide, title: e.target.value})}
+                  placeholder="Enter announcement title"
+                />
+              </div>
+              <div>
+                <Label>Content</Label>
+                <Textarea
+                  value={editingSlide.content || ''}
+                  onChange={(e) => setEditingSlide({...editingSlide, content: e.target.value})}
+                  placeholder="Enter announcement content..."
+                  className="min-h-[200px]"
+                />
+              </div>
+              <div>
+                <Label>Background Image (optional)</Label>
+                <Select 
+                  value={editingSlide.imageUrl || ''} 
+                  onValueChange={(value) => setEditingSlide({...editingSlide, imageUrl: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select image" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No image</SelectItem>
+                    {media.filter(m => m.type === 'image').map(m => (
+                      <SelectItem key={m.id} value={m.url || ''}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
+              <Button onClick={handleSaveAnnouncementSlide}>Save Announcement</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Notes Dialog */}
       {notesDialog && (
         <Dialog open={true} onOpenChange={() => setNotesDialog(null)}>
           <DialogContent>
