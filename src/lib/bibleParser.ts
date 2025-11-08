@@ -144,7 +144,7 @@ export class BibleParser {
   private static async getVerseFromESV(bookName: string, chapterNum: number, verseNum: number): Promise<BibleVerse | null> {
     if (!esvApiKey) {
       console.error('ESV API key not configured');
-      return null;
+      return this.fallbackToOffline(bookName, chapterNum, verseNum, 'ESV API key not configured');
     }
 
     try {
@@ -160,7 +160,7 @@ export class BibleParser {
 
       if (!response.ok) {
         console.error('ESV API error:', response.status);
-        return null;
+        return this.fallbackToOffline(bookName, chapterNum, verseNum, `ESV API error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -168,7 +168,7 @@ export class BibleParser {
       
       if (!text) {
         console.error('No text returned from ESV API');
-        return null;
+        return this.fallbackToOffline(bookName, chapterNum, verseNum, 'No text from ESV API');
       }
 
       return {
@@ -179,14 +179,14 @@ export class BibleParser {
       };
     } catch (error) {
       console.error('Error fetching from ESV API:', error);
-      return null;
+      return this.fallbackToOffline(bookName, chapterNum, verseNum, 'Network error');
     }
   }
 
   private static async getVerseFromNLT(bookName: string, chapterNum: number, verseNum: number): Promise<BibleVerse | null> {
     if (!nltApiKey) {
       console.error('NLT API key not configured');
-      return null;
+      return this.fallbackToOffline(bookName, chapterNum, verseNum, 'NLT API key not configured');
     }
 
     try {
@@ -197,14 +197,14 @@ export class BibleParser {
 
       if (!response.ok) {
         console.error('NLT API error:', response.status);
-        return null;
+        return this.fallbackToOffline(bookName, chapterNum, verseNum, `NLT API error: ${response.status}`);
       }
 
       const text = await response.text();
       
       if (!text) {
         console.error('No text returned from NLT API');
-        return null;
+        return this.fallbackToOffline(bookName, chapterNum, verseNum, 'No text from NLT API');
       }
 
       return {
@@ -215,8 +215,56 @@ export class BibleParser {
       };
     } catch (error) {
       console.error('Error fetching from NLT API:', error);
+      return this.fallbackToOffline(bookName, chapterNum, verseNum, 'Network error');
+    }
+  }
+
+  private static fallbackToOffline(bookName: string, chapterNum: number, verseNum: number, reason: string): BibleVerse | null {
+    console.warn(`Falling back to KJV: ${reason}`);
+    
+    // Temporarily switch to KJV to get the verse
+    const originalVersion = currentVersion;
+    currentVersion = 'kjv';
+    
+    const books = getBibleData();
+    const book = books.find(b => 
+      b.name.toLowerCase() === bookName.toLowerCase() || 
+      b.abbrev.toLowerCase() === bookName.toLowerCase()
+    );
+    
+    currentVersion = originalVersion; // Restore original version
+    
+    if (!book) {
+      console.error(`Book not found in KJV: ${bookName}`);
       return null;
     }
+
+    const chapter = book.chapters[chapterNum - 1];
+    if (!chapter) {
+      console.error(`Chapter ${chapterNum} not found in ${book.name}`);
+      return null;
+    }
+
+    const verseText = chapter[verseNum - 1];
+    if (!verseText) {
+      console.error(`Verse ${verseNum} not found in ${book.name} ${chapterNum}`);
+      return null;
+    }
+
+    // Show a notification about the fallback
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('bible-api-fallback', { 
+        detail: { reason, verse: `${bookName} ${chapterNum}:${verseNum}` } 
+      });
+      window.dispatchEvent(event);
+    }
+
+    return {
+      book: book.name,
+      chapter: chapterNum,
+      verse: verseNum,
+      text: verseText,
+    };
   }
 
   static normalizeBook(book: string): string {

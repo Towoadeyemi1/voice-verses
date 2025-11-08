@@ -43,6 +43,21 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
   const realtimeChat = useRef<RealtimeWebRTC | null>(null);
   const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
 
+  // Listen for API fallback events
+  useEffect(() => {
+    const handleFallback = (event: CustomEvent) => {
+      const { reason, verse } = event.detail;
+      toast.warning('Using offline KJV fallback', {
+        description: `${verse} - ${reason}. Switched to KJV temporarily.`,
+      });
+    };
+
+    window.addEventListener('bible-api-fallback', handleFallback as EventListener);
+    return () => {
+      window.removeEventListener('bible-api-fallback', handleFallback as EventListener);
+    };
+  }, []);
+
   const handleOpenLowerThird = () => {
     window.open('/lower-third', '_blank', 'width=1280,height=720');
   };

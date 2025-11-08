@@ -18,6 +18,8 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
   const [esvApiKey, setEsvApiKey] = useState('');
   const [nltApiKey, setNltApiKey] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isTestingEsv, setIsTestingEsv] = useState(false);
+  const [isTestingNlt, setIsTestingNlt] = useState(false);
 
   const handleVersionChange = (version: BibleVersionType) => {
     setSelectedVersion(version);
@@ -63,6 +65,81 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
       });
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleTestEsvApiKey = async () => {
+    if (!esvApiKey.trim()) {
+      toast.error('Please enter an API key first');
+      return;
+    }
+
+    setIsTestingEsv(true);
+    try {
+      const response = await fetch(
+        'https://api.esv.org/v3/passage/text/?q=John+3:16&include-headings=false&include-footnotes=false&include-verse-numbers=false&include-short-copyright=false&include-passage-references=false',
+        {
+          headers: {
+            'Authorization': `Token ${esvApiKey}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.passages?.[0]) {
+          toast.success('ESV API key is valid!', {
+            description: 'Your key is working correctly',
+          });
+        } else {
+          toast.error('Invalid response from ESV API');
+        }
+      } else {
+        toast.error('Invalid ESV API key', {
+          description: `Error: ${response.status} - ${response.statusText}`,
+        });
+      }
+    } catch (error) {
+      toast.error('Failed to test ESV API key', {
+        description: error instanceof Error ? error.message : 'Network error',
+      });
+    } finally {
+      setIsTestingEsv(false);
+    }
+  };
+
+  const handleTestNltApiKey = async () => {
+    if (!nltApiKey.trim()) {
+      toast.error('Please enter an API key first');
+      return;
+    }
+
+    setIsTestingNlt(true);
+    try {
+      const response = await fetch(
+        `https://api.nlt.to/api/passages?ref=John+3:16&key=${nltApiKey}&version=NLT`
+      );
+
+      if (response.ok) {
+        const text = await response.text();
+        if (text && text.length > 0) {
+          toast.success('NLT API key is valid!', {
+            description: 'Your key is working correctly',
+          });
+        } else {
+          toast.error('Invalid response from NLT API');
+        }
+      } else {
+        toast.error('Invalid NLT API key', {
+          description: `Error: ${response.status} - ${response.statusText}`,
+        });
+      }
+    } catch (error) {
+      toast.error('Failed to test NLT API key', {
+        description: error instanceof Error ? error.message : 'Network error',
+      });
+    } finally {
+      setIsTestingNlt(false);
     }
   };
 
@@ -131,6 +208,14 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
                 value={esvApiKey}
                 onChange={(e) => setEsvApiKey(e.target.value)}
               />
+              <Button 
+                onClick={handleTestEsvApiKey} 
+                size="sm" 
+                variant="outline"
+                disabled={isTestingEsv}
+              >
+                {isTestingEsv ? 'Testing...' : 'Test'}
+              </Button>
               <Button onClick={handleSaveEsvApiKey} size="sm">
                 Save
               </Button>
@@ -165,6 +250,14 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
                 value={nltApiKey}
                 onChange={(e) => setNltApiKey(e.target.value)}
               />
+              <Button 
+                onClick={handleTestNltApiKey} 
+                size="sm" 
+                variant="outline"
+                disabled={isTestingNlt}
+              >
+                {isTestingNlt ? 'Testing...' : 'Test'}
+              </Button>
               <Button onClick={handleSaveNltApiKey} size="sm">
                 Save
               </Button>
