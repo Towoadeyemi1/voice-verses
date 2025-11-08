@@ -9,6 +9,7 @@ import { ServiceStorage } from '@/lib/serviceStorage';
 import { Image, Music, Plus, Trash2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { SongSelectImport } from '@/components/SongSelectImport';
 
 const MediaLibrary = () => {
   const [media, setMedia] = useState<MediaItem[]>([]);
@@ -157,6 +158,9 @@ const MediaLibrary = () => {
             </div>
           </Card>
         )}
+
+        {/* SongSelect Integration */}
+        <SongSelectImport onImportComplete={loadMedia} />
 
         {/* Media Grid */}
         {filteredMedia.length === 0 ? (

@@ -9,7 +9,8 @@ import { ManualSearch } from './ManualSearch';
 import { DisplayMonitor } from './DisplayMonitor';
 import { BibleParser } from '@/lib/bibleParser';
 import { DisplayedVerse, AudioStatus, BibleVerse } from '@/types/bible';
-import { Maximize2, Settings, Loader2, MonitorPlay, LayoutGrid, Monitor, ChevronDown, ExternalLink } from 'lucide-react';
+import { Maximize2, Settings, Loader2, MonitorPlay, LayoutGrid, Monitor, ChevronDown, ExternalLink, Calendar, Music, Mic } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { syncService } from '@/lib/syncService';
 import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
@@ -23,6 +24,7 @@ interface ControlPanelProps {
 }
 
 export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDisplayMonitor }: ControlPanelProps) => {
+  const navigate = useNavigate();
   const [audioStatus, setAudioStatus] = useState<AudioStatus>({
     isListening: false,
     volume: 45,
@@ -334,6 +336,30 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
             </Button>
           </div>
         </div>
+
+        {/* Mode Switcher */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Mic className="w-5 h-5 text-primary" />
+                <span className="font-semibold">Scripture Mode</span>
+                <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-1 rounded">Active</span>
+              </div>
+              <span className="text-muted-foreground text-sm">Voice-controlled Bible display</span>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => navigate('/service-planner')} variant="outline">
+                <Calendar className="w-4 h-4 mr-2" />
+                Service Planner
+              </Button>
+              <Button onClick={() => navigate('/media-library')} variant="outline">
+                <Music className="w-4 h-4 mr-2" />
+                Media Library
+              </Button>
+            </div>
+          </div>
+        </Card>
 
         {/* Settings Panel */}
         {showSettings && (
