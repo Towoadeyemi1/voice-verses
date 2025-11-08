@@ -128,6 +128,9 @@ const ServiceBuilder = () => {
   const [notesDialog, setNotesDialog] = useState<{ type: 'section' | 'subsection' | 'slide'; id: string; sectionId?: string; subsectionId?: string } | null>(null);
   const [notesContent, setNotesContent] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [songSelectMatches, setSongSelectMatches] = useState<Array<{ songTitle: string; index: number; lyrics: string }>>([]);
+  const [showSongSelectDialog, setShowSongSelectDialog] = useState(false);
+  const [pendingImportData, setPendingImportData] = useState<{ parsedSongs: ServiceSubsection[]; worshipSection: ServiceSection | null } | null>(null);
   const media = ServiceStorage.getMedia();
 
   const sensors = useSensors(
@@ -545,8 +548,7 @@ Chorus line 2"`;
       }
 
       const parsedSongs: ServiceSubsection[] = [];
-      let songSelectChecked = 0;
-      let songSelectFound = 0;
+      const potentialMatches: Array<{ songTitle: string; index: number; lyrics: string }> = [];
 
       for (let index = 0; index < dataLines.length; index++) {
         const line = dataLines[index];
@@ -556,26 +558,10 @@ Chorus line 2"`;
 
         const [, songTitle, lyrics] = match;
         
-        // If lyrics are empty or minimal, try to fetch from SongSelect
+        // If lyrics are empty or minimal, collect as potential SongSelect match
         if (!lyrics || lyrics.trim().length < 50) {
-          songSelectChecked++;
-          toast.info(`Checking SongSelect for "${songTitle}"...`);
-          
-          // TODO: Implement actual SongSelect API call
-          // For now, this is a placeholder that shows the intended behavior
-          // In production, this would call an edge function:
-          // const songData = await fetchFromSongSelect(songTitle);
-          // if (songData) { ... }
-          
-          // Simulated check - in real implementation, this would be an API call
-          const isSongSelectAvailable = false; // Replace with actual API call
-          
-          if (isSongSelectAvailable) {
-            songSelectFound++;
-            // When API is integrated, parse the SongSelect response here
-            toast.success(`Found "${songTitle}" in SongSelect`);
-            continue;
-          }
+          potentialMatches.push({ songTitle, index, lyrics });
+          continue;
         }
         
         // Parse manual lyrics into slides (separated by blank lines)
@@ -610,7 +596,16 @@ Chorus line 2"`;
         }
       }
 
-      // Update service with imported songs
+      // If there are potential SongSelect matches, show confirmation dialog
+      if (potentialMatches.length > 0) {
+        setSongSelectMatches(potentialMatches);
+        setPendingImportData({ parsedSongs, worshipSection });
+        setShowSongSelectDialog(true);
+        toast.info(`Found ${potentialMatches.length} song(s) that might be in SongSelect`);
+        return;
+      }
+
+      // Update service with imported songs (when no SongSelect matches)
       setService(prev => {
         if (!prev) return null;
         
@@ -638,11 +633,7 @@ Chorus line 2"`;
         }
       });
 
-      let message = `Imported ${parsedSongs.length} song(s) to Worship section`;
-      if (songSelectChecked > 0) {
-        message += `. Checked ${songSelectChecked} song(s) in SongSelect`;
-      }
-      toast.success(message);
+      toast.success(`Imported ${parsedSongs.length} song(s) to Worship section`);
     };
 
     reader.onerror = () => {
@@ -699,6 +690,81 @@ Chorus line 2"`;
     });
 
     toast.success(`Added "${songTitle}" as new subsection`);
+  };
+
+  const handleSongSelectConfirmation = async (useSongSelect: boolean) => {
+    if (!pendingImportData) return;
+
+    const { parsedSongs, worshipSection } = pendingImportData;
+
+    if (useSongSelect) {
+      // User wants to try importing from SongSelect
+      toast.info(`Attempting to import ${songSelectMatches.length} song(s) from SongSelect...`);
+      
+      // TODO: Call SongSelect API for each match
+      // For now, just show info message
+      for (const match of songSelectMatches) {
+        toast.info(`SongSelect API integration pending for "${match.songTitle}"`);
+        // When implemented, this would call handleSongSelectImport with the fetched data
+        // const songData = await fetchFromSongSelect(match.songTitle);
+        // if (songData) handleSongSelectImport(match.songTitle, songData.slides);
+      }
+    } else {
+      // User wants to skip SongSelect and add songs without lyrics
+      for (const match of songSelectMatches) {
+        if (match.lyrics && match.lyrics.trim()) {
+          // If there are some lyrics, parse them
+          const sections = match.lyrics.split(/\n\n+/).filter(s => s.trim());
+          const slides: LyricsSlide[] = sections.map((section, slideIndex) => ({
+            id: `slide-manual-${Date.now()}-${match.index}-${slideIndex}`,
+            type: 'lyrics',
+            title: `${match.songTitle} - Slide ${slideIndex + 1}`,
+            songTitle: match.songTitle,
+            slideNumber: slideIndex + 1,
+            totalSlides: sections.length,
+            content: section.trim(),
+          }));
+          
+          parsedSongs.push({
+            id: `subsection-manual-${Date.now()}-${match.index}`,
+            name: match.songTitle,
+            slides,
+          });
+        } else {
+          toast.warning(`"${match.songTitle}" has no lyrics - skipped`);
+        }
+      }
+    }
+
+    // Update service with all parsed songs
+    setService(prev => {
+      if (!prev) return null;
+      
+      const existingSection = prev.sections?.find(s => s.name.toLowerCase() === 'worship');
+      
+      if (existingSection) {
+        return {
+          ...prev,
+          sections: prev.sections.map(s => 
+            s.id === existingSection.id 
+              ? { ...s, subsections: [...s.subsections, ...parsedSongs] }
+              : s
+          ),
+        };
+      } else {
+        return {
+          ...prev,
+          sections: [...(prev.sections || []), { ...worshipSection!, subsections: parsedSongs }],
+        };
+      }
+    });
+
+    toast.success(`Imported ${parsedSongs.length} song(s) to Worship section`);
+    
+    // Reset dialog state
+    setShowSongSelectDialog(false);
+    setSongSelectMatches([]);
+    setPendingImportData(null);
   };
 
   const addSlideToSubsection = (slide: Slide) => {
@@ -1468,6 +1534,42 @@ Chorus line 2"`;
             <DialogFooter>
               <Button variant="outline" onClick={() => setNotesDialog(null)}>Cancel</Button>
               <Button onClick={saveNotes}>Save Notes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* SongSelect Confirmation Dialog */}
+      {showSongSelectDialog && (
+        <Dialog open={true} onOpenChange={() => setShowSongSelectDialog(false)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Import from SongSelect?</DialogTitle>
+              <DialogDescription>
+                {songSelectMatches.length} song(s) have minimal or no lyrics. Would you like to try importing them from CCLI SongSelect?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 py-4">
+              <p className="text-sm font-medium">Songs to check:</p>
+              <ul className="text-sm text-muted-foreground space-y-1 max-h-40 overflow-y-auto">
+                {songSelectMatches.map((match, idx) => (
+                  <li key={idx}>• {match.songTitle}</li>
+                ))}
+              </ul>
+              <p className="text-xs text-muted-foreground mt-4">
+                Note: If SongSelect API is not configured, songs will be added without lyrics.
+              </p>
+            </div>
+            <DialogFooter className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => handleSongSelectConfirmation(false)}
+              >
+                Skip SongSelect
+              </Button>
+              <Button onClick={() => handleSongSelectConfirmation(true)}>
+                Import from SongSelect
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
