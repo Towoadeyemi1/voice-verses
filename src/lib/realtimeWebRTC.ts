@@ -87,12 +87,7 @@ export class RealtimeWebRTC {
       console.log('Initializing WebRTC connection...');
 
       // Get ephemeral token from Azure Function
-      // TODO: Replace with your actual Azure Function URL after deployment
-      const AZURE_FUNCTION_URL = 'YOUR_AZURE_FUNCTION_URL_HERE'; // e.g., https://bible-verse-detector-func.azurewebsites.net/api/realtime-token
-      
-      if (AZURE_FUNCTION_URL === 'YOUR_AZURE_FUNCTION_URL_HERE') {
-        throw new Error('Please update AZURE_FUNCTION_URL in realtimeWebRTC.ts with your deployed Azure Function URL');
-      }
+      const AZURE_FUNCTION_URL = 'https://cornerstone-bible.azurewebsites.net/api/realtime-token';
 
       console.log('Fetching ephemeral token...');
       const tokenResponse = await fetch(AZURE_FUNCTION_URL, {
