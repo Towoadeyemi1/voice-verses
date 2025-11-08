@@ -5,16 +5,106 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, ServiceSection, ServiceSubsection } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
-import { Book, Music, Image as ImageIcon, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus } from 'lucide-react';
+import { Book, Music, Image as ImageIcon, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote } from 'lucide-react';
 import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
 import { PPTXImport } from '@/components/PPTXImport';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+// Sortable wrapper for sections
+function SortableSection({ section, children }: { section: ServiceSection; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className="flex items-start gap-2">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mt-4">
+          <GripVertical className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <div className="flex-1">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// Sortable wrapper for subsections
+function SortableSubsection({ subsection, children }: { subsection: ServiceSubsection; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: subsection.id });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className="flex items-start gap-2">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mt-3">
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
+        </div>
+        <div className="flex-1">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// Sortable wrapper for slides
+function SortableSlide({ slide, children }: { slide: Slide; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: slide.id });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className="flex items-center gap-2">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+          <GripVertical className="w-3 h-3 text-muted-foreground" />
+        </div>
+        <div className="flex-1">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 const ServiceBuilder = () => {
   const { serviceId } = useParams();
@@ -23,7 +113,16 @@ const ServiceBuilder = () => {
   const [editingSlide, setEditingSlide] = useState<Partial<Slide> | null>(null);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [selectedSubsection, setSelectedSubsection] = useState<string | null>(null);
+  const [notesDialog, setNotesDialog] = useState<{ type: 'section' | 'subsection' | 'slide'; id: string; sectionId?: string; subsectionId?: string } | null>(null);
+  const [notesContent, setNotesContent] = useState('');
   const media = ServiceStorage.getMedia();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     if (serviceId) {
@@ -31,7 +130,6 @@ const ServiceBuilder = () => {
       const found = services.find(s => s.id === serviceId);
       if (found) {
         setService(found);
-        // Auto-select first section/subsection
         if (found.sections?.length > 0) {
           setSelectedSection(found.sections[0].id);
           if (found.sections[0].subsections?.length > 0) {
@@ -54,17 +152,14 @@ const ServiceBuilder = () => {
 
   const handleSaveAsTemplate = () => {
     if (!service) return;
-    
     const templateName = prompt('Enter template name:');
     if (!templateName) return;
-
     const template: Service = {
       ...service,
       id: `template-${Date.now()}`,
       isTemplate: true,
       templateName,
     };
-    
     ServiceStorage.saveService(template);
     toast.success('Template saved');
   };
@@ -72,30 +167,44 @@ const ServiceBuilder = () => {
   const handleAddSection = () => {
     const name = prompt('Enter section name (e.g., "Worship", "Sermon"):');
     if (!name) return;
-
     const newSection: ServiceSection = {
-      id: Date.now().toString(),
+      id: `section-${Date.now()}`,
       name,
       subsections: [],
     };
+    setService(prev => prev ? { ...prev, sections: [...(prev.sections || []), newSection] } : null);
+    toast.success('Section added');
+  };
 
+  const handleDuplicateSection = (section: ServiceSection) => {
+    const duplicated: ServiceSection = {
+      ...section,
+      id: `section-${Date.now()}`,
+      name: `${section.name} (Copy)`,
+      subsections: section.subsections.map((sub, idx) => ({
+        ...sub,
+        id: `subsection-${Date.now()}-${idx}`,
+        slides: sub.slides.map((slide, slideIdx) => ({
+          ...slide,
+          id: `slide-${Date.now()}-${idx}-${slideIdx}`,
+        })),
+      })),
+    };
     setService(prev => prev ? {
       ...prev,
-      sections: [...(prev.sections || []), newSection],
+      sections: [...(prev.sections || []), duplicated],
     } : null);
-    toast.success('Section added');
+    toast.success('Section duplicated');
   };
 
   const handleAddSubsection = (sectionId: string) => {
     const name = prompt('Enter subsection name (e.g., song title, testimony name):');
     if (!name) return;
-
     const newSubsection: ServiceSubsection = {
-      id: Date.now().toString(),
+      id: `subsection-${Date.now()}`,
       name,
       slides: [],
     };
-
     setService(prev => prev ? {
       ...prev,
       sections: prev.sections?.map(section =>
@@ -104,9 +213,60 @@ const ServiceBuilder = () => {
           : section
       ) || [],
     } : null);
-    
     setSelectedSubsection(newSubsection.id);
     toast.success('Subsection added');
+  };
+
+  const handleDuplicateSubsection = (sectionId: string, subsection: ServiceSubsection) => {
+    const duplicated: ServiceSubsection = {
+      ...subsection,
+      id: `subsection-${Date.now()}`,
+      name: `${subsection.name} (Copy)`,
+      slides: subsection.slides.map((slide, idx) => ({
+        ...slide,
+        id: `slide-${Date.now()}-${idx}`,
+      })),
+    };
+    setService(prev => prev ? {
+      ...prev,
+      sections: prev.sections?.map(section =>
+        section.id === sectionId
+          ? { ...section, subsections: [...section.subsections, duplicated] }
+          : section
+      ) || [],
+    } : null);
+    toast.success('Subsection duplicated');
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedSubsection) {
+      toast.error('Please select a subsection first');
+      return;
+    }
+
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not an image`);
+        continue;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newSlide: ImageSlide = {
+          id: `slide-${Date.now()}-${Math.random()}`,
+          type: 'image',
+          title: file.name,
+          imageUrl: e.target?.result as string,
+        };
+        addSlideToSubsection(newSlide);
+      };
+      reader.readAsDataURL(file);
+    }
+    toast.success(`${files.length} image(s) uploaded`);
+    event.target.value = '';
   };
 
   const handleAddScriptureSlide = async () => {
@@ -114,23 +274,19 @@ const ServiceBuilder = () => {
       toast.error('Please select a subsection first');
       return;
     }
-
     const reference = prompt('Enter scripture reference (e.g., John 3:16):');
     if (!reference) return;
-
     const verse = await BibleParser.parseReference(reference);
     if (!verse) {
       toast.error('Invalid scripture reference');
       return;
     }
-
     const newSlide: ScriptureSlide = {
-      id: Date.now().toString(),
+      id: `slide-${Date.now()}`,
       type: 'scripture',
       title: `${verse.book} ${verse.chapter}:${verse.verse}`,
       verse,
     };
-
     addSlideToSubsection(newSlide);
     toast.success('Scripture slide added');
   };
@@ -140,29 +296,21 @@ const ServiceBuilder = () => {
       toast.error('Please select a subsection first');
       return;
     }
-    setEditingSlide({
-      type: 'lyrics',
-      songTitle: '',
-      content: '',
-    });
+    setEditingSlide({ type: 'lyrics', songTitle: '', content: '' });
   };
 
   const handleSaveLyricsSlide = () => {
     if (!editingSlide || editingSlide.type !== 'lyrics') return;
-
     const slides: LyricsSlide[] = [];
     const sections = editingSlide.content?.split('\n\n') || [];
-    
     sections.forEach((section, index) => {
       const lines = section.trim().split('\n');
       const sectionName = lines[0].toLowerCase().includes('verse') ? 'verse' :
                          lines[0].toLowerCase().includes('chorus') ? 'chorus' :
                          lines[0].toLowerCase().includes('bridge') ? 'bridge' : undefined;
-      
       const content = sectionName ? lines.slice(1).join('\n') : section;
-      
       const slide: LyricsSlide = {
-        id: `${Date.now()}-${index}`,
+        id: `slide-${Date.now()}-${index}`,
         type: 'lyrics',
         title: `${editingSlide.songTitle} - Slide ${index + 1}`,
         songTitle: editingSlide.songTitle || 'Untitled',
@@ -173,7 +321,6 @@ const ServiceBuilder = () => {
       };
       slides.push(slide);
     });
-
     slides.forEach(slide => addSlideToSubsection(slide));
     setEditingSlide(null);
     toast.success('Lyrics slides added');
@@ -184,35 +331,26 @@ const ServiceBuilder = () => {
       toast.error('Please select a subsection first');
       return;
     }
-
     if (media.filter(m => m.type === 'image').length === 0) {
-      toast.error('No images in library', {
-        description: 'Upload images in Media Library first',
-      });
+      toast.error('No images in library', { description: 'Upload images in Media Library first' });
       return;
     }
-    
     const imageMedia = media.filter(m => m.type === 'image');
     const imageList = imageMedia.map((m, i) => `${i + 1}. ${m.name}`).join('\n');
     const selection = prompt(`Select image:\n${imageList}\n\nEnter number:`);
-    
     if (!selection) return;
-    
     const index = parseInt(selection) - 1;
     const selectedImage = imageMedia[index];
-    
     if (!selectedImage || !selectedImage.url) {
       toast.error('Invalid selection');
       return;
     }
-
     const newSlide: ImageSlide = {
-      id: Date.now().toString(),
+      id: `slide-${Date.now()}`,
       type: 'image',
       title: selectedImage.name,
       imageUrl: selectedImage.url,
     };
-
     addSlideToSubsection(newSlide);
     toast.success('Image slide added');
   };
@@ -227,15 +365,12 @@ const ServiceBuilder = () => {
 
   const addSlideToSubsection = (slide: Slide) => {
     if (!selectedSubsection) return;
-
     setService(prev => prev ? {
       ...prev,
       sections: prev.sections?.map(section => ({
         ...section,
         subsections: section.subsections.map(sub =>
-          sub.id === selectedSubsection
-            ? { ...sub, slides: [...sub.slides, slide] }
-            : sub
+          sub.id === selectedSubsection ? { ...sub, slides: [...sub.slides, slide] } : sub
         ),
       })) || [],
     } : null);
@@ -265,10 +400,7 @@ const ServiceBuilder = () => {
       ...prev,
       sections: prev.sections?.map(section =>
         section.id === sectionId
-          ? {
-              ...section,
-              subsections: section.subsections.filter(sub => sub.id !== subsectionId),
-            }
+          ? { ...section, subsections: section.subsections.filter(sub => sub.id !== subsectionId) }
           : section
       ) || [],
     } : null);
@@ -287,9 +419,7 @@ const ServiceBuilder = () => {
     setService(prev => prev ? {
       ...prev,
       sections: prev.sections?.map(section =>
-        section.id === sectionId
-          ? { ...section, collapsed: !section.collapsed }
-          : section
+        section.id === sectionId ? { ...section, collapsed: !section.collapsed } : section
       ) || [],
     } : null);
   };
@@ -321,14 +451,123 @@ const ServiceBuilder = () => {
           ? {
               ...section,
               subsections: section.subsections.map(sub =>
-                sub.id === subsectionId
-                  ? { ...sub, countdown }
-                  : sub
+                sub.id === subsectionId ? { ...sub, countdown } : sub
               ),
             }
           : section
       ) || [],
     } : null);
+  };
+
+  const openNotesDialog = (type: 'section' | 'subsection' | 'slide', id: string, sectionId?: string, subsectionId?: string) => {
+    let currentNotes = '';
+    if (type === 'section') {
+      currentNotes = service?.sections?.find(s => s.id === id)?.operatorNotes || '';
+    } else if (type === 'subsection' && sectionId) {
+      const section = service?.sections?.find(s => s.id === sectionId);
+      currentNotes = section?.subsections?.find(sub => sub.id === id)?.presenterNotes || '';
+    } else if (type === 'slide' && sectionId && subsectionId) {
+      const section = service?.sections?.find(s => s.id === sectionId);
+      const subsection = section?.subsections?.find(sub => sub.id === subsectionId);
+      currentNotes = subsection?.slides?.find(slide => slide.id === id)?.slideNotes || '';
+    }
+    setNotesContent(currentNotes);
+    setNotesDialog({ type, id, sectionId, subsectionId });
+  };
+
+  const saveNotes = () => {
+    if (!notesDialog) return;
+    const { type, id, sectionId, subsectionId } = notesDialog;
+    
+    setService(prev => {
+      if (!prev) return null;
+      if (type === 'section') {
+        return {
+          ...prev,
+          sections: prev.sections?.map(s => s.id === id ? { ...s, operatorNotes: notesContent } : s) || [],
+        };
+      } else if (type === 'subsection' && sectionId) {
+        return {
+          ...prev,
+          sections: prev.sections?.map(section =>
+            section.id === sectionId
+              ? {
+                  ...section,
+                  subsections: section.subsections.map(sub =>
+                    sub.id === id ? { ...sub, presenterNotes: notesContent } : sub
+                  ),
+                }
+              : section
+          ) || [],
+        };
+      } else if (type === 'slide' && sectionId && subsectionId) {
+        return {
+          ...prev,
+          sections: prev.sections?.map(section =>
+            section.id === sectionId
+              ? {
+                  ...section,
+                  subsections: section.subsections.map(sub =>
+                    sub.id === subsectionId
+                      ? {
+                          ...sub,
+                          slides: sub.slides.map(slide =>
+                            slide.id === id ? { ...slide, slideNotes: notesContent } : slide
+                          ),
+                        }
+                      : sub
+                  ),
+                }
+              : section
+          ) || [],
+        };
+      }
+      return prev;
+    });
+    setNotesDialog(null);
+    toast.success('Notes saved');
+  };
+
+  const handleDragEnd = (event: DragEndEvent, context: 'section' | 'subsection' | 'slide', sectionId?: string, subsectionId?: string) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setService(prev => {
+      if (!prev) return null;
+
+      if (context === 'section') {
+        const oldIndex = prev.sections.findIndex(s => s.id === active.id);
+        const newIndex = prev.sections.findIndex(s => s.id === over.id);
+        return { ...prev, sections: arrayMove(prev.sections, oldIndex, newIndex) };
+      } else if (context === 'subsection' && sectionId) {
+        return {
+          ...prev,
+          sections: prev.sections.map(section => {
+            if (section.id !== sectionId) return section;
+            const oldIndex = section.subsections.findIndex(sub => sub.id === active.id);
+            const newIndex = section.subsections.findIndex(sub => sub.id === over.id);
+            return { ...section, subsections: arrayMove(section.subsections, oldIndex, newIndex) };
+          }),
+        };
+      } else if (context === 'slide' && sectionId && subsectionId) {
+        return {
+          ...prev,
+          sections: prev.sections.map(section => {
+            if (section.id !== sectionId) return section;
+            return {
+              ...section,
+              subsections: section.subsections.map(sub => {
+                if (sub.id !== subsectionId) return sub;
+                const oldIndex = sub.slides.findIndex(slide => slide.id === active.id);
+                const newIndex = sub.slides.findIndex(slide => slide.id === over.id);
+                return { ...sub, slides: arrayMove(sub.slides, oldIndex, newIndex) };
+              }),
+            };
+          }),
+        };
+      }
+      return prev;
+    });
   };
 
   if (!service) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -356,10 +595,8 @@ const ServiceBuilder = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Panel - Add Content */}
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Add Content</h2>
-            
             <div className="space-y-4">
               <div>
                 <Label className="mb-2 block">Sections</Label>
@@ -372,11 +609,7 @@ const ServiceBuilder = () => {
               {selectedSection && (
                 <div>
                   <Label className="mb-2 block">Subsections</Label>
-                  <Button
-                    onClick={() => handleAddSubsection(selectedSection)}
-                    variant="outline"
-                    className="w-full justify-start"
-                  >
+                  <Button onClick={() => handleAddSubsection(selectedSection)} variant="outline" className="w-full justify-start">
                     <FilePlus className="w-4 h-4 mr-2" />
                     Add Subsection
                   </Button>
@@ -401,6 +634,20 @@ const ServiceBuilder = () => {
                         Image
                       </Button>
                       <PPTXImport onImport={handlePPTXImport} />
+                      <Label htmlFor="file-upload" className="cursor-pointer">
+                        <div className="flex items-center justify-start w-full px-4 py-2 text-sm font-medium border rounded-md hover:bg-accent">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload from Device
+                        </div>
+                      </Label>
+                      <Input
+                        id="file-upload"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleFileUpload}
+                      />
                     </div>
                   </div>
                 </>
@@ -424,173 +671,182 @@ const ServiceBuilder = () => {
             </div>
           </Card>
 
-          {/* Right Panel - Service Structure */}
           <Card className="p-6 lg:col-span-2">
-            <h2 className="text-xl font-semibold mb-4">
-              Service Structure
-            </h2>
-
+            <h2 className="text-xl font-semibold mb-4">Service Structure</h2>
             {(!service.sections || service.sections.length === 0) ? (
               <div className="text-center py-12 text-muted-foreground">
                 No sections yet. Add your first section to get started.
               </div>
             ) : (
-              <div className="space-y-3">
-                {service.sections.map((section) => (
-                  <Collapsible
-                    key={section.id}
-                    open={!section.collapsed}
-                    onOpenChange={() => toggleSectionCollapse(section.id)}
-                  >
-                    <Card className={`${selectedSection === section.id ? 'border-primary' : ''}`}>
-                      <div className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 flex-1">
-                            <CollapsibleTrigger asChild>
-                              <Button size="sm" variant="ghost">
-                                {section.collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                              </Button>
-                            </CollapsibleTrigger>
-                            <button
-                              onClick={() => setSelectedSection(section.id)}
-                              className="flex-1 text-left font-semibold text-lg"
-                            >
-                              {section.name}
-                            </button>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAddSubsection(section.id)}
-                            >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDeleteSection(section.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <CollapsibleContent className="mt-4">
-                          <div className="space-y-2 ml-8">
-                            {section.subsections.map((subsection) => (
-                              <Card
-                                key={subsection.id}
-                                className={`p-3 ${selectedSubsection === subsection.id ? 'border-primary bg-primary/5' : ''}`}
-                              >
-                                <div className="flex items-center justify-between mb-2">
-                                  <button
-                                    onClick={() => setSelectedSubsection(subsection.id)}
-                                    className="flex-1 text-left font-medium"
-                                  >
-                                    {subsection.name}
-                                  </button>
-                                  <div className="flex gap-1">
-                                    <CountdownConfiguration
-                                      config={subsection.countdown}
-                                      onUpdate={(config) => handleUpdateCountdown(section.id, subsection.id, config)}
-                                    />
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      onClick={() => handleDeleteSubsection(section.id, subsection.id)}
-                                    >
-                                      <Trash2 className="w-4 h-4" />
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'section')}>
+                <SortableContext items={service.sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-3">
+                    {service.sections.map((section) => (
+                      <SortableSection key={section.id} section={section}>
+                        <Collapsible open={!section.collapsed} onOpenChange={() => toggleSectionCollapse(section.id)}>
+                          <Card className={`${selectedSection === section.id ? 'border-primary' : ''}`}>
+                            <div className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <CollapsibleTrigger asChild>
+                                    <Button size="sm" variant="ghost">
+                                      {section.collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                     </Button>
-                                  </div>
+                                  </CollapsibleTrigger>
+                                  <button onClick={() => setSelectedSection(section.id)} className="flex-1 text-left font-semibold text-lg">
+                                    {section.name}
+                                  </button>
                                 </div>
+                                <div className="flex gap-1">
+                                  <Button size="sm" variant="outline" onClick={() => openNotesDialog('section', section.id)}>
+                                    <StickyNote className="w-4 h-4" />
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => handleDuplicateSection(section)}>
+                                    <Copy className="w-4 h-4" />
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => handleAddSubsection(section.id)}>
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteSection(section.id)}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
 
-                                {subsection.slides.length > 0 && (
-                                  <div className="space-y-1 mt-2 pl-4 border-l-2 border-border">
-                                    {subsection.slides.map((slide) => (
-                                      <div key={slide.id} className="flex items-center justify-between p-2 rounded hover:bg-muted/50">
-                                        <div className="flex items-center gap-2 flex-1">
-                                          {slide.type === 'scripture' && <Book className="w-3 h-3 text-primary" />}
-                                          {slide.type === 'lyrics' && <Music className="w-3 h-3 text-primary" />}
-                                          {slide.type === 'image' && <ImageIcon className="w-3 h-3 text-primary" />}
-                                          <span className="text-sm">{slide.title}</span>
-                                        </div>
-                                        <div className="flex gap-1">
-                                          <SlideConfiguration
-                                            slide={slide}
-                                            onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)}
-                                          />
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)}
-                                          >
-                                            <Trash2 className="w-3 h-3" />
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </Card>
-                            ))}
-                          </div>
-                        </CollapsibleContent>
-                      </div>
-                    </Card>
-                  </Collapsible>
-                ))}
-              </div>
+                              <CollapsibleContent className="mt-4">
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'subsection', section.id)}>
+                                  <SortableContext items={section.subsections.map(sub => sub.id)} strategy={verticalListSortingStrategy}>
+                                    <div className="space-y-2 ml-8">
+                                      {section.subsections.map((subsection) => (
+                                        <SortableSubsection key={subsection.id} subsection={subsection}>
+                                          <Card className={`p-3 ${selectedSubsection === subsection.id ? 'border-primary bg-primary/5' : ''}`}>
+                                            <div className="flex items-center justify-between mb-2">
+                                              <button onClick={() => setSelectedSubsection(subsection.id)} className="flex-1 text-left font-medium">
+                                                {subsection.name}
+                                              </button>
+                                              <div className="flex gap-1">
+                                                <Button size="sm" variant="ghost" onClick={() => openNotesDialog('subsection', subsection.id, section.id)}>
+                                                  <StickyNote className="w-3 h-3" />
+                                                </Button>
+                                                <Button size="sm" variant="ghost" onClick={() => handleDuplicateSubsection(section.id, subsection)}>
+                                                  <Copy className="w-3 h-3" />
+                                                </Button>
+                                                <CountdownConfiguration
+                                                  config={subsection.countdown}
+                                                  onUpdate={(countdown) => handleUpdateCountdown(section.id, subsection.id, countdown)}
+                                                />
+                                                <Button size="sm" variant="ghost" onClick={() => handleDeleteSubsection(section.id, subsection.id)}>
+                                                  <Trash2 className="w-3 h-3" />
+                                                </Button>
+                                              </div>
+                                            </div>
+
+                                            {subsection.slides.length > 0 && (
+                                              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'slide', section.id, subsection.id)}>
+                                                <SortableContext items={subsection.slides.map(slide => slide.id)} strategy={verticalListSortingStrategy}>
+                                                  <div className="ml-4 space-y-1">
+                                                    {subsection.slides.map((slide) => (
+                                                      <SortableSlide key={slide.id} slide={slide}>
+                                                        <div className="flex items-center justify-between text-sm py-1">
+                                                          <span className="truncate flex-1">{slide.title}</span>
+                                                          <div className="flex gap-1">
+                                                            <Button size="sm" variant="ghost" onClick={() => openNotesDialog('slide', slide.id, section.id, subsection.id)}>
+                                                              <StickyNote className="w-3 h-3" />
+                                                            </Button>
+                                                            <SlideConfiguration slide={slide} onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)} />
+                                                            <Button size="sm" variant="ghost" onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)}>
+                                                              <Trash2 className="w-3 h-3" />
+                                                            </Button>
+                                                          </div>
+                                                        </div>
+                                                      </SortableSlide>
+                                                    ))}
+                                                  </div>
+                                                </SortableContext>
+                                              </DndContext>
+                                            )}
+                                          </Card>
+                                        </SortableSubsection>
+                                      ))}
+                                    </div>
+                                  </SortableContext>
+                                </DndContext>
+                              </CollapsibleContent>
+                            </div>
+                          </Card>
+                        </Collapsible>
+                      </SortableSection>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
           </Card>
         </div>
-
-        {/* Lyrics Editor Modal */}
-        {editingSlide?.type === 'lyrics' && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-2xl p-6">
-              <h2 className="text-2xl font-semibold mb-4">Add Song Lyrics</h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="song-title">Song Title</Label>
-                  <Input
-                    id="song-title"
-                    value={(editingSlide as any).songTitle || ''}
-                    onChange={(e) => setEditingSlide({...editingSlide, songTitle: e.target.value})}
-                    placeholder="Amazing Grace"
-                    className="mt-2"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="lyrics-content">Lyrics</Label>
-                  <Textarea
-                    id="lyrics-content"
-                    value={(editingSlide as any).content || ''}
-                    onChange={(e) => setEditingSlide({...editingSlide, content: e.target.value})}
-                    placeholder="Verse 1&#10;Amazing grace how sweet the sound&#10;&#10;Chorus&#10;How precious did that grace appear&#10;&#10;Separate slides with double line breaks"
-                    className="mt-2 h-64 font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Tip: Use double line breaks to separate slides. Label sections as "Verse", "Chorus", "Bridge"
-                  </p>
-                </div>
-
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" onClick={() => setEditingSlide(null)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSaveLyricsSlide}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Slides
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
       </div>
+
+      {editingSlide?.type === 'lyrics' && (
+        <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Add Song Lyrics</DialogTitle>
+              <DialogDescription>Separate verses/sections with blank lines</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Song Title</Label>
+                <Input
+                  value={editingSlide.songTitle || ''}
+                  onChange={(e) => setEditingSlide({...editingSlide, songTitle: e.target.value})}
+                  placeholder="Enter song title"
+                />
+              </div>
+              <div>
+                <Label>Lyrics</Label>
+                <Textarea
+                  value={editingSlide.content || ''}
+                  onChange={(e) => setEditingSlide({...editingSlide, content: e.target.value})}
+                  placeholder="Verse 1&#10;First line&#10;Second line&#10;&#10;Chorus&#10;Chorus lyrics..."
+                  className="min-h-[300px] font-mono"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
+              <Button onClick={handleSaveLyricsSlide}>Save Lyrics</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {notesDialog && (
+        <Dialog open={true} onOpenChange={() => setNotesDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {notesDialog.type === 'section' && 'Operator Notes (Private)'}
+                {notesDialog.type === 'subsection' && 'Presenter Notes (Confidence Monitor)'}
+                {notesDialog.type === 'slide' && 'Slide Notes'}
+              </DialogTitle>
+              <DialogDescription>
+                {notesDialog.type === 'section' && 'Private notes for operators only'}
+                {notesDialog.type === 'subsection' && 'Visible on confidence monitor'}
+                {notesDialog.type === 'slide' && 'Notes for this specific slide'}
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              value={notesContent}
+              onChange={(e) => setNotesContent(e.target.value)}
+              placeholder="Enter notes..."
+              className="min-h-[200px]"
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setNotesDialog(null)}>Cancel</Button>
+              <Button onClick={saveNotes}>Save Notes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

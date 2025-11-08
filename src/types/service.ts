@@ -25,6 +25,7 @@ export interface BaseSlide {
     fontSize?: 'small' | 'medium' | 'large' | 'xlarge';
     alignment?: 'left' | 'center' | 'right';
   };
+  slideNotes?: string; // Notes specific to this slide
 }
 
 export interface ScriptureSlide extends BaseSlide {
@@ -63,6 +64,7 @@ export interface ServiceSubsection {
   slides: Slide[];
   countdown?: CountdownConfig;
   autoStartCountdown?: boolean; // for songs vs manual testimonies
+  presenterNotes?: string; // Notes visible on confidence monitor
 }
 
 export interface ServiceSection {
@@ -70,6 +72,7 @@ export interface ServiceSection {
   name: string;
   subsections: ServiceSubsection[];
   collapsed?: boolean;
+  operatorNotes?: string; // Private notes for operators
 }
 
 export interface Service {
