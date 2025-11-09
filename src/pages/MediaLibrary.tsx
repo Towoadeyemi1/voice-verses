@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
-import { Image, Music, Plus, Trash2, Search, Pencil } from 'lucide-react';
+import { Image, Music, Plus, Trash2, Search, Pencil, Mic, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { SongSelectImport } from '@/components/SongSelectImport';
@@ -147,21 +147,61 @@ const MediaLibrary = () => {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Media Library</h1>
-            <p className="text-muted-foreground">
-              Manage images and song lyrics for your services
-            </p>
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Media Library</h1>
+              <p className="text-muted-foreground">
+                Manage images and song lyrics for your services
+              </p>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/service-planner')}>
-              Service Planner
-            </Button>
-            <Button onClick={() => navigate('/')}>
-              Control Panel
-            </Button>
-          </div>
+
+          {/* Mode Switcher */}
+          <Card className="p-4 bg-card/50 backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
+                <Button
+                  onClick={() => navigate('/')}
+                  variant="ghost"
+                  size="lg"
+                  className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
+                >
+                  <Mic className="w-5 h-5" />
+                  <div className="text-left">
+                    <div className="font-semibold text-sm">Scripture Mode</div>
+                    <div className="text-xs text-muted-foreground">Voice-controlled</div>
+                  </div>
+                </Button>
+                
+                <Button
+                  onClick={() => navigate('/service-planner')}
+                  variant="ghost"
+                  size="lg"
+                  className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
+                >
+                  <Calendar className="w-5 h-5" />
+                  <div className="text-left">
+                    <div className="font-semibold text-sm">Service Mode</div>
+                    <div className="text-xs text-muted-foreground">Plan services</div>
+                  </div>
+                </Button>
+                
+                <Button
+                  onClick={() => navigate('/media-library')}
+                  variant="ghost"
+                  size="lg"
+                  className="h-auto p-4 gap-3 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                >
+                  <Music className="w-5 h-5" />
+                  <div className="text-left">
+                    <div className="font-semibold text-sm">Media Mode</div>
+                    <div className="text-xs opacity-90">Manage media</div>
+                  </div>
+                </Button>
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* Search and Filter */}
