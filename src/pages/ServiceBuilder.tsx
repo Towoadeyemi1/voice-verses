@@ -1175,9 +1175,6 @@ Chorus line 2"`;
                                   <Button size="sm" variant="outline" onClick={() => handleDuplicateSection(section)} title="Duplicate Section">
                                     <Copy className="w-4 h-4" />
                                   </Button>
-                                  <Button size="sm" variant="outline" onClick={() => handleAddSubsection(section.id)} title="Add Subsection">
-                                    <Plus className="w-4 h-4" />
-                                  </Button>
                                   <Button size="sm" variant="destructive" onClick={() => handleDeleteSection(section.id)} title="Delete Section">
                                     <Trash2 className="w-4 h-4" />
                                   </Button>
@@ -1185,7 +1182,17 @@ Chorus line 2"`;
                               </div>
 
                               <CollapsibleContent className="mt-4">
-                                <DndContext 
+                                {section.subsections.length === 0 ? (
+                                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                    <p className="text-muted-foreground mb-3">No subsections yet</p>
+                                    <Button onClick={() => handleAddSubsection(section.id)} variant="outline">
+                                      <FilePlus className="w-4 h-4 mr-2" />
+                                      Add Subsection
+                                    </Button>
+                                  </div>
+                                ) : (
+                                <>
+                                <DndContext
                                   sensors={sensors} 
                                   collisionDetection={closestCenter} 
                                   onDragStart={handleDragStart}
@@ -1217,7 +1224,29 @@ Chorus line 2"`;
                                               </div>
                                             </div>
 
-                                            {subsection.slides.length > 0 && (
+                                            {subsection.slides.length === 0 ? (
+                                              <div className="text-center py-6 border-2 border-dashed rounded-lg mt-2">
+                                                <p className="text-xs text-muted-foreground mb-3">No slides yet. Add content:</p>
+                                                <div className="flex flex-wrap gap-2 justify-center">
+                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddScriptureSlide(); }}>
+                                                    <Book className="w-3 h-3 mr-1" />
+                                                    Scripture
+                                                  </Button>
+                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddLyricsSlide(); }}>
+                                                    <Music className="w-3 h-3 mr-1" />
+                                                    Lyrics
+                                                  </Button>
+                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddImageSlide(); }}>
+                                                    <ImageIcon className="w-3 h-3 mr-1" />
+                                                    Image
+                                                  </Button>
+                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddAnnouncementSlide(); }}>
+                                                    <MessageSquare className="w-3 h-3 mr-1" />
+                                                    Announcement
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                            ) : (
                                               <DndContext 
                                                 sensors={sensors} 
                                                 collisionDetection={closestCenter} 
@@ -1226,31 +1255,56 @@ Chorus line 2"`;
                                               >
                                                 <SortableContext items={subsection.slides.map(slide => slide.id)} strategy={verticalListSortingStrategy}>
                                                   <div className="ml-4 space-y-1">
-                                                    {subsection.slides.map((slide) => (
-                                                      <SortableSlide key={slide.id} slide={slide}>
-                                                        <div className={`flex items-center justify-between text-sm py-1 px-2 rounded ${activeId === slide.id ? 'bg-primary/10 ring-1 ring-primary' : ''}`}>
-                                                          <div className="flex items-center gap-2 flex-1 truncate">
-                                                            {getSlideIcon(slide)}
-                                                            <span className="truncate">{slide.title}</span>
-                                                          </div>
-                                                          <div className="flex gap-1">
-                                                            <Button size="sm" variant="ghost" onClick={() => openNotesDialog('slide', slide.id, section.id, subsection.id)} title="Slide Notes">
-                                                              <StickyNote className="w-3 h-3" />
-                                                            </Button>
-                                                            <Button size="sm" variant="ghost" onClick={() => handleEditSlide(section.id, subsection.id, slide)} title="Edit Slide">
-                                                              <Pencil className="w-3 h-3" />
-                                                            </Button>
-                                                            <SlideConfiguration slide={slide} onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)} />
-                                                            <Button size="sm" variant="ghost" onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)} title="Delete">
-                                                              <Trash2 className="w-3 h-3" />
-                                                            </Button>
-                                                          </div>
-                                                        </div>
-                                                      </SortableSlide>
-                                                    ))}
-                                                  </div>
+                                                     {subsection.slides.map((slide) => (
+                                                       <SortableSlide key={slide.id} slide={slide}>
+                                                         <div className={`flex items-center justify-between text-sm py-2 px-2 rounded ${activeId === slide.id ? 'bg-primary/10 ring-1 ring-primary' : ''}`}>
+                                                           <div className="flex items-center gap-2 flex-1 truncate">
+                                                             {slide.type === 'image' ? (
+                                                               <img 
+                                                                 src={(slide as ImageSlide).imageUrl} 
+                                                                 alt={slide.title}
+                                                                 className="w-12 h-12 object-cover rounded"
+                                                               />
+                                                             ) : (
+                                                               getSlideIcon(slide)
+                                                             )}
+                                                             <span className="truncate">{slide.title}</span>
+                                                           </div>
+                                                           <div className="flex gap-1">
+                                                             <Button size="sm" variant="ghost" onClick={() => openNotesDialog('slide', slide.id, section.id, subsection.id)} title="Slide Notes">
+                                                               <StickyNote className="w-3 h-3" />
+                                                             </Button>
+                                                             <Button size="sm" variant="ghost" onClick={() => handleEditSlide(section.id, subsection.id, slide)} title="Edit Slide">
+                                                               <Pencil className="w-3 h-3" />
+                                                             </Button>
+                                                             <SlideConfiguration slide={slide} onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)} />
+                                                             <Button size="sm" variant="ghost" onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)} title="Delete">
+                                                               <Trash2 className="w-3 h-3" />
+                                                             </Button>
+                                                           </div>
+                                                         </div>
+                                                       </SortableSlide>
+                                                     ))}
+                                                   </div>
                                                 </SortableContext>
                                               </DndContext>
+                                            )}
+
+                                            {subsection.slides.length > 0 && (
+                                              <div className="mt-3 flex flex-wrap gap-2">
+                                                <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddScriptureSlide(); }} className="flex-1">
+                                                  <Book className="w-3 h-3 mr-1" />
+                                                  Add Scripture
+                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddLyricsSlide(); }} className="flex-1">
+                                                  <Music className="w-3 h-3 mr-1" />
+                                                  Add Lyrics
+                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddImageSlide(); }} className="flex-1">
+                                                  <ImageIcon className="w-3 h-3 mr-1" />
+                                                  Add Image
+                                                </Button>
+                                              </div>
                                             )}
                                           </Card>
                                         </SortableSubsection>
@@ -1258,6 +1312,14 @@ Chorus line 2"`;
                                     </div>
                                   </SortableContext>
                                 </DndContext>
+                                <div className="mt-3 ml-8">
+                                  <Button onClick={() => handleAddSubsection(section.id)} variant="outline" size="sm" className="w-full">
+                                    <FilePlus className="w-4 h-4 mr-2" />
+                                    Add Subsection
+                                  </Button>
+                                </div>
+                                </>
+                                )}
                               </CollapsibleContent>
                             </div>
                           </Card>
