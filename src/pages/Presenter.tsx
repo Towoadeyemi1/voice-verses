@@ -8,6 +8,7 @@ import { ServiceStorage } from '@/lib/serviceStorage';
 import { syncService } from '@/lib/syncService';
 import { SlideDisplay } from '@/components/SlideDisplay';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
+import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { Play, Square, ChevronLeft, ChevronRight, Monitor, Edit2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { ShowLogoButton } from '@/components/ShowLogoButton';
@@ -240,9 +241,16 @@ const Presenter = () => {
         </div>
       ) : (
         <div className="container mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Preview Area */}
-            <div className="lg:col-span-2 space-y-4">
+          <div className="space-y-6">
+            {/* Display Monitor Section */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Live Display Outputs</h3>
+              <DisplayMonitor />
+            </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Preview Area */}
+              <div className="lg:col-span-2 space-y-4">
               {/* Presentation Controls */}
               <Card className="p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -355,6 +363,7 @@ const Presenter = () => {
                   ))}
                 </div>
               </Card>
+              </div>
             </div>
           </div>
         </div>

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { BibleVerse } from '@/types/bible';
 import { syncService } from '@/lib/syncService';
 import { Monitor, MonitorPlay, TvMinimalPlay } from 'lucide-react';
+import { Slide } from '@/types/service';
+import { SlideDisplay } from './SlideDisplay';
 
 export const DisplayMonitor = () => {
-  const [verse, setVerse] = useState<BibleVerse | null>(null);
+  const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [lowerThirdSettings, setLowerThirdSettings] = useState<any>(null);
   const [projectionSettings, setProjectionSettings] = useState<any>(null);
 
@@ -20,10 +21,21 @@ export const DisplayMonitor = () => {
 
     loadSettings();
 
-    // Subscribe to verse updates
+    // Subscribe to slide updates
     const unsubscribe = syncService.subscribe((message) => {
-      if (message.type === 'VERSE_UPDATE' && message.data.verse) {
-        setVerse(message.data.verse);
+      if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
+        setCurrentSlide(message.data.slide);
+      } else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
+        // Legacy verse update support
+        const verse = message.data.verse;
+        const scriptureSlide: Slide = {
+          id: `temp-${Date.now()}`,
+          type: 'scripture',
+          title: `${verse.book} ${verse.chapter}:${verse.verse}`,
+          verse: verse,
+          textFormatting: { fontSize: 'medium', alignment: 'center' }
+        };
+        setCurrentSlide(scriptureSlide);
       }
     });
 
@@ -38,44 +50,25 @@ export const DisplayMonitor = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3 auto-rows-fr">
-      {/* Projection Display Preview */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Main Projection Display Preview */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MonitorPlay className="w-3.5 h-3.5 text-primary" />
-            <h4 className="font-medium text-xs">Main Projection</h4>
+            <MonitorPlay className="w-4 h-4 text-primary" />
+            <h4 className="font-medium text-sm">Main Projection</h4>
           </div>
-          <span className="text-[10px] text-muted-foreground">SDI 1 • 1920×1080</span>
+          <span className="text-xs text-muted-foreground">1920×1080</span>
         </div>
-        <div className="aspect-video bg-projection-bg rounded-md overflow-hidden border border-border/50">
-          <div className="h-full flex flex-col items-center justify-center p-3 text-projection-text">
-            {verse ? (
-              <div className="space-y-2 text-center w-full">
-                <p 
-                  className="font-serif leading-snug line-clamp-3"
-                  style={{ fontSize: '10px' }}
-                >
-                  "{verse.text}"
-                </p>
-                {(projectionSettings?.showReference ?? true) && (
-                  <div className="pt-1.5 border-t border-projection-accent/20">
-                    <p 
-                      className="font-semibold text-projection-accent"
-                      style={{ fontSize: '8px' }}
-                    >
-                      {verse.book} {verse.chapter}:{verse.verse}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center space-y-1.5">
-                <Monitor className="w-6 h-6 mx-auto text-projection-accent/40" />
-                <p className="text-projection-text/50 text-[10px]">Waiting for verse...</p>
-              </div>
-            )}
-          </div>
+        <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-border shadow-lg">
+          {currentSlide ? (
+            <SlideDisplay slide={currentSlide} className="h-full" />
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-white/50">
+              <MonitorPlay className="w-12 h-12 mb-2" />
+              <p className="text-sm">Waiting for content...</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -83,57 +76,58 @@ export const DisplayMonitor = () => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TvMinimalPlay className="w-3.5 h-3.5 text-primary" />
-            <h4 className="font-medium text-xs">Lower Third</h4>
+            <TvMinimalPlay className="w-4 h-4 text-primary" />
+            <h4 className="font-medium text-sm">Lower Third</h4>
           </div>
-          <span className="text-[10px] text-muted-foreground">SDI 2 • Chroma Key</span>
+          <span className="text-xs text-muted-foreground">Chroma Key</span>
         </div>
-        <div className="aspect-video bg-[#00FF00] rounded-md overflow-hidden border border-border/50 relative">
-          <div className="absolute inset-0 flex items-end justify-center p-2">
-            {verse && lowerThirdSettings?.showBackground ? (
-              <div 
-                className="rounded px-3 py-1.5 max-w-full"
-                style={{
-                  backgroundColor: `${lowerThirdSettings.backgroundColor}${Math.round((lowerThirdSettings.backgroundOpacity || 90) * 2.55).toString(16).padStart(2, '0')}`,
-                }}
-              >
-                <p 
-                  className="font-semibold text-center"
-                  style={{ 
-                    fontSize: '8px',
-                    color: lowerThirdSettings?.textColor || '#FFFFFF'
+        <div className="aspect-video bg-[#00FF00] rounded-lg overflow-hidden border-2 border-border shadow-lg relative">
+          {currentSlide && currentSlide.type === 'scripture' ? (
+            <div className="absolute inset-0 flex items-end justify-center p-4">
+              {lowerThirdSettings?.showBackground ? (
+                <div 
+                  className="rounded-lg px-6 py-3 max-w-full"
+                  style={{
+                    backgroundColor: `${lowerThirdSettings.backgroundColor}${Math.round((lowerThirdSettings.backgroundOpacity || 90) * 2.55).toString(16).padStart(2, '0')}`,
                   }}
                 >
-                  {verse.book} {verse.chapter}:{verse.verse}
-                </p>
-                <p 
-                  className="text-center mt-0.5 line-clamp-1"
-                  style={{ 
-                    fontSize: '7px',
-                    color: lowerThirdSettings?.textColor || '#FFFFFF',
-                    opacity: 0.9
-                  }}
-                >
-                  {verse.text.substring(0, 60)}...
-                </p>
-              </div>
-            ) : (
-              verse && (
-                <div className="text-center">
                   <p 
-                    className="font-bold"
+                    className="font-bold text-center text-sm"
                     style={{ 
-                      fontSize: '8px',
-                      color: lowerThirdSettings?.textColor || '#FFFFFF',
-                      textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+                      color: lowerThirdSettings?.textColor || '#FFFFFF'
                     }}
                   >
-                    {verse.book} {verse.chapter}:{verse.verse}
+                    {currentSlide.verse.book} {currentSlide.verse.chapter}:{currentSlide.verse.verse}
+                  </p>
+                  <p 
+                    className="text-center mt-1 text-xs line-clamp-2"
+                    style={{ 
+                      color: lowerThirdSettings?.textColor || '#FFFFFF',
+                      opacity: 0.9
+                    }}
+                  >
+                    {currentSlide.verse.text}
                   </p>
                 </div>
-              )
-            )}
-          </div>
+              ) : (
+                <div className="text-center">
+                  <p 
+                    className="font-bold text-sm"
+                    style={{ 
+                      color: lowerThirdSettings?.textColor || '#FFFFFF',
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                    }}
+                  >
+                    {currentSlide.verse.book} {currentSlide.verse.chapter}:{currentSlide.verse.verse}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <TvMinimalPlay className="w-12 h-12 text-white/30" />
+            </div>
+          )}
         </div>
       </div>
 
@@ -141,29 +135,34 @@ export const DisplayMonitor = () => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Monitor className="w-3.5 h-3.5 text-primary" />
-            <h4 className="font-medium text-xs">Confidence</h4>
+            <Monitor className="w-4 h-4 text-primary" />
+            <h4 className="font-medium text-sm">Confidence Monitor</h4>
           </div>
-          <span className="text-[10px] text-muted-foreground">SDI 3 • 1920×1080</span>
+          <span className="text-xs text-muted-foreground">1920×1080</span>
         </div>
-        <div className="aspect-video bg-background rounded-md overflow-hidden border border-border/50">
-          <div className="h-full flex items-center justify-center p-2.5">
-            {verse ? (
-              <div className="text-center space-y-1 w-full">
-                <p className="font-bold text-[10px]">
-                  {verse.book} {verse.chapter}:{verse.verse}
+        <div className="aspect-video bg-background rounded-lg overflow-hidden border-2 border-border shadow-lg">
+          {currentSlide ? (
+            <div className="h-full p-4 flex flex-col">
+              <div className="text-center space-y-2">
+                <p className="font-bold text-sm text-foreground">
+                  {currentSlide.title}
                 </p>
-                <p className="text-[9px] text-muted-foreground line-clamp-2 leading-tight">
-                  {verse.text}
+                <p className="text-xs text-muted-foreground capitalize">
+                  {currentSlide.type}
                 </p>
               </div>
-            ) : (
-              <div className="text-center space-y-1.5">
-                <Monitor className="w-6 h-6 mx-auto text-muted-foreground/40" />
-                <p className="text-muted-foreground text-[10px]">No verse</p>
+              <div className="flex-1 flex items-center justify-center mt-4">
+                <div className="w-full aspect-video bg-black/50 rounded overflow-hidden">
+                  <SlideDisplay slide={currentSlide} className="h-full scale-75 origin-center" />
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+              <Monitor className="w-12 h-12 mb-2" />
+              <p className="text-sm">No content</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
