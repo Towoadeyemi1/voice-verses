@@ -47,34 +47,45 @@ const Confidence = () => {
 
     // Subscribe to verse updates
     const unsubscribe = syncService.subscribe(async (message) => {
-      if (message.type === 'VERSE_UPDATE' && message.data.verse !== undefined) {
-        const verse = message.data.verse;
-        setCurrentVerse(verse);
-        
-        if (verse) {
-          // Get next verses based on settings
-          const nextVersesList: { ref: string; snippet: string }[] = [];
-          
-          for (let i = 1; i <= settings.nextVerseCount; i++) {
-            const nextVerse = await BibleParser.getVerse(
-              verse.book,
-              verse.chapter,
-              verse.verse + i
-            );
-            
-            if (nextVerse) {
-              const words = nextVerse.text.split(' ').slice(0, 7).join(' ');
-              nextVersesList.push({
-                ref: `${nextVerse.book} ${nextVerse.chapter}:${nextVerse.verse}`,
-                snippet: words + '...'
-              });
-            }
-          }
-          
-          setNextVerses(nextVersesList);
-        } else {
-          setNextVerses([]);
+      let verse = null;
+      
+      // Handle slide updates from Presenter
+      if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
+        const slide = message.data.slide;
+        if (slide.type === 'scripture' && slide.verse) {
+          verse = slide.verse;
         }
+      }
+      // Handle legacy verse updates
+      else if (message.type === 'VERSE_UPDATE' && message.data.verse !== undefined) {
+        verse = message.data.verse;
+      }
+      
+      setCurrentVerse(verse);
+      
+      if (verse) {
+        // Get next verses based on settings
+        const nextVersesList: { ref: string; snippet: string }[] = [];
+        
+        for (let i = 1; i <= settings.nextVerseCount; i++) {
+          const nextVerse = await BibleParser.getVerse(
+            verse.book,
+            verse.chapter,
+            verse.verse + i
+          );
+          
+          if (nextVerse) {
+            const words = nextVerse.text.split(' ').slice(0, 7).join(' ');
+            nextVersesList.push({
+              ref: `${nextVerse.book} ${nextVerse.chapter}:${nextVerse.verse}`,
+              snippet: words + '...'
+            });
+          }
+        }
+        
+        setNextVerses(nextVersesList);
+      } else {
+        setNextVerses([]);
       }
     });
 

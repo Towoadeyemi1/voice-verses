@@ -31,7 +31,15 @@ const LowerThird = () => {
 
     // Subscribe to verse updates
     const unsubscribe = syncService.subscribe((message) => {
-      if (message.type === 'VERSE_UPDATE' && message.data.verse) {
+      // Handle slide updates from Presenter
+      if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
+        const slide = message.data.slide;
+        if (slide.type === 'scripture' && slide.verse) {
+          setVerse(slide.verse);
+        }
+      }
+      // Handle legacy verse updates
+      else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
         setVerse(message.data.verse);
       }
     });
