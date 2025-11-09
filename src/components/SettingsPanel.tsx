@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { X, Mic, Type, Palette, HardDrive } from 'lucide-react';
+import { X, Mic, Type, Palette, HardDrive, Music2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BibleVersionSettings } from './BibleVersionSettings';
 import { StorageSettings } from './StorageSettings';
@@ -19,6 +19,7 @@ import { ServiceLogoSettings } from './ServiceLogoSettings';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVersionType } from '@/types/bibleVersion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -32,6 +33,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
   const [autoScroll, setAutoScroll] = useState(true);
   const [showReference, setShowReference] = useState(true);
   const [bibleVersion, setBibleVersion] = useState<BibleVersionType>('kjv');
+  const [ccliLicense, setCcliLicense] = useState<string>('');
 
   useEffect(() => {
     // Initialize Bible version
@@ -47,6 +49,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       setAutoScroll(settings.autoScroll ?? true);
       setShowReference(settings.showReference ?? true);
       setSelectedDevice(settings.audioDevice || 'default');
+      setCcliLicense(settings.ccliLicense || '');
     }
 
     // Get audio devices
@@ -65,6 +68,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       autoScroll,
       showReference,
       audioDevice: selectedDevice,
+      ccliLicense,
     };
     localStorage.setItem('cornerstone-settings', JSON.stringify(settings));
     
@@ -89,10 +93,11 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="logo">Service Logo</TabsTrigger>
-          <TabsTrigger value="storage">Storage & Backup</TabsTrigger>
+          <TabsTrigger value="ccli">CCLI</TabsTrigger>
+          <TabsTrigger value="logo">Logo</TabsTrigger>
+          <TabsTrigger value="storage">Storage</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-8 mt-6">
@@ -207,6 +212,38 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
               </Select>
               <p className="text-xs text-muted-foreground">
                 Choose the control panel theme (projection display stays dark)
+              </p>
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="pt-4 border-t border-border">
+            <Button onClick={saveSettings} className="w-full gradient-divine">
+              Save Settings
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="ccli" className="space-y-6 mt-6">
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">CCLI License</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Your CCLI license number for copyright compliance when displaying song lyrics
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ccli-license">CCLI License Number</Label>
+              <Input
+                id="ccli-license"
+                type="text"
+                placeholder="Enter your CCLI license number"
+                value={ccliLicense}
+                onChange={(e) => setCcliLicense(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                This number will be displayed on song lyric slides for copyright compliance
               </p>
             </div>
           </div>
