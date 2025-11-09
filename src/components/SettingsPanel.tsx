@@ -11,11 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { X, Mic, Type, Palette } from 'lucide-react';
+import { X, Mic, Type, Palette, HardDrive } from 'lucide-react';
 import { toast } from 'sonner';
 import { BibleVersionSettings } from './BibleVersionSettings';
+import { StorageSettings } from './StorageSettings';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVersionType } from '@/types/bibleVersion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -85,129 +87,140 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
         </Button>
       </div>
 
-      <div className="space-y-8">
-        {/* Audio Settings */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Mic className="w-5 h-5 text-primary" />
-            <h4 className="font-semibold text-foreground">Audio Settings</h4>
-          </div>
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="storage">Storage & Backup</TabsTrigger>
+        </TabsList>
 
-          <div className="space-y-2">
-            <Label htmlFor="audio-device">Microphone / Input Device</Label>
-            <Select value={selectedDevice} onValueChange={setSelectedDevice}>
-              <SelectTrigger id="audio-device">
-                <SelectValue placeholder="Select audio device" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">Default</SelectItem>
-                {audioDevices.map((device) => (
-                  <SelectItem key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Microphone ${device.deviceId.slice(0, 8)}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Select the microphone or line-in input for voice recognition
-            </p>
-          </div>
-        </div>
-
-        {/* Display Settings */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Type className="w-5 h-5 text-primary" />
-            <h4 className="font-semibold text-foreground">Projection Display</h4>
-          </div>
-
+        <TabsContent value="general" className="space-y-8 mt-6">
+          {/* Audio Settings */}
           <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Mic className="w-5 h-5 text-primary" />
+              <h4 className="font-semibold text-foreground">Audio Settings</h4>
+            </div>
+
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="font-size">Font Size</Label>
-                <span className="text-sm text-muted-foreground">{fontSize}px</span>
-              </div>
-              <Slider
-                id="font-size"
-                min={48}
-                max={120}
-                step={4}
-                value={[fontSize]}
-                onValueChange={(value) => setFontSize(value[0])}
-                className="w-full"
-              />
+              <Label htmlFor="audio-device">Microphone / Input Device</Label>
+              <Select value={selectedDevice} onValueChange={setSelectedDevice}>
+                <SelectTrigger id="audio-device">
+                  <SelectValue placeholder="Select audio device" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Default</SelectItem>
+                  {audioDevices.map((device) => (
+                    <SelectItem key={device.deviceId} value={device.deviceId}>
+                      {device.label || `Microphone ${device.deviceId.slice(0, 8)}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
-                Adjust the verse text size on projection display
+                Select the microphone or line-in input for voice recognition
               </p>
             </div>
+          </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="show-reference">Show Reference</Label>
-                <p className="text-xs text-muted-foreground">
-                  Display book, chapter, and verse on projection
-                </p>
-              </div>
-              <Switch
-                id="show-reference"
-                checked={showReference}
-                onCheckedChange={setShowReference}
-              />
+          {/* Display Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Type className="w-5 h-5 text-primary" />
+              <h4 className="font-semibold text-foreground">Projection Display</h4>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="auto-scroll">Auto Scroll</Label>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="font-size">Font Size</Label>
+                  <span className="text-sm text-muted-foreground">{fontSize}px</span>
+                </div>
+                <Slider
+                  id="font-size"
+                  min={48}
+                  max={120}
+                  step={4}
+                  value={[fontSize]}
+                  onValueChange={(value) => setFontSize(value[0])}
+                  className="w-full"
+                />
                 <p className="text-xs text-muted-foreground">
-                  Automatically scroll to new verses in transcript
+                  Adjust the verse text size on projection display
                 </p>
               </div>
-              <Switch
-                id="auto-scroll"
-                checked={autoScroll}
-                onCheckedChange={setAutoScroll}
-              />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="show-reference">Show Reference</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Display book, chapter, and verse on projection
+                  </p>
+                </div>
+                <Switch
+                  id="show-reference"
+                  checked={showReference}
+                  onCheckedChange={setShowReference}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="auto-scroll">Auto Scroll</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Automatically scroll to new verses in transcript
+                  </p>
+                </div>
+                <Switch
+                  id="auto-scroll"
+                  checked={autoScroll}
+                  onCheckedChange={setAutoScroll}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Bible Version Settings */}
-        <BibleVersionSettings 
-          currentVersion={bibleVersion}
-          onVersionChange={setBibleVersion}
-        />
+          {/* Bible Version Settings */}
+          <BibleVersionSettings 
+            currentVersion={bibleVersion}
+            onVersionChange={setBibleVersion}
+          />
 
-        {/* Theme Settings */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Palette className="w-5 h-5 text-primary" />
-            <h4 className="font-semibold text-foreground">Appearance</h4>
+          {/* Theme Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Palette className="w-5 h-5 text-primary" />
+              <h4 className="font-semibold text-foreground">Appearance</h4>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="theme">Interface Theme</Label>
+              <Select value={theme} onValueChange={(value: 'light' | 'dark') => setTheme(value)}>
+                <SelectTrigger id="theme">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dark">Dark</SelectItem>
+                  <SelectItem value="light">Light</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choose the control panel theme (projection display stays dark)
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="theme">Interface Theme</Label>
-            <Select value={theme} onValueChange={(value: 'light' | 'dark') => setTheme(value)}>
-              <SelectTrigger id="theme">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="light">Light</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Choose the control panel theme (projection display stays dark)
-            </p>
+          {/* Save Button */}
+          <div className="pt-4 border-t border-border">
+            <Button onClick={saveSettings} className="w-full gradient-divine">
+              Save Settings
+            </Button>
           </div>
-        </div>
+        </TabsContent>
 
-        {/* Save Button */}
-        <div className="pt-4 border-t border-border">
-          <Button onClick={saveSettings} className="w-full gradient-divine">
-            Save Settings
-          </Button>
-        </div>
-      </div>
+        <TabsContent value="storage" className="mt-6">
+          <StorageSettings />
+        </TabsContent>
+      </Tabs>
     </Card>
   );
 };
