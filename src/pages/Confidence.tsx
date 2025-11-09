@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { BibleVerse } from '@/types/bible';
+import { Slide } from '@/types/service';
 import { syncService } from '@/lib/syncService';
 import { BibleParser } from '@/lib/bibleParser';
+import { SlideDisplay } from '@/components/SlideDisplay';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -32,6 +34,7 @@ const defaultSettings: ConfidenceSettings = {
 };
 
 const Confidence = () => {
+  const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [currentVerse, setCurrentVerse] = useState<BibleVerse | null>(null);
   const [nextVerses, setNextVerses] = useState<{ ref: string; snippet: string }[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -45,13 +48,17 @@ const Confidence = () => {
       setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
     }
 
-    // Subscribe to verse updates
+    // Subscribe to slide updates
     const unsubscribe = syncService.subscribe(async (message) => {
       let verse = null;
+      let slide = null;
       
       // Handle slide updates from Presenter
       if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
-        const slide = message.data.slide;
+        slide = message.data.slide;
+        setCurrentSlide(slide);
+        
+        // Extract verse for scripture slides
         if (slide.type === 'scripture' && slide.verse) {
           verse = slide.verse;
         }
@@ -59,6 +66,7 @@ const Confidence = () => {
       // Handle legacy verse updates
       else if (message.type === 'VERSE_UPDATE' && message.data.verse !== undefined) {
         verse = message.data.verse;
+        setCurrentSlide(null);
       }
       
       setCurrentVerse(verse);
@@ -124,12 +132,16 @@ const Confidence = () => {
         {/* Header with context and clock */}
         <div className="flex justify-between items-center mb-8 pb-4 border-b" style={{ borderColor: `${settings.textColor}20` }}>
           <div style={{ fontSize: `${settings.clockFontSize * 0.67}px` }} className="font-semibold">
-            {currentVerse ? (
+            {currentSlide ? (
+              <span style={{ color: `${settings.textColor}70` }}>
+                {currentSlide.title} <span className="opacity-50">• {currentSlide.type}</span>
+              </span>
+            ) : currentVerse ? (
               <span style={{ color: `${settings.textColor}70` }}>
                 {currentVerse.book} {currentVerse.chapter}
               </span>
             ) : (
-              <span style={{ color: `${settings.textColor}70` }}>No verse selected</span>
+              <span style={{ color: `${settings.textColor}70` }}>No content selected</span>
             )}
           </div>
           <div 
@@ -140,9 +152,21 @@ const Confidence = () => {
           </div>
         </div>
 
-        {/* Current verse - large and prominent */}
+        {/* Current slide/verse - large and prominent */}
         <div className="flex-1 flex flex-col justify-center mb-8">
-          {currentVerse ? (
+          {currentSlide ? (
+            <div className="space-y-4">
+              <div 
+                className="font-bold mb-4"
+                style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: settings.accentColor }}
+              >
+                {currentSlide.title}
+              </div>
+              <div className="border rounded-lg overflow-hidden bg-black/20">
+                <SlideDisplay slide={currentSlide} className="h-[400px]" />
+              </div>
+            </div>
+          ) : currentVerse ? (
             <div className="space-y-4">
               <div 
                 className="font-bold mb-4"
@@ -162,7 +186,7 @@ const Confidence = () => {
               className="text-center"
               style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: `${settings.textColor}70` }}
             >
-              Waiting for verse selection...
+              Waiting for content...
             </div>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LowerThirdDisplay, LowerThirdSettings } from '@/components/LowerThirdDisplay';
 import { BibleVerse } from '@/types/bible';
+import { Slide } from '@/types/service';
 import { syncService } from '@/lib/syncService';
 import { Button } from '@/components/ui/button';
 import { Settings, X } from 'lucide-react';
@@ -10,6 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 
 const LowerThird = () => {
+  const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [verse, setVerse] = useState<BibleVerse | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<LowerThirdSettings>({
@@ -29,18 +31,24 @@ const LowerThird = () => {
       setSettings((prev) => ({ ...prev, ...JSON.parse(savedSettings) }));
     }
 
-    // Subscribe to verse updates
+    // Subscribe to slide updates
     const unsubscribe = syncService.subscribe((message) => {
       // Handle slide updates from Presenter
       if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
         const slide = message.data.slide;
+        setCurrentSlide(slide);
+        
+        // Extract verse for scripture slides
         if (slide.type === 'scripture' && slide.verse) {
           setVerse(slide.verse);
+        } else {
+          setVerse(null);
         }
       }
       // Handle legacy verse updates
       else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
         setVerse(message.data.verse);
+        setCurrentSlide(null);
       }
     });
 
@@ -61,8 +69,43 @@ const LowerThird = () => {
   };
 
   return (
-    <div className="relative">
-      <LowerThirdDisplay verse={verse} />
+    <div className="relative min-h-screen bg-[#00FF00]">
+      {/* Display slide title/info for non-scripture slides */}
+      {currentSlide && currentSlide.type !== 'scripture' && (
+        <div 
+          className="absolute"
+          style={{
+            bottom: settings.position.includes('bottom') ? '5%' : settings.position.includes('top') ? 'auto' : '50%',
+            top: settings.position.includes('top') ? '5%' : 'auto',
+            left: settings.position.includes('left') ? '5%' : settings.position.includes('center') ? '50%' : 'auto',
+            right: settings.position.includes('right') ? '5%' : 'auto',
+            transform: settings.position.includes('center') ? 'translateX(-50%)' : 'none',
+          }}
+        >
+          <div
+            className="rounded-lg px-8 py-4"
+            style={{
+              backgroundColor: settings.showBackground 
+                ? `#000000${Math.round((settings.backgroundOpacity || 0.8) * 255).toString(16).padStart(2, '0')}`
+                : 'transparent',
+            }}
+          >
+            <p
+              className="font-bold text-center"
+              style={{
+                fontSize: `${settings.fontSize}px`,
+                color: settings.textColor,
+                textShadow: !settings.showBackground ? '2px 2px 4px rgba(0,0,0,0.8)' : 'none',
+              }}
+            >
+              {currentSlide.title}
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {/* Scripture display */}
+      {verse && <LowerThirdDisplay verse={verse} />}
       
       {/* Settings Toggle Button */}
       <Button

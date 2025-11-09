@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ProjectionDisplay } from '@/components/ProjectionDisplay';
+import { SlideDisplay } from '@/components/SlideDisplay';
 import { BibleVerse } from '@/types/bible';
+import { Slide } from '@/types/service';
 import { syncService } from '@/lib/syncService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -33,10 +35,11 @@ const defaultSettings: ProjectionSettings = {
 };
 
 const Projection = () => {
+  const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [verse, setVerse] = useState<BibleVerse | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<ProjectionSettings>(defaultSettings);
-  const [displayMode, setDisplayMode] = useState<'verse' | 'logo'>('verse');
+  const [displayMode, setDisplayMode] = useState<'slide' | 'verse' | 'logo'>('slide');
   const [logoUrl, setLogoUrl] = useState<string>('');
 
   useEffect(() => {
@@ -76,14 +79,19 @@ const Projection = () => {
       // Handle slide updates from Presenter
       if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
         const slide = message.data.slide;
+        setCurrentSlide(slide);
+        
+        // Extract verse for scripture slides (for legacy ProjectionDisplay component)
         if (slide.type === 'scripture' && slide.verse) {
           setVerse(slide.verse);
-          setDisplayMode('verse');
         }
+        
+        setDisplayMode('slide');
       }
       // Handle legacy verse updates
       else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
         setVerse(message.data.verse);
+        setCurrentSlide(null);
         setDisplayMode('verse');
       }
     });
@@ -118,8 +126,19 @@ const Projection = () => {
             className="max-w-[80%] max-h-[80%] object-contain"
           />
         </div>
-      ) : (
+      ) : displayMode === 'slide' && currentSlide ? (
+        <div className="fixed inset-0">
+          <SlideDisplay slide={currentSlide} className="h-full w-full" />
+        </div>
+      ) : displayMode === 'verse' ? (
         <ProjectionDisplay verse={verse} settings={settings} />
+      ) : (
+        <div 
+          className="fixed inset-0 flex items-center justify-center text-white/50"
+          style={{ backgroundColor: settings.backgroundColor }}
+        >
+          <p className="text-2xl">Waiting for content...</p>
+        </div>
       )}
       
       {/* Settings Toggle Button */}
