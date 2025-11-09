@@ -5,13 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Service } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
-import { Calendar, Plus, Edit, Trash2, Copy, Mic, Music } from 'lucide-react';
+import { Calendar, Plus, Edit, Trash2, Copy, Mic, Music, Settings, LayoutGrid, MonitorPlay, Maximize2, Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { DisplayMonitor } from '@/components/DisplayMonitor';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const ServicePlanner = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,6 +66,14 @@ const ServicePlanner = () => {
   const todayServices = getServicesForDate(selectedDate);
   const templates = ServiceStorage.getTemplates();
 
+  const handleOpenProjection = () => {
+    window.open('/projection', '_blank', 'width=1920,height=1080');
+  };
+
+  const handleOpenLowerThird = () => {
+    window.open('/lower-third', '_blank', 'width=1280,height=720');
+  };
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
@@ -73,6 +84,24 @@ const ServicePlanner = () => {
               <p className="text-muted-foreground">
                 Plan and organize your church services
               </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowDisplayMonitor(!showDisplayMonitor)}
+                variant={showDisplayMonitor ? "default" : "outline"}
+                size="lg"
+              >
+                <LayoutGrid className="w-5 h-5 mr-2" />
+                {showDisplayMonitor ? "Hide Monitor" : "Display Monitor"}
+              </Button>
+              <Button onClick={handleOpenLowerThird} variant="outline" size="lg">
+                <MonitorPlay className="w-5 h-5 mr-2" />
+                Lower Third
+              </Button>
+              <Button onClick={handleOpenProjection} size="lg" className="gradient-divine">
+                <Maximize2 className="w-5 h-5 mr-2" />
+                Open Projection
+              </Button>
             </div>
           </div>
 
@@ -122,6 +151,40 @@ const ServicePlanner = () => {
             </div>
           </Card>
         </div>
+
+        {/* Display Monitor Section */}
+        {showDisplayMonitor && (
+          <Card className="p-5 mb-6 animate-fade-in">
+            <Collapsible defaultOpen>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Monitor className="w-4 h-4 text-primary" />
+                  <h3 className="font-semibold text-sm">Display Monitor</h3>
+                  <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-primary/10 rounded">Live</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => window.open('/display-manager', '_blank', 'width=1400,height=900')}
+                    className="h-7 px-2 hover:bg-primary/10"
+                    title="Open in window"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Button>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
+                      <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+              </div>
+              <CollapsibleContent>
+                <DisplayMonitor />
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Calendar & Date Selector */}
