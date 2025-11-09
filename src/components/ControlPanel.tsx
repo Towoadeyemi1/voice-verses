@@ -302,7 +302,7 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/favicon.ico" alt="Cornerstone Bible Logo" className="w-16 h-16" />
+            <img src="https://images.squarespace-cdn.com/content/v1/65aa2684364981476a626a25/d3bc2dc0-97c2-4b45-b1b9-22e2eb7bf70e/CCCGHQ+white+logo.png?format=1500w" alt="Cornerstone Bible Logo" className="w-16 h-16 object-contain" />
             <div>
               <h1 className="text-4xl font-bold text-gradient mb-2">
                 Cornerstone Bible
