@@ -1308,63 +1308,118 @@ Chorus line 2"`;
                                                      {subsection.slides.map((slide) => (
                                                        <SortableSlide key={slide.id} slide={slide}>
                                                          <Card className={`group relative overflow-hidden hover-scale cursor-pointer ${activeId === slide.id ? 'ring-2 ring-primary' : ''}`}>
-                                                           {/* Slide Preview */}
-                                                           <div className="aspect-video bg-muted relative overflow-hidden">
-                                                             {slide.type === 'image' && (
-                                                               <img 
-                                                                 src={(slide as ImageSlide).imageUrl} 
-                                                                 alt={slide.title}
-                                                                 className="w-full h-full object-cover"
-                                                               />
-                                                             )}
-                                                            {slide.type === 'scripture' && (
-                                                                <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-primary/20 to-primary/5 text-center">
-                                                                  <div className="text-sm font-bold text-primary mb-2">
-                                                                    {(slide as ScriptureSlide).verse.book} {(slide as ScriptureSlide).verse.chapter}:{(slide as ScriptureSlide).verse.verse}
-                                                                  </div>
-                                                                  <div className="text-xs leading-relaxed line-clamp-4 text-foreground">
-                                                                    {(slide as ScriptureSlide).verse.text}
-                                                                  </div>
-                                                                </div>
-                                                              )}
-                                                              {slide.type === 'lyrics' && (
-                                                                <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-center">
-                                                                  <div className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2">
-                                                                    {(slide as LyricsSlide).songTitle}
-                                                                  </div>
-                                                                  {(slide as LyricsSlide).section && (
-                                                                    <div className="text-[10px] uppercase text-muted-foreground mb-1">
-                                                                      {(slide as LyricsSlide).section}
+                                                            {/* Slide Preview with WYSIWYG */}
+                                                            <div className="aspect-video bg-black relative overflow-hidden">
+                                                              {(() => {
+                                                                const fontSize = slide.textFormatting?.fontSize || 'large';
+                                                                const alignment = slide.textFormatting?.alignment || 'center';
+                                                                const fontSizeClasses = {
+                                                                  small: 'text-[8px]',
+                                                                  medium: 'text-[9px]',
+                                                                  large: 'text-[10px]',
+                                                                  xlarge: 'text-[11px]',
+                                                                };
+                                                                const alignmentClasses = {
+                                                                  left: 'text-left items-start',
+                                                                  center: 'text-center items-center',
+                                                                  right: 'text-right items-end',
+                                                                };
+                                                                const backgroundStyle = slide.backgroundMedia ? {
+                                                                  backgroundImage: `url(${slide.backgroundMedia.url})`,
+                                                                  backgroundSize: 'cover',
+                                                                  backgroundPosition: 'center',
+                                                                } : {};
+
+                                                                if (slide.type === 'image') {
+                                                                  return (
+                                                                    <>
+                                                                      <img 
+                                                                        src={(slide as ImageSlide).imageUrl} 
+                                                                        alt={slide.title}
+                                                                        className="w-full h-full object-cover"
+                                                                      />
+                                                                      {(slide as ImageSlide).caption && (
+                                                                        <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white px-2 py-1">
+                                                                          <p className="text-[8px] text-center line-clamp-1">{(slide as ImageSlide).caption}</p>
+                                                                        </div>
+                                                                      )}
+                                                                    </>
+                                                                  );
+                                                                }
+
+                                                                if (slide.type === 'scripture') {
+                                                                  return (
+                                                                    <div className="relative w-full h-full" style={backgroundStyle}>
+                                                                      {slide.backgroundMedia && (
+                                                                        <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
+                                                                      )}
+                                                                      <div className={`relative z-10 w-full h-full flex flex-col justify-center p-2 ${alignmentClasses[alignment]}`}>
+                                                                        <div className={`text-[9px] font-bold text-primary mb-1 ${alignmentClasses[alignment].split(' ')[0]}`}>
+                                                                          {(slide as ScriptureSlide).verse.book} {(slide as ScriptureSlide).verse.chapter}:{(slide as ScriptureSlide).verse.verse}
+                                                                        </div>
+                                                                        <div className={`${fontSizeClasses[fontSize]} leading-tight line-clamp-4 text-white ${alignmentClasses[alignment].split(' ')[0]}`}>
+                                                                          {(slide as ScriptureSlide).verse.text}
+                                                                        </div>
+                                                                      </div>
                                                                     </div>
-                                                                  )}
-                                                                  <div className="text-xs leading-relaxed line-clamp-4 whitespace-pre-line">
-                                                                    {(slide as LyricsSlide).content}
-                                                                  </div>
-                                                                </div>
-                                                              )}
-                                                              {slide.type === 'announcement' && (
-                                                                <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-orange-500/20 to-orange-500/5 text-center">
-                                                                  <div className="text-sm font-bold text-orange-600 dark:text-orange-400 mb-2">
-                                                                    {(slide as AnnouncementSlide).title}
-                                                                  </div>
-                                                                  <div className="text-xs leading-relaxed line-clamp-4 whitespace-pre-line">
-                                                                    {(slide as AnnouncementSlide).content}
-                                                                  </div>
-                                                                  {(slide as AnnouncementSlide).imageUrl && (
-                                                                    <div className="absolute top-2 right-2">
-                                                                      <ImageIcon className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                                                  );
+                                                                }
+
+                                                                if (slide.type === 'lyrics') {
+                                                                  return (
+                                                                    <div className="relative w-full h-full" style={backgroundStyle}>
+                                                                      {slide.backgroundMedia && (
+                                                                        <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
+                                                                      )}
+                                                                      <div className={`relative z-10 w-full h-full flex flex-col justify-center p-2 ${alignmentClasses[alignment]}`}>
+                                                                        <div className={`text-[8px] font-semibold text-primary mb-0.5 ${alignmentClasses[alignment].split(' ')[0]}`}>
+                                                                          {(slide as LyricsSlide).songTitle}
+                                                                        </div>
+                                                                        {(slide as LyricsSlide).section && (
+                                                                          <div className={`text-[6px] text-muted-foreground mb-0.5 uppercase ${alignmentClasses[alignment].split(' ')[0]}`}>
+                                                                            {(slide as LyricsSlide).section}
+                                                                          </div>
+                                                                        )}
+                                                                        <div className={`${fontSizeClasses[fontSize]} leading-tight line-clamp-4 whitespace-pre-line text-white ${alignmentClasses[alignment].split(' ')[0]}`}>
+                                                                          {(slide as LyricsSlide).content}
+                                                                        </div>
+                                                                      </div>
                                                                     </div>
-                                                                  )}
-                                                               </div>
-                                                              )}
-                                                              {slide.type === 'blank' && (
-                                                                <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-muted text-center">
-                                                                  <FileQuestion className="w-8 h-8 mb-2 text-muted-foreground" />
-                                                                  <div className="text-xs font-medium text-muted-foreground">
-                                                                    {slide.title}
-                                                                  </div>
-                                                                </div>
-                                                              )}
+                                                                  );
+                                                                }
+
+                                                                if (slide.type === 'announcement') {
+                                                                  return (
+                                                                    <div className="w-full h-full flex flex-col items-center justify-center p-2 bg-background text-foreground">
+                                                                      {(slide as AnnouncementSlide).imageUrl && (
+                                                                        <img
+                                                                          src={(slide as AnnouncementSlide).imageUrl}
+                                                                          alt={slide.title}
+                                                                          className="max-h-12 mb-1 rounded"
+                                                                        />
+                                                                      )}
+                                                                      <div className="text-[10px] font-bold text-primary mb-1 line-clamp-1">
+                                                                        {(slide as AnnouncementSlide).title}
+                                                                      </div>
+                                                                      <div className="text-[8px] leading-tight text-center line-clamp-3 whitespace-pre-line">
+                                                                        {(slide as AnnouncementSlide).content}
+                                                                      </div>
+                                                                    </div>
+                                                                  );
+                                                                }
+
+                                                                if (slide.type === 'blank') {
+                                                                  return (
+                                                                    <div className="w-full h-full flex items-center justify-center bg-black">
+                                                                      <div className="text-[8px] font-medium text-muted-foreground">
+                                                                        {slide.title || 'Blank Slide'}
+                                                                      </div>
+                                                                    </div>
+                                                                  );
+                                                                }
+
+                                                                return null;
+                                                              })()}
                                                              
                                                              {/* Drag Handle Overlay */}
                                                              <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
