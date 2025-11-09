@@ -33,8 +33,13 @@ export const ModeNav = () => {
     return location.pathname.startsWith(path);
   };
   
+  const handleNavigation = (path: string) => {
+    console.log('Navigating to:', path);
+    navigate(path);
+  };
+
   return (
-    <Card className="bg-card/50 backdrop-blur border-border/50">
+    <Card className="bg-card/50 backdrop-blur border-border/50 relative z-10">
       <nav className="flex items-center gap-1 p-1" role="tablist" aria-label="Application modes">
         {modes.map((mode) => {
           const Icon = mode.icon;
@@ -43,22 +48,23 @@ export const ModeNav = () => {
           return (
             <Button
               key={mode.path}
-              onClick={() => navigate(mode.path)}
+              onClick={() => handleNavigation(mode.path)}
               variant="ghost"
               size="lg"
               role="tab"
               aria-selected={active}
               aria-label={`${mode.label} mode: ${mode.description}`}
               className={`
-                flex-1 h-auto px-4 py-3 gap-3 transition-all
+                flex-1 h-auto px-4 py-3 gap-3 transition-all cursor-pointer
                 ${active 
                   ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm' 
                   : 'hover:bg-muted/50'
                 }
               `}
+              style={{ pointerEvents: 'auto' }}
             >
               <Icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-              <div className="text-left min-w-0">
+              <div className="text-left min-w-0 pointer-events-none">
                 <div className="font-semibold text-sm truncate">{mode.label}</div>
                 <div className={`text-xs truncate ${active ? 'opacity-90' : 'text-muted-foreground'}`}>
                   {mode.description}
