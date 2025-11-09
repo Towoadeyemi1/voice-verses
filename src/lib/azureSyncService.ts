@@ -33,7 +33,8 @@ class AzureSyncService {
   }
 
   isEnabled(): boolean {
-    return this.enabled && !!this.functionUrl;
+    // Enabled if the switch is on (functionUrl is optional, defaults to current origin)
+    return this.enabled;
   }
 
   isSyncing(): boolean {
@@ -49,7 +50,9 @@ class AzureSyncService {
     try {
       this.syncInProgress = true;
       
-      const response = await fetch(`${this.functionUrl}/blob-upload`, {
+      // Use the configured URL or default to current origin
+      const baseUrl = this.functionUrl || `${window.location.origin}/api`;
+      const response = await fetch(`${baseUrl}/blob-upload`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +64,8 @@ class AzureSyncService {
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.statusText} - ${errorText}`);
       }
 
       console.log(`Successfully uploaded ${filename} to Azure Blob`);
@@ -81,10 +85,13 @@ class AzureSyncService {
     }
 
     try {
-      const response = await fetch(`${this.functionUrl}/blob-download?filename=${encodeURIComponent(filename)}`);
+      // Use the configured URL or default to current origin
+      const baseUrl = this.functionUrl || `${window.location.origin}/api`;
+      const response = await fetch(`${baseUrl}/blob-download?filename=${encodeURIComponent(filename)}`);
       
       if (!response.ok) {
-        throw new Error(`Download failed: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Download failed: ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();

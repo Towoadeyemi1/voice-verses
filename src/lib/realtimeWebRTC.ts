@@ -86,10 +86,10 @@ export class RealtimeWebRTC {
     try {
       console.log('Initializing WebRTC connection...');
 
-      // Get ephemeral token from Azure Function
-      const AZURE_FUNCTION_URL = 'https://cornerstone-bible.azurewebsites.net/api/realtime-token';
+      // Get ephemeral token from Azure Function (deployed with Static Web App)
+      const AZURE_FUNCTION_URL = `${window.location.origin}/api/realtime-token`;
 
-      console.log('Fetching ephemeral token...');
+      console.log('Fetching ephemeral token from:', AZURE_FUNCTION_URL);
       const tokenResponse = await fetch(AZURE_FUNCTION_URL, {
         method: 'POST',
         headers: {

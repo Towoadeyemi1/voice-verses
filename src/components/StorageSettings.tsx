@@ -175,15 +175,15 @@ export function StorageSettings() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="azure-url">Azure Function URL</Label>
+            <Label htmlFor="azure-url">Azure Function URL (Optional)</Label>
             <Input
               id="azure-url"
-              placeholder="https://your-function-app.azurewebsites.net/api"
+              placeholder={`${window.location.origin}/api (default)`}
               value={azureUrl}
               onChange={(e) => setAzureUrl(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Enter your Azure Function App URL (the base URL without specific endpoints)
+              Leave empty to use the default (same domain). Only set if using external Azure Functions.
             </p>
           </div>
 
