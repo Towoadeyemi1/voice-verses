@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ControlPanel } from '@/components/ControlPanel';
 
 const Index = () => {
-  const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
+  const [showDisplayMonitor, setShowDisplayMonitor] = useState(true);
 
   return (
     <div className="min-h-screen">
