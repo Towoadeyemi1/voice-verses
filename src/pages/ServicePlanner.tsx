@@ -9,12 +9,14 @@ import { Calendar, Plus, Edit, Trash2, Copy, Mic, Music, Settings, LayoutGrid, M
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
+import { SettingsPanel } from '@/components/SettingsPanel';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const ServicePlanner = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -87,6 +89,14 @@ const ServicePlanner = () => {
             </div>
             <div className="flex gap-3">
               <Button
+                onClick={() => setShowSettings(!showSettings)}
+                variant="outline"
+                size="lg"
+              >
+                <Settings className="w-5 h-5 mr-2" />
+                Settings
+              </Button>
+              <Button
                 onClick={() => setShowDisplayMonitor(!showDisplayMonitor)}
                 variant={showDisplayMonitor ? "default" : "outline"}
                 size="lg"
@@ -151,6 +161,13 @@ const ServicePlanner = () => {
             </div>
           </Card>
         </div>
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className="mb-6 animate-fade-in">
+            <SettingsPanel onClose={() => setShowSettings(false)} />
+          </div>
+        )}
 
         {/* Display Monitor Section */}
         {showDisplayMonitor && (

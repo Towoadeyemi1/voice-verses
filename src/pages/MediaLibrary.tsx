@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { SongSelectImport } from '@/components/SongSelectImport';
 import { PowerPointImport } from '@/components/PowerPointImport';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
+import { SettingsPanel } from '@/components/SettingsPanel';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Dialog,
@@ -37,6 +38,7 @@ const MediaLibrary = () => {
   const [editLyrics, setEditLyrics] = useState('');
   const [newCategory, setNewCategory] = useState('');
   const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const navigate = useNavigate();
 
   const categories = ['all', ...new Set(media.map(m => m.category).filter(Boolean))] as string[];
@@ -168,6 +170,14 @@ const MediaLibrary = () => {
             </div>
             <div className="flex gap-3">
               <Button
+                onClick={() => setShowSettings(!showSettings)}
+                variant="outline"
+                size="lg"
+              >
+                <Settings className="w-5 h-5 mr-2" />
+                Settings
+              </Button>
+              <Button
                 onClick={() => setShowDisplayMonitor(!showDisplayMonitor)}
                 variant={showDisplayMonitor ? "default" : "outline"}
                 size="lg"
@@ -232,6 +242,13 @@ const MediaLibrary = () => {
             </div>
           </Card>
         </div>
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className="mb-6 animate-fade-in">
+            <SettingsPanel onClose={() => setShowSettings(false)} />
+          </div>
+        )}
 
         {/* Display Monitor Section */}
         {showDisplayMonitor && (
