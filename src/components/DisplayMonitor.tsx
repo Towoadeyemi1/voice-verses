@@ -71,9 +71,13 @@ export const DisplayMonitor = () => {
           </div>
           <span className="text-xs text-muted-foreground">1920×1080</span>
         </div>
-        <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-border shadow-lg">
+        <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-border shadow-lg relative">
           {currentSlide ? (
-            <SlideDisplay slide={currentSlide} className="h-full" />
+            <div className="absolute inset-0">
+              <div className="w-[1920px] h-[1080px] origin-top-left" style={{ transform: 'scale(0.2)' }}>
+                <SlideDisplay slide={currentSlide} className="h-full w-full" />
+              </div>
+            </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-white/50">
               <MonitorPlay className="w-12 h-12 mb-2" />
@@ -151,20 +155,22 @@ export const DisplayMonitor = () => {
           </div>
           <span className="text-xs text-muted-foreground">1920×1080</span>
         </div>
-        <div className="aspect-video bg-background rounded-lg overflow-hidden border-2 border-border shadow-lg">
+        <div className="aspect-video bg-background rounded-lg overflow-hidden border-2 border-border shadow-lg relative">
           {currentSlide ? (
-            <div className="h-full p-4 flex flex-col">
-              <div className="text-center space-y-2">
-                <p className="font-bold text-sm text-foreground">
+            <div className="absolute inset-0 flex flex-col p-2">
+              <div className="text-center space-y-1 mb-2">
+                <p className="font-bold text-xs text-foreground truncate">
                   {currentSlide.title}
                 </p>
-                <p className="text-xs text-muted-foreground capitalize">
+                <p className="text-[10px] text-muted-foreground capitalize">
                   {currentSlide.type}
                 </p>
               </div>
-              <div className="flex-1 flex items-center justify-center mt-4">
-                <div className="w-full aspect-video bg-black/50 rounded overflow-hidden">
-                  <SlideDisplay slide={currentSlide} className="h-full scale-75 origin-center" />
+              <div className="flex-1 flex items-center justify-center relative">
+                <div className="w-full h-full bg-black/50 rounded overflow-hidden relative">
+                  <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.15)' }}>
+                    <SlideDisplay slide={currentSlide} className="h-full w-full" />
+                  </div>
                 </div>
               </div>
             </div>
