@@ -338,47 +338,47 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
         </div>
 
         {/* Mode Switcher */}
-        <Card className="p-4">
+        <Card className="p-4 bg-card/50 backdrop-blur">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={() => navigate('/')}
-                  variant="ghost"
-                  className="h-auto p-3 gap-2 data-[active=true]:bg-primary/10 data-[active=true]:border data-[active=true]:border-primary/20"
-                  data-active="true"
-                >
-                  <Mic className="w-5 h-5 text-primary" />
-                  <div className="text-left">
-                    <div className="font-semibold">Scripture Mode</div>
-                    <div className="text-xs text-muted-foreground">Voice-controlled Bible display</div>
-                  </div>
-                </Button>
-                
-                <Button
-                  onClick={() => navigate('/service-planner')}
-                  variant="ghost"
-                  className="h-auto p-3 gap-2 hover:bg-primary/10"
-                >
-                  <Calendar className="w-5 h-5" />
-                  <div className="text-left">
-                    <div className="font-semibold">Service Mode</div>
-                    <div className="text-xs text-muted-foreground">Plan and build services</div>
-                  </div>
-                </Button>
-                
-                <Button
-                  onClick={() => navigate('/media-library')}
-                  variant="ghost"
-                  className="h-auto p-3 gap-2 hover:bg-primary/10"
-                >
-                  <Music className="w-5 h-5" />
-                  <div className="text-left">
-                    <div className="font-semibold">Media Mode</div>
-                    <div className="text-xs text-muted-foreground">Manage media library</div>
-                  </div>
-                </Button>
-              </div>
+            <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
+              <Button
+                onClick={() => navigate('/')}
+                variant="ghost"
+                size="lg"
+                className="h-auto p-4 gap-3 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+              >
+                <Mic className="w-5 h-5" />
+                <div className="text-left">
+                  <div className="font-semibold text-sm">Scripture Mode</div>
+                  <div className="text-xs opacity-90">Voice-controlled</div>
+                </div>
+              </Button>
+              
+              <Button
+                onClick={() => navigate('/service-planner')}
+                variant="ghost"
+                size="lg"
+                className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
+              >
+                <Calendar className="w-5 h-5" />
+                <div className="text-left">
+                  <div className="font-semibold text-sm">Service Mode</div>
+                  <div className="text-xs text-muted-foreground">Plan services</div>
+                </div>
+              </Button>
+              
+              <Button
+                onClick={() => navigate('/media-library')}
+                variant="ghost"
+                size="lg"
+                className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
+              >
+                <Music className="w-5 h-5" />
+                <div className="text-left">
+                  <div className="font-semibold text-sm">Media Mode</div>
+                  <div className="text-xs text-muted-foreground">Manage media</div>
+                </div>
+              </Button>
             </div>
           </div>
         </Card>
