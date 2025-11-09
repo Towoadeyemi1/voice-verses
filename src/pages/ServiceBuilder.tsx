@@ -448,28 +448,39 @@ const ServiceBuilder = () => {
       toast.error('Please select a subsection first');
       return;
     }
-    if (media.filter(m => m.type === 'image').length === 0) {
-      toast.error('No images in library', { description: 'Upload images in Media Library first' });
-      return;
-    }
-    const imageMedia = media.filter(m => m.type === 'image');
-    const imageList = imageMedia.map((m, i) => `${i + 1}. ${m.name}`).join('\n');
-    const selection = prompt(`Select image:\n${imageList}\n\nEnter number:`);
-    if (!selection) return;
-    const index = parseInt(selection) - 1;
-    const selectedImage = imageMedia[index];
-    if (!selectedImage || !selectedImage.url) {
-      toast.error('Invalid selection');
-      return;
-    }
-    const newSlide: ImageSlide = {
-      id: `slide-${Date.now()}`,
-      type: 'image',
-      title: selectedImage.name,
-      imageUrl: selectedImage.url,
+    
+    // Create and trigger file input for image upload
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = async (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (!files || files.length === 0) return;
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} is not an image`);
+          continue;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const imageUrl = event.target?.result as string;
+          const newSlide: ImageSlide = {
+            id: `slide-${Date.now()}-${i}`,
+            type: 'image',
+            title: file.name.replace(/\.[^/.]+$/, ''),
+            imageUrl: imageUrl,
+          };
+          addSlideToSubsection(newSlide);
+        };
+        reader.readAsDataURL(file);
+      }
+      toast.success(`${files.length} image${files.length > 1 ? 's' : ''} added`);
     };
-    addSlideToSubsection(newSlide);
-    toast.success('Image slide added');
+    input.click();
   };
 
   const handlePPTXImport = (slides: ImageSlide[]) => {
