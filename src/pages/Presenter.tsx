@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,10 +9,13 @@ import { syncService } from '@/lib/syncService';
 import { SlideDisplay } from '@/components/SlideDisplay';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
-import { Play, Square, ChevronLeft, ChevronRight, Monitor, Edit2, ExternalLink } from 'lucide-react';
+import { AudioVisualizer } from '@/components/AudioVisualizer';
+import { Play, Square, ChevronLeft, ChevronRight, Monitor, Edit2, ExternalLink, Mic, MicOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ShowLogoButton } from '@/components/ShowLogoButton';
 import { cn } from '@/lib/utils';
+import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
+import { BibleVerse } from '@/types/bible';
 
 const Presenter = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,6 +25,13 @@ const Presenter = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPresenting, setIsPresenting] = useState(false);
   const [editingSlideIndex, setEditingSlideIndex] = useState<number | null>(null);
+  
+  // Voice activation
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [audioVolume, setAudioVolume] = useState(0);
+  const realtimeChat = useRef<RealtimeWebRTC | null>(null);
 
   useEffect(() => {
     loadServices();
@@ -55,6 +65,15 @@ const Presenter = () => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isPresenting, currentIndex, currentService]);
+
+  // Cleanup voice on unmount
+  useEffect(() => {
+    return () => {
+      if (realtimeChat.current) {
+        realtimeChat.current.disconnect();
+      }
+    };
+  }, []);
 
   const loadServices = () => {
     const allServices = ServiceStorage.getServices().filter(s => !s.isTemplate);
@@ -167,6 +186,68 @@ const Presenter = () => {
     toast.success('Display windows opened');
   };
 
+  const handleStartVoice = async () => {
+    try {
+      setIsConnecting(true);
+      setIsVoiceActive(true);
+      
+      realtimeChat.current = new RealtimeWebRTC(
+        (text) => {
+          console.log('Transcript:', text);
+          setTranscript(text);
+        },
+        (verse: BibleVerse) => {
+          if (verse) {
+            // Create a scripture slide
+            const scriptureSlide: Slide = {
+              id: `voice-${Date.now()}`,
+              type: 'scripture',
+              title: `${verse.book} ${verse.chapter}:${verse.verse}`,
+              verse: verse,
+              textFormatting: { fontSize: 'medium', alignment: 'center' }
+            };
+            
+            // Broadcast to displays
+            broadcastSlide(scriptureSlide, -1);
+            
+            toast.success('Scripture detected!', {
+              description: `${verse.book} ${verse.chapter}:${verse.verse}`,
+              duration: 3000,
+            });
+          }
+        },
+        (volume) => {
+          setAudioVolume(Math.round(volume));
+        }
+      );
+
+      await realtimeChat.current.init();
+      setIsConnecting(false);
+      
+      toast.success('Voice activated', {
+        description: 'Speak scripture references to display them',
+      });
+    } catch (error) {
+      console.error('Error starting voice:', error);
+      setIsConnecting(false);
+      setIsVoiceActive(false);
+      toast.error('Failed to start voice recognition', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  };
+
+  const handleStopVoice = () => {
+    if (realtimeChat.current) {
+      realtimeChat.current.disconnect();
+      realtimeChat.current = null;
+    }
+    setIsVoiceActive(false);
+    setAudioVolume(0);
+    setTranscript('');
+    toast.info('Voice deactivated');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Control Bar */}
@@ -211,6 +292,32 @@ const Presenter = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Voice Activation Button */}
+              {!isVoiceActive ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStartVoice}
+                  disabled={isConnecting}
+                >
+                  {isConnecting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Mic className="w-4 h-4 mr-2" />
+                  )}
+                  Voice Mode
+                </Button>
+              ) : (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleStopVoice}
+                >
+                  <MicOff className="w-4 h-4 mr-2" />
+                  Stop Voice
+                </Button>
+              )}
+              
               <ShowLogoButton serviceId={currentService?.id} variant="outline" size="sm" />
               
               <Button
@@ -242,6 +349,21 @@ const Presenter = () => {
       ) : (
         <div className="container mx-auto px-4 py-6">
           <div className="space-y-6">
+            {/* Voice Visualizer */}
+            {isVoiceActive && (
+              <Card className="p-4">
+                <div className="space-y-3">
+                  <AudioVisualizer isListening={isVoiceActive} volume={audioVolume} />
+                  {transcript && (
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Last detected:</p>
+                      <p className="text-sm">{transcript}</p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )}
+            
             {/* Display Monitor Section */}
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Live Display Outputs</h3>
