@@ -76,17 +76,30 @@ const Projection = () => {
     }
 
     const unsubscribe = syncService.subscribe((message) => {
+      console.log('Projection received message:', message);
+      
       // Handle slide updates from Presenter
-      if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
-        const slide = message.data.slide;
-        setCurrentSlide(slide);
+      if (message.type === 'SLIDE_UPDATE') {
+        console.log('Projection handling SLIDE_UPDATE:', message.data);
         
-        // Extract verse for scripture slides (for legacy ProjectionDisplay component)
-        if (slide.type === 'scripture' && slide.verse) {
-          setVerse(slide.verse);
+        if (message.data.slide) {
+          const slide = message.data.slide;
+          setCurrentSlide(slide);
+          
+          // Extract verse for scripture slides (for legacy ProjectionDisplay component)
+          if (slide.type === 'scripture' && slide.verse) {
+            setVerse(slide.verse);
+          }
+          
+          setDisplayMode('slide');
+          console.log('Projection updated to show slide:', slide.title);
+        } else {
+          // Clear display when slide is null
+          setCurrentSlide(null);
+          setVerse(null);
+          setDisplayMode('slide');
+          console.log('Projection cleared (no slide)');
         }
-        
-        setDisplayMode('slide');
       }
       // Handle legacy verse updates
       else if (message.type === 'VERSE_UPDATE' && message.data.verse) {

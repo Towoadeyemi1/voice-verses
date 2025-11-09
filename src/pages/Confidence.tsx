@@ -50,17 +50,28 @@ const Confidence = () => {
 
     // Subscribe to slide updates
     const unsubscribe = syncService.subscribe(async (message) => {
+      console.log('Confidence received message:', message);
+      
       let verse = null;
       let slide = null;
       
       // Handle slide updates from Presenter
-      if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
-        slide = message.data.slide;
-        setCurrentSlide(slide);
+      if (message.type === 'SLIDE_UPDATE') {
+        console.log('Confidence handling SLIDE_UPDATE:', message.data);
         
-        // Extract verse for scripture slides
-        if (slide.type === 'scripture' && slide.verse) {
-          verse = slide.verse;
+        if (message.data.slide) {
+          slide = message.data.slide;
+          setCurrentSlide(slide);
+          
+          // Extract verse for scripture slides
+          if (slide.type === 'scripture' && slide.verse) {
+            verse = slide.verse;
+          }
+          
+          console.log('Confidence updated to show slide:', slide.title);
+        } else {
+          setCurrentSlide(null);
+          console.log('Confidence cleared (no slide)');
         }
       }
       // Handle legacy verse updates

@@ -33,16 +33,28 @@ const LowerThird = () => {
 
     // Subscribe to slide updates
     const unsubscribe = syncService.subscribe((message) => {
+      console.log('LowerThird received message:', message);
+      
       // Handle slide updates from Presenter
-      if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
-        const slide = message.data.slide;
-        setCurrentSlide(slide);
+      if (message.type === 'SLIDE_UPDATE') {
+        console.log('LowerThird handling SLIDE_UPDATE:', message.data);
         
-        // Extract verse for scripture slides
-        if (slide.type === 'scripture' && slide.verse) {
-          setVerse(slide.verse);
+        if (message.data.slide) {
+          const slide = message.data.slide;
+          setCurrentSlide(slide);
+          
+          // Extract verse for scripture slides
+          if (slide.type === 'scripture' && slide.verse) {
+            setVerse(slide.verse);
+          } else {
+            setVerse(null);
+          }
+          
+          console.log('LowerThird updated to show slide:', slide.title);
         } else {
+          setCurrentSlide(null);
           setVerse(null);
+          console.log('LowerThird cleared (no slide)');
         }
       }
       // Handle legacy verse updates
