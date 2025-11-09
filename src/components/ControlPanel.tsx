@@ -302,7 +302,7 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/favicon.ico" alt="Cornerstone Bible Logo" className="w-16 h-16 object-contain" />
+            <img src="/logo-transparent.png" alt="Cornerstone Bible Logo" className="w-16 h-16 object-contain" />
             <div>
               <h1 className="text-4xl font-bold text-gradient mb-2">
                 Cornerstone Bible
