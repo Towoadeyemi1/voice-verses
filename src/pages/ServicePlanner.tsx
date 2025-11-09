@@ -5,12 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Service } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
-import { Calendar, Plus, Edit, Trash2, Copy, Mic, Music, Settings, LayoutGrid, MonitorPlay, Maximize2, Monitor, ChevronDown, ExternalLink } from 'lucide-react';
+import { Calendar, Plus, Edit, Trash2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { SettingsPanel } from '@/components/SettingsPanel';
+import { PageHeader } from '@/components/PageHeader';
+import { ModeNav } from '@/components/ModeNav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 
 const ServicePlanner = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -77,133 +80,64 @@ const ServicePlanner = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Service Planner</h1>
-              <p className="text-muted-foreground">
-                Plan and organize your church services
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowSettings(!showSettings)}
-                variant="outline"
-                size="lg"
-              >
-                <Settings className="w-5 h-5 mr-2" />
-                Settings
-              </Button>
-              <Button
-                onClick={() => setShowDisplayMonitor(!showDisplayMonitor)}
-                variant={showDisplayMonitor ? "default" : "outline"}
-                size="lg"
-              >
-                <LayoutGrid className="w-5 h-5 mr-2" />
-                {showDisplayMonitor ? "Hide Monitor" : "Display Monitor"}
-              </Button>
-              <Button onClick={handleOpenLowerThird} variant="outline" size="lg">
-                <MonitorPlay className="w-5 h-5 mr-2" />
-                Lower Third
-              </Button>
-              <Button onClick={handleOpenProjection} size="lg" className="gradient-divine">
-                <Maximize2 className="w-5 h-5 mr-2" />
-                Open Projection
-              </Button>
-            </div>
-          </div>
+        <PageHeader
+          title="Service Planner"
+          description="Plan and organize your church services"
+          showSettings={showSettings}
+          onToggleSettings={() => setShowSettings(!showSettings)}
+          showDisplayMonitor={showDisplayMonitor}
+          onToggleDisplayMonitor={() => setShowDisplayMonitor(!showDisplayMonitor)}
+          onOpenProjection={handleOpenProjection}
+          onOpenLowerThird={handleOpenLowerThird}
+        />
 
-          {/* Mode Switcher */}
-          <Card className="p-4 bg-card/50 backdrop-blur">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
-                <Button
-                  onClick={() => navigate('/')}
-                  variant="ghost"
-                  size="lg"
-                  className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
-                >
-                  <Mic className="w-5 h-5" />
-                  <div className="text-left">
-                    <div className="font-semibold text-sm">Scripture Mode</div>
-                    <div className="text-xs text-muted-foreground">Voice-controlled</div>
-                  </div>
-                </Button>
-                
-                <Button
-                  onClick={() => navigate('/service-planner')}
-                  variant="ghost"
-                  size="lg"
-                  className="h-auto p-4 gap-3 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-                >
-                  <Calendar className="w-5 h-5" />
-                  <div className="text-left">
-                    <div className="font-semibold text-sm">Service Mode</div>
-                    <div className="text-xs opacity-90">Plan services</div>
-                  </div>
-                </Button>
-                
-                <Button
-                  onClick={() => navigate('/media-library')}
-                  variant="ghost"
-                  size="lg"
-                  className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
-                >
-                  <Music className="w-5 h-5" />
-                  <div className="text-left">
-                    <div className="font-semibold text-sm">Media Mode</div>
-                    <div className="text-xs text-muted-foreground">Manage media</div>
-                  </div>
-                </Button>
-              </div>
+        <div className="space-y-4 sm:space-y-6">
+          <ModeNav />
+
+          {/* Settings Panel */}
+          {showSettings && (
+            <div className="animate-fade-in">
+              <SettingsPanel onClose={() => setShowSettings(false)} />
             </div>
-          </Card>
-        </div>
+          )}
 
-        {/* Settings Panel */}
-        {showSettings && (
-          <div className="mb-6 animate-fade-in">
-            <SettingsPanel onClose={() => setShowSettings(false)} />
-          </div>
-        )}
-
-        {/* Display Monitor Section */}
-        {showDisplayMonitor && (
-          <Card className="p-5 mb-6 animate-fade-in">
-            <Collapsible defaultOpen>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Monitor className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-sm">Display Monitor</h3>
-                  <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-primary/10 rounded">Live</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => window.open('/display-manager', '_blank', 'width=1400,height=900')}
-                    className="h-7 px-2 hover:bg-primary/10"
-                    title="Open in window"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </Button>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
-                      <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+          {/* Display Monitor Section */}
+          {showDisplayMonitor && (
+            <Card className="p-5 animate-fade-in">
+              <Collapsible defaultOpen>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Monitor className="w-4 h-4 text-primary" />
+                    <h3 className="font-semibold text-sm">Display Monitor</h3>
+                    <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-primary/10 rounded">Live</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => window.open('/display-manager', '_blank', 'width=1400,height=900')}
+                      className="h-7 px-2 hover:bg-primary/10"
+                      title="Open in window"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
                     </Button>
-                  </CollapsibleTrigger>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
+                        <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
                 </div>
-              </div>
-              <CollapsibleContent>
-                <DisplayMonitor />
-              </CollapsibleContent>
-            </Collapsible>
-          </Card>
-        )}
+                <CollapsibleContent>
+                  <DisplayMonitor />
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
+          )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Calendar & Date Selector */}
           <Card className="p-6 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
@@ -344,7 +278,8 @@ const ServicePlanner = () => {
               ))}
             </div>
           </Card>
-        )}
+         )}
+        </div>
       </div>
     </div>
   );
