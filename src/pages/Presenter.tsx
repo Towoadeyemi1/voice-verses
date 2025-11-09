@@ -81,10 +81,22 @@ const Presenter = () => {
   };
 
   const getAllSlides = (service: Service | null): Slide[] => {
-    if (!service) return [];
-    return service.sections?.flatMap(section => 
+    if (!service) {
+      console.log('getAllSlides: No service provided');
+      return [];
+    }
+    
+    if (!service.sections || service.sections.length === 0) {
+      console.log('getAllSlides: No sections in service');
+      return [];
+    }
+    
+    const slides = service.sections?.flatMap(section => 
       section.subsections.flatMap(sub => sub.slides)
     ) || [];
+    
+    console.log(`getAllSlides: Found ${slides.length} slides in service "${service.name}"`);
+    return slides;
   };
 
   const currentSlide = currentService ? getAllSlides(currentService)[currentIndex] : null;
@@ -92,6 +104,13 @@ const Presenter = () => {
   const nextSlide = allSlides[currentIndex + 1];
 
   const broadcastSlide = (slide: Slide | null, index: number) => {
+    console.log('Broadcasting slide:', { 
+      slideId: slide?.id, 
+      slideType: slide?.type, 
+      slideTitle: slide?.title,
+      index 
+    });
+    
     syncService.broadcast({
       type: 'SLIDE_UPDATE',
       data: {
@@ -107,6 +126,17 @@ const Presenter = () => {
       toast.error('Please select a service first');
       return;
     }
+    
+    const slides = getAllSlides(currentService);
+    console.log('handleStart: Starting presentation with', slides.length, 'slides');
+    
+    if (slides.length === 0) {
+      toast.error('This service has no slides', {
+        description: 'Please add slides to the service first'
+      });
+      return;
+    }
+    
     setIsPresenting(true);
     setCurrentIndex(0);
     broadcastSlide(allSlides[0], 0);
