@@ -61,114 +61,94 @@ export const DisplayMonitor = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-3 gap-3">
       {/* Main Projection Display Preview */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MonitorPlay className="w-4 h-4 text-primary" />
-            <h4 className="font-medium text-sm">Main Projection</h4>
-          </div>
-          <span className="text-xs text-muted-foreground">1920×1080</span>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 px-1">
+          <MonitorPlay className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[11px] font-medium text-foreground">Main</span>
+          <span className="text-[10px] text-muted-foreground ml-auto">1920×1080</span>
         </div>
-        <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-border shadow-lg relative">
+        <div className="aspect-video bg-black rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide ? (
             <div className="absolute inset-0">
-              <div className="w-[1920px] h-[1080px] origin-top-left" style={{ transform: 'scale(0.2)' }}>
+              <div className="w-[1920px] h-[1080px] origin-top-left" style={{ transform: 'scale(0.13)' }}>
                 <SlideDisplay slide={currentSlide} className="h-full w-full" />
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-white/50">
-              <MonitorPlay className="w-12 h-12 mb-2" />
-              <p className="text-sm">Waiting for content...</p>
+            <div className="h-full flex flex-col items-center justify-center text-white/30">
+              <MonitorPlay className="w-8 h-8 mb-1" />
+              <p className="text-[10px]">Waiting...</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Lower Third Preview */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TvMinimalPlay className="w-4 h-4 text-primary" />
-            <h4 className="font-medium text-sm">Lower Third</h4>
-          </div>
-          <span className="text-xs text-muted-foreground">Chroma Key</span>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 px-1">
+          <TvMinimalPlay className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[11px] font-medium text-foreground">Lower</span>
+          <span className="text-[10px] text-muted-foreground ml-auto">Chroma</span>
         </div>
-        <div className="aspect-video bg-[#00FF00] rounded-lg overflow-hidden border-2 border-border shadow-lg relative">
+        <div className="aspect-video bg-[#00FF00] rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide && currentSlide.type === 'scripture' ? (
-            <div className="absolute inset-0 flex items-end justify-center p-4">
+            <div className="absolute inset-0 flex items-end justify-center p-3">
               {lowerThirdSettings?.showBackground ? (
                 <div 
-                  className="rounded-lg px-6 py-3 max-w-full"
+                  className="rounded px-4 py-2 max-w-full"
                   style={{
                     backgroundColor: `${lowerThirdSettings.backgroundColor}${Math.round((lowerThirdSettings.backgroundOpacity || 90) * 2.55).toString(16).padStart(2, '0')}`,
                   }}
                 >
                   <p 
-                    className="font-bold text-center text-sm"
+                    className="font-bold text-center text-[10px]"
                     style={{ 
                       color: lowerThirdSettings?.textColor || '#FFFFFF'
                     }}
                   >
                     {currentSlide.verse.book} {currentSlide.verse.chapter}:{currentSlide.verse.verse}
                   </p>
-                  <p 
-                    className="text-center mt-1 text-xs line-clamp-2"
-                    style={{ 
-                      color: lowerThirdSettings?.textColor || '#FFFFFF',
-                      opacity: 0.9
-                    }}
-                  >
-                    {currentSlide.verse.text}
-                  </p>
                 </div>
               ) : (
-                <div className="text-center">
-                  <p 
-                    className="font-bold text-sm"
-                    style={{ 
-                      color: lowerThirdSettings?.textColor || '#FFFFFF',
-                      textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
-                    }}
-                  >
-                    {currentSlide.verse.book} {currentSlide.verse.chapter}:{currentSlide.verse.verse}
-                  </p>
-                </div>
+                <p 
+                  className="font-bold text-[10px]"
+                  style={{ 
+                    color: lowerThirdSettings?.textColor || '#FFFFFF',
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                  }}
+                >
+                  {currentSlide.verse.book} {currentSlide.verse.chapter}:{currentSlide.verse.verse}
+                </p>
               )}
             </div>
           ) : (
             <div className="h-full flex items-center justify-center">
-              <TvMinimalPlay className="w-12 h-12 text-white/30" />
+              <TvMinimalPlay className="w-8 h-8 text-white/20" />
             </div>
           )}
         </div>
       </div>
 
       {/* Confidence Monitor Preview */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Monitor className="w-4 h-4 text-primary" />
-            <h4 className="font-medium text-sm">Confidence Monitor</h4>
-          </div>
-          <span className="text-xs text-muted-foreground">1920×1080</span>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 px-1">
+          <Monitor className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[11px] font-medium text-foreground">Confidence</span>
+          <span className="text-[10px] text-muted-foreground ml-auto">1920×1080</span>
         </div>
-        <div className="aspect-video bg-background rounded-lg overflow-hidden border-2 border-border shadow-lg relative">
+        <div className="aspect-video bg-background rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide ? (
-            <div className="absolute inset-0 flex flex-col p-2">
-              <div className="text-center space-y-1 mb-2">
-                <p className="font-bold text-xs text-foreground truncate">
+            <div className="absolute inset-0 flex flex-col p-1.5">
+              <div className="text-center mb-1">
+                <p className="font-bold text-[9px] text-foreground truncate">
                   {currentSlide.title}
-                </p>
-                <p className="text-[10px] text-muted-foreground capitalize">
-                  {currentSlide.type}
                 </p>
               </div>
               <div className="flex-1 flex items-center justify-center relative">
-                <div className="w-full h-full bg-black/50 rounded overflow-hidden relative">
-                  <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.15)' }}>
+                <div className="w-full h-full bg-black/50 rounded-sm overflow-hidden relative">
+                  <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.11)' }}>
                     <SlideDisplay slide={currentSlide} className="h-full w-full" />
                   </div>
                 </div>
@@ -176,8 +156,8 @@ export const DisplayMonitor = () => {
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-              <Monitor className="w-12 h-12 mb-2" />
-              <p className="text-sm">No content</p>
+              <Monitor className="w-8 h-8 mb-1" />
+              <p className="text-[10px]">No content</p>
             </div>
           )}
         </div>
