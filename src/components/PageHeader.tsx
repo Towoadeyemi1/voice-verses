@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Settings, LayoutGrid, MonitorPlay, Maximize2 } from 'lucide-react';
+import { Settings, LayoutGrid, MonitorPlay, Presentation } from 'lucide-react';
 import { ShowLogoButton } from './ShowLogoButton';
 
 interface PageHeaderProps {
@@ -10,7 +11,6 @@ interface PageHeaderProps {
   onToggleSettings?: () => void;
   showDisplayMonitor?: boolean;
   onToggleDisplayMonitor?: () => void;
-  onOpenProjection?: () => void;
   onOpenLowerThird?: () => void;
   actions?: ReactNode;
 }
@@ -22,10 +22,10 @@ export const PageHeader = ({
   onToggleSettings,
   showDisplayMonitor,
   onToggleDisplayMonitor,
-  onOpenProjection,
   onOpenLowerThird,
   actions,
 }: PageHeaderProps) => {
+  const navigate = useNavigate();
   return (
     <div className="flex items-start justify-between gap-6 mb-6">
       <div className="flex-1 min-w-0">
@@ -83,17 +83,15 @@ export const PageHeader = ({
           </Button>
         )}
         
-        {onOpenProjection && (
-          <Button
-            onClick={onOpenProjection}
-            size="default"
-            className="gradient-divine shadow-glow"
-            aria-label="Open projection display"
-          >
-            <Maximize2 className="w-4 h-4 sm:mr-2" aria-hidden="true" />
-            <span className="hidden sm:inline">Projection</span>
-          </Button>
-        )}
+        <Button
+          onClick={() => navigate('/presenter')}
+          size="default"
+          className="gradient-divine shadow-glow"
+          aria-label="Open presentation control"
+        >
+          <Presentation className="w-4 h-4 sm:mr-2" aria-hidden="true" />
+          <span className="hidden sm:inline">Presenter</span>
+        </Button>
       </div>
     </div>
   );

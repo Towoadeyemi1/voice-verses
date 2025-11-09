@@ -151,10 +151,6 @@ const MediaLibrary = () => {
     return matchesSearch && matchesFilter && matchesCategory;
   });
 
-  const handleOpenProjection = () => {
-    window.open('/projection', '_blank', 'width=1920,height=1080');
-  };
-
   const handleOpenLowerThird = () => {
     window.open('/lower-third', '_blank', 'width=1280,height=720');
   };
@@ -169,7 +165,6 @@ const MediaLibrary = () => {
           onToggleSettings={() => setShowSettings(!showSettings)}
           showDisplayMonitor={showDisplayMonitor}
           onToggleDisplayMonitor={() => setShowDisplayMonitor(!showDisplayMonitor)}
-          onOpenProjection={handleOpenProjection}
           onOpenLowerThird={handleOpenLowerThird}
         />
 

@@ -20,12 +20,11 @@ import { Card } from '@/components/ui/card';
 import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 
 interface ControlPanelProps {
-  onOpenProjection: () => void;
   showDisplayMonitor?: boolean;
   onToggleDisplayMonitor?: () => void;
 }
 
-export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDisplayMonitor }: ControlPanelProps) => {
+export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: ControlPanelProps) => {
   const [audioStatus, setAudioStatus] = useState<AudioStatus>({
     isListening: false,
     volume: 45,
@@ -307,7 +306,6 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
           onToggleSettings={() => setShowSettings(!showSettings)}
           showDisplayMonitor={showDisplayMonitor}
           onToggleDisplayMonitor={onToggleDisplayMonitor}
-          onOpenProjection={onOpenProjection}
           onOpenLowerThird={handleOpenLowerThird}
         />
 
