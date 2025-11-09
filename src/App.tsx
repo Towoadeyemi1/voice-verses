@@ -12,6 +12,7 @@ import DisplayManager from "./pages/DisplayManager";
 import Install from "./pages/Install";
 import ServicePlanner from "./pages/ServicePlanner";
 import ServiceBuilder from "./pages/ServiceBuilder";
+import Presenter from "./pages/Presenter";
 import MediaLibrary from "./pages/MediaLibrary";
 import NotFound from "./pages/NotFound";
 import { storageOrchestrator } from "./lib/storageOrchestrator";
@@ -43,6 +44,7 @@ const App = () => {
             <Route path="/display-manager" element={<DisplayManager />} />
             <Route path="/service-planner" element={<ServicePlanner />} />
             <Route path="/service-builder/:serviceId" element={<ServiceBuilder />} />
+            <Route path="/presenter" element={<Presenter />} />
             <Route path="/media-library" element={<MediaLibrary />} />
             <Route path="/install" element={<Install />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

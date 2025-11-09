@@ -217,6 +217,14 @@ const ServicePlanner = () => {
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
+                          onClick={() => navigate(`/presenter?service=${service.id}`)}
+                        >
+                          <Monitor className="w-4 h-4 mr-2" />
+                          Present
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => navigate(`/service-builder/${service.id}`)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
