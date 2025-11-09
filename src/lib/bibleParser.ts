@@ -488,6 +488,75 @@ export class BibleParser {
     if (nltKey) nltApiKey = nltKey;
   }
 
+  // Get multiple verses from a range or full chapter
+  static async getVerses(bookName: string, chapterNum: number, startVerse?: number, endVerse?: number): Promise<BibleVerse[]> {
+    const books = getBibleData();
+    const book = books.find(b => 
+      b.name.toLowerCase() === bookName.toLowerCase() || 
+      b.abbrev.toLowerCase() === bookName.toLowerCase()
+    );
+    
+    if (!book) {
+      console.warn(`Book not found: ${bookName}`);
+      return [];
+    }
+
+    const chapter = book.chapters[chapterNum - 1];
+    if (!chapter) {
+      console.warn(`Chapter ${chapterNum} not found in ${book.name}`);
+      return [];
+    }
+
+    const verses: BibleVerse[] = [];
+    const start = startVerse || 1;
+    const end = endVerse || chapter.length;
+
+    for (let verseNum = start; verseNum <= end; verseNum++) {
+      const verseText = chapter[verseNum - 1];
+      if (verseText) {
+        verses.push({
+          book: book.name,
+          chapter: chapterNum,
+          verse: verseNum,
+          text: verseText,
+        });
+      }
+    }
+
+    return verses;
+  }
+
+  // Parse scripture range (e.g., "John 3:1-16" or "John 3")
+  static async parseReferenceRange(text: string): Promise<BibleVerse[]> {
+    const cleanText = text.trim();
+    
+    // Pattern for range: "John 3:1-16"
+    const rangePattern = /^(\d?\s*\w+(?:\s+\w+)?)\s*[:\s,]+(\d+)\s*[:\s,]+(\d+)\s*-\s*(\d+)$/i;
+    const rangeMatch = cleanText.match(rangePattern);
+    
+    if (rangeMatch) {
+      const [, book, chapter, startVerse, endVerse] = rangeMatch;
+      const normalizedBook = this.normalizeBook(book.trim());
+      this.context = { book: normalizedBook, chapter: parseInt(chapter) };
+      return await this.getVerses(normalizedBook, parseInt(chapter), parseInt(startVerse), parseInt(endVerse));
+    }
+
+    // Pattern for full chapter: "John 3"
+    const chapterPattern = /^(\d?\s*\w+(?:\s+\w+)?)\s+(\d+)$/i;
+    const chapterMatch = cleanText.match(chapterPattern);
+    
+    if (chapterMatch) {
+      const [, book, chapter] = chapterMatch;
+      const normalizedBook = this.normalizeBook(book.trim());
+      this.context = { book: normalizedBook, chapter: parseInt(chapter) };
+      return await this.getVerses(normalizedBook, parseInt(chapter));
+    }
+
+    // Single verse - return as array
+    const verse = await this.parseReference(text);
+    return verse ? [verse] : [];
+  }
+
   static exportCurrentVersion(): any {
     if (currentVersion === 'esv' || currentVersion === 'nlt') {
       console.error('Cannot export API-based versions');

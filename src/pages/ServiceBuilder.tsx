@@ -9,7 +9,7 @@ import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, AnnouncementSl
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVerse } from '@/types/bible';
-import { Book, Music, Image as ImageIcon, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil } from 'lucide-react';
+import { Book, Music, Image as ImageIcon, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
@@ -51,6 +51,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Sortable wrapper for sections
 function SortableSection({ section, children }: { section: ServiceSection; children: React.ReactNode }) {
@@ -131,6 +137,8 @@ const ServiceBuilder = () => {
   const [songSelectMatches, setSongSelectMatches] = useState<Array<{ songTitle: string; index: number; lyrics: string }>>([]);
   const [showSongSelectDialog, setShowSongSelectDialog] = useState(false);
   const [pendingImportData, setPendingImportData] = useState<{ parsedSongs: ServiceSubsection[]; worshipSection: ServiceSection | null } | null>(null);
+  const [showScriptureDialog, setShowScriptureDialog] = useState(false);
+  const [scriptureReference, setScriptureReference] = useState('');
   const media = ServiceStorage.getMedia();
 
   const sensors = useSensors(
@@ -297,26 +305,37 @@ const ServiceBuilder = () => {
     toast.success('Scripture slide added');
   };
 
-  const handleAddScriptureSlide = async () => {
+  const handleAddScriptureSlide = () => {
     if (!selectedSubsection) {
       toast.error('Please select a subsection first');
       return;
     }
-    const reference = prompt('Enter scripture reference (e.g., John 3:16):');
-    if (!reference) return;
-    const verse = await BibleParser.parseReference(reference);
-    if (!verse) {
+    setShowScriptureDialog(true);
+  };
+
+  const handleScriptureSubmit = async () => {
+    if (!scriptureReference.trim()) return;
+    
+    const verses = await BibleParser.parseReferenceRange(scriptureReference);
+    if (!verses || verses.length === 0) {
       toast.error('Invalid scripture reference');
       return;
     }
-    const newSlide: ScriptureSlide = {
-      id: `slide-${Date.now()}`,
-      type: 'scripture',
-      title: `${verse.book} ${verse.chapter}:${verse.verse}`,
-      verse,
-    };
-    addSlideToSubsection(newSlide);
-    toast.success('Scripture slide added');
+
+    // Create a slide for each verse
+    verses.forEach(verse => {
+      const newSlide: ScriptureSlide = {
+        id: `slide-${Date.now()}-${verse.verse}`,
+        type: 'scripture',
+        title: `${verse.book} ${verse.chapter}:${verse.verse}`,
+        verse,
+      };
+      addSlideToSubsection(newSlide);
+    });
+    
+    toast.success(`Added ${verses.length} scripture slide${verses.length > 1 ? 's' : ''}`);
+    setScriptureReference('');
+    setShowScriptureDialog(false);
   };
 
   const handleAddLyricsSlide = () => {
@@ -1429,28 +1448,41 @@ Chorus line 2"`;
                                                              </div>
                                                            </div>
                                                            
-                                                           {/* Slide Info & Actions */}
-                                                           <div className="p-2 border-t">
-                                                             <div className="text-xs font-medium truncate mb-2" title={slide.title}>
-                                                               {slide.title}
-                                                             </div>
-                                                             <div className="flex gap-1 justify-between">
-                                                               <div className="flex gap-1">
-                                                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openNotesDialog('slide', slide.id, section.id, subsection.id)} title="Slide Notes">
-                                                                   <StickyNote className="w-3 h-3" />
-                                                                 </Button>
-                                                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleEditSlide(section.id, subsection.id, slide)} title="Edit Slide">
-                                                                   <Pencil className="w-3 h-3" />
-                                                                 </Button>
-                                                               </div>
-                                                               <div className="flex gap-1">
-                                                                 <SlideConfiguration slide={slide} onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)} />
-                                                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)} title="Delete">
-                                                                   <Trash2 className="w-3 h-3" />
-                                                                 </Button>
-                                                               </div>
-                                                             </div>
-                                                           </div>
+                                                            {/* Slide Info & Actions */}
+                                                            <div className="p-2 border-t">
+                                                              <div className="text-xs font-medium truncate" title={slide.title}>
+                                                                {slide.title}
+                                                              </div>
+                                                              
+                                                              {/* Dropdown Menu for Actions */}
+                                                              <div className="absolute top-2 right-2">
+                                                                <DropdownMenu>
+                                                                  <DropdownMenuTrigger asChild>
+                                                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                      <MoreVertical className="w-4 h-4" />
+                                                                    </Button>
+                                                                  </DropdownMenuTrigger>
+                                                                  <DropdownMenuContent align="end" className="w-40 bg-background z-50">
+                                                                    <DropdownMenuItem onClick={() => openNotesDialog('slide', slide.id, section.id, subsection.id)}>
+                                                                      <StickyNote className="w-4 h-4 mr-2" />
+                                                                      Notes
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => handleEditSlide(section.id, subsection.id, slide)}>
+                                                                      <Pencil className="w-4 h-4 mr-2" />
+                                                                      Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                                      <Settings className="w-4 h-4 mr-2" />
+                                                                      <SlideConfiguration slide={slide} onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)} />
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)} className="text-destructive">
+                                                                      <Trash2 className="w-4 h-4 mr-2" />
+                                                                      Delete
+                                                                    </DropdownMenuItem>
+                                                                  </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                              </div>
+                                                            </div>
                                                          </Card>
                                                        </SortableSlide>
                                                      ))}
@@ -1769,6 +1801,56 @@ Chorus line 2"`;
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Scripture Dialog */}
+      <Dialog open={showScriptureDialog} onOpenChange={setShowScriptureDialog}>
+        <DialogContent className="sm:max-w-md bg-background border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Add Scripture</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Enter a scripture reference. Examples: John 3:16, John 3:1-16, or John 3 (full chapter)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="scripture-ref" className="text-sm font-medium text-foreground">
+                Scripture Reference
+              </Label>
+              <Input
+                id="scripture-ref"
+                value={scriptureReference}
+                onChange={(e) => setScriptureReference(e.target.value)}
+                placeholder="e.g., John 3:16"
+                className="bg-background border-input text-foreground placeholder:text-muted-foreground"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleScriptureSubmit();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setScriptureReference('');
+                setShowScriptureDialog(false);
+              }}
+              className="border-border"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleScriptureSubmit}
+              disabled={!scriptureReference.trim()}
+            >
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* SongSelect Confirmation Dialog */}
       {showSongSelectDialog && (
