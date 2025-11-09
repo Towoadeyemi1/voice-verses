@@ -6,14 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
-import { Image, Music, Plus, Trash2, Search, Pencil, Mic, Calendar, Settings, LayoutGrid, MonitorPlay, Maximize2, Monitor, ChevronDown, ExternalLink } from 'lucide-react';
+import { Image, Music, Plus, Trash2, Search, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { SongSelectImport } from '@/components/SongSelectImport';
 import { PowerPointImport } from '@/components/PowerPointImport';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { SettingsPanel } from '@/components/SettingsPanel';
+import { PageHeader } from '@/components/PageHeader';
+import { ModeNav } from '@/components/ModeNav';
+import { EmptyState } from '@/components/EmptyState';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -39,7 +42,6 @@ const MediaLibrary = () => {
   const [newCategory, setNewCategory] = useState('');
   const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const navigate = useNavigate();
 
   const categories = ['all', ...new Set(media.map(m => m.category).filter(Boolean))] as string[];
 
@@ -158,288 +160,227 @@ const MediaLibrary = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Media Library</h1>
-              <p className="text-muted-foreground">
-                Manage images and song lyrics for your services
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowSettings(!showSettings)}
-                variant="outline"
-                size="lg"
-              >
-                <Settings className="w-5 h-5 mr-2" />
-                Settings
-              </Button>
-              <Button
-                onClick={() => setShowDisplayMonitor(!showDisplayMonitor)}
-                variant={showDisplayMonitor ? "default" : "outline"}
-                size="lg"
-              >
-                <LayoutGrid className="w-5 h-5 mr-2" />
-                {showDisplayMonitor ? "Hide Monitor" : "Display Monitor"}
-              </Button>
-              <Button onClick={handleOpenLowerThird} variant="outline" size="lg">
-                <MonitorPlay className="w-5 h-5 mr-2" />
-                Lower Third
-              </Button>
-              <Button onClick={handleOpenProjection} size="lg" className="gradient-divine">
-                <Maximize2 className="w-5 h-5 mr-2" />
-                Open Projection
-              </Button>
-            </div>
-          </div>
+        <PageHeader
+          title="Media Library"
+          description="Manage images and song lyrics for your services"
+          showSettings={showSettings}
+          onToggleSettings={() => setShowSettings(!showSettings)}
+          showDisplayMonitor={showDisplayMonitor}
+          onToggleDisplayMonitor={() => setShowDisplayMonitor(!showDisplayMonitor)}
+          onOpenProjection={handleOpenProjection}
+          onOpenLowerThird={handleOpenLowerThird}
+        />
 
-          {/* Mode Switcher */}
-          <Card className="p-4 bg-card/50 backdrop-blur">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
-                <Button
-                  onClick={() => navigate('/')}
-                  variant="ghost"
-                  size="lg"
-                  className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
-                >
-                  <Mic className="w-5 h-5" />
-                  <div className="text-left">
-                    <div className="font-semibold text-sm">Scripture Mode</div>
-                    <div className="text-xs text-muted-foreground">Voice-controlled</div>
-                  </div>
-                </Button>
-                
-                <Button
-                  onClick={() => navigate('/service-planner')}
-                  variant="ghost"
-                  size="lg"
-                  className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
-                >
-                  <Calendar className="w-5 h-5" />
-                  <div className="text-left">
-                    <div className="font-semibold text-sm">Service Mode</div>
-                    <div className="text-xs text-muted-foreground">Plan services</div>
-                  </div>
-                </Button>
-                
-                <Button
-                  onClick={() => navigate('/media-library')}
-                  variant="ghost"
-                  size="lg"
-                  className="h-auto p-4 gap-3 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-                >
-                  <Music className="w-5 h-5" />
-                  <div className="text-left">
-                    <div className="font-semibold text-sm">Media Mode</div>
-                    <div className="text-xs opacity-90">Manage media</div>
-                  </div>
-                </Button>
-              </div>
+        <div className="space-y-4 sm:space-y-6">
+          <ModeNav />
+
+          {/* Settings Panel */}
+          {showSettings && (
+            <div className="animate-fade-in">
+              <SettingsPanel onClose={() => setShowSettings(false)} />
             </div>
-          </Card>
-        </div>
+          )}
 
-        {/* Settings Panel */}
-        {showSettings && (
-          <div className="mb-6 animate-fade-in">
-            <SettingsPanel onClose={() => setShowSettings(false)} />
-          </div>
-        )}
-
-        {/* Display Monitor Section */}
-        {showDisplayMonitor && (
-          <Card className="p-5 mb-6 animate-fade-in">
-            <Collapsible defaultOpen>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Monitor className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-sm">Display Monitor</h3>
-                  <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-primary/10 rounded">Live</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => window.open('/display-manager', '_blank', 'width=1400,height=900')}
-                    className="h-7 px-2 hover:bg-primary/10"
-                    title="Open in window"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </Button>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
-                      <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+          {/* Display Monitor Section */}
+          {showDisplayMonitor && (
+            <Card className="p-5 animate-fade-in">
+              <Collapsible defaultOpen>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Monitor className="w-4 h-4 text-primary" />
+                    <h3 className="font-semibold text-sm">Display Monitor</h3>
+                    <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-primary/10 rounded">Live</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => window.open('/display-manager', '_blank', 'width=1400,height=900')}
+                      className="h-7 px-2 hover:bg-primary/10"
+                      title="Open in window"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
                     </Button>
-                  </CollapsibleTrigger>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
+                        <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
                 </div>
-              </div>
-              <CollapsibleContent>
-                <DisplayMonitor />
-              </CollapsibleContent>
-            </Collapsible>
-          </Card>
-        )}
+                <CollapsibleContent>
+                  <DisplayMonitor />
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
+          )}
 
-        {/* Search and Filter */}
-        <Card className="p-4 mb-6">
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search media..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2 items-center">
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilter('all')}
-                size="sm"
-              >
-                All
-              </Button>
-              <Button
-                variant={filter === 'image' ? 'default' : 'outline'}
-                onClick={() => setFilter('image')}
-                size="sm"
-              >
-                <Image className="w-4 h-4 mr-2" />
-                Images
-              </Button>
-              <Button
-                variant={filter === 'song' ? 'default' : 'outline'}
-                onClick={() => setFilter('song')}
-                size="sm"
-              >
-                <Music className="w-4 h-4 mr-2" />
-                Songs
-              </Button>
-              
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  {categories.map(cat => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat === 'all' ? 'All Categories' : cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={() => setShowUpload(!showUpload)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Upload
-            </Button>
-          </div>
-        </Card>
-
-        {/* Upload Section */}
-        {showUpload && (
-          <Card className="p-6 mb-6 animate-fade-in">
-            <h2 className="text-xl font-semibold mb-4">Upload Media</h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="image-upload">Upload Image</Label>
+          {/* Search and Filter */}
+          <Card className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="mt-2"
+                  placeholder="Search media..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                  aria-label="Search media items"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Supported: JPG, PNG, WEBP (for backgrounds, announcements)
-                </p>
               </div>
-              
-              <div className="pt-4 border-t">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Note:</strong> Song lyrics can be added when building your service. 
-                  Use the Service Builder to create lyric slides.
-                </p>
+              <div className="flex flex-wrap gap-2 items-center">
+                <Button
+                  variant={filter === 'all' ? 'default' : 'outline'}
+                  onClick={() => setFilter('all')}
+                  size="sm"
+                  aria-pressed={filter === 'all'}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={filter === 'image' ? 'default' : 'outline'}
+                  onClick={() => setFilter('image')}
+                  size="sm"
+                  aria-pressed={filter === 'image'}
+                >
+                  <Image className="w-4 h-4 mr-2" />
+                  Images
+                </Button>
+                <Button
+                  variant={filter === 'song' ? 'default' : 'outline'}
+                  onClick={() => setFilter('song')}
+                  size="sm"
+                  aria-pressed={filter === 'song'}
+                >
+                  <Music className="w-4 h-4 mr-2" />
+                  Songs
+                </Button>
+                
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-[180px]" aria-label="Filter by category">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    {categories.map(cat => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat === 'all' ? 'All Categories' : cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              <Button onClick={() => setShowUpload(!showUpload)} className="shrink-0">
+                <Plus className="w-4 h-4 mr-2" />
+                Upload
+              </Button>
             </div>
           </Card>
-        )}
 
-        {/* SongSelect Integration */}
-        <div className="space-y-4">
-          <SongSelectImport onImportComplete={loadMedia} />
-          <PowerPointImport onImportComplete={loadMedia} />
-        </div>
-
-        {/* Media Grid */}
-        {filteredMedia.length === 0 ? (
-          <Card className="p-12 text-center">
-            <p className="text-muted-foreground mb-4">
-              No media found. Upload images to get started.
-            </p>
-            <Button onClick={() => setShowUpload(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Upload First Item
-            </Button>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {filteredMedia.map((item) => (
-              <Card key={item.id} className="overflow-hidden group">
-                {item.type === 'image' && item.url && (
-                  <div className="aspect-video bg-muted relative">
-                    <img
-                      src={item.url}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteMedia(item.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                {item.type === 'song' && (
-                  <div className="aspect-video bg-primary/10 flex items-center justify-center relative">
-                    <Music className="w-12 h-12 text-primary" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleEditSong(item)}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteMedia(item.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                <div className="p-3">
-                  <div className="font-medium truncate">{item.name}</div>
-                  <div className="text-xs text-muted-foreground capitalize">
-                    {item.type}
-                  </div>
+          {/* Upload Section */}
+          {showUpload && (
+            <Card className="p-6 animate-fade-in">
+              <h2 className="text-xl font-semibold mb-4">Upload Media</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="image-upload">Upload Image</Label>
+                  <Input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="mt-2"
+                    aria-label="Select image file to upload"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Supported: JPG, PNG, WEBP (for backgrounds, announcements)
+                  </p>
                 </div>
-              </Card>
-            ))}
+                
+                <div className="pt-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Note:</strong> Song lyrics can be added when building your service. 
+                    Use the Service Builder to create lyric slides.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* SongSelect Integration */}
+          <div className="space-y-4">
+            <SongSelectImport onImportComplete={loadMedia} />
+            <PowerPointImport onImportComplete={loadMedia} />
           </div>
-        )}
+
+          {/* Media Grid */}
+          {filteredMedia.length === 0 ? (
+            <EmptyState
+              icon={Image}
+              title="No media found"
+              description="Upload images or import songs to get started with your media library."
+              action={{
+                label: 'Upload First Item',
+                onClick: () => setShowUpload(true),
+              }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {filteredMedia.map((item) => (
+                <Card key={item.id} className="overflow-hidden group hover-lift">
+                  {item.type === 'image' && item.url && (
+                    <div className="aspect-video bg-muted relative">
+                      <img
+                        src={item.url}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteMedia(item.id)}
+                          aria-label={`Delete ${item.name}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {item.type === 'song' && (
+                    <div className="aspect-video bg-primary/10 flex items-center justify-center relative">
+                      <Music className="w-12 h-12 text-primary" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleEditSong(item)}
+                          aria-label={`Edit ${item.name}`}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteMedia(item.id)}
+                          aria-label={`Delete ${item.name}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="p-3">
+                    <div className="font-medium truncate">{item.name}</div>
+                    <div className="text-xs text-muted-foreground capitalize">
+                      {item.type}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
 
         {/* Edit Lyrics Dialog */}
         <Dialog open={!!editingSong} onOpenChange={() => setEditingSong(null)}>
@@ -471,6 +412,7 @@ const MediaLibrary = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
     </div>
   );

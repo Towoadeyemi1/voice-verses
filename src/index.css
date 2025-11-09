@@ -48,11 +48,14 @@ All colors MUST be HSL.
 
     --gradient-divine: linear-gradient(135deg, hsl(43 100% 65%) 0%, hsl(33 100% 55%) 100%);
     --gradient-dark: linear-gradient(180deg, hsl(215 25% 12%) 0%, hsl(210 30% 8%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(215 25% 14%) 0%, hsl(215 25% 12%) 100%);
 
     --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
     --shadow-glow: 0 0 30px hsl(43 100% 65% / 0.2);
+    --shadow-elevated: 0 10px 40px -10px hsl(0 0% 0% / 0.4);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -79,6 +82,10 @@ All colors MUST be HSL.
     background: var(--gradient-dark);
   }
 
+  .gradient-subtle {
+    background: var(--gradient-subtle);
+  }
+
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-divine);
@@ -88,8 +95,16 @@ All colors MUST be HSL.
     box-shadow: var(--shadow-glow);
   }
 
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
   .transition-smooth {
     transition: var(--transition-smooth);
+  }
+
+  .transition-fast {
+    transition: var(--transition-fast);
   }
 
   .animate-fade-in {
@@ -118,5 +133,13 @@ All colors MUST be HSL.
     50% {
       opacity: 0.7;
     }
+  }
+
+  .hover-lift {
+    @apply transition-smooth hover:shadow-elevated hover:-translate-y-0.5;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 }

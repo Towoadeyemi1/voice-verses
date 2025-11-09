@@ -7,16 +7,17 @@ import { ContextTracker } from './ContextTracker';
 import { SettingsPanel } from './SettingsPanel';
 import { ManualSearch } from './ManualSearch';
 import { DisplayMonitor } from './DisplayMonitor';
+import { PageHeader } from './PageHeader';
+import { ModeNav } from './ModeNav';
 import { BibleParser } from '@/lib/bibleParser';
 import { DisplayedVerse, AudioStatus, BibleVerse } from '@/types/bible';
-import { Maximize2, Settings, Loader2, MonitorPlay, LayoutGrid, Monitor, ChevronDown, ExternalLink, Calendar, Music, Mic } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncService } from '@/lib/syncService';
 import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card } from '@/components/ui/card';
-import { ShowLogoButton } from './ShowLogoButton';
+import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 
 interface ControlPanelProps {
   onOpenProjection: () => void;
@@ -25,7 +26,6 @@ interface ControlPanelProps {
 }
 
 export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDisplayMonitor }: ControlPanelProps) => {
-  const navigate = useNavigate();
   const [audioStatus, setAudioStatus] = useState<AudioStatus>({
     isListening: false,
     volume: 45,
@@ -298,95 +298,20 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
   const context = BibleParser.getCurrentContext();
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src="/favicon.ico" alt="Cornerstone Bible Logo" className="w-16 h-16 object-contain" />
-            <div>
-              <h1 className="text-4xl font-bold text-gradient mb-2">
-                Cornerstone Bible
-              </h1>
-              <p className="text-muted-foreground">
-                Voice-Activated Scripture Projection System
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <ShowLogoButton variant="outline" size="lg" />
-            <Button
-              onClick={() => setShowSettings(!showSettings)}
-              variant="outline"
-              size="lg"
-            >
-              <Settings className="w-5 h-5 mr-2" />
-              Settings
-            </Button>
-            <Button 
-              onClick={onToggleDisplayMonitor} 
-              variant={showDisplayMonitor ? "default" : "outline"}
-              size="lg"
-            >
-              <LayoutGrid className="w-5 h-5 mr-2" />
-              {showDisplayMonitor ? "Hide Monitor" : "Display Monitor"}
-            </Button>
-            <Button onClick={handleOpenLowerThird} variant="outline" size="lg">
-              <MonitorPlay className="w-5 h-5 mr-2" />
-              Lower Third
-            </Button>
-            <Button onClick={onOpenProjection} size="lg" className="gradient-divine">
-              <Maximize2 className="w-5 h-5 mr-2" />
-              Open Projection
-            </Button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-background p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <PageHeader
+          title="Cornerstone Bible"
+          description="Voice-Activated Scripture Projection System"
+          showSettings={showSettings}
+          onToggleSettings={() => setShowSettings(!showSettings)}
+          showDisplayMonitor={showDisplayMonitor}
+          onToggleDisplayMonitor={onToggleDisplayMonitor}
+          onOpenProjection={onOpenProjection}
+          onOpenLowerThird={handleOpenLowerThird}
+        />
 
-        {/* Mode Switcher */}
-        <Card className="p-4 bg-card/50 backdrop-blur">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
-              <Button
-                onClick={() => navigate('/')}
-                variant="ghost"
-                size="lg"
-                className="h-auto p-4 gap-3 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-              >
-                <Mic className="w-5 h-5" />
-                <div className="text-left">
-                  <div className="font-semibold text-sm">Scripture Mode</div>
-                  <div className="text-xs opacity-90">Voice-controlled</div>
-                </div>
-              </Button>
-              
-              <Button
-                onClick={() => navigate('/service-planner')}
-                variant="ghost"
-                size="lg"
-                className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
-              >
-                <Calendar className="w-5 h-5" />
-                <div className="text-left">
-                  <div className="font-semibold text-sm">Service Mode</div>
-                  <div className="text-xs text-muted-foreground">Plan services</div>
-                </div>
-              </Button>
-              
-              <Button
-                onClick={() => navigate('/media-library')}
-                variant="ghost"
-                size="lg"
-                className="h-auto p-4 gap-3 hover:bg-primary/10 transition-all"
-              >
-                <Music className="w-5 h-5" />
-                <div className="text-left">
-                  <div className="font-semibold text-sm">Media Mode</div>
-                  <div className="text-xs text-muted-foreground">Manage media</div>
-                </div>
-              </Button>
-            </div>
-          </div>
-        </Card>
+        <ModeNav />
 
         {/* Settings Panel */}
         {showSettings && (
