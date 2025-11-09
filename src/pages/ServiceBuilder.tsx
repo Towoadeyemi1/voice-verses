@@ -1317,44 +1317,54 @@ Chorus line 2"`;
                                                                  className="w-full h-full object-cover"
                                                                />
                                                              )}
-                                                             {slide.type === 'scripture' && (
-                                                               <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-br from-primary/20 to-primary/5 text-center">
-                                                                 <Book className="w-8 h-8 mb-2 text-primary" />
-                                                                 <div className="text-xs font-semibold text-primary mb-1">
-                                                                   {(slide as ScriptureSlide).verse.book} {(slide as ScriptureSlide).verse.chapter}:{(slide as ScriptureSlide).verse.verse}
-                                                                 </div>
-                                                                 <div className="text-[10px] line-clamp-3 text-foreground/70">
-                                                                   {(slide as ScriptureSlide).verse.text}
-                                                                 </div>
+                                                            {slide.type === 'scripture' && (
+                                                                <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-primary/20 to-primary/5 text-center">
+                                                                  <div className="text-sm font-bold text-primary mb-2">
+                                                                    {(slide as ScriptureSlide).verse.book} {(slide as ScriptureSlide).verse.chapter}:{(slide as ScriptureSlide).verse.verse}
+                                                                  </div>
+                                                                  <div className="text-xs leading-relaxed line-clamp-4 text-foreground">
+                                                                    {(slide as ScriptureSlide).verse.text}
+                                                                  </div>
+                                                                </div>
+                                                              )}
+                                                              {slide.type === 'lyrics' && (
+                                                                <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-center">
+                                                                  <div className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2">
+                                                                    {(slide as LyricsSlide).songTitle}
+                                                                  </div>
+                                                                  {(slide as LyricsSlide).section && (
+                                                                    <div className="text-[10px] uppercase text-muted-foreground mb-1">
+                                                                      {(slide as LyricsSlide).section}
+                                                                    </div>
+                                                                  )}
+                                                                  <div className="text-xs leading-relaxed line-clamp-4 whitespace-pre-line">
+                                                                    {(slide as LyricsSlide).content}
+                                                                  </div>
+                                                                </div>
+                                                              )}
+                                                              {slide.type === 'announcement' && (
+                                                                <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-orange-500/20 to-orange-500/5 text-center">
+                                                                  <div className="text-sm font-bold text-orange-600 dark:text-orange-400 mb-2">
+                                                                    {(slide as AnnouncementSlide).title}
+                                                                  </div>
+                                                                  <div className="text-xs leading-relaxed line-clamp-4 whitespace-pre-line">
+                                                                    {(slide as AnnouncementSlide).content}
+                                                                  </div>
+                                                                  {(slide as AnnouncementSlide).imageUrl && (
+                                                                    <div className="absolute top-2 right-2">
+                                                                      <ImageIcon className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                                                    </div>
+                                                                  )}
                                                                </div>
-                                                             )}
-                                                             {slide.type === 'lyrics' && (
-                                                               <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-center">
-                                                                 <Music className="w-8 h-8 mb-2 text-blue-600 dark:text-blue-400" />
-                                                                 <div className="text-xs font-semibold mb-1">
-                                                                   {(slide as LyricsSlide).songTitle}
-                                                                 </div>
-                                                                 <div className="text-[10px] line-clamp-3">
-                                                                   {(slide as LyricsSlide).content}
-                                                                 </div>
-                                                               </div>
-                                                             )}
-                                                             {slide.type === 'announcement' && (
-                                                               <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-br from-orange-500/20 to-orange-500/5 text-center">
-                                                                 <MessageSquare className="w-8 h-8 mb-2 text-orange-600 dark:text-orange-400" />
-                                                                 <div className="text-xs font-semibold mb-1">
-                                                                   {(slide as AnnouncementSlide).title}
-                                                                 </div>
-                                                                 <div className="text-[10px] line-clamp-2">
-                                                                   {(slide as AnnouncementSlide).content}
-                                                                 </div>
-                                                               </div>
-                                                             )}
-                                                             {slide.type === 'blank' && (
-                                                               <div className="w-full h-full flex items-center justify-center bg-muted">
-                                                                 <FileQuestion className="w-8 h-8 text-muted-foreground" />
-                                                               </div>
-                                                             )}
+                                                              )}
+                                                              {slide.type === 'blank' && (
+                                                                <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-muted text-center">
+                                                                  <FileQuestion className="w-8 h-8 mb-2 text-muted-foreground" />
+                                                                  <div className="text-xs font-medium text-muted-foreground">
+                                                                    {slide.title}
+                                                                  </div>
+                                                                </div>
+                                                              )}
                                                              
                                                              {/* Drag Handle Overlay */}
                                                              <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
