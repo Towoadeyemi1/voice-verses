@@ -181,10 +181,9 @@ const ServiceBuilder = () => {
   };
 
   const handleAddSection = () => {
-    const name = prompt('Enter section name (e.g., "Worship", "Sermon"):') || 'New Section';
     const newSection: ServiceSection = {
       id: `section-${Date.now()}`,
-      name,
+      name: 'New Section',
       subsections: [],
     };
     setService(prev => prev ? { ...prev, sections: [...(prev.sections || []), newSection] } : null);
@@ -214,10 +213,9 @@ const ServiceBuilder = () => {
   };
 
   const handleAddSubsection = (sectionId: string) => {
-    const name = prompt('Enter subsection name (e.g., song title, testimony name):') || 'New Subsection';
     const newSubsection: ServiceSubsection = {
       id: `subsection-${Date.now()}`,
-      name,
+      name: 'New Item',
       slides: [],
     };
     setService(prev => prev ? {
@@ -229,7 +227,7 @@ const ServiceBuilder = () => {
       ) || [],
     } : null);
     setSelectedSubsection(newSubsection.id);
-    toast.success('Subsection added');
+    toast.success('Item added');
   };
 
   const handleDuplicateSubsection = (sectionId: string, subsection: ServiceSubsection) => {
@@ -1149,10 +1147,24 @@ Chorus line 2"`;
           </Card>
 
           <Card className="p-6 lg:col-span-2">
-            <h2 className="text-xl font-semibold mb-4">Service Structure</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Service Structure</h2>
+              <Button onClick={handleAddSection} size="sm" className="gap-2">
+                <FolderPlus className="w-4 h-4" />
+                Add Section
+              </Button>
+            </div>
             {(!service.sections || service.sections.length === 0) ? (
-              <div className="text-center py-12 text-muted-foreground">
-                No sections yet. Add your first section to get started.
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <FolderPlus className="w-16 h-16 text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No sections yet</h3>
+                <p className="text-muted-foreground mb-6 max-w-sm">
+                  Get started by adding your first section. Sections help organize your service into parts like Worship, Sermon, or Announcements.
+                </p>
+                <Button onClick={handleAddSection} size="lg" className="gap-2">
+                  <FolderPlus className="w-5 h-5" />
+                  Add Your First Section
+                </Button>
               </div>
             ) : (
               <DndContext 
@@ -1175,9 +1187,19 @@ Chorus line 2"`;
                                       {section.collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                     </Button>
                                   </CollapsibleTrigger>
-                                  <button onClick={() => setSelectedSection(section.id)} className="flex-1 text-left font-semibold text-lg">
-                                    {section.name}
-                                  </button>
+                                  <Input 
+                                    value={section.name}
+                                    onChange={(e) => {
+                                      setService(prev => prev ? {
+                                        ...prev,
+                                        sections: prev.sections?.map(s => 
+                                          s.id === section.id ? { ...s, name: e.target.value } : s
+                                        ) || []
+                                      } : null);
+                                    }}
+                                    onFocus={() => setSelectedSection(section.id)}
+                                    className="flex-1 font-semibold text-lg h-auto py-1 border-transparent hover:border-input focus:border-primary"
+                                  />
                                 </div>
                                 <div className="flex gap-1">
                                   <Button size="sm" variant="outline" onClick={() => openNotesDialog('section', section.id)} title="Operator Notes">
@@ -1214,10 +1236,27 @@ Chorus line 2"`;
                                       {section.subsections.map((subsection) => (
                                         <SortableSubsection key={subsection.id} subsection={subsection}>
                                           <Card className={`p-3 ${selectedSubsection === subsection.id ? 'border-primary bg-primary/5' : ''} ${activeId === subsection.id ? 'ring-2 ring-primary' : ''}`}>
-                                            <div className="flex items-center justify-between mb-2">
-                                              <button onClick={() => setSelectedSubsection(subsection.id)} className="flex-1 text-left font-medium">
-                                                {subsection.name}
-                                              </button>
+                                             <div className="flex items-center justify-between mb-2">
+                                              <Input 
+                                                value={subsection.name}
+                                                onChange={(e) => {
+                                                  setService(prev => prev ? {
+                                                    ...prev,
+                                                    sections: prev.sections?.map(s => 
+                                                      s.id === section.id 
+                                                        ? { 
+                                                            ...s, 
+                                                            subsections: s.subsections.map(sub =>
+                                                              sub.id === subsection.id ? { ...sub, name: e.target.value } : sub
+                                                            )
+                                                          }
+                                                        : s
+                                                    ) || []
+                                                  } : null);
+                                                }}
+                                                onFocus={() => setSelectedSubsection(subsection.id)}
+                                                className="flex-1 font-medium h-auto py-1 border-transparent hover:border-input focus:border-primary"
+                                              />
                                               <div className="flex gap-1">
                                                 <Button size="sm" variant="ghost" onClick={() => openNotesDialog('subsection', subsection.id, section.id)} title="Presenter Notes">
                                                   <StickyNote className="w-3 h-3" />
