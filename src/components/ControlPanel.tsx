@@ -301,13 +301,16 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-gradient mb-2">
-              Cornerstone Bible
-            </h1>
-            <p className="text-muted-foreground">
-              Voice-Activated Scripture Projection System
-            </p>
+          <div className="flex items-center gap-4">
+            <img src="/favicon.ico" alt="Cornerstone Bible Logo" className="w-16 h-16" />
+            <div>
+              <h1 className="text-4xl font-bold text-gradient mb-2">
+                Cornerstone Bible
+              </h1>
+              <p className="text-muted-foreground">
+                Voice-Activated Scripture Projection System
+              </p>
+            </div>
           </div>
           <div className="flex gap-3">
             <Button
