@@ -57,10 +57,12 @@ const LowerThird = () => {
           console.log('LowerThird cleared (no slide)');
         }
       }
-      // Handle legacy verse updates
+      // Handle voice-controlled scripture (VERSE_UPDATE from Scripture page)
       else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
+        console.log('LowerThird handling VERSE_UPDATE (voice-controlled):', message.data.verse);
         setVerse(message.data.verse);
         setCurrentSlide(null);
+        console.log('LowerThird showing voice-controlled verse:', `${message.data.verse.book} ${message.data.verse.chapter}:${message.data.verse.verse}`);
       }
     });
 

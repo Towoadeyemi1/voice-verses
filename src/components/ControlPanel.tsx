@@ -225,6 +225,7 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
       setRecentVerses(prev => [displayedVerse, ...prev].slice(0, 5));
 
       // Broadcast to projection display
+      console.log('ControlPanel broadcasting voice-controlled verse:', displayedVerse);
       syncService.broadcast({
         type: 'VERSE_UPDATE',
         data: {

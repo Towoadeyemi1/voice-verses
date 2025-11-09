@@ -74,10 +74,12 @@ const Confidence = () => {
           console.log('Confidence cleared (no slide)');
         }
       }
-      // Handle legacy verse updates
+      // Handle voice-controlled scripture (VERSE_UPDATE from Scripture page)
       else if (message.type === 'VERSE_UPDATE' && message.data.verse !== undefined) {
+        console.log('Confidence handling VERSE_UPDATE (voice-controlled):', message.data.verse);
         verse = message.data.verse;
         setCurrentSlide(null);
+        console.log('Confidence showing voice-controlled verse:', verse ? `${verse.book} ${verse.chapter}:${verse.verse}` : 'null');
       }
       
       setCurrentVerse(verse);
