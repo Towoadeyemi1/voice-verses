@@ -59,7 +59,7 @@ export const ShowLogoButton = ({ serviceId, variant = 'outline', size = 'default
       className={className}
     >
       <ImageIcon className="w-4 h-4 mr-2" />
-      Display Logo
+      Clear to Logo
     </Button>
   );
 };
