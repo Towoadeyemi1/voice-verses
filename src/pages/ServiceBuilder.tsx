@@ -1463,16 +1463,16 @@ Chorus line 2"`;
               <div>
                 <Label>Background Image (optional)</Label>
                 <Select 
-                  value={editingSlide.imageUrl || ''} 
-                  onValueChange={(value) => setEditingSlide({...editingSlide, imageUrl: value})}
+                  value={editingSlide.imageUrl || 'none'} 
+                  onValueChange={(value) => setEditingSlide({...editingSlide, imageUrl: value === 'none' ? undefined : value})}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select image" />
                   </SelectTrigger>
                   <SelectContent className="bg-background z-50">
-                    <SelectItem value="">No image</SelectItem>
-                    {media.filter(m => m.type === 'image').map(m => (
-                      <SelectItem key={m.id} value={m.url || ''}>{m.name}</SelectItem>
+                    <SelectItem value="none">No image</SelectItem>
+                    {media.filter(m => m.type === 'image' && m.url).map(m => (
+                      <SelectItem key={m.id} value={m.url!}>{m.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -1618,8 +1618,8 @@ Chorus line 2"`;
                   <SelectValue placeholder="Choose an image" />
                 </SelectTrigger>
                 <SelectContent className="bg-background z-50">
-                  {media.filter(m => m.type === 'image').map(m => (
-                    <SelectItem key={m.id} value={m.url || ''}>{m.name}</SelectItem>
+                  {media.filter(m => m.type === 'image' && m.url).map(m => (
+                    <SelectItem key={m.id} value={m.url!}>{m.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

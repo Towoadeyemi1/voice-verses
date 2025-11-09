@@ -27,18 +27,18 @@ interface SlideConfigurationProps {
 
 export const SlideConfiguration = ({ slide, onUpdate }: SlideConfigurationProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [backgroundUrl, setBackgroundUrl] = useState(slide.backgroundMedia?.url || '');
+  const [backgroundUrl, setBackgroundUrl] = useState(slide.backgroundMedia?.url || 'none');
   const [backgroundOpacity, setBackgroundOpacity] = useState(slide.backgroundMedia?.opacity || 0.3);
   const [linesPerSlide, setLinesPerSlide] = useState(slide.textFormatting?.linesPerSlide || 4);
   const [fontSize, setFontSize] = useState(slide.textFormatting?.fontSize || 'large');
   const [alignment, setAlignment] = useState(slide.textFormatting?.alignment || 'center');
 
-  const media = ServiceStorage.getMedia().filter(m => m.type === 'image');
+  const media = ServiceStorage.getMedia().filter(m => m.type === 'image' && m.url);
 
   const handleSave = () => {
     const updatedSlide: Slide = {
       ...slide,
-      backgroundMedia: backgroundUrl ? {
+      backgroundMedia: backgroundUrl && backgroundUrl !== 'none' ? {
         type: 'image',
         url: backgroundUrl,
         opacity: backgroundOpacity,
@@ -77,9 +77,9 @@ export const SlideConfiguration = ({ slide, onUpdate }: SlideConfigurationProps)
                     <SelectValue placeholder="No background" />
                   </SelectTrigger>
                   <SelectContent className="bg-background z-50">
-                    <SelectItem value="">No background</SelectItem>
+                    <SelectItem value="none">No background</SelectItem>
                     {media.map(m => (
-                      <SelectItem key={m.id} value={m.url || ''}>
+                      <SelectItem key={m.id} value={m.url!}>
                         {m.name}
                       </SelectItem>
                     ))}
@@ -87,7 +87,7 @@ export const SlideConfiguration = ({ slide, onUpdate }: SlideConfigurationProps)
                 </Select>
               </div>
 
-              {backgroundUrl && (
+              {backgroundUrl && backgroundUrl !== 'none' && (
                 <div>
                   <Label>Background Opacity: {Math.round(backgroundOpacity * 100)}%</Label>
                   <Slider
