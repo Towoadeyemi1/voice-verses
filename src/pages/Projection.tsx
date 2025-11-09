@@ -36,6 +36,8 @@ const Projection = () => {
   const [verse, setVerse] = useState<BibleVerse | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<ProjectionSettings>(defaultSettings);
+  const [displayMode, setDisplayMode] = useState<'verse' | 'logo'>('verse');
+  const [logoUrl, setLogoUrl] = useState<string>('');
 
   useEffect(() => {
     // Load settings from localStorage
@@ -44,14 +46,42 @@ const Projection = () => {
       setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
     }
 
+    // Listen for logo display commands
+    const handleLogoDisplay = (event: MessageEvent) => {
+      if (event.data?.type === 'show-logo' && event.data?.logoUrl) {
+        setLogoUrl(event.data.logoUrl);
+        setDisplayMode('logo');
+      }
+    };
+
+    // Listen via BroadcastChannel
+    const channel = new BroadcastChannel('cornerstone-display');
+    channel.addEventListener('message', handleLogoDisplay);
+
+    // Check for logo in localStorage on load
+    const currentDisplay = localStorage.getItem('cornerstone-current-display');
+    if (currentDisplay) {
+      try {
+        const displayData = JSON.parse(currentDisplay);
+        if (displayData.type === 'show-logo' && displayData.logoUrl) {
+          setLogoUrl(displayData.logoUrl);
+          setDisplayMode('logo');
+        }
+      } catch (e) {
+        console.error('Failed to parse display data', e);
+      }
+    }
+
     const unsubscribe = syncService.subscribe((message) => {
       if (message.type === 'VERSE_UPDATE' && message.data.verse) {
         setVerse(message.data.verse);
+        setDisplayMode('verse');
       }
     });
 
     return () => {
       unsubscribe();
+      channel.close();
     };
   }, []);
 
@@ -68,7 +98,20 @@ const Projection = () => {
 
   return (
     <>
-      <ProjectionDisplay verse={verse} settings={settings} />
+      {displayMode === 'logo' ? (
+        <div 
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ backgroundColor: settings.backgroundColor }}
+        >
+          <img 
+            src={logoUrl} 
+            alt="Service Logo" 
+            className="max-w-[80%] max-h-[80%] object-contain"
+          />
+        </div>
+      ) : (
+        <ProjectionDisplay verse={verse} settings={settings} />
+      )}
       
       {/* Settings Toggle Button */}
       <Button

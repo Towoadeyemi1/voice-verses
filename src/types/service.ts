@@ -88,6 +88,7 @@ export interface Service {
   sections: ServiceSection[];
   isTemplate: boolean;
   templateName?: string;
+  serviceLogo?: string; // URL or base64 data of service logo
   // Legacy support
   slides?: Slide[];
 }

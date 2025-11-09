@@ -15,6 +15,7 @@ import { X, Mic, Type, Palette, HardDrive } from 'lucide-react';
 import { toast } from 'sonner';
 import { BibleVersionSettings } from './BibleVersionSettings';
 import { StorageSettings } from './StorageSettings';
+import { ServiceLogoSettings } from './ServiceLogoSettings';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVersionType } from '@/types/bibleVersion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -88,8 +89,9 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="logo">Service Logo</TabsTrigger>
           <TabsTrigger value="storage">Storage & Backup</TabsTrigger>
         </TabsList>
 
@@ -215,6 +217,10 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
               Save Settings
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="logo" className="space-y-6 mt-6">
+          <ServiceLogoSettings />
         </TabsContent>
 
         <TabsContent value="storage" className="mt-6">

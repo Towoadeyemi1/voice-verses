@@ -16,6 +16,7 @@ import { syncService } from '@/lib/syncService';
 import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card } from '@/components/ui/card';
+import { ShowLogoButton } from './ShowLogoButton';
 
 interface ControlPanelProps {
   onOpenProjection: () => void;
@@ -313,6 +314,7 @@ export const ControlPanel = ({ onOpenProjection, showDisplayMonitor, onToggleDis
             </div>
           </div>
           <div className="flex gap-3">
+            <ShowLogoButton variant="outline" size="lg" />
             <Button
               onClick={() => setShowSettings(!showSettings)}
               variant="outline"
