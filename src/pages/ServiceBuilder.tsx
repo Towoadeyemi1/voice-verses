@@ -1254,35 +1254,89 @@ Chorus line 2"`;
                                                 onDragEnd={(e) => handleDragEnd(e, 'slide', section.id, subsection.id)}
                                               >
                                                 <SortableContext items={subsection.slides.map(slide => slide.id)} strategy={verticalListSortingStrategy}>
-                                                  <div className="ml-4 space-y-1">
+                                                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mt-3">
                                                      {subsection.slides.map((slide) => (
                                                        <SortableSlide key={slide.id} slide={slide}>
-                                                         <div className={`flex items-center justify-between text-sm py-2 px-2 rounded ${activeId === slide.id ? 'bg-primary/10 ring-1 ring-primary' : ''}`}>
-                                                           <div className="flex items-center gap-2 flex-1 truncate">
-                                                             {slide.type === 'image' ? (
+                                                         <Card className={`group relative overflow-hidden hover-scale cursor-pointer ${activeId === slide.id ? 'ring-2 ring-primary' : ''}`}>
+                                                           {/* Slide Preview */}
+                                                           <div className="aspect-video bg-muted relative overflow-hidden">
+                                                             {slide.type === 'image' && (
                                                                <img 
                                                                  src={(slide as ImageSlide).imageUrl} 
                                                                  alt={slide.title}
-                                                                 className="w-12 h-12 object-cover rounded"
+                                                                 className="w-full h-full object-cover"
                                                                />
-                                                             ) : (
-                                                               getSlideIcon(slide)
                                                              )}
-                                                             <span className="truncate">{slide.title}</span>
+                                                             {slide.type === 'scripture' && (
+                                                               <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-br from-primary/20 to-primary/5 text-center">
+                                                                 <Book className="w-8 h-8 mb-2 text-primary" />
+                                                                 <div className="text-xs font-semibold text-primary mb-1">
+                                                                   {(slide as ScriptureSlide).verse.book} {(slide as ScriptureSlide).verse.chapter}:{(slide as ScriptureSlide).verse.verse}
+                                                                 </div>
+                                                                 <div className="text-[10px] line-clamp-3 text-foreground/70">
+                                                                   {(slide as ScriptureSlide).verse.text}
+                                                                 </div>
+                                                               </div>
+                                                             )}
+                                                             {slide.type === 'lyrics' && (
+                                                               <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-center">
+                                                                 <Music className="w-8 h-8 mb-2 text-blue-600 dark:text-blue-400" />
+                                                                 <div className="text-xs font-semibold mb-1">
+                                                                   {(slide as LyricsSlide).songTitle}
+                                                                 </div>
+                                                                 <div className="text-[10px] line-clamp-3">
+                                                                   {(slide as LyricsSlide).content}
+                                                                 </div>
+                                                               </div>
+                                                             )}
+                                                             {slide.type === 'announcement' && (
+                                                               <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-gradient-to-br from-orange-500/20 to-orange-500/5 text-center">
+                                                                 <MessageSquare className="w-8 h-8 mb-2 text-orange-600 dark:text-orange-400" />
+                                                                 <div className="text-xs font-semibold mb-1">
+                                                                   {(slide as AnnouncementSlide).title}
+                                                                 </div>
+                                                                 <div className="text-[10px] line-clamp-2">
+                                                                   {(slide as AnnouncementSlide).content}
+                                                                 </div>
+                                                               </div>
+                                                             )}
+                                                             {slide.type === 'blank' && (
+                                                               <div className="w-full h-full flex items-center justify-center bg-muted">
+                                                                 <FileQuestion className="w-8 h-8 text-muted-foreground" />
+                                                               </div>
+                                                             )}
+                                                             
+                                                             {/* Drag Handle Overlay */}
+                                                             <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                               <div className="bg-background/80 backdrop-blur-sm rounded p-1">
+                                                                 <GripVertical className="w-3 h-3 text-muted-foreground" />
+                                                               </div>
+                                                             </div>
                                                            </div>
-                                                           <div className="flex gap-1">
-                                                             <Button size="sm" variant="ghost" onClick={() => openNotesDialog('slide', slide.id, section.id, subsection.id)} title="Slide Notes">
-                                                               <StickyNote className="w-3 h-3" />
-                                                             </Button>
-                                                             <Button size="sm" variant="ghost" onClick={() => handleEditSlide(section.id, subsection.id, slide)} title="Edit Slide">
-                                                               <Pencil className="w-3 h-3" />
-                                                             </Button>
-                                                             <SlideConfiguration slide={slide} onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)} />
-                                                             <Button size="sm" variant="ghost" onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)} title="Delete">
-                                                               <Trash2 className="w-3 h-3" />
-                                                             </Button>
+                                                           
+                                                           {/* Slide Info & Actions */}
+                                                           <div className="p-2 border-t">
+                                                             <div className="text-xs font-medium truncate mb-2" title={slide.title}>
+                                                               {slide.title}
+                                                             </div>
+                                                             <div className="flex gap-1 justify-between">
+                                                               <div className="flex gap-1">
+                                                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openNotesDialog('slide', slide.id, section.id, subsection.id)} title="Slide Notes">
+                                                                   <StickyNote className="w-3 h-3" />
+                                                                 </Button>
+                                                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleEditSlide(section.id, subsection.id, slide)} title="Edit Slide">
+                                                                   <Pencil className="w-3 h-3" />
+                                                                 </Button>
+                                                               </div>
+                                                               <div className="flex gap-1">
+                                                                 <SlideConfiguration slide={slide} onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)} />
+                                                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleDeleteSlide(section.id, subsection.id, slide.id)} title="Delete">
+                                                                   <Trash2 className="w-3 h-3" />
+                                                                 </Button>
+                                                               </div>
+                                                             </div>
                                                            </div>
-                                                         </div>
+                                                         </Card>
                                                        </SortableSlide>
                                                      ))}
                                                    </div>
