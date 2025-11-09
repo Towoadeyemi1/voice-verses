@@ -28,8 +28,18 @@ class SyncService {
   }
 
   broadcast(message: SyncMessage) {
+    console.log('syncService.broadcast called with:', message);
+    
+    // Call local listeners immediately (for same-window components)
+    this.listeners.forEach(listener => {
+      console.log('Calling local listener with message:', message);
+      listener(message);
+    });
+    
+    // Also broadcast to other windows/tabs
     if (this.channel) {
       this.channel.postMessage(message);
+      console.log('Message posted to BroadcastChannel');
     }
   }
 
