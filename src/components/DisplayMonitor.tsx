@@ -23,8 +23,18 @@ export const DisplayMonitor = () => {
 
     // Subscribe to slide updates
     const unsubscribe = syncService.subscribe((message) => {
-      if (message.type === 'SLIDE_UPDATE' && message.data.slide) {
-        setCurrentSlide(message.data.slide);
+      console.log('DisplayMonitor received message:', message);
+      
+      if (message.type === 'SLIDE_UPDATE') {
+        console.log('DisplayMonitor handling SLIDE_UPDATE:', message.data);
+        
+        if (message.data.slide) {
+          setCurrentSlide(message.data.slide);
+          console.log('DisplayMonitor updated to show slide:', message.data.slide.title);
+        } else {
+          setCurrentSlide(null);
+          console.log('DisplayMonitor cleared (no slide)');
+        }
       } else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
         // Legacy verse update support
         const verse = message.data.verse;
@@ -36,6 +46,7 @@ export const DisplayMonitor = () => {
           textFormatting: { fontSize: 'medium', alignment: 'center' }
         };
         setCurrentSlide(scriptureSlide);
+        console.log('DisplayMonitor updated with legacy verse:', scriptureSlide.title);
       }
     });
 
