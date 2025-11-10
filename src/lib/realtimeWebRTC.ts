@@ -100,31 +100,131 @@ export class RealtimeWebRTC {
     try {
       console.log('Initializing WebRTC connection...');
 
-      // Get ephemeral token from Azure Function (deployed with Static Web App)
-      const AZURE_FUNCTION_URL = `${window.location.origin}/api/realtime-token`;
-
-      console.log('Fetching ephemeral token from:', AZURE_FUNCTION_URL);
-      const tokenResponse = await fetch(AZURE_FUNCTION_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!tokenResponse.ok) {
-        const errorText = await tokenResponse.text();
-        console.error('Token request failed:', errorText);
-        throw new Error(`Failed to get ephemeral token: ${errorText}`);
-      }
-
-      const data: SessionData = await tokenResponse.json();
+      // Check if we're in development (Lovable preview) or production (Azure)
+      const isDevelopment = window.location.hostname.includes('lovableproject.com');
       
-      if (!data.client_secret?.value) {
-        console.error('Invalid token response:', data);
-        throw new Error("Invalid token response from server");
-      }
+      let EPHEMERAL_KEY: string;
+      
+      if (isDevelopment) {
+        // DEVELOPMENT ONLY: Direct OpenAI call
+        // WARNING: This is for testing only. For production, use Azure Functions
+        console.warn('⚠️ Development mode: Using direct OpenAI API call. Deploy to Azure for production!');
+        
+        const OPENAI_API_KEY = prompt('Enter your OpenAI API key for testing (this is temporary and not saved):');
+        if (!OPENAI_API_KEY) {
+          throw new Error('OpenAI API key is required');
+        }
+        
+        const tokenResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-realtime-preview-2024-12-17",
+            voice: "alloy",
+            modalities: ["text", "audio"],
+            instructions: `You are a highly intelligent Bible verse detection system for church services. You have deep knowledge of the entire Bible.
 
-      const EPHEMERAL_KEY = data.client_secret.value;
+CRITICAL RULES:
+1. Detect Bible verses from BOTH explicit references AND descriptions/paraphrases
+2. When you identify a verse, immediately call the appropriate function
+3. DO NOT engage in conversation or ask questions
+4. DO NOT respond verbally to greetings or non-Bible content
+5. Stay completely silent unless detecting verses
+
+DETECTION MODES:
+
+A) EXPLICIT REFERENCES (use display_verse):
+- "John 3:16", "john three sixteen", "Romans 8:28"
+- "Turn to Psalm 23", "Let's read verse 5"
+- "Next verse", "Chapter 3 verse 16"
+
+B) PARAPHRASES & DESCRIPTIONS (use suggest_verse_from_description):
+- "The verse about God so loved the world" → John 3:16
+- "Where Jesus wept" → John 11:35
+- "The Lord is my shepherd" → Psalm 23:1
+
+You are a Bible expert. Use your knowledge to identify verses from any description.`,
+            tools: [
+              {
+                type: "function",
+                name: "display_verse",
+                description: "Display a Bible verse when an explicit reference is mentioned",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    book: { type: "string" },
+                    chapter: { type: "number" },
+                    verse: { type: "number" }
+                  },
+                  required: ["book", "chapter", "verse"]
+                }
+              },
+              {
+                type: "function",
+                name: "suggest_verse_from_description",
+                description: "Suggest a Bible verse from description",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    book: { type: "string" },
+                    chapter: { type: "number" },
+                    verse: { type: "number" },
+                    description: { type: "string" },
+                    confidence: { type: "string", enum: ["high", "medium", "low"] }
+                  },
+                  required: ["book", "chapter", "verse", "description", "confidence"]
+                }
+              }
+            ],
+            tool_choice: "auto",
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 1000
+            }
+          }),
+        });
+
+        if (!tokenResponse.ok) {
+          const errorText = await tokenResponse.text();
+          console.error('OpenAI API error:', tokenResponse.status, errorText);
+          throw new Error(`OpenAI API error: ${tokenResponse.status}`);
+        }
+
+        const data = await tokenResponse.json();
+        EPHEMERAL_KEY = data.client_secret.value;
+      } else {
+        // PRODUCTION: Use Azure Function
+        const AZURE_FUNCTION_URL = `${window.location.origin}/api/realtime-token`;
+        console.log('Fetching ephemeral token from:', AZURE_FUNCTION_URL);
+        
+        const tokenResponse = await fetch(AZURE_FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!tokenResponse.ok) {
+          const errorText = await tokenResponse.text();
+          console.error('Token request failed:', errorText);
+          throw new Error(`Failed to get ephemeral token: ${errorText}`);
+        }
+
+        const data = await tokenResponse.json();
+        
+        if (!data.client_secret?.value) {
+          console.error('Invalid token response:', data);
+          throw new Error("Invalid token response from server");
+        }
+
+        EPHEMERAL_KEY = data.client_secret.value;
+      }
+      
       console.log('Ephemeral token received');
 
       // Create peer connection
