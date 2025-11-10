@@ -88,7 +88,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
 
   const handleStartListening = async () => {
     // Check if in development mode and need API key
-    const isDevelopment = window.location.hostname.includes('lovableproject.com');
+    const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
+                         window.location.hostname.includes('lovable.dev');
     
     if (isDevelopment) {
       // Check for saved API key

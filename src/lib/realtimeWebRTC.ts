@@ -102,7 +102,8 @@ export class RealtimeWebRTC {
       console.log('Initializing WebRTC connection...');
 
       // Check if we're in development (Lovable preview) or production (Azure)
-      const isDevelopment = window.location.hostname.includes('lovableproject.com');
+      const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
+                           window.location.hostname.includes('lovable.dev');
       
       let EPHEMERAL_KEY: string;
       
