@@ -70,6 +70,11 @@ export interface ServiceSubsection {
   countdown?: CountdownConfig;
   autoStartCountdown?: boolean; // for songs vs manual testimonies
   presenterNotes?: string; // Notes visible on confidence monitor
+  backgroundMedia?: {
+    type: 'image';
+    url: string;
+    opacity: number;
+  };
 }
 
 export interface ServiceSection {

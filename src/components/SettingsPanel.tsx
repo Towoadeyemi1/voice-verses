@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { BibleVersionSettings } from './BibleVersionSettings';
 import { StorageSettings } from './StorageSettings';
 import { ServiceLogoSettings } from './ServiceLogoSettings';
+import { ScriptureBackgroundSettings } from './ScriptureBackgroundSettings';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVersionType } from '@/types/bibleVersion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -93,8 +94,9 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="backgrounds">Backgrounds</TabsTrigger>
           <TabsTrigger value="ccli">CCLI</TabsTrigger>
           <TabsTrigger value="logo">Logo</TabsTrigger>
           <TabsTrigger value="storage">Storage</TabsTrigger>
@@ -222,6 +224,10 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
               Save Settings
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="backgrounds" className="space-y-6 mt-6">
+          <ScriptureBackgroundSettings />
         </TabsContent>
 
         <TabsContent value="ccli" className="space-y-6 mt-6">

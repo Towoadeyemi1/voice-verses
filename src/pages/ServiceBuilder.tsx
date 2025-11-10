@@ -891,6 +891,22 @@ Chorus line 2"`;
     } : null);
   };
 
+  const handleUpdateSubsection = (sectionId: string, updatedSubsection: ServiceSubsection) => {
+    setService(prev => prev ? {
+      ...prev,
+      sections: prev.sections?.map(section =>
+        section.id === sectionId
+          ? {
+              ...section,
+              subsections: section.subsections.map(sub =>
+                sub.id === updatedSubsection.id ? updatedSubsection : sub
+              ),
+            }
+          : section
+      ) || [],
+    } : null);
+  };
+
   const openNotesDialog = (type: 'section' | 'subsection' | 'slide', id: string, sectionId?: string, subsectionId?: string) => {
     let currentNotes = '';
     if (type === 'section') {
@@ -1343,11 +1359,16 @@ Chorus line 2"`;
                                                                   center: 'text-center items-center',
                                                                   right: 'text-right items-end',
                                                                 };
-                                                                const backgroundStyle = slide.backgroundMedia ? {
+                                                                 const backgroundStyle = slide.backgroundMedia ? {
                                                                   backgroundImage: `url(${slide.backgroundMedia.url})`,
                                                                   backgroundSize: 'cover',
                                                                   backgroundPosition: 'center',
-                                                                } : {};
+                                                                 } : subsection.backgroundMedia ? {
+                                                                  backgroundImage: `url(${subsection.backgroundMedia.url})`,
+                                                                  backgroundSize: 'cover',
+                                                                  backgroundPosition: 'center',
+                                                                 } : {};
+                                                                const backgroundOpacity = slide.backgroundMedia?.opacity ?? subsection.backgroundMedia?.opacity ?? 0.3;
 
                                                                 if (slide.type === 'image') {
                                                                   return (
@@ -1369,8 +1390,8 @@ Chorus line 2"`;
                                                                 if (slide.type === 'scripture') {
                                                                   return (
                                                                     <div className="relative w-full h-full" style={backgroundStyle}>
-                                                                      {slide.backgroundMedia && (
-                                                                        <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
+                                                                      {(slide.backgroundMedia || subsection.backgroundMedia) && (
+                                                                        <div className="absolute inset-0 bg-black" style={{ opacity: 1 - backgroundOpacity }} />
                                                                       )}
                                                                       <div className={`relative z-10 w-full h-full flex flex-col justify-center p-2 ${alignmentClasses[alignment]}`}>
                                                                         <div className={`text-[9px] font-bold text-primary mb-1 ${alignmentClasses[alignment].split(' ')[0]}`}>
@@ -1387,8 +1408,8 @@ Chorus line 2"`;
                                                                 if (slide.type === 'lyrics') {
                                                                   return (
                                                                     <div className="relative w-full h-full" style={backgroundStyle}>
-                                                                      {slide.backgroundMedia && (
-                                                                        <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
+                                                                      {(slide.backgroundMedia || subsection.backgroundMedia) && (
+                                                                        <div className="absolute inset-0 bg-black" style={{ opacity: 1 - backgroundOpacity }} />
                                                                       )}
                                                                       <div className={`relative z-10 w-full h-full flex flex-col justify-center p-2 ${alignmentClasses[alignment]}`}>
                                                                         <div className={`text-[8px] font-semibold text-primary mb-0.5 ${alignmentClasses[alignment].split(' ')[0]}`}>

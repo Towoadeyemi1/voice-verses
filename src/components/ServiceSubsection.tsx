@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trash2, Copy, StickyNote, Clock } from 'lucide-react';
 import { ServiceSubsection as ServiceSubsectionType } from '@/types/service';
+import { SubsectionBackgroundConfig } from './SubsectionBackgroundConfig';
 
 interface ServiceSubsectionProps {
   subsection: ServiceSubsectionType;
@@ -12,6 +13,7 @@ interface ServiceSubsectionProps {
   onDuplicate: () => void;
   onOpenNotes: () => void;
   onOpenCountdown: () => void;
+  onUpdateSubsection: (subsection: ServiceSubsectionType) => void;
   children: ReactNode;
 }
 
@@ -23,6 +25,7 @@ export const ServiceSubsection = ({
   onDuplicate,
   onOpenNotes,
   onOpenCountdown,
+  onUpdateSubsection,
   children,
 }: ServiceSubsectionProps) => {
   return (
@@ -45,6 +48,11 @@ export const ServiceSubsection = ({
         </div>
 
         <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+          <SubsectionBackgroundConfig
+            subsection={subsection}
+            onUpdate={onUpdateSubsection}
+          />
+
           <Button
             variant="ghost"
             size="sm"
