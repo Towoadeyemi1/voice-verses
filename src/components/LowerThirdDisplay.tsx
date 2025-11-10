@@ -118,13 +118,18 @@ export const LowerThirdDisplay = ({ verse }: LowerThirdDisplayProps) => {
   };
 
   if (!verse) {
-    return null; // Don't show anything when no verse
+    return (
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{ backgroundColor: '#00FF00' }}
+      />
+    );
   }
 
   return (
     <div 
       className={`fixed inset-0 flex ${getPositionClasses()} pointer-events-none`}
-      style={{ backgroundColor: 'transparent' }}
+      style={{ backgroundColor: '#00FF00' }}
     >
       <div
         className={`max-w-4xl transition-all duration-500 ${

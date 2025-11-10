@@ -139,90 +139,109 @@ const Confidence = () => {
   return (
     <>
       <div 
-        className="min-h-screen p-8 flex flex-col"
+        className="min-h-screen flex"
         style={{ backgroundColor: settings.backgroundColor, color: settings.textColor }}
       >
-        {/* Header with context and clock */}
-        <div className="flex justify-between items-center mb-8 pb-4 border-b" style={{ borderColor: `${settings.textColor}20` }}>
-          <div style={{ fontSize: `${settings.clockFontSize * 0.67}px` }} className="font-semibold">
+        {/* Main content area */}
+        <div className="flex-1 p-8 flex flex-col">
+          {/* Header with context and clock */}
+          <div className="flex justify-between items-center mb-8 pb-4 border-b" style={{ borderColor: `${settings.textColor}20` }}>
+            <div style={{ fontSize: `${settings.clockFontSize * 0.67}px` }} className="font-semibold">
+              {currentSlide ? (
+                <span style={{ color: `${settings.textColor}70` }}>
+                  {currentSlide.title} <span className="opacity-50">• {currentSlide.type}</span>
+                </span>
+              ) : currentVerse ? (
+                <span style={{ color: `${settings.textColor}70` }}>
+                  {currentVerse.book} {currentVerse.chapter}
+                </span>
+              ) : (
+                <span style={{ color: `${settings.textColor}70` }}>No content selected</span>
+              )}
+            </div>
+            <div 
+              className="font-bold tabular-nums"
+              style={{ fontSize: `${settings.clockFontSize}px`, color: settings.textColor }}
+            >
+              {formatTime(currentTime)}
+            </div>
+          </div>
+
+          {/* Current slide/verse - large and prominent */}
+          <div className="flex-1 flex flex-col justify-center">
             {currentSlide ? (
-              <span style={{ color: `${settings.textColor}70` }}>
-                {currentSlide.title} <span className="opacity-50">• {currentSlide.type}</span>
-              </span>
+              <div className="space-y-4">
+                <div 
+                  className="font-bold mb-4"
+                  style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: settings.accentColor }}
+                >
+                  {currentSlide.title}
+                </div>
+                <div className="border rounded-lg overflow-hidden bg-black/20">
+                  <SlideDisplay slide={currentSlide} className="h-[400px]" />
+                </div>
+              </div>
             ) : currentVerse ? (
-              <span style={{ color: `${settings.textColor}70` }}>
-                {currentVerse.book} {currentVerse.chapter}
-              </span>
+              <div className="space-y-4">
+                <div 
+                  className="font-bold mb-4"
+                  style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: settings.accentColor }}
+                >
+                  {currentVerse.book} {currentVerse.chapter}:{currentVerse.verse}
+                </div>
+                <div 
+                  className="leading-relaxed"
+                  style={{ fontSize: `${settings.currentVerseFontSize}px`, color: settings.textColor }}
+                >
+                  {currentVerse.text}
+                </div>
+              </div>
             ) : (
-              <span style={{ color: `${settings.textColor}70` }}>No content selected</span>
+              <div 
+                className="text-center"
+                style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: `${settings.textColor}70` }}
+              >
+                Waiting for content...
+              </div>
             )}
           </div>
-          <div 
-            className="font-bold tabular-nums"
-            style={{ fontSize: `${settings.clockFontSize}px`, color: settings.textColor }}
-          >
-            {formatTime(currentTime)}
-          </div>
         </div>
 
-        {/* Current slide/verse - large and prominent */}
-        <div className="flex-1 flex flex-col justify-center mb-8">
-          {currentSlide ? (
-            <div className="space-y-4">
-              <div 
-                className="font-bold mb-4"
-                style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: settings.accentColor }}
-              >
-                {currentSlide.title}
-              </div>
-              <div className="border rounded-lg overflow-hidden bg-black/20">
-                <SlideDisplay slide={currentSlide} className="h-[400px]" />
-              </div>
-            </div>
-          ) : currentVerse ? (
-            <div className="space-y-4">
-              <div 
-                className="font-bold mb-4"
-                style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: settings.accentColor }}
-              >
-                {currentVerse.book} {currentVerse.chapter}:{currentVerse.verse}
-              </div>
-              <div 
-                className="leading-relaxed"
-                style={{ fontSize: `${settings.currentVerseFontSize}px`, color: settings.textColor }}
-              >
-                {currentVerse.text}
-              </div>
-            </div>
-          ) : (
-            <div 
-              className="text-center"
-              style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: `${settings.textColor}70` }}
-            >
-              Waiting for content...
-            </div>
-          )}
-        </div>
-
-        {/* Next verses preview */}
+        {/* Next verses sidebar - Yellow/Gold colored */}
         {nextVerses.length > 0 && (
-          <div className="border-t pt-6 space-y-3" style={{ borderColor: `${settings.textColor}20` }}>
+          <div 
+            className="w-96 border-l p-6 flex flex-col"
+            style={{ 
+              backgroundColor: '#fbbf24',
+              borderColor: '#f59e0b',
+              color: '#000000'
+            }}
+          >
             <div 
-              className="font-semibold mb-4"
-              style={{ fontSize: `${settings.nextVerseFontSize * 0.83}px`, color: `${settings.textColor}70` }}
+              className="font-bold mb-6 text-xl"
+              style={{ color: '#000000' }}
             >
-              Coming Up:
+              COMING UP NEXT
             </div>
-            {nextVerses.map((verse, index) => (
-              <div
-                key={index}
-                className="flex items-baseline gap-3"
-                style={{ fontSize: `${settings.nextVerseFontSize}px`, color: `${settings.textColor}70` }}
-              >
-                <span className="font-semibold min-w-fit">{verse.ref}</span>
-                <span className="opacity-70">{verse.snippet}</span>
-              </div>
-            ))}
+            <div className="space-y-4">
+              {nextVerses.map((verse, index) => (
+                <div
+                  key={index}
+                  className="p-4 rounded-lg"
+                  style={{ 
+                    backgroundColor: index === 0 ? '#fcd34d' : 'rgba(252, 211, 77, 0.5)',
+                    border: index === 0 ? '2px solid #f59e0b' : '1px solid #fcd34d'
+                  }}
+                >
+                  <div className="font-bold mb-2" style={{ fontSize: `${settings.nextVerseFontSize}px` }}>
+                    {verse.ref}
+                  </div>
+                  <div style={{ fontSize: `${settings.nextVerseFontSize * 0.83}px`, opacity: 0.8 }}>
+                    {verse.snippet}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

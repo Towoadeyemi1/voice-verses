@@ -88,7 +88,7 @@ export const ProjectionDisplay = ({ verse, settings: propSettings }: ProjectionD
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center"
+      className="min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden"
       style={{ 
         backgroundColor: settings.backgroundColor,
         color: settings.textColor,
@@ -96,45 +96,37 @@ export const ProjectionDisplay = ({ verse, settings: propSettings }: ProjectionD
       }}
     >
       <div
-        className={`max-w-6xl w-full space-y-12 transition-all duration-500 ${
+        className={`w-full h-full flex flex-col items-center justify-center space-y-8 transition-all duration-500 ${
           show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}
         style={{ textAlign: settings.textAlign }}
       >
-        {/* Verse Text */}
-        <div>
+        {/* Verse Text - Takes up most of the space */}
+        <div className="flex-1 flex items-center justify-center w-full px-8">
           <p 
-            className="leading-relaxed"
+            className="leading-relaxed max-w-7xl"
             style={{ 
               fontSize: `${settings.fontSize}px`,
               fontFamily: settings.fontFamily,
               color: settings.textColor,
+              lineHeight: '1.4',
             }}
           >
-            "{verse.text}"
+            {verse.text}
           </p>
         </div>
 
-        {/* Reference */}
+        {/* Reference - Fixed at bottom */}
         {settings.showReference && (
-          <div className="pt-8 border-t" style={{ borderColor: `${settings.accentColor}20` }}>
+          <div className="w-full border-t py-6" style={{ borderColor: `${settings.accentColor}30` }}>
             <p 
-              className="font-semibold"
+              className="font-semibold text-center"
               style={{ 
-                fontSize: `${Math.floor(settings.fontSize * 0.5)}px`,
+                fontSize: `${Math.floor(settings.fontSize * 0.4)}px`,
                 color: settings.accentColor,
               }}
             >
               {verse.book} {verse.chapter}:{verse.verse}
-            </p>
-            <p 
-              className="mt-2"
-              style={{ 
-                fontSize: `${Math.floor(settings.fontSize * 0.3)}px`,
-                color: `${settings.textColor}60`,
-              }}
-            >
-              King James Version
             </p>
           </div>
         )}
