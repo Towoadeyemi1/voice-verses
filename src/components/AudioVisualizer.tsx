@@ -70,11 +70,12 @@ export const AudioVisualizer = ({ isListening, volume, latency, isMuted, onToggl
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {isListening && onToggleMute && (
+            {onToggleMute && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onToggleMute}
+                disabled={!isListening}
                 className="h-9 sm:h-8 gap-1.5 sm:gap-2 flex-1 sm:flex-none text-xs sm:text-sm"
               >
                 {isMuted ? <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <MicOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
