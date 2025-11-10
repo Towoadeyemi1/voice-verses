@@ -16,6 +16,7 @@ import Presenter from "./pages/Presenter";
 import MediaLibrary from "./pages/MediaLibrary";
 import NotFound from "./pages/NotFound";
 import { storageOrchestrator } from "./lib/storageOrchestrator";
+import { HelpAssistant } from "./components/HelpAssistant";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => {
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <HelpAssistant />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
