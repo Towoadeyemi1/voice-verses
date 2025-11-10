@@ -116,6 +116,8 @@ const Presenter = () => {
       data: {
         slide,
         index,
+        slideIndex: index,
+        allSlides: allSlides,
         timestamp: new Date(),
       },
     });

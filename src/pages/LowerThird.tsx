@@ -85,7 +85,7 @@ const LowerThird = () => {
   return (
     <div className="relative min-h-screen bg-[#00FF00]">
       {/* Always render LowerThirdDisplay as overlay */}
-      <LowerThirdDisplay verse={verse} />
+      <LowerThirdDisplay verse={verse} slide={currentSlide} />
       
       {/* Waiting state when no verse */}
       {!verse && !currentSlide && (

@@ -36,7 +36,9 @@ const defaultSettings: ConfidenceSettings = {
 const Confidence = () => {
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [currentVerse, setCurrentVerse] = useState<BibleVerse | null>(null);
-  const [nextVerses, setNextVerses] = useState<{ ref: string; snippet: string }[]>([]);
+  const [nextItems, setNextItems] = useState<{ ref: string; snippet: string }[]>([]);
+  const [allSlides, setAllSlides] = useState<Slide[]>([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(-1);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<ConfidenceSettings>(defaultSettings);
@@ -63,6 +65,14 @@ const Confidence = () => {
           slide = message.data.slide;
           setCurrentSlide(slide);
           
+          // Store all slides and current index if provided
+          if (message.data.allSlides) {
+            setAllSlides(message.data.allSlides);
+          }
+          if (message.data.slideIndex !== undefined) {
+            setCurrentSlideIndex(message.data.slideIndex);
+          }
+          
           // Extract verse for scripture slides
           if (slide.type === 'scripture' && slide.verse) {
             verse = slide.verse;
@@ -71,6 +81,8 @@ const Confidence = () => {
           console.log('Confidence updated to show slide:', slide.title);
         } else {
           setCurrentSlide(null);
+          setAllSlides([]);
+          setCurrentSlideIndex(-1);
           console.log('Confidence cleared (no slide)');
         }
       }
@@ -79,15 +91,18 @@ const Confidence = () => {
         console.log('Confidence handling VERSE_UPDATE (voice-controlled):', message.data.verse);
         verse = message.data.verse;
         setCurrentSlide(null);
+        setAllSlides([]);
+        setCurrentSlideIndex(-1);
         console.log('Confidence showing voice-controlled verse:', verse ? `${verse.book} ${verse.chapter}:${verse.verse}` : 'null');
       }
       
       setCurrentVerse(verse);
       
+      // Build next items list
+      const nextItemsList: { ref: string; snippet: string }[] = [];
+      
       if (verse) {
-        // Get next verses based on settings
-        const nextVersesList: { ref: string; snippet: string }[] = [];
-        
+        // Get next verses for scripture
         for (let i = 1; i <= settings.nextVerseCount; i++) {
           const nextVerse = await BibleParser.getVerse(
             verse.book,
@@ -97,17 +112,36 @@ const Confidence = () => {
           
           if (nextVerse) {
             const words = nextVerse.text.split(' ').slice(0, 7).join(' ');
-            nextVersesList.push({
+            nextItemsList.push({
               ref: `${nextVerse.book} ${nextVerse.chapter}:${nextVerse.verse}`,
               snippet: words + '...'
             });
           }
         }
-        
-        setNextVerses(nextVersesList);
-      } else {
-        setNextVerses([]);
+      } else if (currentSlideIndex >= 0 && allSlides.length > 0) {
+        // Get next slides from the service
+        for (let i = 1; i <= settings.nextVerseCount && currentSlideIndex + i < allSlides.length; i++) {
+          const nextSlide = allSlides[currentSlideIndex + i];
+          let snippet = '';
+          
+          if (nextSlide.type === 'scripture' && nextSlide.verse) {
+            snippet = nextSlide.verse.text.split(' ').slice(0, 7).join(' ') + '...';
+          } else if (nextSlide.type === 'lyrics') {
+            snippet = nextSlide.content.split('\n')[0].slice(0, 50) + '...';
+          } else if (nextSlide.type === 'announcement') {
+            snippet = nextSlide.content?.split('\n')[0].slice(0, 50) + '...';
+          } else {
+            snippet = 'Media slide';
+          }
+          
+          nextItemsList.push({
+            ref: nextSlide.title,
+            snippet: snippet
+          });
+        }
       }
+      
+      setNextItems(nextItemsList);
     });
 
     // Update clock every second
@@ -207,8 +241,8 @@ const Confidence = () => {
           </div>
         </div>
 
-        {/* Next verses sidebar - Yellow/Gold colored */}
-        {nextVerses.length > 0 && (
+        {/* Next items sidebar - Yellow/Gold colored */}
+        {nextItems.length > 0 && (
           <div 
             className="w-96 border-l p-6 flex flex-col"
             style={{ 
@@ -224,7 +258,7 @@ const Confidence = () => {
               COMING UP NEXT
             </div>
             <div className="space-y-4">
-              {nextVerses.map((verse, index) => (
+              {nextItems.map((item, index) => (
                 <div
                   key={index}
                   className="p-4 rounded-lg"
@@ -234,10 +268,10 @@ const Confidence = () => {
                   }}
                 >
                   <div className="font-bold mb-2" style={{ fontSize: `${settings.nextVerseFontSize}px` }}>
-                    {verse.ref}
+                    {item.ref}
                   </div>
                   <div style={{ fontSize: `${settings.nextVerseFontSize * 0.83}px`, opacity: 0.8 }}>
-                    {verse.snippet}
+                    {item.snippet}
                   </div>
                 </div>
               ))}

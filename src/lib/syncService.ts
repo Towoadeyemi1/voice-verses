@@ -11,6 +11,8 @@ export type SyncMessage = {
     transcript?: string;
     slide?: Slide | null;
     index?: number;
+    slideIndex?: number;
+    allSlides?: Slide[];
   };
 };
 

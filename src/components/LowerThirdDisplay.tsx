@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { BibleVerse } from '@/types/bible';
+import { Slide } from '@/types/service';
 
 interface LowerThirdDisplayProps {
   verse: BibleVerse | null;
+  slide?: Slide | null;
 }
 
 export type LowerThirdTemplate = 'classic' | 'modern' | 'minimal' | 'elegant' | 'bold';
@@ -31,16 +33,16 @@ const defaultSettings: LowerThirdSettings = {
   accentColor: '#3B82F6',
 };
 
-export const LowerThirdDisplay = ({ verse }: LowerThirdDisplayProps) => {
+export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
   const [show, setShow] = useState(false);
   const [settings, setSettings] = useState<LowerThirdSettings>(defaultSettings);
 
   useEffect(() => {
-    if (verse) {
+    if (verse || slide) {
       setShow(false);
       setTimeout(() => setShow(true), 50);
     }
-  }, [verse]);
+  }, [verse, slide]);
 
   useEffect(() => {
     // Load settings
@@ -117,7 +119,10 @@ export const LowerThirdDisplay = ({ verse }: LowerThirdDisplayProps) => {
     }
   };
 
-  if (!verse) {
+  // Determine what content to show
+  const hasContent = verse || (slide && slide.type === 'lyrics');
+  
+  if (!hasContent) {
     return (
       <div 
         className="fixed inset-0 pointer-events-none"
@@ -140,39 +145,75 @@ export const LowerThirdDisplay = ({ verse }: LowerThirdDisplayProps) => {
           borderBottomColor: settings.template === 'minimal' ? settings.accentColor : undefined,
         }}
       >
-        {/* Verse Text */}
-        <div className="space-y-2">
-          <p 
-            className="leading-relaxed font-serif"
-            style={{ 
-              fontSize: `${settings.fontSize}px`,
-              color: settings.textColor,
-            }}
-          >
-            "{verse.text}"
-          </p>
-
-          {/* Reference */}
-          <div className="flex items-center gap-3 pt-2">
-            <div 
-              className="h-px flex-1"
-              style={{ backgroundColor: `${settings.accentColor}40` }}
-            />
+        {verse ? (
+          // Scripture Display
+          <div className="space-y-2">
             <p 
-              className="font-semibold"
+              className="leading-relaxed font-serif"
               style={{ 
-                fontSize: `${Math.floor(settings.fontSize * 0.6)}px`,
-                color: settings.accentColor,
+                fontSize: `${settings.fontSize}px`,
+                color: settings.textColor,
               }}
             >
-              {verse.book} {verse.chapter}:{verse.verse}
+              "{verse.text}"
             </p>
-            <div 
-              className="h-px flex-1"
-              style={{ backgroundColor: `${settings.accentColor}40` }}
-            />
+
+            {/* Reference */}
+            <div className="flex items-center gap-3 pt-2">
+              <div 
+                className="h-px flex-1"
+                style={{ backgroundColor: `${settings.accentColor}40` }}
+              />
+              <p 
+                className="font-semibold"
+                style={{ 
+                  fontSize: `${Math.floor(settings.fontSize * 0.6)}px`,
+                  color: settings.accentColor,
+                }}
+              >
+                {verse.book} {verse.chapter}:{verse.verse}
+              </p>
+              <div 
+                className="h-px flex-1"
+                style={{ backgroundColor: `${settings.accentColor}40` }}
+              />
+            </div>
           </div>
-        </div>
+        ) : slide && slide.type === 'lyrics' ? (
+          // Lyrics Display
+          <div className="space-y-2">
+            <p 
+              className="leading-relaxed whitespace-pre-line"
+              style={{ 
+                fontSize: `${settings.fontSize}px`,
+                color: settings.textColor,
+              }}
+            >
+              {slide.content}
+            </p>
+
+            {/* Song title and section */}
+            <div className="flex items-center gap-3 pt-2">
+              <div 
+                className="h-px flex-1"
+                style={{ backgroundColor: `${settings.accentColor}40` }}
+              />
+              <p 
+                className="font-semibold"
+                style={{ 
+                  fontSize: `${Math.floor(settings.fontSize * 0.6)}px`,
+                  color: settings.accentColor,
+                }}
+              >
+                {slide.songTitle}{slide.section ? ` - ${slide.section}` : ''}
+              </p>
+              <div 
+                className="h-px flex-1"
+                style={{ backgroundColor: `${settings.accentColor}40` }}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
