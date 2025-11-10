@@ -121,6 +121,9 @@ export class RealtimeWebRTC {
             model: "gpt-4o-realtime-preview-2024-12-17",
             voice: "alloy",
             modalities: ["text"],
+            input_audio_transcription: {
+              model: "whisper-1"
+            },
             instructions: `You are a silent Bible verse detection system for church services. You have deep knowledge of the entire Bible.
 
 CRITICAL: YOU ARE COMPLETELY SILENT. NEVER generate any audio or text responses. ONLY call functions.

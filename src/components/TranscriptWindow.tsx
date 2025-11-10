@@ -38,8 +38,7 @@ export const TranscriptWindow = ({ transcript, highlightedText }: TranscriptWind
 
         <ScrollArea className="h-24 sm:h-32 rounded-lg bg-muted/30 p-3 sm:p-4">
           <p className="text-foreground leading-relaxed font-mono text-xs sm:text-sm">
-            {transcript || 'Waiting for speech...'}
-            {renderTranscript()}
+            {transcript ? renderTranscript() : 'Waiting for speech...'}
           </p>
         </ScrollArea>
       </div>
