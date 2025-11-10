@@ -17,6 +17,7 @@ import { syncService } from '@/lib/syncService';
 import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card } from '@/components/ui/card';
+import { ApiKeyDialog } from './ApiKeyDialog';
 import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 
 interface ControlPanelProps {
@@ -37,6 +38,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   const [showSettings, setShowSettings] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [pendingApiKey, setPendingApiKey] = useState<string | null>(null);
   
   // Verse range tracking
   const [verseRange, setVerseRange] = useState<{ start: number; end: number } | null>(null);
@@ -84,6 +87,29 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   }, [transcript]);
 
   const handleStartListening = async () => {
+    // Check if in development mode and need API key
+    const isDevelopment = window.location.hostname.includes('lovableproject.com');
+    
+    if (isDevelopment) {
+      // Check for saved API key
+      const savedKey = localStorage.getItem('dev_openai_api_key');
+      
+      if (!savedKey) {
+        // Show dialog to get API key
+        setShowApiKeyDialog(true);
+        return;
+      }
+      
+      // Use saved key
+      setPendingApiKey(savedKey);
+      startListeningWithKey(savedKey);
+    } else {
+      // Production mode - use Azure Function
+      startListeningWithKey(null);
+    }
+  };
+
+  const startListeningWithKey = async (apiKey: string | null) => {
     try {
       setIsConnecting(true);
       setAudioStatus(prev => ({ ...prev, isListening: true, status: 'listening' }));
@@ -109,7 +135,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
         },
         (volume) => {
           setAudioStatus(prev => ({ ...prev, volume }));
-        }
+        },
+        apiKey // Pass API key to WebRTC class
       );
 
       await realtimeChat.current.init();
@@ -126,6 +153,15 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
         description: error instanceof Error ? error.message : 'Unknown error',
       });
       setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle' }));
+    }
+  };
+
+  const handleApiKeyDialogClose = (apiKey: string | null) => {
+    setShowApiKeyDialog(false);
+    
+    if (apiKey) {
+      setPendingApiKey(apiKey);
+      startListeningWithKey(apiKey);
     }
   };
 
@@ -440,6 +476,9 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
           </div>
         </div>
       </div>
+
+      {/* API Key Dialog for Development */}
+      <ApiKeyDialog open={showApiKeyDialog} onClose={handleApiKeyDialogClose} />
     </div>
   );
 };

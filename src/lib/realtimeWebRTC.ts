@@ -84,7 +84,8 @@ export class RealtimeWebRTC {
   constructor(
     private onTranscript: (text: string) => void,
     private onVerseDetected: (verse: BibleVerse | null, detectionInfo?: { method: string; description?: string; confidence?: string }) => void,
-    private onVolumeUpdate: (volume: number) => void
+    private onVolumeUpdate: (volume: number) => void,
+    private apiKey: string | null = null
   ) {
     this.audioEl = document.createElement("audio");
     this.audioEl.autoplay = true;
@@ -105,20 +106,14 @@ export class RealtimeWebRTC {
       
       let EPHEMERAL_KEY: string;
       
-      if (isDevelopment) {
-        // DEVELOPMENT ONLY: Direct OpenAI call
-        // WARNING: This is for testing only. For production, use Azure Functions
-        console.warn('⚠️ Development mode: Using direct OpenAI API call. Deploy to Azure for production!');
-        
-        const OPENAI_API_KEY = prompt('Enter your OpenAI API key for testing (this is temporary and not saved):');
-        if (!OPENAI_API_KEY) {
-          throw new Error('OpenAI API key is required');
-        }
+      if (isDevelopment && this.apiKey) {
+        // DEVELOPMENT: Use provided API key
+        console.log('Development mode: Using provided OpenAI API key');
         
         const tokenResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${OPENAI_API_KEY}`,
+            "Authorization": `Bearer ${this.apiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
