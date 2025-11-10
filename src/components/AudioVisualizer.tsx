@@ -55,16 +55,16 @@ export const AudioVisualizer = ({ isListening, volume, latency, isMuted, onToggl
   }, [isListening, volume]);
 
   return (
-    <Card className="p-6 border-border bg-card">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isListening ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-              {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+    <Card className="p-3 sm:p-4 lg:p-6 border-border bg-card">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className={`p-1.5 sm:p-2 rounded-lg ${isListening ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+              {isMuted ? <MicOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
             </div>
-            <div>
-              <h3 className="font-semibold text-foreground">Live Audio Feed</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm sm:text-base text-foreground">Live Audio Feed</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {isListening ? (isMuted ? 'Muted' : 'Listening...') : 'Idle'}
               </p>
             </div>
@@ -75,14 +75,14 @@ export const AudioVisualizer = ({ isListening, volume, latency, isMuted, onToggl
                 variant="outline"
                 size="sm"
                 onClick={onToggleMute}
-                className="h-8 gap-2"
+                className="h-9 sm:h-8 gap-1.5 sm:gap-2 flex-1 sm:flex-none text-xs sm:text-sm"
               >
-                {isMuted ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-                {isMuted ? 'Unmute' : 'Mute'}
+                {isMuted ? <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <MicOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                <span>{isMuted ? 'Unmute' : 'Mute'}</span>
               </Button>
             )}
             {latency !== undefined && (
-              <Badge variant="outline" className="text-primary border-primary">
+              <Badge variant="outline" className="text-primary border-primary text-[10px] sm:text-xs whitespace-nowrap">
                 {latency}ms
               </Badge>
             )}
@@ -93,17 +93,17 @@ export const AudioVisualizer = ({ isListening, volume, latency, isMuted, onToggl
           ref={canvasRef}
           width={800}
           height={80}
-          className="w-full h-20 rounded-lg bg-muted/30"
+          className="w-full h-16 sm:h-20 rounded-lg bg-muted/30"
         />
 
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full gradient-divine transition-smooth"
               style={{ width: `${volume}%` }}
             />
           </div>
-          <span className="text-sm text-muted-foreground min-w-[3ch]">
+          <span className="text-xs sm:text-sm text-muted-foreground min-w-[2.5ch] sm:min-w-[3ch]">
             {volume}%
           </span>
         </div>

@@ -309,8 +309,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   const context = BibleParser.getCurrentContext();
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+    <div className="min-h-screen bg-background p-2 sm:p-4 lg:p-6">
+      <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
         <PageHeader
           title="Cornerstone Bible"
           description="Voice-Activated Scripture Projection System"
@@ -331,9 +331,9 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
         )}
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4 lg:space-y-6">
             <ManualSearch onVerseSelect={handleManualVerseSelect} />
 
             <AudioVisualizer
@@ -356,36 +356,36 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
             />
 
             {/* Control Buttons */}
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               {!audioStatus.isListening ? (
                 <Button 
                   onClick={handleStartListening} 
                   size="lg" 
-                  className="flex-1 gradient-divine"
+                  className="flex-1 gradient-divine h-12 sm:h-auto"
                   disabled={isConnecting}
                 >
                   {isConnecting ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Connecting...
+                      <span className="text-sm sm:text-base">Connecting...</span>
                     </>
                   ) : (
-                    'Start Listening'
+                    <span className="text-sm sm:text-base">Start Listening</span>
                   )}
                 </Button>
               ) : (
-                <Button onClick={handleStopListening} size="lg" variant="destructive" className="flex-1">
-                  Stop Listening
+                <Button onClick={handleStopListening} size="lg" variant="destructive" className="flex-1 h-12 sm:h-auto">
+                  <span className="text-sm sm:text-base">Stop Listening</span>
                 </Button>
               )}
             </div>
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="space-y-4 lg:w-full xl:w-auto 2xl:min-w-[700px]">
+          <div className="space-y-3 sm:space-y-4 lg:w-full xl:w-auto 2xl:min-w-[700px]">
             {/* Display Monitor Section */}
             {showDisplayMonitor && (
-              <Card className="p-5 animate-fade-in">
+              <Card className="p-3 sm:p-4 lg:p-5 animate-fade-in">
                 <Collapsible defaultOpen>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -418,7 +418,7 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
             )}
 
             {/* Context Tracker Section */}
-            <Card className="p-5">
+            <Card className="p-3 sm:p-4 lg:p-5">
               <Collapsible defaultOpen>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-sm">Active Content</h3>

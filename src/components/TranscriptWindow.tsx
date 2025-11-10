@@ -24,20 +24,20 @@ export const TranscriptWindow = ({ transcript, highlightedText }: TranscriptWind
   };
 
   return (
-    <Card className="p-6 border-border bg-card">
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-muted text-muted-foreground">
-            <FileText className="w-5 h-5" />
+    <Card className="p-3 sm:p-4 lg:p-6 border-border bg-card">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 rounded-lg bg-muted text-muted-foreground">
+            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground">Live Transcript</h3>
-            <p className="text-sm text-muted-foreground">Real-time speech recognition</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-sm sm:text-base text-foreground">Live Transcript</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Real-time speech recognition</p>
           </div>
         </div>
 
-        <ScrollArea className="h-32 rounded-lg bg-muted/30 p-4">
-          <p className="text-foreground leading-relaxed font-mono text-sm">
+        <ScrollArea className="h-24 sm:h-32 rounded-lg bg-muted/30 p-3 sm:p-4">
+          <p className="text-foreground leading-relaxed font-mono text-xs sm:text-sm">
             {transcript || 'Waiting for speech...'}
             {renderTranscript()}
           </p>

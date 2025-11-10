@@ -79,58 +79,59 @@ export const HelpAssistant = () => {
       <Button
         onClick={() => setIsOpen(true)}
         size="lg"
-        className="fixed bottom-6 right-6 rounded-full shadow-lg h-14 w-14 p-0 z-50"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 rounded-full shadow-lg h-12 w-12 sm:h-14 sm:w-14 p-0 z-50"
       >
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
       </Button>
     );
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[500px] shadow-2xl flex flex-col z-50">
-      <div className="flex items-center justify-between p-4 border-b">
+    <Card className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 h-[calc(100vh-8rem)] sm:h-[500px] max-h-[600px] shadow-2xl flex flex-col z-50">
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b">
         <div className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">Help Assistant</h3>
+          <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h3 className="font-semibold text-sm sm:text-base">Help Assistant</h3>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsOpen(false)}
+          className="h-7 w-7 sm:h-8 sm:w-8 p-0"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollRef}>
+        <div className="space-y-3 sm:space-y-4">
           {messages.map((message, index) => (
             <div
               key={index}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
+                className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-2.5 sm:p-3 ${
                   message.role === 'user'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted'
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-xs sm:text-sm whitespace-pre-wrap">{message.content}</p>
               </div>
             </div>
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-muted rounded-lg p-3">
-                <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="bg-muted rounded-lg p-2.5 sm:p-3">
+                <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
               </div>
             </div>
           )}
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t">
+      <div className="p-3 sm:p-4 border-t">
         <div className="flex gap-2">
           <Input
             value={input}
@@ -138,13 +139,15 @@ export const HelpAssistant = () => {
             onKeyPress={handleKeyPress}
             placeholder="Ask me anything..."
             disabled={isLoading}
+            className="h-9 sm:h-10 text-sm"
           />
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
             size="icon"
+            className="h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
         </div>
       </div>

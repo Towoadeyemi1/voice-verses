@@ -61,13 +61,13 @@ export const DisplayMonitor = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
       {/* Main Projection Display Preview */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-1.5 px-1">
-          <MonitorPlay className="w-3.5 h-3.5 text-primary" />
-          <span className="text-[11px] font-medium text-foreground">Main</span>
-          <span className="text-[10px] text-muted-foreground ml-auto">1920×1080</span>
+          <MonitorPlay className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" />
+          <span className="text-[10px] sm:text-[11px] font-medium text-foreground">Main</span>
+          <span className="text-[9px] sm:text-[10px] text-muted-foreground ml-auto">1920×1080</span>
         </div>
         <div className="aspect-video bg-black rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide ? (
@@ -78,8 +78,8 @@ export const DisplayMonitor = () => {
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-white/30">
-              <MonitorPlay className="w-8 h-8 mb-1" />
-              <p className="text-[10px]">Waiting...</p>
+              <MonitorPlay className="w-6 h-6 sm:w-8 sm:h-8 mb-1" />
+              <p className="text-[9px] sm:text-[10px]">Waiting...</p>
             </div>
           )}
         </div>
@@ -88,9 +88,9 @@ export const DisplayMonitor = () => {
       {/* Lower Third Preview */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-1.5 px-1">
-          <TvMinimalPlay className="w-3.5 h-3.5 text-primary" />
-          <span className="text-[11px] font-medium text-foreground">Lower</span>
-          <span className="text-[10px] text-muted-foreground ml-auto">Chroma</span>
+          <TvMinimalPlay className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" />
+          <span className="text-[10px] sm:text-[11px] font-medium text-foreground">Lower</span>
+          <span className="text-[9px] sm:text-[10px] text-muted-foreground ml-auto">Chroma</span>
         </div>
         <div className="aspect-video bg-[#00FF00] rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide && currentSlide.type === 'scripture' ? (

@@ -27,15 +27,15 @@ export const PageHeader = ({
 }: PageHeaderProps) => {
   const navigate = useNavigate();
   return (
-    <div className="flex items-start justify-between gap-6 mb-6">
-      <div className="flex-1 min-w-0">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2 truncate">{title}</h1>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-6 mb-4 sm:mb-6">
+      <div className="flex-1 min-w-0 w-full sm:w-auto">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 truncate">{title}</h1>
         {description && (
-          <p className="text-sm sm:text-base text-muted-foreground">{description}</p>
+          <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">{description}</p>
         )}
       </div>
       
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
         {actions}
         
         <ShowLogoButton variant="outline" size="default" className="hidden sm:flex" />
@@ -86,11 +86,11 @@ export const PageHeader = ({
         <Button
           onClick={() => navigate('/presenter')}
           size="default"
-          className="gradient-divine shadow-glow"
+          className="gradient-divine shadow-glow flex-1 sm:flex-none"
           aria-label="Open presentation control"
         >
           <Presentation className="w-4 h-4 sm:mr-2" aria-hidden="true" />
-          <span className="hidden sm:inline">Presenter</span>
+          <span className="text-sm sm:text-base">Presenter</span>
         </Button>
       </div>
     </div>

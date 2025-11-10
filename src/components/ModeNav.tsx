@@ -55,7 +55,7 @@ export const ModeNav = () => {
               aria-selected={active}
               aria-label={`${mode.label} mode: ${mode.description}`}
               className={`
-                flex-1 h-auto px-4 py-3 gap-3 transition-all cursor-pointer
+                flex-1 h-auto px-2 sm:px-4 py-2 sm:py-3 gap-2 sm:gap-3 transition-all cursor-pointer
                 ${active 
                   ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm' 
                   : 'hover:bg-muted/50'
@@ -63,10 +63,10 @@ export const ModeNav = () => {
               `}
               style={{ pointerEvents: 'auto' }}
             >
-              <Icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+              <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" aria-hidden="true" />
               <div className="text-left min-w-0 pointer-events-none">
-                <div className="font-semibold text-sm truncate">{mode.label}</div>
-                <div className={`text-xs truncate ${active ? 'opacity-90' : 'text-muted-foreground'}`}>
+                <div className="font-semibold text-xs sm:text-sm truncate">{mode.label}</div>
+                <div className={`text-[10px] sm:text-xs truncate hidden sm:block ${active ? 'opacity-90' : 'text-muted-foreground'}`}>
                   {mode.description}
                 </div>
               </div>
