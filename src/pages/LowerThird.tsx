@@ -84,6 +84,34 @@ const LowerThird = () => {
 
   return (
     <div className="relative min-h-screen bg-[#00FF00]">
+      {/* Always render LowerThirdDisplay as overlay */}
+      <LowerThirdDisplay verse={verse} />
+      
+      {/* Waiting state when no verse */}
+      {!verse && !currentSlide && (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center space-y-4 px-8 bg-black/50 rounded-lg p-8">
+            <div className="w-16 h-16 mx-auto rounded-full border-4 border-white/30 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-white"
+                fill="none"
+                strokeWidth="2"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <p className="text-xl text-white/80 font-light">
+              Waiting for Scripture...
+            </p>
+            <p className="text-sm text-white/60">
+              Chroma Key Ready (Green Screen)
+            </p>
+          </div>
+        </div>
+      )}
+      
       {/* Display slide title/info for non-scripture slides */}
       {currentSlide && currentSlide.type !== 'scripture' && (
         <div 
@@ -117,9 +145,6 @@ const LowerThird = () => {
           </div>
         </div>
       )}
-      
-      {/* Scripture display */}
-      {verse && <LowerThirdDisplay verse={verse} />}
       
       {/* Settings Toggle Button */}
       <Button
