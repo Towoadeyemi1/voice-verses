@@ -28,11 +28,18 @@ export const PageHeader = ({
   const navigate = useNavigate();
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-6 mb-4 sm:mb-6">
-      <div className="flex-1 min-w-0 w-full sm:w-auto">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 truncate">{title}</h1>
-        {description && (
-          <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">{description}</p>
-        )}
+      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 w-full sm:w-auto">
+        <img 
+          src="/logo-transparent.png" 
+          alt="Cornerstone Bible Logo" 
+          className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 object-contain flex-shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 truncate">{title}</h1>
+          {description && (
+            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">{description}</p>
+          )}
+        </div>
       </div>
       
       <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
