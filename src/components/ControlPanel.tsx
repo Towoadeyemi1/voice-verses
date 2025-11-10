@@ -36,6 +36,7 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   const [recentVerses, setRecentVerses] = useState<DisplayedVerse[]>([]);
   const [showSettings, setShowSettings] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
   
   // Verse range tracking
   const [verseRange, setVerseRange] = useState<{ start: number; end: number } | null>(null);
@@ -142,7 +143,17 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle', volume: 0 }));
     setReadingMode('idle');
     setVerseRange(null);
+    setIsMicMuted(false);
     toast.info('Listening stopped');
+  };
+
+  const handleToggleMute = () => {
+    if (realtimeChat.current) {
+      const newMutedState = !isMicMuted;
+      setIsMicMuted(newMutedState);
+      realtimeChat.current.setMicrophoneMuted(newMutedState);
+      toast.info(newMutedState ? 'Microphone muted' : 'Microphone unmuted');
+    }
   };
 
   const analyzeReadingMode = (text: string, currentVerseText?: string): 'reading' | 'explaining' => {
@@ -329,6 +340,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
               isListening={audioStatus.isListening}
               volume={audioStatus.volume}
               latency={currentVerse?.latency}
+              isMuted={isMicMuted}
+              onToggleMute={handleToggleMute}
             />
 
             <TranscriptWindow

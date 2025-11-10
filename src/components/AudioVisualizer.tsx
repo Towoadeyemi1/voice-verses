@@ -1,15 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mic } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Mic, MicOff } from 'lucide-react';
 
 interface AudioVisualizerProps {
   isListening: boolean;
   volume: number;
   latency?: number;
+  isMuted?: boolean;
+  onToggleMute?: () => void;
 }
 
-export const AudioVisualizer = ({ isListening, volume, latency }: AudioVisualizerProps) => {
+export const AudioVisualizer = ({ isListening, volume, latency, isMuted, onToggleMute }: AudioVisualizerProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -57,20 +60,33 @@ export const AudioVisualizer = ({ isListening, volume, latency }: AudioVisualize
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${isListening ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-              <Mic className="w-5 h-5" />
+              {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </div>
             <div>
               <h3 className="font-semibold text-foreground">Live Audio Feed</h3>
               <p className="text-sm text-muted-foreground">
-                {isListening ? 'Listening...' : 'Idle'}
+                {isListening ? (isMuted ? 'Muted' : 'Listening...') : 'Idle'}
               </p>
             </div>
           </div>
-          {latency !== undefined && (
-            <Badge variant="outline" className="text-primary border-primary">
-              {latency}ms
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {isListening && onToggleMute && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onToggleMute}
+                className="h-8 gap-2"
+              >
+                {isMuted ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                {isMuted ? 'Unmute' : 'Mute'}
+              </Button>
+            )}
+            {latency !== undefined && (
+              <Badge variant="outline" className="text-primary border-primary">
+                {latency}ms
+              </Badge>
+            )}
+          </div>
         </div>
 
         <canvas

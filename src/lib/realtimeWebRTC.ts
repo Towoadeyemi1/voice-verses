@@ -15,6 +15,14 @@ export class AudioRecorder {
 
   constructor(private onAudioData: (audioData: Float32Array) => void) {}
 
+  setMuted(muted: boolean) {
+    if (this.stream) {
+      this.stream.getAudioTracks().forEach(track => {
+        track.enabled = !muted;
+      });
+    }
+  }
+
   async start() {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
@@ -80,6 +88,12 @@ export class RealtimeWebRTC {
   ) {
     this.audioEl = document.createElement("audio");
     this.audioEl.autoplay = true;
+  }
+
+  setMicrophoneMuted(muted: boolean) {
+    if (this.audioRecorder) {
+      this.audioRecorder.setMuted(muted);
+    }
   }
 
   async init() {
