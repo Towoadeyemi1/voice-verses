@@ -367,7 +367,9 @@ FORBIDDEN:
     if (name === 'display_verse') {
       try {
         const params = JSON.parse(args);
-        const verse = await BibleParser.getVerse(params.book, params.chapter, params.verse);
+        // Default to verse 1 if not specified (for chapter-only references)
+        const verseNum = params.verse || 1;
+        const verse = await BibleParser.getVerse(params.book, params.chapter, verseNum);
         console.log('Function call - display verse:', verse);
         this.onVerseDetected(verse, { method: 'explicit' });
       } catch (error) {

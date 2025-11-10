@@ -81,7 +81,7 @@ Use your Bible knowledge to identify verses from any description, scenario, char
           {
             type: "function",
             name: "display_verse",
-            description: "Display a Bible verse when an explicit reference is mentioned (e.g., 'John 3:16', 'Romans 8 verse 28'). Use this for clear, direct verse citations.",
+            description: "Display a Bible verse when an explicit reference is mentioned (e.g., 'John 3:16', 'Romans 8 verse 28'). If only book and chapter are mentioned (e.g., 'John 3', 'Revelation 2'), omit the verse parameter to show verse 1.",
             parameters: {
               type: "object",
               properties: {
@@ -95,10 +95,10 @@ Use your Bible knowledge to identify verses from any description, scenario, char
                 },
                 verse: {
                   type: "number",
-                  description: "Verse number"
+                  description: "Verse number (optional - omit if only book and chapter are mentioned)"
                 }
               },
-              required: ["book", "chapter", "verse"]
+              required: ["book", "chapter"]
             }
           },
           {
