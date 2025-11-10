@@ -30,7 +30,7 @@ export const PageHeader = ({
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-6 mb-4 sm:mb-6">
       <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 w-full sm:w-auto">
         <img 
-          src="/logo-transparent.png" 
+          src="/cornerstone-logo.png" 
           alt="Cornerstone Bible Logo" 
           className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 object-contain flex-shrink-0"
         />
