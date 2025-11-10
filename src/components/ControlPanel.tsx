@@ -384,6 +384,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
             <TranscriptWindow
               transcript={transcript}
               highlightedText={context ? `${context.book} ${context.chapter}` : undefined}
+              isListening={audioStatus.isListening}
+              onStop={handleStopListening}
             />
 
             <VerseDisplay
