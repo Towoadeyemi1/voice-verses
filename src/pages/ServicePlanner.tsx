@@ -38,17 +38,21 @@ const ServicePlanner = () => {
   };
 
   const handleCreateService = () => {
+    const now = new Date();
+    const currentTime = now.toTimeString().slice(0, 5); // Format: "HH:MM"
+    
     const newService: Service = {
       id: Date.now().toString(),
       name: 'New Service',
       date: selectedDate,
-      startTime: '10:00',
+      startTime: currentTime,
       sections: [],
       isTemplate: false,
     };
     ServiceStorage.saveService(newService);
     loadServices();
     toast.success('Service created');
+    navigate(`/service-builder/${newService.id}`);
   };
 
   const handleDeleteService = (id: string) => {

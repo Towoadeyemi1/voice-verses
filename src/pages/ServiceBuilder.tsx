@@ -1172,6 +1172,12 @@ Chorus line 2"`;
                   placeholder="Service name"
                 />
                 <Input
+                  type="date"
+                  value={service.date instanceof Date ? service.date.toISOString().split('T')[0] : new Date(service.date).toISOString().split('T')[0]}
+                  onChange={(e) => setService({...service, date: new Date(e.target.value)})}
+                  className="mt-2 mb-2"
+                />
+                <Input
                   type="time"
                   value={service.startTime}
                   onChange={(e) => setService({...service, startTime: e.target.value})}
