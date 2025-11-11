@@ -1376,10 +1376,10 @@ Chorus line 2"`;
                                                 <SortableContext items={subsection.slides.map(slide => slide.id)} strategy={verticalListSortingStrategy}>
                                                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mt-3">
                                                      {subsection.slides.map((slide) => (
-                                                       <SortableSlide key={slide.id} slide={slide}>
-                                                         <Card className={`group relative overflow-hidden hover-scale cursor-pointer ${activeId === slide.id ? 'ring-2 ring-primary' : ''}`}>
-                                                            {/* Slide Preview with WYSIWYG */}
-                                                            <div className="aspect-video bg-black relative overflow-hidden">
+                                                        <SortableSlide key={slide.id} slide={slide}>
+                                                          <Card className={`group relative overflow-hidden hover-scale cursor-pointer flex flex-col h-full ${activeId === slide.id ? 'ring-2 ring-primary' : ''}`}>
+                                                             {/* Slide Preview with WYSIWYG */}
+                                                             <div className="aspect-video bg-black relative overflow-hidden flex-shrink-0">
                                                               {(() => {
                                                                 const fontSize = slide.textFormatting?.fontSize || 'large';
                                                                 const alignment = slide.textFormatting?.alignment || 'center';
@@ -1503,10 +1503,10 @@ Chorus line 2"`;
                                                                </div>
                                                              </div>
                                                            </div>
-                                                           
-                                                            {/* Slide Info & Actions */}
-                                                            <div className="p-2 border-t">
-                                                              <div className="text-xs font-medium truncate" title={slide.title}>
+                                                            
+                                                             {/* Slide Info & Actions */}
+                                                             <div className="p-2 border-t flex-shrink-0">
+                                                               <div className="text-xs font-medium truncate" title={slide.title}>
                                                                 {slide.title}
                                                               </div>
                                                               
