@@ -141,6 +141,7 @@ const ServiceBuilder = () => {
   const [showScriptureDialog, setShowScriptureDialog] = useState(false);
   const [scriptureReference, setScriptureReference] = useState('');
   const [showLyricsEditor, setShowLyricsEditor] = useState(false);
+  const [editingLyricsContext, setEditingLyricsContext] = useState<{ sectionId: string; subsectionId: string; songTitle: string } | null>(null);
   const media = ServiceStorage.getMedia();
 
   const sensors = useSensors(
@@ -372,6 +373,14 @@ const ServiceBuilder = () => {
   };
 
   const handleEditSlide = (sectionId: string, subsectionId: string, slide: Slide) => {
+    // For lyrics slides, open the full lyrics editor
+    if (slide.type === 'lyrics') {
+      const lyricsSlide = slide as LyricsSlide;
+      setEditingLyricsContext({ sectionId, subsectionId, songTitle: lyricsSlide.songTitle });
+      setShowLyricsEditor(true);
+      return;
+    }
+    
     // For blank slides, let user choose the slide type first
     if (slide.type === 'blank') {
       setEditingSlide({
@@ -390,6 +399,43 @@ const ServiceBuilder = () => {
   };
 
   const handleSaveLyricsFromEditor = (slides: LyricsSlide[], subsectionBackground?: { type: 'image'; url: string; opacity: number }) => {
+    // If editing existing lyrics, replace the old slides
+    if (editingLyricsContext && service) {
+      const { sectionId, subsectionId, songTitle } = editingLyricsContext;
+      
+      setService(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          sections: prev.sections.map(section =>
+            section.id === sectionId
+              ? {
+                  ...section,
+                  subsections: section.subsections.map(sub =>
+                    sub.id === subsectionId
+                      ? {
+                          ...sub,
+                          slides: [
+                            ...sub.slides.filter(s => s.type !== 'lyrics' || (s as LyricsSlide).songTitle !== songTitle),
+                            ...slides
+                          ],
+                          backgroundMedia: subsectionBackground || sub.backgroundMedia,
+                        }
+                      : sub
+                  ),
+                }
+              : section
+          ),
+        };
+      });
+      
+      setEditingLyricsContext(null);
+      setShowLyricsEditor(false);
+      toast.success(`${slides.length} slide${slides.length !== 1 ? 's' : ''} updated`);
+      return;
+    }
+    
+    // Adding new lyrics
     if (!selectedSubsection) return;
 
     // Add all slides to the subsection
@@ -411,49 +457,6 @@ const ServiceBuilder = () => {
 
     setShowLyricsEditor(false);
     toast.success(`${slides.length} slide${slides.length !== 1 ? 's' : ''} added`);
-  };
-
-  const handleSaveLyricsSlide = () => {
-    if (!editingSlide || editingSlide.type !== 'lyrics') return;
-    
-    const context = (editingSlide as any)._editContext;
-    
-    // If editing existing slide
-    if (editingSlide.id && context) {
-      const updatedSlide: LyricsSlide = {
-        ...(editingSlide as LyricsSlide),
-        songTitle: editingSlide.songTitle || 'Untitled',
-        content: editingSlide.content || '',
-      };
-      handleUpdateSlide(context.sectionId, context.subsectionId, updatedSlide);
-      setEditingSlide(null);
-      return;
-    }
-
-    // Creating new slides
-    const slides: LyricsSlide[] = [];
-    const sections = editingSlide.content?.split('\n\n') || [];
-    sections.forEach((section, index) => {
-      const lines = section.trim().split('\n');
-      const sectionName = lines[0].toLowerCase().includes('verse') ? 'verse' :
-                         lines[0].toLowerCase().includes('chorus') ? 'chorus' :
-                         lines[0].toLowerCase().includes('bridge') ? 'bridge' : undefined;
-      const content = sectionName ? lines.slice(1).join('\n') : section;
-      const slide: LyricsSlide = {
-        id: `slide-${Date.now()}-${index}`,
-        type: 'lyrics',
-        title: `${editingSlide.songTitle} - Slide ${index + 1}`,
-        songTitle: editingSlide.songTitle || 'Untitled',
-        slideNumber: index + 1,
-        totalSlides: sections.length,
-        content: content.trim(),
-        section: sectionName,
-      };
-      slides.push(slide);
-    });
-    slides.forEach(slide => addSlideToSubsection(slide));
-    setEditingSlide(null);
-    toast.success('Lyrics slides added');
   };
 
   const handleSaveAnnouncementSlide = () => {
@@ -1591,44 +1594,53 @@ Chorus line 2"`;
       {/* New Comprehensive Lyrics Editor */}
       <LyricsEditor
         open={showLyricsEditor}
-        onClose={() => setShowLyricsEditor(false)}
+        onClose={() => {
+          setShowLyricsEditor(false);
+          setEditingLyricsContext(null);
+        }}
         onSave={handleSaveLyricsFromEditor}
+        initialSongTitle={editingLyricsContext ? editingLyricsContext.songTitle : ''}
+        initialLyrics={editingLyricsContext ? (() => {
+          // Gather all slides for this song and reconstruct the lyrics
+          const section = service?.sections.find(s => s.id === editingLyricsContext.sectionId);
+          const subsection = section?.subsections.find(sub => sub.id === editingLyricsContext.subsectionId);
+          const songSlides = subsection?.slides.filter(s => 
+            s.type === 'lyrics' && (s as LyricsSlide).songTitle === editingLyricsContext.songTitle
+          ) as LyricsSlide[] || [];
+          
+          // Group slides by section and reconstruct lyrics
+          const sections: string[] = [];
+          let currentSection = '';
+          let currentSectionType = '';
+          
+          songSlides
+            .filter(s => s.content !== editingLyricsContext.songTitle) // Skip title card
+            .forEach(slide => {
+              const sectionLabel = slide.section ? 
+                (slide.section.charAt(0).toUpperCase() + slide.section.slice(1)) : '';
+              
+              if (sectionLabel && sectionLabel !== currentSectionType) {
+                if (currentSection) {
+                  sections.push(currentSection);
+                }
+                currentSectionType = sectionLabel;
+                currentSection = sectionLabel + '\n' + slide.content;
+              } else {
+                if (currentSection) {
+                  currentSection += '\n' + slide.content;
+                } else {
+                  currentSection = slide.content;
+                }
+              }
+            });
+          
+          if (currentSection) {
+            sections.push(currentSection);
+          }
+          
+          return sections.join('\n\n');
+        })() : ''}
       />
-
-      {/* Old Lyrics Editor Dialog - for editing existing slides */}
-      {editingSlide?.type === 'lyrics' && (
-        <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit Song Lyrics Slide</DialogTitle>
-              <DialogDescription>Edit this individual lyrics slide</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Song Title</Label>
-                <Input
-                  value={editingSlide.songTitle || ''}
-                  onChange={(e) => setEditingSlide({...editingSlide, songTitle: e.target.value})}
-                  placeholder="Enter song title"
-                />
-              </div>
-              <div>
-                <Label>Lyrics</Label>
-                <Textarea
-                  value={editingSlide.content || ''}
-                  onChange={(e) => setEditingSlide({...editingSlide, content: e.target.value})}
-                  placeholder="Verse 1&#10;First line&#10;Second line&#10;&#10;Chorus&#10;Chorus lyrics..."
-                  className="min-h-[300px] font-mono"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
-              <Button onClick={handleSaveLyricsSlide}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* Announcement Editor Dialog */}
       {editingSlide?.type === 'announcement' && !(editingSlide as any)._isConverting && (
