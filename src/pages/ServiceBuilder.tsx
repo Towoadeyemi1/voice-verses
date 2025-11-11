@@ -16,6 +16,7 @@ import { CountdownConfiguration } from '@/components/CountdownConfig';
 import { ManualSearch } from '@/components/ManualSearch';
 import { PPTXImport } from '@/components/PPTXImport';
 import { SongSelectImport } from '@/components/SongSelectImport';
+import { LyricsEditor } from '@/components/LyricsEditor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   DndContext,
@@ -139,6 +140,7 @@ const ServiceBuilder = () => {
   const [pendingImportData, setPendingImportData] = useState<{ parsedSongs: ServiceSubsection[]; worshipSection: ServiceSection | null } | null>(null);
   const [showScriptureDialog, setShowScriptureDialog] = useState(false);
   const [scriptureReference, setScriptureReference] = useState('');
+  const [showLyricsEditor, setShowLyricsEditor] = useState(false);
   const media = ServiceStorage.getMedia();
 
   const sensors = useSensors(
@@ -343,7 +345,7 @@ const ServiceBuilder = () => {
       toast.error('Please select a subsection first');
       return;
     }
-    setEditingSlide({ type: 'lyrics', songTitle: '', content: '' });
+    setShowLyricsEditor(true);
   };
 
   const handleAddAnnouncementSlide = () => {
@@ -385,6 +387,30 @@ const ServiceBuilder = () => {
         _editContext: { sectionId, subsectionId }
       } as any);
     }
+  };
+
+  const handleSaveLyricsFromEditor = (slides: LyricsSlide[], subsectionBackground?: { type: 'image'; url: string; opacity: number }) => {
+    if (!selectedSubsection) return;
+
+    // Add all slides to the subsection
+    slides.forEach(slide => addSlideToSubsection(slide));
+
+    // If background media was provided, update the subsection
+    if (subsectionBackground && service) {
+      const updatedService = { ...service };
+      for (const section of updatedService.sections) {
+        const subsection = section.subsections.find(s => s.id === selectedSubsection);
+        if (subsection) {
+          subsection.backgroundMedia = subsectionBackground;
+          break;
+        }
+      }
+      setService(updatedService);
+      ServiceStorage.saveService(updatedService);
+    }
+
+    setShowLyricsEditor(false);
+    toast.success(`${slides.length} slide${slides.length !== 1 ? 's' : ''} added`);
   };
 
   const handleSaveLyricsSlide = () => {
@@ -1562,13 +1588,20 @@ Chorus line 2"`;
         </div>
       </div>
 
-      {/* Lyrics Editor Dialog */}
+      {/* New Comprehensive Lyrics Editor */}
+      <LyricsEditor
+        open={showLyricsEditor}
+        onClose={() => setShowLyricsEditor(false)}
+        onSave={handleSaveLyricsFromEditor}
+      />
+
+      {/* Old Lyrics Editor Dialog - for editing existing slides */}
       {editingSlide?.type === 'lyrics' && (
         <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{editingSlide.id ? 'Edit Song Lyrics' : 'Add Song Lyrics'}</DialogTitle>
-              <DialogDescription>Separate verses/sections with blank lines</DialogDescription>
+              <DialogTitle>Edit Song Lyrics Slide</DialogTitle>
+              <DialogDescription>Edit this individual lyrics slide</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -1591,7 +1624,7 @@ Chorus line 2"`;
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
-              <Button onClick={handleSaveLyricsSlide}>Save Lyrics</Button>
+              <Button onClick={handleSaveLyricsSlide}>Save Changes</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
