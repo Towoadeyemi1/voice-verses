@@ -285,7 +285,7 @@ const Presenter = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Control Bar */}
       <div className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 flex-shrink-0">
-        <div className="w-full px-6 py-3">
+        <div className="max-w-screen-2xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Button
@@ -380,10 +380,11 @@ const Presenter = () => {
           </Card>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Voice Visualizer */}
-          {isVoiceActive && (
-            <div className="px-6 pt-4 flex-shrink-0">
+        <div className="flex-1 flex justify-center overflow-hidden">
+          <div className="w-full max-w-screen-2xl flex flex-col">
+            {/* Voice Visualizer */}
+            {isVoiceActive && (
+              <div className="px-6 pt-4 flex-shrink-0">
               <Card className="p-4">
                 <div className="space-y-3">
                   <AudioVisualizer isListening={isVoiceActive} volume={audioVolume} />
@@ -524,6 +525,7 @@ const Presenter = () => {
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
+          </div>
         </div>
       )}
     </div>
