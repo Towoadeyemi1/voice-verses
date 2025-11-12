@@ -1768,6 +1768,50 @@ Chorus line 2"`;
         </Dialog>
       )}
 
+      {/* Edit Existing Scripture Slide */}
+      {editingSlide?.type === 'scripture' && !(editingSlide as any)._needsScriptureInput && editingSlide.id && (
+        <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Scripture Slide</DialogTitle>
+              <DialogDescription>Change the verse for this scripture slide</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <p className="text-sm font-medium mb-2">Current Verse:</p>
+                <p className="text-lg font-semibold text-primary">
+                  {(editingSlide as ScriptureSlide).verse.book} {(editingSlide as ScriptureSlide).verse.chapter}:{(editingSlide as ScriptureSlide).verse.verse}
+                </p>
+                <p className="text-sm mt-2 text-muted-foreground">
+                  {(editingSlide as ScriptureSlide).verse.text}
+                </p>
+              </div>
+              <div className="border-t pt-4">
+                <Label className="text-base mb-3 block">Select New Verse:</Label>
+                <ManualSearch 
+                  onVerseSelect={async (verse) => {
+                    const context = (editingSlide as any)._editContext;
+                    if (context) {
+                      const updatedSlide: ScriptureSlide = {
+                        ...editingSlide as ScriptureSlide,
+                        title: `${verse.book} ${verse.chapter}:${verse.verse}`,
+                        verse,
+                      };
+                      handleUpdateSlide(context.sectionId, context.subsectionId, updatedSlide);
+                      toast.success('Scripture updated');
+                    }
+                    setEditingSlide(null);
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Scripture Input for Blank Slide Conversion */}
       {editingSlide?.type === 'scripture' && (editingSlide as any)._needsScriptureInput && (
         <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
@@ -1795,6 +1839,90 @@ Chorus line 2"`;
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Edit Existing Image Slide */}
+      {editingSlide?.type === 'image' && !(editingSlide as any)._needsImageSelection && editingSlide.id && (
+        <Dialog open={true} onOpenChange={() => setEditingSlide(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Image Slide</DialogTitle>
+              <DialogDescription>Change the image or caption for this slide</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <p className="text-sm font-medium mb-2">Current Image:</p>
+                <div className="aspect-video relative rounded-lg overflow-hidden border">
+                  <img 
+                    src={(editingSlide as ImageSlide).imageUrl} 
+                    alt="Current slide"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {(editingSlide as ImageSlide).caption && (
+                  <p className="text-sm mt-2 text-muted-foreground">
+                    Caption: {(editingSlide as ImageSlide).caption}
+                  </p>
+                )}
+              </div>
+              <div className="border-t pt-4 space-y-4">
+                <div>
+                  <Label>Select New Image</Label>
+                  <Select 
+                    value={(editingSlide as ImageSlide).imageUrl}
+                    onValueChange={(value) => {
+                      const selectedImage = media.find(m => m.url === value);
+                      if (selectedImage) {
+                        setEditingSlide({
+                          ...editingSlide,
+                          imageUrl: value,
+                          title: selectedImage.name,
+                        } as ImageSlide);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Choose an image" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50 max-h-[200px]">
+                      {media.filter(m => m.type === 'image' && m.url).map(m => (
+                        <SelectItem key={m.id} value={m.url!}>{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Caption (Optional)</Label>
+                  <Input
+                    value={(editingSlide as ImageSlide).caption || ''}
+                    onChange={(e) => setEditingSlide({
+                      ...editingSlide,
+                      caption: e.target.value
+                    } as ImageSlide)}
+                    placeholder="Add a caption for this image"
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingSlide(null)}>Cancel</Button>
+              <Button onClick={() => {
+                const context = (editingSlide as any)._editContext;
+                if (context && editingSlide.id) {
+                  const updatedSlide: ImageSlide = {
+                    ...editingSlide as ImageSlide,
+                  };
+                  handleUpdateSlide(context.sectionId, context.subsectionId, updatedSlide);
+                  toast.success('Image slide updated');
+                  setEditingSlide(null);
+                }
+              }}>
+                Save Changes
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
