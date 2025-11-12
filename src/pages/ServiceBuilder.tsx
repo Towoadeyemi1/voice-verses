@@ -175,9 +175,19 @@ const ServiceBuilder = () => {
   }, [serviceId, navigate]);
 
   const handleSave = () => {
+    console.log('handleSave called', { service, serviceId: service?.id });
     if (service) {
-      ServiceStorage.saveService(service);
-      toast.success('Service saved');
+      try {
+        ServiceStorage.saveService(service);
+        console.log('Service saved successfully');
+        toast.success('Service saved');
+      } catch (error) {
+        console.error('Error saving service:', error);
+        toast.error('Failed to save service');
+      }
+    } else {
+      console.error('No service to save');
+      toast.error('No service to save');
     }
   };
 
