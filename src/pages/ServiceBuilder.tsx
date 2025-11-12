@@ -1373,11 +1373,11 @@ Chorus line 2"`;
                                                 onDragStart={handleDragStart}
                                                 onDragEnd={(e) => handleDragEnd(e, 'slide', section.id, subsection.id)}
                                               >
-                                                <SortableContext items={subsection.slides.map(slide => slide.id)} strategy={verticalListSortingStrategy}>
-                                                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mt-3">
-                                                     {subsection.slides.map((slide) => (
-                                                        <SortableSlide key={slide.id} slide={slide}>
-                                                          <Card className={`group relative overflow-hidden hover-scale cursor-pointer flex flex-col h-full ${activeId === slide.id ? 'ring-2 ring-primary' : ''}`}>
+                                                 <SortableContext items={subsection.slides.map(slide => slide.id)} strategy={verticalListSortingStrategy}>
+                                                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-3 auto-rows-fr">
+                                                      {subsection.slides.map((slide) => (
+                                                         <SortableSlide key={slide.id} slide={slide}>
+                                                           <Card className={`group relative overflow-hidden hover-scale cursor-pointer flex flex-col min-h-0 h-full ${activeId === slide.id ? 'ring-2 ring-primary' : ''}`}>
                                                              {/* Slide Preview with WYSIWYG */}
                                                              <div className="aspect-video bg-black relative overflow-hidden flex-shrink-0">
                                                               {(() => {
@@ -1441,27 +1441,31 @@ Chorus line 2"`;
                                                                 }
 
                                                                 if (slide.type === 'lyrics') {
-                                                                  return (
-                                                                    <div className="relative w-full h-full" style={backgroundStyle}>
-                                                                      {(slide.backgroundMedia || subsection.backgroundMedia) && (
-                                                                        <div className="absolute inset-0 bg-black" style={{ opacity: 1 - backgroundOpacity }} />
-                                                                      )}
-                                                                      <div className={`relative z-10 w-full h-full flex flex-col justify-center p-2 ${alignmentClasses[alignment]}`}>
-                                                                        <div className={`text-[8px] font-semibold text-primary mb-0.5 ${alignmentClasses[alignment].split(' ')[0]}`}>
-                                                                          {(slide as LyricsSlide).songTitle}
-                                                                        </div>
-                                                                        {(slide as LyricsSlide).section && (
-                                                                          <div className={`text-[6px] text-muted-foreground mb-0.5 uppercase ${alignmentClasses[alignment].split(' ')[0]}`}>
-                                                                            {(slide as LyricsSlide).section}
-                                                                          </div>
-                                                                        )}
-                                                                        <div className={`${fontSizeClasses[fontSize]} leading-tight line-clamp-4 whitespace-pre-line text-white ${alignmentClasses[alignment].split(' ')[0]}`}>
-                                                                          {(slide as LyricsSlide).content}
-                                                                        </div>
-                                                                      </div>
-                                                                    </div>
-                                                                  );
-                                                                }
+                                                                   const lyricsSlide = slide as LyricsSlide;
+                                                                   const isTitleCard = lyricsSlide.content === lyricsSlide.songTitle;
+                                                                   
+                                                                   return (
+                                                                     <div className="relative w-full h-full" style={backgroundStyle}>
+                                                                       {(slide.backgroundMedia || subsection.backgroundMedia) && (
+                                                                         <div className="absolute inset-0 bg-black" style={{ opacity: 1 - backgroundOpacity }} />
+                                                                       )}
+                                                                       <div className={`relative z-10 w-full h-full flex flex-col justify-center p-2 ${alignmentClasses[alignment]}`}>
+                                                                         {!isTitleCard && (
+                                                                           <>
+                                                                             {lyricsSlide.section && (
+                                                                               <div className={`text-[7px] text-primary/80 mb-0.5 uppercase font-semibold ${alignmentClasses[alignment].split(' ')[0]}`}>
+                                                                                 {lyricsSlide.section}
+                                                                               </div>
+                                                                             )}
+                                                                           </>
+                                                                         )}
+                                                                         <div className={`${isTitleCard ? 'text-[12px] font-bold' : fontSizeClasses[fontSize]} leading-tight ${isTitleCard ? 'line-clamp-2' : 'line-clamp-4'} whitespace-pre-line text-white ${alignmentClasses[alignment].split(' ')[0]}`}>
+                                                                           {lyricsSlide.content}
+                                                                         </div>
+                                                                       </div>
+                                                                     </div>
+                                                                   );
+                                                                 }
 
                                                                 if (slide.type === 'announcement') {
                                                                   return (

@@ -423,32 +423,51 @@ export function LyricsEditor({ open, onClose, onSave, initialSongTitle = '', ini
                     <h3 className="font-semibold mb-4">Background Media</h3>
                     <div className="space-y-4">
                       <div>
-                        <Label>Select Background</Label>
+                        <Label>Select from Media Library</Label>
                         <Select
                           value={backgroundMedia || 'none'}
                           onValueChange={(value) => setBackgroundMedia(value === 'none' ? undefined : value)}
                         >
                           <SelectTrigger className="mt-2">
-                            <SelectValue placeholder="Select background" />
+                            <SelectValue placeholder="Choose a background image" />
                           </SelectTrigger>
-                          <SelectContent className="bg-background z-50">
+                          <SelectContent className="bg-background z-50 max-h-[200px]">
                             <SelectItem value="none">No background</SelectItem>
-                            {media.filter(m => m.type === 'image' && m.url).map(m => (
-                              <SelectItem key={m.id} value={m.url!}>{m.name}</SelectItem>
-                            ))}
+                            {media.filter(m => m.type === 'image' && m.url).length > 0 ? (
+                              media.filter(m => m.type === 'image' && m.url).map(m => (
+                                <SelectItem key={m.id} value={m.url!}>{m.name}</SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="empty" disabled>No images in library</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
 
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-background px-2 text-muted-foreground">Or</span>
+                        </div>
+                      </div>
+
                       <div>
-                        <Label htmlFor="bg-upload">Or Upload New</Label>
-                        <Input
-                          id="bg-upload"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="mt-2"
-                        />
+                        <Label htmlFor="bg-upload">Upload New Image</Label>
+                        <div className="mt-2">
+                          <label htmlFor="bg-upload" className="flex items-center justify-center gap-2 p-3 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors">
+                            <Upload className="w-4 h-4" />
+                            <span className="text-sm">Choose image file</span>
+                          </label>
+                          <Input
+                            id="bg-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                        </div>
                       </div>
 
                       {backgroundMedia && (
