@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
@@ -10,14 +10,20 @@ interface ServiceLogoSettingsProps {
 }
 
 export const ServiceLogoSettings = ({ serviceId }: ServiceLogoSettingsProps) => {
-  const [logoUrl, setLogoUrl] = useState<string>(() => {
-    if (serviceId) {
-      const services = ServiceStorage.getServices();
-      const service = services.find(s => s.id === serviceId);
-      return service?.serviceLogo || '';
-    }
-    return localStorage.getItem('global-service-logo') || '';
-  });
+  const [logoUrl, setLogoUrl] = useState<string>('');
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      if (serviceId) {
+        const services = await ServiceStorage.getServices();
+        const service = services.find(s => s.id === serviceId);
+        setLogoUrl(service?.serviceLogo || '');
+      } else {
+        setLogoUrl(localStorage.getItem('global-service-logo') || '');
+      }
+    };
+    loadLogo();
+  }, [serviceId]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -29,17 +35,17 @@ export const ServiceLogoSettings = ({ serviceId }: ServiceLogoSettingsProps) => 
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const dataUrl = e.target?.result as string;
       setLogoUrl(dataUrl);
       
       if (serviceId) {
         // Update specific service
-        const services = ServiceStorage.getServices();
+        const services = await ServiceStorage.getServices();
         const service = services.find(s => s.id === serviceId);
         if (service) {
           service.serviceLogo = dataUrl;
-          ServiceStorage.saveService(service);
+          await ServiceStorage.saveService(service);
           toast.success('Service logo updated');
         }
       } else {
@@ -52,15 +58,15 @@ export const ServiceLogoSettings = ({ serviceId }: ServiceLogoSettingsProps) => 
     event.target.value = '';
   };
 
-  const handleRemoveLogo = () => {
+  const handleRemoveLogo = async () => {
     setLogoUrl('');
     
     if (serviceId) {
-      const services = ServiceStorage.getServices();
+      const services = await ServiceStorage.getServices();
       const service = services.find(s => s.id === serviceId);
       if (service) {
         service.serviceLogo = undefined;
-        ServiceStorage.saveService(service);
+        await ServiceStorage.saveService(service);
         toast.success('Service logo removed');
       }
     } else {

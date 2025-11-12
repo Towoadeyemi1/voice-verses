@@ -26,8 +26,8 @@ const ServicePlanner = () => {
     loadServices();
   }, [selectedDate]);
 
-  const loadServices = () => {
-    const allServices = ServiceStorage.getServices();
+  const loadServices = async () => {
+    const allServices = await ServiceStorage.getServices();
     setServices(allServices);
   };
 
@@ -37,7 +37,7 @@ const ServicePlanner = () => {
     ).sort((a, b) => a.startTime.localeCompare(b.startTime));
   };
 
-  const handleCreateService = () => {
+  const handleCreateService = async () => {
     const now = new Date();
     const currentTime = now.toTimeString().slice(0, 5); // Format: "HH:MM"
     
@@ -49,31 +49,35 @@ const ServicePlanner = () => {
       sections: [],
       isTemplate: false,
     };
-    ServiceStorage.saveService(newService);
-    loadServices();
+    await ServiceStorage.saveService(newService);
+    await loadServices();
     toast.success('Service created');
     navigate(`/service-builder/${newService.id}`);
   };
 
-  const handleDeleteService = (id: string) => {
-    ServiceStorage.deleteService(id);
-    loadServices();
+  const handleDeleteService = async (id: string) => {
+    await ServiceStorage.deleteService(id);
+    await loadServices();
     toast.success('Service deleted');
   };
 
-  const handleDuplicateService = (service: Service) => {
+  const handleDuplicateService = async (service: Service) => {
     const duplicate: Service = {
       ...service,
       id: Date.now().toString(),
       name: `${service.name} (Copy)`,
     };
-    ServiceStorage.saveService(duplicate);
-    loadServices();
+    await ServiceStorage.saveService(duplicate);
+    await loadServices();
     toast.success('Service duplicated');
   };
 
   const todayServices = getServicesForDate(selectedDate);
-  const templates = ServiceStorage.getTemplates();
+  const [templates, setTemplates] = useState<Service[]>([]);
+  
+  useEffect(() => {
+    ServiceStorage.getTemplates().then(setTemplates);
+  }, [services]);
 
   const handleOpenLowerThird = () => {
     window.open('/lower-third', '_blank', 'width=1280,height=720');
@@ -267,15 +271,15 @@ const ServicePlanner = () => {
                     size="sm"
                     variant="outline"
                     className="w-full"
-                    onClick={() => {
+                    onClick={async () => {
                       const newService: Service = {
                         ...template,
                         id: Date.now().toString(),
                         date: selectedDate,
                         isTemplate: false,
                       };
-                      ServiceStorage.saveService(newService);
-                      loadServices();
+                      await ServiceStorage.saveService(newService);
+                      await loadServices();
                       toast.success('Service created from template');
                     }}
                   >

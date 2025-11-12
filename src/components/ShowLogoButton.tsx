@@ -11,12 +11,12 @@ interface ShowLogoButtonProps {
 }
 
 export const ShowLogoButton = ({ serviceId, variant = 'outline', size = 'default', className }: ShowLogoButtonProps) => {
-  const handleShowLogo = () => {
+  const handleShowLogo = async () => {
     let logoUrl = '';
     
     // Try to get service-specific logo first
     if (serviceId) {
-      const services = ServiceStorage.getServices();
+      const services = await ServiceStorage.getServices();
       const service = services.find(s => s.id === serviceId);
       logoUrl = service?.serviceLogo || '';
     }

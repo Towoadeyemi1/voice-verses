@@ -76,8 +76,8 @@ const Presenter = () => {
     };
   }, []);
 
-  const loadServices = () => {
-    const allServices = ServiceStorage.getServices().filter(s => !s.isTemplate);
+  const loadServices = async () => {
+    const allServices = (await ServiceStorage.getServices()).filter(s => !s.isTemplate);
     setServices(allServices);
   };
 

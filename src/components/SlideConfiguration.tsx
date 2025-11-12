@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Slide } from '@/types/service';
+import { Slide, MediaItem } from '@/types/service';
 import { Settings2, Image as ImageIcon } from 'lucide-react';
 import { ServiceStorage } from '@/lib/serviceStorage';
 
@@ -32,8 +32,15 @@ export const SlideConfiguration = ({ slide, onUpdate }: SlideConfigurationProps)
   const [linesPerSlide, setLinesPerSlide] = useState(slide.textFormatting?.linesPerSlide || 4);
   const [fontSize, setFontSize] = useState(slide.textFormatting?.fontSize || 'large');
   const [alignment, setAlignment] = useState(slide.textFormatting?.alignment || 'center');
+  const [media, setMedia] = useState<MediaItem[]>([]);
 
-  const media = ServiceStorage.getMedia().filter(m => m.type === 'image' && m.url);
+  useEffect(() => {
+    if (isOpen) {
+      ServiceStorage.getMedia().then(items => {
+        setMedia(items.filter(m => m.type === 'image' && m.url));
+      });
+    }
+  }, [isOpen]);
 
   const handleSave = () => {
     const updatedSlide: Slide = {

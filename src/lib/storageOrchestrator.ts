@@ -42,7 +42,7 @@ class StorageOrchestrator {
     // If IndexedDB has recent data, use it
     if (indexedState.services.length > 0 || indexedState.media.length > 0) {
       console.log('Restored from IndexedDB');
-      this.applyState(indexedState);
+      await this.applyState(indexedState);
       
       // Sync with Azure in background
       if (navigator.onLine && azureSyncService.isEnabled()) {
@@ -65,7 +65,7 @@ class StorageOrchestrator {
           settings: {},
           lastSync: new Date(),
         };
-        this.applyState(state);
+        await this.applyState(state);
         await indexedDBService.saveAppState(state);
         return;
       }
@@ -84,7 +84,7 @@ class StorageOrchestrator {
           settings: {},
           lastSync: new Date(),
         };
-        this.applyState(state);
+        await this.applyState(state);
         await indexedDBService.saveAppState(state);
       }
     }
@@ -92,14 +92,18 @@ class StorageOrchestrator {
     console.log('No previous state found, starting fresh');
   }
 
-  private applyState(state: AppState): void {
-    // Apply to localStorage (for backward compatibility)
+  private async applyState(state: AppState): Promise<void> {
+    // Apply to ServiceStorage (using IndexedDB)
     if (state.services.length > 0) {
-      state.services.forEach(service => ServiceStorage.saveService(service));
+      for (const service of state.services) {
+        await ServiceStorage.saveService(service);
+      }
     }
     
     if (state.media.length > 0) {
-      state.media.forEach(item => ServiceStorage.saveMediaItem(item));
+      for (const item of state.media) {
+        await ServiceStorage.saveMediaItem(item);
+      }
     }
   }
 
@@ -112,7 +116,7 @@ class StorageOrchestrator {
         // Simple conflict resolution: use Azure if it's newer
         if (new Date(azureState.lastSync) > currentState.lastSync) {
           console.log('Azure has newer data, updating local...');
-          this.applyState(azureState);
+          await this.applyState(azureState);
           await indexedDBService.saveAppState(azureState);
         }
       }
@@ -122,13 +126,10 @@ class StorageOrchestrator {
   }
 
   async saveService(service: Service): Promise<void> {
-    // Save to localStorage first (immediate)
-    ServiceStorage.saveService(service);
+    // Save to ServiceStorage (using IndexedDB)
+    await ServiceStorage.saveService(service);
     
-    const services = ServiceStorage.getServices();
-    
-    // Save to IndexedDB (fast)
-    await indexedDBService.saveServices(services);
+    const services = await ServiceStorage.getServices();
     
     // Save to file system (background)
     if (await fileSystemService.hasDirectoryAccess()) {
@@ -142,9 +143,9 @@ class StorageOrchestrator {
   }
 
   async saveMediaItem(item: MediaItem): Promise<void> {
-    ServiceStorage.saveMediaItem(item);
+    await ServiceStorage.saveMediaItem(item);
     
-    const media = ServiceStorage.getMedia();
+    const media = await ServiceStorage.getMedia();
     
     await indexedDBService.saveMedia(media);
     
@@ -170,8 +171,8 @@ class StorageOrchestrator {
 
   private async syncToAzure(): Promise<void> {
     try {
-      const services = ServiceStorage.getServices();
-      const media = ServiceStorage.getMedia();
+      const services = await ServiceStorage.getServices();
+      const media = await ServiceStorage.getMedia();
       const state: AppState = {
         services,
         media,
@@ -217,8 +218,8 @@ class StorageOrchestrator {
     const success = await fileSystemService.requestDirectory();
     if (success) {
       // Sync current data to file system
-      const services = ServiceStorage.getServices();
-      const media = ServiceStorage.getMedia();
+      const services = await ServiceStorage.getServices();
+      const media = await ServiceStorage.getMedia();
       await fileSystemService.saveServices(services);
       await fileSystemService.saveMedia(media);
     }

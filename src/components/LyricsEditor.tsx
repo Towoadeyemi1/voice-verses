@@ -68,7 +68,7 @@ export function LyricsEditor({ open, onClose, onSave, initialSongTitle = '', ini
 
   useEffect(() => {
     if (open) {
-      setMedia(ServiceStorage.getMedia());
+      ServiceStorage.getMedia().then(setMedia);
     }
   }, [open]);
 

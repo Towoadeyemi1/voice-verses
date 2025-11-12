@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ServiceSubsection } from '@/types/service';
+import { ServiceSubsection, MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { Image as ImageIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,7 +18,15 @@ export const SubsectionBackgroundConfig = ({ subsection, onUpdate }: SubsectionB
   const [isOpen, setIsOpen] = useState(false);
   const [backgroundUrl, setBackgroundUrl] = useState(subsection.backgroundMedia?.url || 'none');
   const [opacity, setOpacity] = useState(subsection.backgroundMedia?.opacity || 0.3);
-  const media = ServiceStorage.getMedia().filter(m => m.type === 'image' && m.url);
+  const [media, setMedia] = useState<MediaItem[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      ServiceStorage.getMedia().then(items => {
+        setMedia(items.filter(m => m.type === 'image' && m.url));
+      });
+    }
+  }, [isOpen]);
 
   const handleSave = () => {
     const updated: ServiceSubsection = {

@@ -5,6 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ServiceStorage } from '@/lib/serviceStorage';
+import { MediaItem } from '@/types/service';
 import { Book, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -23,7 +24,13 @@ const defaultConfig: ScriptureBackgroundConfig = {
 
 export const ScriptureBackgroundSettings = () => {
   const [config, setConfig] = useState<ScriptureBackgroundConfig>(defaultConfig);
-  const media = ServiceStorage.getMedia().filter(m => m.type === 'image' && m.url);
+  const [media, setMedia] = useState<MediaItem[]>([]);
+
+  useEffect(() => {
+    ServiceStorage.getMedia().then(items => {
+      setMedia(items.filter(m => m.type === 'image' && m.url));
+    });
+  }, []);
 
   useEffect(() => {
     const savedConfig = localStorage.getItem('cornerstone-scripture-background');

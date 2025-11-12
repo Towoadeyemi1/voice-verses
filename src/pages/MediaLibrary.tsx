@@ -49,8 +49,8 @@ const MediaLibrary = () => {
     loadMedia();
   }, []);
 
-  const loadMedia = () => {
-    setMedia(ServiceStorage.getMedia());
+  const loadMedia = async () => {
+    setMedia(await ServiceStorage.getMedia());
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

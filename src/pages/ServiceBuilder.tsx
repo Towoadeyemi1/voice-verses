@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, AnnouncementSlide, BlankSlide, ServiceSection, ServiceSubsection } from '@/types/service';
+import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, AnnouncementSlide, BlankSlide, ServiceSection, ServiceSubsection, MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVerse } from '@/types/bible';
@@ -146,7 +146,11 @@ const ServiceBuilder = () => {
   const [scriptureReference, setScriptureReference] = useState('');
   const [showLyricsEditor, setShowLyricsEditor] = useState(false);
   const [editingLyricsContext, setEditingLyricsContext] = useState<{ sectionId: string; subsectionId: string; songTitle: string } | null>(null);
-  const media = ServiceStorage.getMedia();
+  const [media, setMedia] = useState<MediaItem[]>([]);
+
+  useEffect(() => {
+    ServiceStorage.getMedia().then(setMedia);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -157,28 +161,29 @@ const ServiceBuilder = () => {
 
   useEffect(() => {
     if (serviceId) {
-      const services = ServiceStorage.getServices();
-      const found = services.find(s => s.id === serviceId);
-      if (found) {
-        setService(found);
-        if (found.sections?.length > 0) {
-          setSelectedSection(found.sections[0].id);
-          if (found.sections[0].subsections?.length > 0) {
-            setSelectedSubsection(found.sections[0].subsections[0].id);
+      ServiceStorage.getServices().then(services => {
+        const found = services.find(s => s.id === serviceId);
+        if (found) {
+          setService(found);
+          if (found.sections?.length > 0) {
+            setSelectedSection(found.sections[0].id);
+            if (found.sections[0].subsections?.length > 0) {
+              setSelectedSubsection(found.sections[0].subsections[0].id);
+            }
           }
+        } else {
+          toast.error('Service not found');
+          navigate('/service-planner');
         }
-      } else {
-        toast.error('Service not found');
-        navigate('/service-planner');
-      }
+      });
     }
   }, [serviceId, navigate]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     console.log('handleSave called', { service, serviceId: service?.id });
     if (service) {
       try {
-        ServiceStorage.saveService(service);
+        await ServiceStorage.saveService(service);
         console.log('Service saved successfully');
         toast.success('Service saved');
       } catch (error) {
@@ -195,7 +200,7 @@ const ServiceBuilder = () => {
     navigate('/service-planner');
   };
 
-  const handleSaveAsTemplate = () => {
+  const handleSaveAsTemplate = async () => {
     if (!service) return;
     const templateName = prompt('Enter template name:');
     if (!templateName) return;
@@ -205,7 +210,7 @@ const ServiceBuilder = () => {
       isTemplate: true,
       templateName,
     };
-    ServiceStorage.saveService(template);
+    await ServiceStorage.saveService(template);
     toast.success('Template saved');
   };
 
