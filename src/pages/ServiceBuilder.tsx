@@ -146,8 +146,6 @@ const ServiceBuilder = () => {
   const [scriptureReference, setScriptureReference] = useState('');
   const [showLyricsEditor, setShowLyricsEditor] = useState(false);
   const [editingLyricsContext, setEditingLyricsContext] = useState<{ sectionId: string; subsectionId: string; songTitle: string } | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
   const media = ServiceStorage.getMedia();
 
   const sensors = useSensors(
@@ -185,10 +183,6 @@ const ServiceBuilder = () => {
 
   const handleCreateNewService = () => {
     navigate('/service-planner');
-  };
-
-  const handleOpenLowerThird = () => {
-    window.open('/lower-third', '_blank', 'width=1280,height=720');
   };
 
   const handleSaveAsTemplate = () => {
@@ -1085,11 +1079,6 @@ Chorus line 2"`;
         <PageHeader
           title="Service Builder"
           description={service.name}
-          showSettings={showSettings}
-          onToggleSettings={() => setShowSettings(!showSettings)}
-          showDisplayMonitor={showDisplayMonitor}
-          onToggleDisplayMonitor={() => setShowDisplayMonitor(!showDisplayMonitor)}
-          onOpenLowerThird={handleOpenLowerThird}
           actions={
             <>
               <Button onClick={handleCreateNewService} variant="outline" size="default">
@@ -1110,20 +1099,6 @@ Chorus line 2"`;
 
         <div className="space-y-4 sm:space-y-6">
           <ModeNav />
-
-          {/* Settings Panel */}
-          {showSettings && (
-            <div className="animate-fade-in">
-              <SettingsPanel onClose={() => setShowSettings(false)} />
-            </div>
-          )}
-
-          {/* Display Monitor */}
-          {showDisplayMonitor && (
-            <div className="animate-fade-in">
-              <DisplayMonitor />
-            </div>
-          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
