@@ -1,4 +1,5 @@
 import { Slide } from '@/types/service';
+import { useEffect, useRef, useState } from 'react';
 
 interface SlideDisplayProps {
   slide: Slide | null;
@@ -6,22 +7,51 @@ interface SlideDisplayProps {
 }
 
 export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const container = containerRef.current;
+        const baseWidth = 1920;
+        const baseHeight = 1080;
+        const scaleX = container.clientWidth / baseWidth;
+        const scaleY = container.clientHeight / baseHeight;
+        setScale(Math.min(scaleX, scaleY));
+      }
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [slide]);
+
   if (!slide) {
     return (
-      <div className={`flex items-center justify-center h-full ${className}`}>
-        <p className="text-4xl text-muted-foreground">No slide selected</p>
+      <div ref={containerRef} className={`flex items-center justify-center h-full w-full ${className}`}>
+        <p style={{ fontSize: `${Math.max(24, 48 * scale)}px` }} className="text-muted-foreground">
+          No slide selected
+        </p>
       </div>
     );
   }
 
   const fontSize = slide.textFormatting?.fontSize || 'large';
   const alignment = slide.textFormatting?.alignment || 'center';
-  const fontSizeClasses = {
-    small: 'text-3xl',
-    medium: 'text-4xl',
-    large: 'text-5xl',
-    xlarge: 'text-6xl',
+  const fontSizeMap = {
+    small: 48,
+    medium: 64,
+    large: 80,
+    xlarge: 96,
   };
+  const baseFontSize = fontSizeMap[fontSize];
+  const scaledFontSize = Math.max(16, baseFontSize * scale);
+  
   const alignmentClasses = {
     left: 'text-left',
     center: 'text-center',
@@ -37,15 +67,21 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
   switch (slide.type) {
     case 'scripture':
       return (
-        <div className={`relative flex flex-col items-center justify-center h-full p-12 ${className}`} style={backgroundStyle}>
+        <div ref={containerRef} className={`relative flex flex-col items-center justify-center h-full w-full ${className}`} style={{ ...backgroundStyle, padding: `${Math.max(16, 64 * scale)}px` }}>
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center">
-            <div className={`text-3xl font-bold text-primary mb-8 ${alignmentClasses[alignment]}`}>
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-full">
+            <div 
+              className={`font-bold text-primary ${alignmentClasses[alignment]}`}
+              style={{ fontSize: `${Math.max(20, 48 * scale)}px`, marginBottom: `${Math.max(16, 32 * scale)}px` }}
+            >
               {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
             </div>
-            <div className={`${fontSizeClasses[fontSize]} leading-relaxed ${alignmentClasses[alignment]} max-w-5xl`}>
+            <div 
+              className={`leading-relaxed ${alignmentClasses[alignment]}`}
+              style={{ fontSize: `${scaledFontSize}px`, maxWidth: '90%' }}
+            >
               {slide.verse.text}
             </div>
           </div>
@@ -54,23 +90,35 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
 
     case 'lyrics':
       return (
-        <div className={`relative flex flex-col items-center justify-center h-full p-12 ${className}`} style={backgroundStyle}>
+        <div ref={containerRef} className={`relative flex flex-col items-center justify-center h-full w-full ${className}`} style={{ ...backgroundStyle, padding: `${Math.max(16, 64 * scale)}px` }}>
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center">
-            <div className={`text-2xl font-semibold text-primary mb-4 ${alignmentClasses[alignment]}`}>
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-full">
+            <div 
+              className={`font-semibold text-primary ${alignmentClasses[alignment]}`}
+              style={{ fontSize: `${Math.max(18, 36 * scale)}px`, marginBottom: `${Math.max(8, 16 * scale)}px` }}
+            >
               {slide.songTitle}
             </div>
             {slide.section && (
-              <div className={`text-xl text-muted-foreground mb-6 uppercase ${alignmentClasses[alignment]}`}>
+              <div 
+                className={`text-muted-foreground uppercase ${alignmentClasses[alignment]}`}
+                style={{ fontSize: `${Math.max(14, 28 * scale)}px`, marginBottom: `${Math.max(12, 24 * scale)}px` }}
+              >
                 {slide.section}
               </div>
             )}
-            <div className={`${fontSizeClasses[fontSize]} leading-relaxed ${alignmentClasses[alignment]} max-w-4xl whitespace-pre-line`}>
+            <div 
+              className={`leading-relaxed ${alignmentClasses[alignment]} whitespace-pre-line`}
+              style={{ fontSize: `${scaledFontSize}px`, maxWidth: '90%' }}
+            >
               {slide.content}
             </div>
-            <div className="text-lg text-muted-foreground mt-8">
+            <div 
+              className="text-muted-foreground"
+              style={{ fontSize: `${Math.max(12, 24 * scale)}px`, marginTop: `${Math.max(16, 32 * scale)}px` }}
+            >
               {slide.slideNumber} / {slide.totalSlides}
             </div>
           </div>
@@ -79,15 +127,15 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
 
     case 'image':
       return (
-        <div className={`relative h-full ${className}`}>
+        <div ref={containerRef} className={`relative h-full w-full ${className}`}>
           <img
             src={slide.imageUrl}
             alt={slide.title}
             className="w-full h-full object-cover"
           />
           {slide.caption && (
-            <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-6">
-              <p className="text-3xl text-center">{slide.caption}</p>
+            <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white" style={{ padding: `${Math.max(12, 32 * scale)}px` }}>
+              <p className="text-center" style={{ fontSize: `${Math.max(18, 48 * scale)}px` }}>{slide.caption}</p>
             </div>
           )}
         </div>
@@ -95,18 +143,25 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
 
     case 'announcement':
       return (
-        <div className={`flex flex-col items-center justify-center h-full p-12 ${className}`}>
+        <div ref={containerRef} className={`flex flex-col items-center justify-center h-full w-full ${className}`} style={{ padding: `${Math.max(16, 64 * scale)}px` }}>
           {slide.imageUrl && (
             <img
               src={slide.imageUrl}
               alt={slide.title}
-              className="max-h-64 mb-8 rounded-lg"
+              className="rounded-lg"
+              style={{ maxHeight: `${Math.max(100, 256 * scale)}px`, marginBottom: `${Math.max(16, 32 * scale)}px` }}
             />
           )}
-          <div className="text-4xl font-bold text-primary mb-6">
+          <div 
+            className="font-bold text-primary"
+            style={{ fontSize: `${Math.max(24, 64 * scale)}px`, marginBottom: `${Math.max(12, 24 * scale)}px` }}
+          >
             {slide.title}
           </div>
-          <div className="text-3xl leading-relaxed text-center max-w-4xl whitespace-pre-line">
+          <div 
+            className="leading-relaxed text-center whitespace-pre-line"
+            style={{ fontSize: `${Math.max(18, 48 * scale)}px`, maxWidth: '90%' }}
+          >
             {slide.content}
           </div>
         </div>
@@ -114,8 +169,8 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
 
     default:
       return (
-        <div className={`flex items-center justify-center h-full ${className}`}>
-          <p className="text-2xl text-muted-foreground">Unknown slide type</p>
+        <div ref={containerRef} className={`flex items-center justify-center h-full w-full ${className}`}>
+          <p className="text-muted-foreground" style={{ fontSize: `${Math.max(18, 36 * scale)}px` }}>Unknown slide type</p>
         </div>
       );
   }

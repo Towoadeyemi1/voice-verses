@@ -16,6 +16,7 @@ import { ShowLogoButton } from '@/components/ShowLogoButton';
 import { cn } from '@/lib/utils';
 import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
 import { BibleVerse } from '@/types/bible';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 const Presenter = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -281,10 +282,10 @@ const Presenter = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Top Control Bar */}
-      <div className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
-        <div className="container mx-auto px-4 py-3">
+      <div className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 flex-shrink-0">
+        <div className="w-full px-6 py-3">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Button
@@ -366,8 +367,8 @@ const Presenter = () => {
       </div>
 
       {!currentService ? (
-        <div className="container mx-auto px-4 py-16">
-          <Card className="p-12 text-center">
+        <div className="flex-1 flex items-center justify-center px-6 py-16">
+          <Card className="p-12 text-center max-w-2xl">
             <Monitor className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="text-2xl font-semibold mb-2">No Service Selected</h2>
             <p className="text-muted-foreground mb-6">
@@ -379,10 +380,10 @@ const Presenter = () => {
           </Card>
         </div>
       ) : (
-        <div className="container mx-auto px-4 py-6">
-          <div className="space-y-6">
-            {/* Voice Visualizer */}
-            {isVoiceActive && (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Voice Visualizer */}
+          {isVoiceActive && (
+            <div className="px-6 pt-4 flex-shrink-0">
               <Card className="p-4">
                 <div className="space-y-3">
                   <AudioVisualizer isListening={isVoiceActive} volume={audioVolume} />
@@ -394,92 +395,95 @@ const Presenter = () => {
                   )}
                 </div>
               </Card>
-            )}
-            
-            {/* Display Monitor Section */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Live Display Outputs</h3>
-              <DisplayMonitor />
-            </Card>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Preview Area */}
-              <div className="lg:col-span-2 space-y-4">
-              {/* Presentation Controls */}
-              <Card className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-sm font-medium">
-                    Slide {currentIndex + 1} of {allSlides.length}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {!isPresenting ? (
-                      <Button onClick={handleStart} size="sm">
-                        <Play className="w-4 h-4 mr-2" />
-                        Start
+            </div>
+          )}
+          
+          {/* Main Content with Resizable Panels */}
+          <ResizablePanelGroup direction="horizontal" className="flex-1 px-6 py-4">
+            {/* Left Panel - Preview and Controls */}
+            <ResizablePanel defaultSize={65} minSize={40}>
+              <div className="h-full flex flex-col gap-4 pr-3">
+                {/* Presentation Controls */}
+                <Card className="p-4 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium">
+                      Slide {currentIndex + 1} of {allSlides.length}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!isPresenting ? (
+                        <Button onClick={handleStart} size="sm">
+                          <Play className="w-4 h-4 mr-2" />
+                          Start
+                        </Button>
+                      ) : (
+                        <Button onClick={handleStop} variant="destructive" size="sm">
+                          <Square className="w-4 h-4 mr-2" />
+                          Stop
+                        </Button>
+                      )}
+                      <Button
+                        onClick={handlePrevious}
+                        disabled={currentIndex === 0}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
                       </Button>
-                    ) : (
-                      <Button onClick={handleStop} variant="destructive" size="sm">
-                        <Square className="w-4 h-4 mr-2" />
-                        Stop
+                      <Button
+                        onClick={handleNext}
+                        disabled={currentIndex >= allSlides.length - 1}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <ChevronRight className="w-4 h-4" />
                       </Button>
-                    )}
-                    <Button
-                      onClick={handlePrevious}
-                      disabled={currentIndex === 0}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      onClick={handleNext}
-                      disabled={currentIndex >= allSlides.length - 1}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
+                    </div>
                   </div>
-                </div>
+                </Card>
 
                 {/* Current Slide Preview */}
-                <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-primary/20">
-                  <SlideDisplay slide={currentSlide} className="h-full" />
-                </div>
-
-                {currentSlide && (
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground">
+                <Card className="flex-1 p-4 overflow-hidden flex flex-col min-h-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold">Current Slide</h3>
+                    {currentSlide && <SlideConfiguration slide={currentSlide} onUpdate={handleUpdateSlide} />}
+                  </div>
+                  <div className="flex-1 bg-black rounded-lg overflow-hidden border-2 border-primary/20 min-h-0">
+                    <SlideDisplay slide={currentSlide} className="h-full w-full" />
+                  </div>
+                  {currentSlide && (
+                    <div className="mt-3 text-sm text-muted-foreground">
                       <span className="font-medium">{currentSlide.title}</span>
                       <span className="mx-2">•</span>
                       <span className="capitalize">{currentSlide.type}</span>
                     </div>
-                    <SlideConfiguration slide={currentSlide} onUpdate={handleUpdateSlide} />
-                  </div>
-                )}
-              </Card>
-
-              {/* Next Slide Preview */}
-              {nextSlide && (
-                <Card className="p-4">
-                  <div className="text-sm font-medium mb-2 text-muted-foreground">
-                    Next Slide
-                  </div>
-                  <div className="aspect-video bg-black/50 rounded-lg overflow-hidden border">
-                    <SlideDisplay slide={nextSlide} className="h-full opacity-60" />
-                  </div>
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    {nextSlide.title}
-                  </div>
+                  )}
                 </Card>
-              )}
-            </div>
 
-            {/* Playlist Sidebar */}
-            <div className="lg:col-span-1">
-              <Card className="p-4 sticky top-4">
-                <h3 className="font-semibold mb-3">Playlist</h3>
-                <div className="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2">
+                {/* Next Slide Preview */}
+                {nextSlide && (
+                  <Card className="p-4 flex-shrink-0">
+                    <div className="text-sm font-medium mb-2 text-muted-foreground">
+                      Next Slide
+                    </div>
+                    <div className="aspect-video bg-black/50 rounded-lg overflow-hidden border">
+                      <SlideDisplay slide={nextSlide} className="h-full w-full opacity-60" />
+                    </div>
+                    <div className="mt-2 text-sm text-muted-foreground truncate">
+                      {nextSlide.title}
+                    </div>
+                  </Card>
+                )}
+              </div>
+            </ResizablePanel>
+
+            <ResizableHandle withHandle />
+
+            {/* Right Panel - Playlist */}
+            <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
+              <div className="h-full flex flex-col pl-3">
+                <Card className="flex-1 p-4 flex flex-col min-h-0">
+                  <h3 className="font-semibold mb-3 flex-shrink-0">Playlist</h3>
+                  <div className="flex-1 space-y-2 overflow-y-auto pr-2 min-h-0">
                   {allSlides.map((slide, index) => (
                     <button
                       key={slide.id}
@@ -515,14 +519,13 @@ const Presenter = () => {
                       </div>
                     </button>
                   ))}
-                </div>
-              </Card>
+                  </div>
+                </Card>
               </div>
-            </div>
-          </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
       )}
-
     </div>
   );
 };
