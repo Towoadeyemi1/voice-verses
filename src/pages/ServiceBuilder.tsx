@@ -58,6 +58,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PageHeader } from '@/components/PageHeader';
+import { ModeNav } from '@/components/ModeNav';
+import { SettingsPanel } from '@/components/SettingsPanel';
+import { DisplayMonitor } from '@/components/DisplayMonitor';
 
 // Sortable wrapper for sections
 function SortableSection({ section, children }: { section: ServiceSection; children: React.ReactNode }) {
@@ -142,6 +146,8 @@ const ServiceBuilder = () => {
   const [scriptureReference, setScriptureReference] = useState('');
   const [showLyricsEditor, setShowLyricsEditor] = useState(false);
   const [editingLyricsContext, setEditingLyricsContext] = useState<{ sectionId: string; subsectionId: string; songTitle: string } | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
   const media = ServiceStorage.getMedia();
 
   const sensors = useSensors(
@@ -175,6 +181,14 @@ const ServiceBuilder = () => {
       ServiceStorage.saveService(service);
       toast.success('Service saved');
     }
+  };
+
+  const handleCreateNewService = () => {
+    navigate('/service-planner');
+  };
+
+  const handleOpenLowerThird = () => {
+    window.open('/lower-third', '_blank', 'width=1280,height=720');
   };
 
   const handleSaveAsTemplate = () => {
@@ -1068,23 +1082,48 @@ Chorus line 2"`;
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Service Builder</h1>
-            <p className="text-muted-foreground">{service.name}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleSaveAsTemplate} variant="outline">
-              Save as Template
-            </Button>
-            <Button onClick={handleSave}>
-              <Save className="w-4 h-4 mr-2" />
-              Save
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/service-planner')}>
-              Back
-            </Button>
-          </div>
+        <PageHeader
+          title="Service Builder"
+          description={service.name}
+          showSettings={showSettings}
+          onToggleSettings={() => setShowSettings(!showSettings)}
+          showDisplayMonitor={showDisplayMonitor}
+          onToggleDisplayMonitor={() => setShowDisplayMonitor(!showDisplayMonitor)}
+          onOpenLowerThird={handleOpenLowerThird}
+          actions={
+            <>
+              <Button onClick={handleCreateNewService} variant="outline" size="default">
+                <Plus className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Service</span>
+              </Button>
+              <Button onClick={handleSaveAsTemplate} variant="outline" size="default" className="hidden sm:flex">
+                <Copy className="w-4 h-4 sm:mr-2" />
+                <span className="hidden lg:inline">Save as Template</span>
+              </Button>
+              <Button onClick={handleSave} size="default">
+                <Save className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Save</span>
+              </Button>
+            </>
+          }
+        />
+
+        <div className="space-y-4 sm:space-y-6">
+          <ModeNav />
+
+          {/* Settings Panel */}
+          {showSettings && (
+            <div className="animate-fade-in">
+              <SettingsPanel onClose={() => setShowSettings(false)} />
+            </div>
+          )}
+
+          {/* Display Monitor */}
+          {showDisplayMonitor && (
+            <div className="animate-fade-in">
+              <DisplayMonitor />
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
