@@ -45,9 +45,29 @@ const Presenter = () => {
       const service = services.find(s => s.id === serviceId);
       if (service) {
         setCurrentService(service);
+        
+        // Show service logo by default when not presenting
+        if (service.serviceLogo && !isPresenting) {
+          syncService.broadcast({
+            type: 'SLIDE_UPDATE',
+            data: { slide: null }
+          });
+          
+          // Broadcast logo display
+          const channel = new BroadcastChannel('cornerstone-display');
+          channel.postMessage({
+            type: 'show-logo',
+            logoUrl: service.serviceLogo
+          });
+          localStorage.setItem('cornerstone-current-display', JSON.stringify({
+            type: 'show-logo',
+            logoUrl: service.serviceLogo
+          }));
+          channel.close();
+        }
       }
     }
-  }, [searchParams, services]);
+  }, [searchParams, services, isPresenting]);
 
   useEffect(() => {
     if (!isPresenting) return;
@@ -150,6 +170,21 @@ const Presenter = () => {
   const handleStop = () => {
     setIsPresenting(false);
     broadcastSlide(null, -1);
+    
+    // Show service logo when stopping presentation
+    if (currentService?.serviceLogo) {
+      const channel = new BroadcastChannel('cornerstone-display');
+      channel.postMessage({
+        type: 'show-logo',
+        logoUrl: currentService.serviceLogo
+      });
+      localStorage.setItem('cornerstone-current-display', JSON.stringify({
+        type: 'show-logo',
+        logoUrl: currentService.serviceLogo
+      }));
+      channel.close();
+    }
+    
     toast.info('Presentation stopped');
   };
 

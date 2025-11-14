@@ -8,18 +8,40 @@ export const DisplayMonitor = () => {
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [lowerThirdSettings, setLowerThirdSettings] = useState<any>(null);
   const [projectionSettings, setProjectionSettings] = useState<any>(null);
+  const [logoUrl, setLogoUrl] = useState<string>('');
 
   useEffect(() => {
     // Load settings
     const loadSettings = () => {
       const lowerThird = localStorage.getItem('cornerstone-lowerthird-settings');
       const projection = localStorage.getItem('cornerstone-settings');
+      const currentDisplay = localStorage.getItem('cornerstone-current-display');
       
       if (lowerThird) setLowerThirdSettings(JSON.parse(lowerThird));
       if (projection) setProjectionSettings(JSON.parse(projection));
+      
+      // Check for logo display
+      if (currentDisplay) {
+        try {
+          const displayData = JSON.parse(currentDisplay);
+          if (displayData.type === 'show-logo' && displayData.logoUrl) {
+            setLogoUrl(displayData.logoUrl);
+          }
+        } catch (e) {
+          console.error('Failed to parse display data', e);
+        }
+      }
     };
 
     loadSettings();
+
+    // Listen for logo display commands via BroadcastChannel
+    const displayChannel = new BroadcastChannel('cornerstone-display');
+    displayChannel.addEventListener('message', (event) => {
+      if (event.data?.type === 'show-logo' && event.data?.logoUrl) {
+        setLogoUrl(event.data.logoUrl);
+      }
+    });
 
     // Subscribe to slide updates
     const unsubscribe = syncService.subscribe((message) => {
@@ -56,6 +78,7 @@ export const DisplayMonitor = () => {
 
     return () => {
       unsubscribe();
+      displayChannel.close();
       window.removeEventListener('settings-updated', handleSettingsUpdate);
     };
   }, []);
@@ -75,6 +98,14 @@ export const DisplayMonitor = () => {
               <div className="w-[1920px] h-[1080px] origin-top-left" style={{ transform: 'scale(0.13)' }}>
                 <SlideDisplay slide={currentSlide} className="h-full w-full" />
               </div>
+            </div>
+          ) : logoUrl ? (
+            <div className="h-full flex items-center justify-center p-4">
+              <img 
+                src={logoUrl} 
+                alt="Service Logo" 
+                className="max-w-full max-h-full object-contain"
+              />
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-white/30">
