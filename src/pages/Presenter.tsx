@@ -525,7 +525,7 @@ const Presenter = () => {
 
             {/* Right Panel - Display Monitor and Current Slide */}
             <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
-              <div className="h-full flex flex-col pl-3 gap-4">
+              <div className="h-full flex flex-col pl-3 gap-4 overflow-hidden">
                 {/* Display Monitor at top */}
                 {showDisplayMonitor && (
                   <Card className="p-3 flex-shrink-0">
