@@ -26,6 +26,7 @@ const Presenter = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPresenting, setIsPresenting] = useState(false);
   const [editingSlideIndex, setEditingSlideIndex] = useState<number | null>(null);
+  const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
   
   // Voice activation
   const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -356,10 +357,19 @@ const Presenter = () => {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setShowDisplayMonitor(!showDisplayMonitor)}
+              >
+                <Monitor className="w-4 h-4 mr-2" />
+                {showDisplayMonitor ? 'Hide' : 'Show'} Displays
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleOpenWindows}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Open Displays
+                Open Windows
               </Button>
             </div>
           </div>
@@ -443,12 +453,12 @@ const Presenter = () => {
                 </Card>
 
                 {/* Current Slide Preview */}
-                <Card className="flex-1 p-4 overflow-hidden flex flex-col min-h-0">
+                <Card className="p-4 flex-shrink-0">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold">Current Slide</h3>
                     {currentSlide && <SlideConfiguration slide={currentSlide} onUpdate={handleUpdateSlide} />}
                   </div>
-                  <div className="flex-1 bg-black rounded-lg overflow-hidden border-2 border-primary/20 min-h-0">
+                  <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-primary/20">
                     <SlideDisplay slide={currentSlide} className="h-full w-full" />
                   </div>
                   {currentSlide && (
@@ -459,6 +469,14 @@ const Presenter = () => {
                     </div>
                   )}
                 </Card>
+                
+                {/* Display Monitor */}
+                {showDisplayMonitor && (
+                  <Card className="p-4 flex-shrink-0">
+                    <h3 className="font-semibold mb-3">Display Preview</h3>
+                    <DisplayMonitor />
+                  </Card>
+                )}
 
                 {/* Next Slide Preview */}
                 {nextSlide && (
