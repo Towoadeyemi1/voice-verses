@@ -391,7 +391,7 @@ const Presenter = () => {
         </div>
       ) : (
         <div className="flex-1 flex justify-center overflow-hidden">
-          <div className="w-full max-w-screen-2xl flex flex-col">
+          <div className="w-full max-w-screen-2xl flex flex-col h-full">
             {/* Voice Visualizer */}
             {isVoiceActive && (
               <div className="px-6 pt-4 flex-shrink-0">
