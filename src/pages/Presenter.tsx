@@ -411,8 +411,8 @@ const Presenter = () => {
           
           {/* Main Content with Resizable Panels */}
           <ResizablePanelGroup direction="horizontal" className="flex-1 px-6 py-4">
-            {/* Left Panel - Preview and Controls */}
-            <ResizablePanel defaultSize={65} minSize={40}>
+            {/* Left Panel - Playlist */}
+            <ResizablePanel defaultSize={60} minSize={40}>
               <div className="h-full flex flex-col gap-4 pr-3">
                 {/* Presentation Controls */}
                 <Card className="p-4 flex-shrink-0">
@@ -450,24 +450,6 @@ const Presenter = () => {
                       </Button>
                     </div>
                   </div>
-                </Card>
-
-                {/* Current Slide Preview */}
-                <Card className="p-4 flex-shrink-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold">Current Slide</h3>
-                    {currentSlide && <SlideConfiguration slide={currentSlide} onUpdate={handleUpdateSlide} />}
-                  </div>
-                  <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-primary/20">
-                    <SlideDisplay slide={currentSlide} className="h-full w-full" />
-                  </div>
-                  {currentSlide && (
-                    <div className="mt-3 text-sm text-muted-foreground">
-                      <span className="font-medium">{currentSlide.title}</span>
-                      <span className="mx-2">•</span>
-                      <span className="capitalize">{currentSlide.type}</span>
-                    </div>
-                  )}
                 </Card>
 
                 {/* Playlist organized by sections */}
@@ -541,15 +523,34 @@ const Presenter = () => {
 
             <ResizableHandle withHandle />
 
-            {/* Right Panel - Display Monitor */}
-            <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
-              <div className="h-full flex flex-col pl-3">
+            {/* Right Panel - Display Monitor and Current Slide */}
+            <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
+              <div className="h-full flex flex-col pl-3 gap-4">
+                {/* Display Monitor at top */}
                 {showDisplayMonitor && (
                   <Card className="p-3 flex-shrink-0">
                     <h3 className="font-semibold text-sm mb-2">Display Preview</h3>
                     <DisplayMonitor />
                   </Card>
                 )}
+
+                {/* Current Slide Preview */}
+                <Card className="p-4 flex-shrink-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold">Current Slide</h3>
+                    {currentSlide && <SlideConfiguration slide={currentSlide} onUpdate={handleUpdateSlide} />}
+                  </div>
+                  <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-primary/20">
+                    <SlideDisplay slide={currentSlide} className="h-full w-full" />
+                  </div>
+                  {currentSlide && (
+                    <div className="mt-3 text-sm text-muted-foreground">
+                      <span className="font-medium">{currentSlide.title}</span>
+                      <span className="mx-2">•</span>
+                      <span className="capitalize">{currentSlide.type}</span>
+                    </div>
+                  )}
+                </Card>
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
