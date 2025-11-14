@@ -501,8 +501,12 @@ const Presenter = () => {
                                       </div>
                                       
                                       {/* Mini preview */}
-                                      <div className="aspect-video bg-black/50 rounded overflow-hidden border border-border/50">
-                                        <SlideDisplay slide={slide} className="h-full scale-50 origin-top-left w-[200%]" />
+                                      <div className="aspect-video bg-black/50 rounded overflow-hidden border border-border/50 relative">
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                          <div className="w-full h-full scale-[0.2] origin-center">
+                                            <SlideDisplay slide={slide} className="w-[1920px] h-[1080px]" />
+                                          </div>
+                                        </div>
                                       </div>
                                       
                                       <div className="text-xs text-muted-foreground capitalize mt-1 truncate">
