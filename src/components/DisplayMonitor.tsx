@@ -13,7 +13,7 @@ export const DisplayMonitor = () => {
   useEffect(() => {
     // Load settings
     const loadSettings = () => {
-      const lowerThird = localStorage.getItem('cornerstone-lowerthird-settings');
+      const lowerThird = localStorage.getItem('cornerstone-lower-third-settings');
       const projection = localStorage.getItem('cornerstone-settings');
       const currentDisplay = localStorage.getItem('cornerstone-current-display');
       
@@ -155,9 +155,7 @@ export const DisplayMonitor = () => {
               )}
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center">
-              <TvMinimalPlay className="w-8 h-8 text-white/20" />
-            </div>
+            <div className="h-full" />
           )}
         </div>
       </div>
