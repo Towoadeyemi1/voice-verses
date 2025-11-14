@@ -410,10 +410,11 @@ const Presenter = () => {
           )}
           
           {/* Main Content with Resizable Panels */}
-          <ResizablePanelGroup direction="horizontal" className="flex-1 px-6 py-4">
-            {/* Left Panel - Playlist */}
-            <ResizablePanel defaultSize={60} minSize={40}>
-              <div className="h-full flex flex-col gap-4 pr-3">
+          <div className="flex-1 px-6 py-4 overflow-hidden">
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              {/* Left Panel - Playlist */}
+              <ResizablePanel defaultSize={60} minSize={40}>
+                <div className="h-full flex flex-col gap-4 pr-3 overflow-hidden">
                 {/* Presentation Controls */}
                 <Card className="p-4 flex-shrink-0">
                   <div className="flex items-center justify-between">
@@ -525,7 +526,7 @@ const Presenter = () => {
 
             {/* Right Panel - Display Monitor and Current Slide */}
             <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
-              <div className="h-full flex flex-col pl-3 gap-4 overflow-hidden">
+              <div className="h-full flex flex-col pl-3 gap-4 overflow-y-auto">
                 {/* Display Monitor at top */}
                 {showDisplayMonitor && (
                   <Card className="p-3 flex-shrink-0">
@@ -553,7 +554,8 @@ const Presenter = () => {
                 </Card>
               </div>
             </ResizablePanel>
-          </ResizablePanelGroup>
+            </ResizablePanelGroup>
+          </div>
           </div>
         </div>
       )}
