@@ -283,7 +283,7 @@ const Presenter = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Top Control Bar */}
       <div className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 flex-shrink-0">
         <div className="max-w-screen-2xl mx-auto px-6 py-3">
