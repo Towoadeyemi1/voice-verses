@@ -522,7 +522,7 @@ const Presenter = () => {
               </div>
             </ResizablePanel>
 
-            <ResizableHandle withHandle />
+            <ResizableHandle />
 
             {/* Right Panel - Display Monitor and Current Slide */}
             <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
