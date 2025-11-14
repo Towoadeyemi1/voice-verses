@@ -469,14 +469,6 @@ const Presenter = () => {
                     </div>
                   )}
                 </Card>
-                
-                {/* Display Monitor */}
-                {showDisplayMonitor && (
-                  <Card className="p-4 flex-shrink-0">
-                    <h3 className="font-semibold mb-3">Display Preview</h3>
-                    <DisplayMonitor />
-                  </Card>
-                )}
 
                 {/* Next Slide Preview */}
                 {nextSlide && (
@@ -499,45 +491,79 @@ const Presenter = () => {
 
             {/* Right Panel - Playlist */}
             <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
-              <div className="h-full flex flex-col pl-3">
+              <div className="h-full flex flex-col pl-3 gap-4">
+                {/* Display Monitor at top */}
+                {showDisplayMonitor && (
+                  <Card className="p-3 flex-shrink-0">
+                    <h3 className="font-semibold text-sm mb-2">Display Preview</h3>
+                    <DisplayMonitor />
+                  </Card>
+                )}
+
+                {/* Playlist organized by sections */}
                 <Card className="flex-1 p-4 flex flex-col min-h-0">
                   <h3 className="font-semibold mb-3 flex-shrink-0">Playlist</h3>
-                  <div className="flex-1 space-y-2 overflow-y-auto pr-2 min-h-0">
-                  {allSlides.map((slide, index) => (
-                    <button
-                      key={slide.id}
-                      onClick={() => handleJumpTo(index)}
-                      className={cn(
-                        "w-full text-left p-3 rounded-lg border transition-all",
-                        "hover:bg-accent hover:border-primary/50",
-                        currentIndex === index 
-                          ? "bg-primary/10 border-primary shadow-sm" 
-                          : "bg-card border-border"
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div className="text-sm font-medium truncate flex-1">
-                          {slide.title}
-                        </div>
-                        <div className={cn(
-                          "text-xs px-1.5 py-0.5 rounded",
-                          currentIndex === index 
-                            ? "bg-primary text-primary-foreground" 
-                            : "bg-muted text-muted-foreground"
-                        )}>
-                          {index + 1}
-                        </div>
+                  <div className="flex-1 space-y-4 overflow-y-auto pr-2 min-h-0">
+                    {currentService?.sections.map((section) => (
+                      <div key={section.id} className="space-y-2">
+                        <h4 className="text-sm font-semibold text-muted-foreground sticky top-0 bg-card z-10 py-1">
+                          {section.name}
+                        </h4>
+                        {section.subsections.map((subsection) => {
+                          const subsectionStartIndex = getAllSlides(currentService)
+                            .findIndex(s => subsection.slides.some(subSlide => subSlide.id === s.id));
+                          
+                          return (
+                            <div key={subsection.id} className="space-y-2">
+                              <div className="text-xs font-medium text-muted-foreground/80 px-1">
+                                {subsection.name}
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {subsection.slides.map((slide, slideIndex) => {
+                                  const globalIndex = subsectionStartIndex + slideIndex;
+                                  return (
+                                    <button
+                                      key={slide.id}
+                                      onClick={() => handleJumpTo(globalIndex)}
+                                      className={cn(
+                                        "text-left p-2 rounded-lg border transition-all",
+                                        "hover:bg-accent hover:border-primary/50",
+                                        currentIndex === globalIndex
+                                          ? "bg-primary/10 border-primary shadow-sm ring-2 ring-primary/20"
+                                          : "bg-card border-border"
+                                      )}
+                                    >
+                                      <div className="flex items-start justify-between gap-1 mb-1">
+                                        <div className="text-xs font-medium truncate flex-1">
+                                          {slide.title}
+                                        </div>
+                                        <div className={cn(
+                                          "text-xs px-1 py-0.5 rounded flex-shrink-0",
+                                          currentIndex === globalIndex
+                                            ? "bg-primary text-primary-foreground"
+                                            : "bg-muted text-muted-foreground"
+                                        )}>
+                                          {globalIndex + 1}
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Mini preview */}
+                                      <div className="aspect-video bg-black/50 rounded overflow-hidden border border-border/50">
+                                        <SlideDisplay slide={slide} className="h-full scale-50 origin-top-left w-[200%]" />
+                                      </div>
+                                      
+                                      <div className="text-xs text-muted-foreground capitalize mt-1 truncate">
+                                        {slide.type}
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className="text-xs text-muted-foreground capitalize">
-                        {slide.type}
-                      </div>
-                      
-                      {/* Mini preview */}
-                      <div className="mt-2 aspect-video bg-black/50 rounded overflow-hidden border border-border/50">
-                        <SlideDisplay slide={slide} className="h-full scale-50 origin-top-left w-[200%]" />
-                      </div>
-                    </button>
-                  ))}
+                    ))}
                   </div>
                 </Card>
               </div>
