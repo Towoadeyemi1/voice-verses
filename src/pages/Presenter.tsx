@@ -470,36 +470,6 @@ const Presenter = () => {
                   )}
                 </Card>
 
-                {/* Next Slide Preview */}
-                {nextSlide && (
-                  <Card className="p-4 flex-shrink-0">
-                    <div className="text-sm font-medium mb-2 text-muted-foreground">
-                      Next Slide
-                    </div>
-                    <div className="aspect-video bg-black/50 rounded-lg overflow-hidden border">
-                      <SlideDisplay slide={nextSlide} className="h-full w-full opacity-60" />
-                    </div>
-                    <div className="mt-2 text-sm text-muted-foreground truncate">
-                      {nextSlide.title}
-                    </div>
-                  </Card>
-                )}
-              </div>
-            </ResizablePanel>
-
-            <ResizableHandle withHandle />
-
-            {/* Right Panel - Playlist */}
-            <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
-              <div className="h-full flex flex-col pl-3 gap-4">
-                {/* Display Monitor at top */}
-                {showDisplayMonitor && (
-                  <Card className="p-3 flex-shrink-0">
-                    <h3 className="font-semibold text-sm mb-2">Display Preview</h3>
-                    <DisplayMonitor />
-                  </Card>
-                )}
-
                 {/* Playlist organized by sections */}
                 <Card className="flex-1 p-4 flex flex-col min-h-0">
                   <h3 className="font-semibold mb-3 flex-shrink-0">Playlist</h3>
@@ -518,7 +488,7 @@ const Presenter = () => {
                               <div className="text-xs font-medium text-muted-foreground/80 px-1">
                                 {subsection.name}
                               </div>
-                              <div className="grid grid-cols-2 gap-2">
+                              <div className="grid grid-cols-4 gap-2">
                                 {subsection.slides.map((slide, slideIndex) => {
                                   const globalIndex = subsectionStartIndex + slideIndex;
                                   return (
@@ -566,6 +536,20 @@ const Presenter = () => {
                     ))}
                   </div>
                 </Card>
+              </div>
+            </ResizablePanel>
+
+            <ResizableHandle withHandle />
+
+            {/* Right Panel - Display Monitor */}
+            <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
+              <div className="h-full flex flex-col pl-3">
+                {showDisplayMonitor && (
+                  <Card className="p-3 flex-shrink-0">
+                    <h3 className="font-semibold text-sm mb-2">Display Preview</h3>
+                    <DisplayMonitor />
+                  </Card>
+                )}
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
