@@ -26,7 +26,7 @@ const Presenter = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPresenting, setIsPresenting] = useState(false);
   const [editingSlideIndex, setEditingSlideIndex] = useState<number | null>(null);
-  const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
+  const [showDisplayMonitor, setShowDisplayMonitor] = useState(true);
   
   // Voice activation
   const [isVoiceActive, setIsVoiceActive] = useState(false);
