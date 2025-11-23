@@ -38,14 +38,19 @@ export const SlideCard = ({
   const getPreview = () => {
     if (slide.type === 'scripture') {
       return (
-        <div className="text-xs text-muted-foreground">
-          {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
+        <div className="space-y-1">
+          <div className="text-xs font-medium text-muted-foreground">
+            {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
+          </div>
+          <div className="text-xs text-muted-foreground line-clamp-3 break-words">
+            {slide.verse.text}
+          </div>
         </div>
       );
     }
     if (slide.type === 'lyrics') {
       return (
-        <div className="text-xs text-muted-foreground line-clamp-2">
+        <div className="text-xs text-muted-foreground line-clamp-4 whitespace-pre-wrap break-words">
           {slide.content}
         </div>
       );
@@ -61,7 +66,7 @@ export const SlideCard = ({
     }
     if (slide.type === 'announcement') {
       return (
-        <div className="text-xs text-muted-foreground line-clamp-2">
+        <div className="text-xs text-muted-foreground line-clamp-4 whitespace-pre-wrap break-words">
           {slide.content}
         </div>
       );
