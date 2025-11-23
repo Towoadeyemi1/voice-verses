@@ -144,18 +144,9 @@ export const DisplayMonitor = () => {
         </div>
         <div className="aspect-video bg-background rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide ? (
-            <div className="absolute inset-0 flex flex-col p-1.5">
-              <div className="text-center mb-1">
-                <p className="font-bold text-[9px] text-foreground truncate">
-                  {currentSlide.title}
-                </p>
-              </div>
-              <div className="flex-1 flex items-center justify-center relative">
-                <div className="w-full h-full bg-black/50 rounded-sm overflow-hidden relative">
-                  <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.11)' }}>
-                    <SlideDisplay slide={currentSlide} className="h-full w-full" />
-                  </div>
-                </div>
+            <div className="absolute inset-0">
+              <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.11)' }}>
+                <SlideDisplay slide={currentSlide} className="h-full w-full" />
               </div>
             </div>
           ) : (

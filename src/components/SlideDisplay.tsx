@@ -71,15 +71,15 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-8" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
+          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
             <div 
-              className={`font-bold text-primary ${alignmentClasses[alignment]} break-words w-full`}
+              className={`font-bold text-primary text-center break-words w-full`}
               style={{ fontSize: `${Math.max(20, 48 * scale)}px`, marginBottom: `${Math.max(16, 32 * scale)}px` }}
             >
               {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
             </div>
             <div 
-              className={`leading-relaxed ${alignmentClasses[alignment]} break-words w-full`}
+              className={`leading-relaxed text-center break-words w-full`}
               style={{ 
                 fontSize: `${scaledFontSize}px`,
                 lineHeight: '1.6'
@@ -99,21 +99,21 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
           )}
           <div className="relative z-10 flex flex-col items-center justify-center w-full h-full" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
             <div 
-              className={`font-semibold text-primary ${alignmentClasses[alignment]} break-words w-full`}
+              className={`font-semibold text-primary text-center break-words w-full`}
               style={{ fontSize: `${Math.max(18, 36 * scale)}px`, marginBottom: `${Math.max(8, 16 * scale)}px` }}
             >
               {slide.songTitle}
             </div>
             {slide.section && (
               <div 
-                className={`text-muted-foreground uppercase ${alignmentClasses[alignment]} break-words w-full`}
+                className={`text-muted-foreground uppercase text-center break-words w-full`}
                 style={{ fontSize: `${Math.max(14, 28 * scale)}px`, marginBottom: `${Math.max(12, 24 * scale)}px` }}
               >
                 {slide.section}
               </div>
             )}
             <div 
-              className={`leading-relaxed ${alignmentClasses[alignment]} whitespace-pre-line break-words w-full`}
+              className={`leading-relaxed text-center whitespace-pre-line break-words w-full`}
               style={{ 
                 fontSize: `${scaledFontSize}px`,
                 lineHeight: '1.6'
@@ -122,7 +122,7 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
               {slide.content}
             </div>
             <div 
-              className="text-muted-foreground"
+              className="text-muted-foreground text-center"
               style={{ fontSize: `${Math.max(12, 24 * scale)}px`, marginTop: `${Math.max(16, 32 * scale)}px` }}
             >
               {slide.slideNumber} / {slide.totalSlides}

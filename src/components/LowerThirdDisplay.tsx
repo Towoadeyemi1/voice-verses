@@ -141,16 +141,17 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
       className={`fixed inset-0 flex ${getPositionClasses()} pointer-events-none`}
       style={{ backgroundColor: '#00FF00' }}
     >
-      <div
-        className={`max-w-4xl transition-all duration-500 ${
-          show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        } ${getTemplateClasses()}`}
-        style={{ 
-          ...getBackgroundStyle(),
-          borderColor: settings.template === 'modern' ? settings.accentColor : undefined,
-          borderBottomColor: settings.template === 'minimal' ? settings.accentColor : undefined,
-        }}
-      >
+      {hasContent && (
+        <div
+          className={`max-w-4xl transition-all duration-500 ${
+            show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          } ${getTemplateClasses()}`}
+          style={{ 
+            ...getBackgroundStyle(),
+            borderColor: settings.template === 'modern' ? settings.accentColor : undefined,
+            borderBottomColor: settings.template === 'minimal' ? settings.accentColor : undefined,
+          }}
+        >
         {verse ? (
           // Scripture Display
           <div className="space-y-2">
@@ -220,7 +221,8 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
             </div>
           </div>
         ) : null}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
