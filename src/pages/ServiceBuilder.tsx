@@ -316,19 +316,24 @@ const ServiceBuilder = () => {
     event.target.value = '';
   };
 
-  const handleVerseSelect = (verse: BibleVerse) => {
+  const handleVerseSelect = async (verse: BibleVerse) => {
     if (!selectedSubsection) {
       toast.error('Please select a subsection first');
       return;
     }
-    const newSlide: ScriptureSlide = {
-      id: `slide-${Date.now()}`,
-      type: 'scripture',
-      title: `${verse.book} ${verse.chapter}:${verse.verse}`,
-      verse,
-    };
-    addSlideToSubsection(newSlide);
-    toast.success('Scripture slide added');
+    
+    // Import the splitter utility
+    const { splitScriptureSlide } = await import('@/lib/slideContentSplitter');
+    
+    // Split the verse if it's too long
+    const slides = splitScriptureSlide(verse, 'large');
+    slides.forEach(slide => addSlideToSubsection(slide));
+    
+    if (slides.length > 1) {
+      toast.success(`Scripture split into ${slides.length} slides`);
+    } else {
+      toast.success('Scripture slide added');
+    }
   };
 
   const handleAddScriptureSlide = () => {
@@ -348,18 +353,19 @@ const ServiceBuilder = () => {
       return;
     }
 
-    // Create a slide for each verse
+    // Import the splitter utility
+    const { splitScriptureSlide } = await import('@/lib/slideContentSplitter');
+    
+    let totalSlidesAdded = 0;
+    
+    // Create slides for each verse, automatically splitting if text is too long
     verses.forEach(verse => {
-      const newSlide: ScriptureSlide = {
-        id: `slide-${Date.now()}-${verse.verse}`,
-        type: 'scripture',
-        title: `${verse.book} ${verse.chapter}:${verse.verse}`,
-        verse,
-      };
-      addSlideToSubsection(newSlide);
+      const slides = splitScriptureSlide(verse, 'large');
+      slides.forEach(slide => addSlideToSubsection(slide));
+      totalSlidesAdded += slides.length;
     });
     
-    toast.success(`Added ${verses.length} scripture slide${verses.length > 1 ? 's' : ''}`);
+    toast.success(`Added ${totalSlidesAdded} scripture slide${totalSlidesAdded > 1 ? 's' : ''}`);
     setScriptureReference('');
     setShowScriptureDialog(false);
   };
@@ -482,34 +488,77 @@ const ServiceBuilder = () => {
     toast.success(`${slides.length} slide${slides.length !== 1 ? 's' : ''} added`);
   };
 
-  const handleSaveAnnouncementSlide = () => {
+  const handleSaveAnnouncementSlide = async () => {
     if (!editingSlide || editingSlide.type !== 'announcement') return;
     
     const context = (editingSlide as any)._editContext;
     
+    // Import the splitter utility
+    const { splitAnnouncementSlide } = await import('@/lib/slideContentSplitter');
+    
     // If editing existing slide
     if (editingSlide.id && context) {
-      const updatedSlide: AnnouncementSlide = {
-        ...(editingSlide as AnnouncementSlide),
-        title: editingSlide.title || 'Announcement',
-        content: editingSlide.content || '',
-      };
-      handleUpdateSlide(context.sectionId, context.subsectionId, updatedSlide);
+      // Split the updated content
+      const slides = splitAnnouncementSlide(
+        editingSlide.title || 'Announcement',
+        editingSlide.content || '',
+        editingSlide.imageUrl,
+        'large'
+      );
+      
+      // If it results in multiple slides, need to replace old slide with new ones
+      if (slides.length > 1) {
+        // Remove the old slide and add all new split slides
+        setService(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            sections: prev.sections?.map(section =>
+              section.id === context.sectionId
+                ? {
+                    ...section,
+                    subsections: section.subsections.map(sub =>
+                      sub.id === context.subsectionId
+                        ? {
+                            ...sub,
+                            slides: [
+                              ...sub.slides.filter(s => s.id !== editingSlide.id),
+                              ...slides
+                            ]
+                          }
+                        : sub
+                    )
+                  }
+                : section
+            ) || []
+          };
+        });
+        toast.success(`Announcement split into ${slides.length} slides`);
+      } else {
+        // Just update the single slide
+        handleUpdateSlide(context.sectionId, context.subsectionId, slides[0]);
+      }
+      
       setEditingSlide(null);
       return;
     }
 
-    // Creating new slide
-    const newSlide: AnnouncementSlide = {
-      id: `slide-${Date.now()}`,
-      type: 'announcement',
-      title: editingSlide.title || 'Announcement',
-      content: editingSlide.content || '',
-      imageUrl: editingSlide.imageUrl,
-    };
-    addSlideToSubsection(newSlide);
+    // Creating new slide - split if content is too long
+    const slides = splitAnnouncementSlide(
+      editingSlide.title || 'Announcement',
+      editingSlide.content || '',
+      editingSlide.imageUrl,
+      'large'
+    );
+    
+    slides.forEach(slide => addSlideToSubsection(slide));
     setEditingSlide(null);
-    toast.success('Announcement slide added');
+    
+    if (slides.length > 1) {
+      toast.success(`Announcement split into ${slides.length} slides`);
+    } else {
+      toast.success('Announcement slide added');
+    }
   };
 
   const handleAddImageSlide = () => {

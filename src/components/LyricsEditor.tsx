@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { splitLyricsContent } from '@/lib/slideContentSplitter';
 
 interface LyricsEditorProps {
   open: boolean;
@@ -124,32 +125,33 @@ export function LyricsEditor({ open, onClose, onSave, initialSongTitle = '', ini
         const slideLines = lines.slice(i, i + linesPerSlide);
         const slideContent = slideLines.join('\n');
         
-        const slideNumber = slides.length + 1;
-        slides.push({
-          id: `${songTitle}-slide-${slideNumber}`,
-          type: 'lyrics',
-          title: songTitle,
+        // Further split if content is too long for screen
+        const splitSlides = splitLyricsContent(
+          slideContent,
           songTitle,
-          slideNumber,
-          totalSlides: 0,
-          content: slideContent,
-          section: section.type,
-          textFormatting: {
-            fontSize: fontSettings.size,
-            alignment: 'center',
-            linesPerSlide,
-          },
-          backgroundMedia: backgroundMedia ? {
-            type: 'image',
-            url: backgroundMedia,
-            opacity: backgroundOpacity,
-          } : undefined,
+          section.type,
+          fontSettings.size,
+          slides.length + 1,
+          0 // Will be updated later
+        );
+        
+        // Apply background media to all split slides
+        splitSlides.forEach(slide => {
+          if (backgroundMedia) {
+            slide.backgroundMedia = {
+              type: 'image',
+              url: backgroundMedia,
+              opacity: backgroundOpacity,
+            };
+          }
+          slides.push(slide);
         });
       }
     });
 
-    // Update total slides count
-    slides.forEach(slide => {
+    // Update total slides count and slide numbers
+    slides.forEach((slide, index) => {
+      slide.slideNumber = index + 1;
       slide.totalSlides = slides.length;
     });
 
