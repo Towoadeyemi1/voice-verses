@@ -126,15 +126,6 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
 
   // Determine what content to show
   const hasContent = verse || (slide && slide.type === 'lyrics');
-  
-  if (!hasContent) {
-    return (
-      <div 
-        className="fixed inset-0 pointer-events-none"
-        style={{ backgroundColor: '#00FF00' }}
-      />
-    );
-  }
 
   return (
     <div 
