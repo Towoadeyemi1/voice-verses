@@ -146,7 +146,7 @@ export const DisplayMonitor = () => {
           {currentSlide ? (
             <div className="absolute inset-0">
               <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.11)' }}>
-                <SlideDisplay slide={currentSlide} className="h-full w-full" />
+                <SlideDisplay slide={currentSlide} className="h-full w-full" hideReference={true} />
               </div>
             </div>
           ) : (
