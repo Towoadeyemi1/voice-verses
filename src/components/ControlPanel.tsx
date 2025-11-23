@@ -40,6 +40,9 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [pendingApiKey, setPendingApiKey] = useState<string | null>(null);
+  const [transcriptionLanguage, setTranscriptionLanguage] = useState(() => {
+    return localStorage.getItem('transcription_language') || 'en';
+  });
   
   // Verse range tracking
   const [verseRange, setVerseRange] = useState<{ start: number; end: number } | null>(null);
@@ -57,12 +60,24 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
         description: `${verse} - ${reason}. Switched to KJV temporarily.`,
       });
     };
+    
+    const handleSettingsUpdate = () => {
+      const savedLanguage = localStorage.getItem('transcription_language');
+      if (savedLanguage && savedLanguage !== transcriptionLanguage) {
+        setTranscriptionLanguage(savedLanguage);
+        toast.info('Language updated', {
+          description: 'Restart listening for the change to take effect.',
+        });
+      }
+    };
 
     window.addEventListener('bible-api-fallback', handleFallback as EventListener);
+    window.addEventListener('settings-updated', handleSettingsUpdate);
     return () => {
       window.removeEventListener('bible-api-fallback', handleFallback as EventListener);
+      window.removeEventListener('settings-updated', handleSettingsUpdate);
     };
-  }, []);
+  }, [transcriptionLanguage]);
 
   const handleOpenLowerThird = () => {
     window.open('/lower-third', '_blank', 'width=1280,height=720');
@@ -137,7 +152,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
         (volume) => {
           setAudioStatus(prev => ({ ...prev, volume }));
         },
-        apiKey // Pass API key to WebRTC class
+        apiKey, // Pass API key to WebRTC class
+        transcriptionLanguage // Pass language preference
       );
 
       await realtimeChat.current.init();

@@ -28,24 +28,40 @@ export const AudioVisualizer = ({ isListening, volume, latency, isMuted, onToggl
 
       ctx.clearRect(0, 0, width, height);
 
-      // Draw animated waveform
-      const bars = 40;
+      // Draw beautiful multicolored waveform
+      const bars = 60;
       const barWidth = width / bars;
       const time = Date.now() / 1000;
 
       for (let i = 0; i < bars; i++) {
         const x = i * barWidth;
+        
+        // Create flowing wave effect with multiple frequencies
+        const wave1 = Math.sin(time * 2 + i * 0.3) * 0.5;
+        const wave2 = Math.sin(time * 3 - i * 0.2) * 0.3;
+        const wave3 = Math.cos(time * 1.5 + i * 0.4) * 0.2;
         const intensity = isListening 
-          ? Math.sin(time * 3 + i * 0.5) * 0.5 + 0.5
+          ? (wave1 + wave2 + wave3 + 1) / 2
           : 0.1;
-        const barHeight = (height * 0.8) * intensity * (volume / 100);
+        
+        const barHeight = (height * 0.85) * intensity * (volume / 100);
 
+        // Create rainbow gradient that shifts over time
+        const hueShift = (time * 30) % 360;
+        const hue = (hueShift + (i / bars) * 360) % 360;
+        
         const gradient = ctx.createLinearGradient(x, height - barHeight, x, height);
-        gradient.addColorStop(0, 'hsl(43, 100%, 65%)');
-        gradient.addColorStop(1, 'hsl(33, 100%, 55%)');
+        gradient.addColorStop(0, `hsla(${hue}, 85%, 65%, 0.9)`);
+        gradient.addColorStop(0.5, `hsla(${(hue + 30) % 360}, 90%, 60%, 0.8)`);
+        gradient.addColorStop(1, `hsla(${(hue + 60) % 360}, 95%, 55%, 0.7)`);
 
         ctx.fillStyle = gradient;
-        ctx.fillRect(x, height - barHeight, barWidth - 2, barHeight);
+        
+        // Add glow effect
+        ctx.shadowBlur = isListening ? 15 : 5;
+        ctx.shadowColor = `hsla(${hue}, 100%, 70%, 0.5)`;
+        
+        ctx.fillRect(x + 1, height - barHeight, barWidth - 3, barHeight);
       }
 
       requestAnimationFrame(draw);

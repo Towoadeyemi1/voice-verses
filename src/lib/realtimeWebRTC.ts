@@ -85,7 +85,8 @@ export class RealtimeWebRTC {
     private onTranscript: (text: string) => void,
     private onVerseDetected: (verse: BibleVerse | null, detectionInfo?: { method: string; description?: string; confidence?: string }) => void,
     private onVolumeUpdate: (volume: number) => void,
-    private apiKey: string | null = null
+    private apiKey: string | null = null,
+    private language: string = 'en'
   ) {
     this.audioEl = document.createElement("audio");
     this.audioEl.autoplay = true;
@@ -122,7 +123,8 @@ export class RealtimeWebRTC {
             voice: "alloy",
             modalities: ["text"],
             input_audio_transcription: {
-              model: "whisper-1"
+              model: "whisper-1",
+              language: this.language
             },
             instructions: `You are a silent Bible verse detection system for church services. You have deep knowledge of the entire Bible.
 
@@ -211,6 +213,7 @@ FORBIDDEN:
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ language: this.language })
         });
 
         if (!tokenResponse.ok) {
