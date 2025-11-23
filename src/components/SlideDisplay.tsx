@@ -68,24 +68,25 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
   switch (slide.type) {
     case 'scripture':
       return (
-        <div ref={containerRef} className={`relative flex items-center justify-center h-full w-full overflow-hidden ${className}`} style={backgroundStyle}>
+        <div ref={containerRef} className={`relative flex items-center justify-center h-full w-full ${className}`} style={backgroundStyle}>
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center max-w-[90%] mx-auto text-center" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
+          <div className="relative z-10 w-full h-full flex flex-col items-center justify-center" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
             {!hideReference && (
               <div 
-                className={`font-bold text-primary text-center break-words w-full`}
+                className="font-bold text-primary text-center break-words w-full"
                 style={{ fontSize: `${Math.max(20, 48 * scale)}px`, marginBottom: `${Math.max(16, 32 * scale)}px` }}
               >
                 {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
               </div>
             )}
             <div 
-              className={`leading-relaxed text-center break-words w-full`}
+              className="leading-relaxed text-center break-words w-full overflow-auto"
               style={{ 
                 fontSize: `${scaledFontSize}px`,
-                lineHeight: '1.6'
+                lineHeight: '1.6',
+                maxHeight: '100%'
               }}
             >
               {slide.verse.text}
@@ -96,30 +97,32 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
 
     case 'lyrics':
       return (
-        <div ref={containerRef} className={`relative flex items-center justify-center h-full w-full overflow-hidden ${className}`} style={backgroundStyle}>
+        <div ref={containerRef} className={`relative flex items-center justify-center h-full w-full ${className}`} style={backgroundStyle}>
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center max-w-[90%] mx-auto text-center" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
+          <div className="relative z-10 w-full h-full flex flex-col items-center justify-center" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
             <div 
-              className={`font-semibold text-primary text-center break-words w-full`}
+              className="font-semibold text-primary text-center break-words w-full"
               style={{ fontSize: `${Math.max(18, 36 * scale)}px`, marginBottom: `${Math.max(8, 16 * scale)}px` }}
             >
               {slide.songTitle}
             </div>
             {slide.section && (
               <div 
-                className={`text-muted-foreground uppercase text-center break-words w-full`}
+                className="text-muted-foreground uppercase text-center break-words w-full"
                 style={{ fontSize: `${Math.max(14, 28 * scale)}px`, marginBottom: `${Math.max(12, 24 * scale)}px` }}
               >
                 {slide.section}
               </div>
             )}
             <div 
-              className={`leading-relaxed text-center whitespace-pre-line break-words w-full`}
+              className="leading-relaxed text-center whitespace-pre-line break-words w-full overflow-auto"
               style={{ 
                 fontSize: `${scaledFontSize}px`,
-                lineHeight: '1.6'
+                lineHeight: '1.6',
+                maxHeight: '100%',
+                flex: '1 1 auto'
               }}
             >
               {slide.content}
@@ -152,7 +155,7 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
 
     case 'announcement':
       return (
-        <div ref={containerRef} className={`flex flex-col items-center justify-center h-full w-full overflow-hidden ${className}`} style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
+        <div ref={containerRef} className={`flex flex-col items-center justify-center h-full w-full ${className}`} style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
           {slide.imageUrl && (
             <img
               src={slide.imageUrl}
@@ -168,10 +171,12 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
             {slide.title}
           </div>
           <div 
-            className="leading-relaxed text-center whitespace-pre-line break-words w-full"
+            className="leading-relaxed text-center whitespace-pre-line break-words w-full overflow-auto"
             style={{ 
               fontSize: `${Math.max(18, 48 * scale)}px`,
-              lineHeight: '1.6'
+              lineHeight: '1.6',
+              maxHeight: '100%',
+              flex: '1 1 auto'
             }}
           >
             {slide.content}
