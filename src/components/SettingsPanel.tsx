@@ -35,6 +35,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
   const [showReference, setShowReference] = useState(true);
   const [bibleVersion, setBibleVersion] = useState<BibleVersionType>('kjv');
   const [ccliLicense, setCcliLicense] = useState<string>('');
+  const [transcriptionLanguage, setTranscriptionLanguage] = useState<string>('en');
 
   useEffect(() => {
     // Initialize Bible version
@@ -51,6 +52,12 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       setShowReference(settings.showReference ?? true);
       setSelectedDevice(settings.audioDevice || 'default');
       setCcliLicense(settings.ccliLicense || '');
+    }
+    
+    // Load transcription language separately
+    const savedLanguage = localStorage.getItem('transcription_language');
+    if (savedLanguage) {
+      setTranscriptionLanguage(savedLanguage);
     }
 
     // Get audio devices
@@ -72,6 +79,9 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       ccliLicense,
     };
     localStorage.setItem('cornerstone-settings', JSON.stringify(settings));
+    
+    // Save transcription language separately
+    localStorage.setItem('transcription_language', transcriptionLanguage);
     
     // Apply theme
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -127,6 +137,32 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
               </Select>
               <p className="text-xs text-muted-foreground">
                 Select the microphone or line-in input for voice recognition
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="transcription-language">Transcription Language</Label>
+              <Select value={transcriptionLanguage} onValueChange={setTranscriptionLanguage}>
+                <SelectTrigger id="transcription-language">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="es">Spanish (Español)</SelectItem>
+                  <SelectItem value="fr">French (Français)</SelectItem>
+                  <SelectItem value="de">German (Deutsch)</SelectItem>
+                  <SelectItem value="it">Italian (Italiano)</SelectItem>
+                  <SelectItem value="pt">Portuguese (Português)</SelectItem>
+                  <SelectItem value="nl">Dutch (Nederlands)</SelectItem>
+                  <SelectItem value="pl">Polish (Polski)</SelectItem>
+                  <SelectItem value="ru">Russian (Русский)</SelectItem>
+                  <SelectItem value="zh">Chinese (中文)</SelectItem>
+                  <SelectItem value="ja">Japanese (日本語)</SelectItem>
+                  <SelectItem value="ko">Korean (한국어)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Select the language for voice transcription. Restart listening for changes to take effect.
               </p>
             </div>
           </div>

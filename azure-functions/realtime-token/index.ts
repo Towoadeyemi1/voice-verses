@@ -28,7 +28,9 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
       return;
     }
 
-    context.log('Requesting ephemeral token from OpenAI...');
+    // Get language from request body, default to 'en'
+    const { language = 'en' } = req.body || {};
+    context.log(`Requesting ephemeral token with language: ${language}`);
 
     // Request an ephemeral token from OpenAI
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
@@ -42,7 +44,8 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         voice: "alloy",
         modalities: ["text"],
         input_audio_transcription: {
-          model: "whisper-1"
+          model: "whisper-1",
+          language: language
         },
         instructions: `You are a silent Bible verse detection system for church services. You have deep knowledge of the entire Bible.
 
