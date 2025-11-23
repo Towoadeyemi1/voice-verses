@@ -3,6 +3,8 @@ import { syncService } from '@/lib/syncService';
 import { Monitor, MonitorPlay, TvMinimalPlay } from 'lucide-react';
 import { Slide } from '@/types/service';
 import { SlideDisplay } from './SlideDisplay';
+import { LowerThirdDisplay } from './LowerThirdDisplay';
+import { BibleVerse } from '@/types/bible';
 
 export const DisplayMonitor = () => {
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
@@ -124,39 +126,12 @@ export const DisplayMonitor = () => {
           <span className="text-[9px] sm:text-[10px] text-muted-foreground ml-auto">Chroma</span>
         </div>
         <div className="aspect-video bg-[#00FF00] rounded-md overflow-hidden border border-border/50 relative">
-          {currentSlide && currentSlide.type === 'scripture' ? (
-            <div className="absolute inset-0 flex items-end justify-center p-3">
-              {lowerThirdSettings?.showBackground ? (
-                <div 
-                  className="rounded px-4 py-2 max-w-full"
-                  style={{
-                    backgroundColor: `${lowerThirdSettings.backgroundColor}${Math.round((lowerThirdSettings.backgroundOpacity || 90) * 2.55).toString(16).padStart(2, '0')}`,
-                  }}
-                >
-                  <p 
-                    className="font-bold text-center text-[10px]"
-                    style={{ 
-                      color: lowerThirdSettings?.textColor || '#FFFFFF'
-                    }}
-                  >
-                    {currentSlide.verse.book} {currentSlide.verse.chapter}:{currentSlide.verse.verse}
-                  </p>
-                </div>
-              ) : (
-                <p 
-                  className="font-bold text-[10px]"
-                  style={{ 
-                    color: lowerThirdSettings?.textColor || '#FFFFFF',
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
-                  }}
-                >
-                  {currentSlide.verse.book} {currentSlide.verse.chapter}:{currentSlide.verse.verse}
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="h-full" />
-          )}
+          <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.13)' }}>
+            <LowerThirdDisplay 
+              verse={currentSlide?.type === 'scripture' ? currentSlide.verse : null}
+              slide={currentSlide?.type === 'lyrics' ? currentSlide : null}
+            />
+          </div>
         </div>
       </div>
 
