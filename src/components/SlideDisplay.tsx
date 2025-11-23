@@ -71,7 +71,7 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full overflow-auto">
+          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full">
             <div 
               className={`font-bold text-primary ${alignmentClasses[alignment]}`}
               style={{ fontSize: `${Math.max(20, 48 * scale)}px`, marginBottom: `${Math.max(16, 32 * scale)}px` }}
@@ -82,11 +82,7 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
               className={`leading-relaxed ${alignmentClasses[alignment]}`}
               style={{ 
                 fontSize: `${scaledFontSize}px`, 
-                maxWidth: '100%', 
-                width: '90%',
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word',
-                whiteSpace: 'pre-wrap'
+                maxWidth: '90%'
               }}
             >
               {slide.verse.text}
@@ -101,7 +97,7 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full overflow-auto">
+          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full">
             <div 
               className={`font-semibold text-primary ${alignmentClasses[alignment]}`}
               style={{ fontSize: `${Math.max(18, 36 * scale)}px`, marginBottom: `${Math.max(8, 16 * scale)}px` }}
@@ -120,10 +116,7 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
               className={`leading-relaxed ${alignmentClasses[alignment]} whitespace-pre-line`}
               style={{ 
                 fontSize: `${scaledFontSize}px`, 
-                maxWidth: '100%',
-                width: '90%',
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word'
+                maxWidth: '90%'
               }}
             >
               {slide.content}
@@ -156,7 +149,7 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
 
     case 'announcement':
       return (
-        <div ref={containerRef} className={`flex flex-col items-center justify-center h-full w-full overflow-auto ${className}`} style={{ padding: `${Math.max(16, 64 * scale)}px` }}>
+        <div ref={containerRef} className={`flex flex-col items-center justify-center h-full w-full ${className}`} style={{ padding: `${Math.max(16, 64 * scale)}px` }}>
           {slide.imageUrl && (
             <img
               src={slide.imageUrl}
@@ -175,10 +168,7 @@ export const SlideDisplay = ({ slide, className = '' }: SlideDisplayProps) => {
             className="leading-relaxed text-center whitespace-pre-line"
             style={{ 
               fontSize: `${Math.max(18, 48 * scale)}px`, 
-              maxWidth: '100%',
-              width: '90%',
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word'
+              maxWidth: '90%'
             }}
           >
             {slide.content}
