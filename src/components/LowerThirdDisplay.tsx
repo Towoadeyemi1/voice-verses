@@ -100,9 +100,7 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
   };
 
   const getTemplateClasses = () => {
-    const base = settings.showBackground 
-      ? `bg-black/[${settings.backgroundOpacity}] backdrop-blur-sm` 
-      : '';
+    const base = settings.showBackground ? 'backdrop-blur-sm' : '';
     
     switch (settings.template) {
       case 'modern':
@@ -117,6 +115,13 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
       default:
         return `${base} rounded px-6 py-4`;
     }
+  };
+
+  const getBackgroundStyle = () => {
+    if (!settings.showBackground) return {};
+    return {
+      backgroundColor: `rgba(0, 0, 0, ${settings.backgroundOpacity})`,
+    };
   };
 
   // Determine what content to show
@@ -141,6 +146,7 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
           show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         } ${getTemplateClasses()}`}
         style={{ 
+          ...getBackgroundStyle(),
           borderColor: settings.template === 'modern' ? settings.accentColor : undefined,
           borderBottomColor: settings.template === 'minimal' ? settings.accentColor : undefined,
         }}
