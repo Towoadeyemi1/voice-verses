@@ -202,17 +202,17 @@ const Confidence = () => {
           </div>
 
           {/* Current slide/verse - large and prominent */}
-          <div className="flex-1 flex flex-col justify-center">
+          <div className="flex-1 flex flex-col justify-center min-h-0">
             {currentSlide ? (
-              <div className="space-y-4">
+              <div className="space-y-4 h-full flex flex-col">
                 <div 
-                  className="font-bold mb-4"
+                  className="font-bold"
                   style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: settings.accentColor }}
                 >
                   {currentSlide.title}
                 </div>
-                <div className="border rounded-lg overflow-hidden bg-black/20">
-                  <SlideDisplay slide={currentSlide} className="h-[400px]" />
+                <div className="border rounded-lg overflow-hidden bg-black/20 flex-1 min-h-0">
+                  <SlideDisplay slide={currentSlide} className="h-full" />
                 </div>
               </div>
             ) : currentVerse ? (
@@ -224,7 +224,7 @@ const Confidence = () => {
                   {currentVerse.book} {currentVerse.chapter}:{currentVerse.verse}
                 </div>
                 <div 
-                  className="leading-relaxed"
+                  className="leading-relaxed break-words"
                   style={{ fontSize: `${settings.currentVerseFontSize}px`, color: settings.textColor }}
                 >
                   {currentVerse.text}
