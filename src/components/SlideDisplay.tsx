@@ -68,11 +68,11 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
   switch (slide.type) {
     case 'scripture':
       return (
-        <div ref={containerRef} className={`relative flex flex-col items-center justify-center h-full w-full overflow-hidden ${className}`} style={backgroundStyle}>
+        <div ref={containerRef} className={`relative flex items-center justify-center h-full w-full overflow-hidden ${className}`} style={backgroundStyle}>
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-[90%] mx-auto text-center" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
             {!hideReference && (
               <div 
                 className={`font-bold text-primary text-center break-words w-full`}
@@ -96,11 +96,11 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
 
     case 'lyrics':
       return (
-        <div ref={containerRef} className={`relative flex flex-col items-center justify-center h-full w-full overflow-hidden ${className}`} style={backgroundStyle}>
+        <div ref={containerRef} className={`relative flex items-center justify-center h-full w-full overflow-hidden ${className}`} style={backgroundStyle}>
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-[90%] mx-auto text-center" style={{ padding: `${Math.max(32, 64 * scale)}px` }}>
             <div 
               className={`font-semibold text-primary text-center break-words w-full`}
               style={{ fontSize: `${Math.max(18, 36 * scale)}px`, marginBottom: `${Math.max(8, 16 * scale)}px` }}
