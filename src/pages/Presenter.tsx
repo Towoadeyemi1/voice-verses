@@ -7,6 +7,7 @@ import { Service, Slide } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { syncService } from '@/lib/syncService';
 import { SlideDisplay } from '@/components/SlideDisplay';
+import { SlidePreview } from '@/components/SlidePreview';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
@@ -537,7 +538,7 @@ const Presenter = () => {
                                       
                                       {/* Mini preview */}
                                       <div className="aspect-video bg-black/50 rounded overflow-hidden border border-border/50">
-                                        <SlideDisplay slide={slide} className="w-full h-full" />
+                                        <SlidePreview slide={slide} className="w-full h-full" />
                                       </div>
                                       
                                       <div className="text-xs text-muted-foreground capitalize mt-1 truncate">
