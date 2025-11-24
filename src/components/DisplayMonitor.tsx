@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { syncService } from '@/lib/syncService';
 import { Monitor, MonitorPlay, TvMinimalPlay } from 'lucide-react';
 import { Slide } from '@/types/service';
-import { SlidePreview } from './SlidePreview';
+import { SlideDisplay } from './SlideDisplay';
 import { LowerThirdDisplay } from './LowerThirdDisplay';
 import { BibleVerse } from '@/types/bible';
 
@@ -96,7 +96,7 @@ export const DisplayMonitor = () => {
         </div>
         <div className="aspect-video bg-black rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide ? (
-            <SlidePreview slide={currentSlide} className="h-full w-full" />
+            <SlideDisplay slide={currentSlide} className="h-full w-full" />
           ) : logoUrl ? (
             <div className="h-full flex items-center justify-center p-4">
               <img 
@@ -140,7 +140,7 @@ export const DisplayMonitor = () => {
         </div>
         <div className="aspect-video bg-background rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide ? (
-            <SlidePreview slide={currentSlide} className="h-full w-full" hideReference={true} />
+            <SlideDisplay slide={currentSlide} className="h-full w-full" hideReference={true} />
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
               <Monitor className="w-8 h-8 mb-1" />
