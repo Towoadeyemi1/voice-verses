@@ -49,6 +49,11 @@ const Projection = () => {
       setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
     }
 
+    // Request current slide from presenter on load
+    const requestChannel = new BroadcastChannel('cornerstone-display-request');
+    requestChannel.postMessage({ type: 'request-current-slide' });
+    requestChannel.close();
+
     // Listen for logo display commands
     const handleLogoDisplay = (event: MessageEvent) => {
       if (event.data?.type === 'show-logo' && event.data?.logoUrl) {

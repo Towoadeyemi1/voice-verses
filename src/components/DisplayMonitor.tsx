@@ -96,9 +96,7 @@ export const DisplayMonitor = () => {
         </div>
         <div className="aspect-video bg-black rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide ? (
-            <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.13)' }}>
-              <SlideDisplay slide={currentSlide} className="h-full w-full" />
-            </div>
+            <SlideDisplay slide={currentSlide} className="h-full w-full" />
           ) : logoUrl ? (
             <div className="h-full flex items-center justify-center p-4">
               <img 
@@ -142,9 +140,7 @@ export const DisplayMonitor = () => {
         </div>
         <div className="aspect-video bg-background rounded-md overflow-hidden border border-border/50 relative">
           {currentSlide ? (
-            <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.13)' }}>
-              <SlideDisplay slide={currentSlide} className="h-full w-full" hideReference={true} />
-            </div>
+            <SlideDisplay slide={currentSlide} className="h-full w-full" hideReference={true} />
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
               <Monitor className="w-8 h-8 mb-1" />
