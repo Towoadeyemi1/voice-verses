@@ -94,10 +94,12 @@ export const DisplayMonitor = () => {
           <span className="text-[10px] sm:text-[11px] font-medium text-foreground">Main</span>
           <span className="text-[9px] sm:text-[10px] text-muted-foreground ml-auto">1920×1080</span>
         </div>
-        <div className="aspect-video bg-black rounded-md overflow-hidden border border-border/50 relative">
+        <div className="aspect-video bg-black rounded-md border border-border/50 relative overflow-hidden">
           {currentSlide ? (
-            <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.13)' }}>
-              <DisplayPreviewSlide slide={currentSlide} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-[1920px] h-[1080px] origin-center" style={{ transform: 'scale(0.13)' }}>
+                <DisplayPreviewSlide slide={currentSlide} />
+              </div>
             </div>
           ) : logoUrl ? (
             <div className="h-full flex items-center justify-center p-4">
@@ -140,10 +142,12 @@ export const DisplayMonitor = () => {
           <span className="text-[11px] font-medium text-foreground">Confidence</span>
           <span className="text-[10px] text-muted-foreground ml-auto">1920×1080</span>
         </div>
-        <div className="aspect-video bg-background rounded-md overflow-hidden border border-border/50 relative">
+        <div className="aspect-video bg-background rounded-md border border-border/50 relative overflow-hidden">
           {currentSlide ? (
-            <div className="w-[1920px] h-[1080px] origin-top-left absolute" style={{ transform: 'scale(0.13)' }}>
-              <DisplayPreviewSlide slide={currentSlide} hideReference={true} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-[1920px] h-[1080px] origin-center" style={{ transform: 'scale(0.13)' }}>
+                <DisplayPreviewSlide slide={currentSlide} hideReference={true} />
+              </div>
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-muted-foreground">

@@ -42,21 +42,21 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
   switch (slide.type) {
     case 'scripture':
       return (
-        <div className={`relative flex items-center justify-center h-full w-full`} style={backgroundStyle}>
+        <div className={`relative flex items-center justify-center h-full w-full text-white`} style={backgroundStyle}>
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full text-center" style={{ padding: '64px' }}>
+          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-16 py-12">
             {!hideReference && (
               <div 
-                className="font-bold text-primary text-center break-words"
-                style={{ fontSize: '48px', marginBottom: '32px' }}
+                className="font-bold text-center break-words w-full mb-8"
+                style={{ fontSize: '48px', color: '#3B82F6' }}
               >
                 {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
               </div>
             )}
             <div 
-              className="leading-relaxed text-center break-words"
+              className="leading-relaxed text-center break-words w-full max-w-[1600px]"
               style={{ 
                 fontSize: `${baseFontSize}px`,
                 lineHeight: '1.6'
@@ -70,27 +70,27 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
 
     case 'lyrics':
       return (
-        <div className={`relative flex items-center justify-center h-full w-full`} style={backgroundStyle}>
+        <div className={`relative flex items-center justify-center h-full w-full text-white`} style={backgroundStyle}>
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full text-center" style={{ padding: '64px' }}>
+          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full px-16 py-12">
             <div 
-              className="font-semibold text-primary text-center break-words"
-              style={{ fontSize: '36px', marginBottom: '16px' }}
+              className="font-semibold text-center break-words w-full mb-4"
+              style={{ fontSize: '36px', color: '#3B82F6' }}
             >
               {slide.songTitle}
             </div>
             {slide.section && (
               <div 
-                className="text-muted-foreground uppercase text-center break-words"
-                style={{ fontSize: '28px', marginBottom: '24px' }}
+                className="uppercase text-center break-words w-full mb-6"
+                style={{ fontSize: '28px', color: '#9CA3AF' }}
               >
                 {slide.section}
               </div>
             )}
             <div 
-              className="leading-relaxed text-center whitespace-pre-line break-words"
+              className="leading-relaxed text-center whitespace-pre-line break-words w-full max-w-[1600px]"
               style={{ 
                 fontSize: `${baseFontSize}px`,
                 lineHeight: '1.6'
@@ -99,8 +99,8 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
               {slide.content}
             </div>
             <div 
-              className="text-muted-foreground text-center"
-              style={{ fontSize: '24px', marginTop: '32px' }}
+              className="text-center mt-8"
+              style={{ fontSize: '24px', color: '#9CA3AF' }}
             >
               {slide.slideNumber} / {slide.totalSlides}
             </div>
@@ -126,23 +126,23 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
 
     case 'announcement':
       return (
-        <div className="flex flex-col items-center justify-center h-full w-full text-center" style={{ padding: '64px' }}>
+        <div className="flex flex-col items-center justify-center h-full w-full text-white px-16 py-12">
           {slide.imageUrl && (
             <img
               src={slide.imageUrl}
               alt={slide.title}
-              className="rounded-lg"
-              style={{ maxHeight: '256px', marginBottom: '32px' }}
+              className="rounded-lg mb-8"
+              style={{ maxHeight: '256px' }}
             />
           )}
           <div 
-            className="font-bold text-primary text-center break-words"
-            style={{ fontSize: '64px', marginBottom: '24px' }}
+            className="font-bold text-center break-words w-full mb-6"
+            style={{ fontSize: '64px', color: '#3B82F6' }}
           >
             {slide.title}
           </div>
           <div 
-            className="leading-relaxed text-center whitespace-pre-line break-words"
+            className="leading-relaxed text-center whitespace-pre-line break-words w-full max-w-[1600px]"
             style={{ 
               fontSize: '48px',
               lineHeight: '1.6'

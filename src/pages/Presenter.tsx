@@ -219,10 +219,19 @@ const Presenter = () => {
     const requestChannel = new BroadcastChannel('cornerstone-display-request');
     requestChannel.onmessage = (event) => {
       if (event.data?.type === 'request-current-slide') {
-        if (isPresenting && currentSlide) {
-          // Re-broadcast current slide for newly opened windows
+        // Always respond if there's a current slide, even if not presenting
+        if (currentSlide) {
           console.log('Re-broadcasting current slide for new window:', currentSlide.title);
           broadcastSlide(currentSlide, currentIndex);
+        } else if (currentService?.serviceLogo) {
+          // If no slide but service has logo, show logo
+          console.log('Sending logo to new window');
+          const channel = new BroadcastChannel('cornerstone-display');
+          channel.postMessage({
+            type: 'show-logo',
+            logoUrl: currentService.serviceLogo
+          });
+          channel.close();
         }
       }
     };
@@ -230,7 +239,7 @@ const Presenter = () => {
     return () => {
       requestChannel.close();
     };
-  }, [isPresenting, currentSlide, currentIndex]);
+  }, [currentSlide, currentIndex, currentService]);
 
   const handleServiceChange = (serviceId: string) => {
     setSearchParams({ service: serviceId });
