@@ -50,6 +50,11 @@ const Confidence = () => {
       setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
     }
 
+    // Request current slide from presenter on load
+    const requestChannel = new BroadcastChannel('cornerstone-display-request');
+    requestChannel.postMessage({ type: 'request-current-slide' });
+    requestChannel.close();
+
     // Subscribe to slide updates
     const unsubscribe = syncService.subscribe(async (message) => {
       console.log('Confidence received message:', message);

@@ -214,6 +214,24 @@ const Presenter = () => {
     }
   };
 
+  // Listen for display requests from projection windows
+  useEffect(() => {
+    const requestChannel = new BroadcastChannel('cornerstone-display-request');
+    requestChannel.onmessage = (event) => {
+      if (event.data?.type === 'request-current-slide') {
+        if (isPresenting && currentSlide) {
+          // Re-broadcast current slide for newly opened windows
+          console.log('Re-broadcasting current slide for new window:', currentSlide.title);
+          broadcastSlide(currentSlide, currentIndex);
+        }
+      }
+    };
+
+    return () => {
+      requestChannel.close();
+    };
+  }, [isPresenting, currentSlide, currentIndex]);
+
   const handleServiceChange = (serviceId: string) => {
     setSearchParams({ service: serviceId });
     setCurrentIndex(0);
