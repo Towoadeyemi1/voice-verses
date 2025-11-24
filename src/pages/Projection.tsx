@@ -43,6 +43,8 @@ const Projection = () => {
   const [logoUrl, setLogoUrl] = useState<string>('');
 
   useEffect(() => {
+    console.log('Projection window mounted');
+    
     // Load settings from localStorage
     const savedSettings = localStorage.getItem('cornerstone-projection-settings');
     if (savedSettings) {
@@ -50,8 +52,10 @@ const Projection = () => {
     }
 
     // Request current slide from presenter on load
+    console.log('Projection: Requesting current slide from presenter');
     const requestChannel = new BroadcastChannel('cornerstone-display-request');
     requestChannel.postMessage({ type: 'request-current-slide' });
+    console.log('Projection: Request sent');
     requestChannel.close();
 
     // Listen for logo display commands
