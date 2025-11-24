@@ -122,8 +122,8 @@ const Presenter = () => {
     return slides;
   };
 
-  const currentSlide = currentService ? getAllSlides(currentService)[currentIndex] : null;
   const allSlides = getAllSlides(currentService);
+  const currentSlide = currentService ? allSlides[currentIndex] : null;
   const nextSlide = allSlides[currentIndex + 1];
 
   const broadcastSlide = (slide: Slide | null, index: number) => {
