@@ -60,15 +60,23 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       setTranscriptionLanguage(savedLanguage);
     }
 
-    // Get audio devices
-    navigator.mediaDevices.enumerateDevices().then((devices) => {
-      const audioInputs = devices.filter((device) => 
-        device.kind === 'audioinput' && device.deviceId !== ''
-      );
-      setAudioDevices(audioInputs);
-    });
+    // Get audio devices - need to request permission first to get labels
+    const getAudioDevices = async () => {
+      try {
+        // Request permission first to get device labels
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter((device) => 
+          device.kind === 'audioinput' && device.deviceId !== ''
+        );
+        console.log('Audio devices found:', audioInputs);
+        setAudioDevices(audioInputs);
+      } catch (error) {
+        console.error('Error getting audio devices:', error);
+      }
+    };
+    getAudioDevices();
   }, []);
-
   const saveSettings = () => {
     const settings = {
       fontSize,
