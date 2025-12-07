@@ -23,17 +23,22 @@ export class AudioRecorder {
     }
   }
 
-  async start() {
+  async start(deviceId?: string | null) {
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 24000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
+      const audioConstraints: MediaTrackConstraints = {
+        sampleRate: 24000,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      };
+      
+      // Use selected device if specified
+      if (deviceId && deviceId !== 'default') {
+        audioConstraints.deviceId = { exact: deviceId };
+      }
+      
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
       
       this.audioContext = new AudioContext({
         sampleRate: 24000,
@@ -80,6 +85,7 @@ export class RealtimeWebRTC {
   private dc: RTCDataChannel | null = null;
   private audioEl: HTMLAudioElement;
   private audioRecorder: AudioRecorder | null = null;
+  private selectedDeviceId: string | null = null;
 
   constructor(
     private onTranscript: (text: string) => void,
@@ -90,6 +96,14 @@ export class RealtimeWebRTC {
   ) {
     this.audioEl = document.createElement("audio");
     this.audioEl.autoplay = true;
+    
+    // Get selected audio device from settings
+    const savedSettings = localStorage.getItem('cornerstone-settings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      this.selectedDeviceId = settings.audioDevice || null;
+      console.log('Using audio device:', this.selectedDeviceId || 'default');
+    }
   }
 
   setMicrophoneMuted(muted: boolean) {
@@ -243,21 +257,26 @@ FORBIDDEN:
         this.audioEl.srcObject = e.streams[0];
       };
 
-      // Add local audio track
+      // Add local audio track with selected device
       console.log('Requesting microphone access...');
-      const ms = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          sampleRate: 24000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
+      const audioConstraints: MediaTrackConstraints = {
+        sampleRate: 24000,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      };
+      
+      // Use selected device if specified
+      if (this.selectedDeviceId && this.selectedDeviceId !== 'default') {
+        audioConstraints.deviceId = { exact: this.selectedDeviceId };
+      }
+      
+      const ms = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
       this.pc.addTrack(ms.getTracks()[0]);
       console.log('Microphone added to peer connection');
 
-      // Set up audio recorder for volume visualization
+      // Set up audio recorder for volume visualization using same device
       this.audioRecorder = new AudioRecorder((audioData) => {
         let sum = 0;
         for (let i = 0; i < audioData.length; i++) {
@@ -267,7 +286,7 @@ FORBIDDEN:
         const volume = Math.min(100, Math.floor(rms * 100 * 10));
         this.onVolumeUpdate(volume);
       });
-      await this.audioRecorder.start();
+      await this.audioRecorder.start(this.selectedDeviceId);
 
       // Set up data channel for events
       this.dc = this.pc.createDataChannel("oai-events");
