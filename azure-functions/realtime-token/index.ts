@@ -41,8 +41,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
       },
       body: JSON.stringify({
         model: "gpt-4o-realtime-preview-2024-12-17",
-        voice: "alloy",
-        modalities: ["text", "audio"],
+        modalities: ["text"],  // No audio output - we only want transcription
         input_audio_transcription: {
           model: "whisper-1",
           language: language
