@@ -16,14 +16,14 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
     );
   }
 
-  // Fixed font sizes for 1920x1080 resolution (no dynamic scaling)
+  // Fixed font sizes for 1920x1080 resolution - LARGE for church projection
   const fontSize = slide.textFormatting?.fontSize || 'large';
   const alignment = slide.textFormatting?.alignment || 'center';
   const fontSizeMap = {
-    small: 48,
-    medium: 64,
-    large: 80,
-    xlarge: 96,
+    small: 72,
+    medium: 96,
+    large: 120,
+    xlarge: 144,
   };
   const baseFontSize = fontSizeMap[fontSize];
   
@@ -50,7 +50,7 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
             {!hideReference && (
               <div 
                 className="font-bold text-center"
-                style={{ fontSize: '48px', color: '#3B82F6', marginBottom: '32px', width: '100%' }}
+                style={{ fontSize: '72px', color: '#3B82F6', marginBottom: '48px', width: '100%' }}
               >
                 {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
               </div>
@@ -81,14 +81,14 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
           <div className="relative z-10 flex flex-col items-center justify-center h-full" style={{ width: '1600px', padding: '64px' }}>
             <div 
               className="font-semibold text-center"
-              style={{ fontSize: '36px', color: '#3B82F6', marginBottom: '16px', width: '100%' }}
+              style={{ fontSize: '56px', color: '#3B82F6', marginBottom: '24px', width: '100%' }}
             >
               {slide.songTitle}
             </div>
             {slide.section && (
               <div 
                 className="uppercase text-center"
-                style={{ fontSize: '28px', color: '#9CA3AF', marginBottom: '24px', width: '100%' }}
+                style={{ fontSize: '40px', color: '#9CA3AF', marginBottom: '32px', width: '100%' }}
               >
                 {slide.section}
               </div>
