@@ -129,8 +129,8 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
 
   return (
     <div 
-      className={`fixed inset-0 flex ${getPositionClasses()} pointer-events-none`}
-      style={{ backgroundColor: '#00FF00' }}
+      className={`absolute inset-0 flex ${getPositionClasses()} pointer-events-none`}
+      style={{ backgroundColor: '#00FF00', width: '1920px', height: '1080px' }}
     >
       {hasContent && (
         <div
