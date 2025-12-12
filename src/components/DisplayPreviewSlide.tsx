@@ -6,19 +6,18 @@ interface DisplayPreviewSlideProps {
 }
 
 // Calculate adaptive font size based on text length to fill 85% of screen
-// More aggressive scaling to ensure text fits and spreads across full width
+// Optimized for full width utilization - text should spread across entire screen
 const getAdaptiveFontSize = (text: string, maxFontSize: number, minFontSize: number): number => {
   const charCount = text.length;
   
-  // More aggressive thresholds to prevent overflow and ensure full width utilization
-  if (charCount <= 30) return maxFontSize;           // Very short: max size
-  if (charCount <= 60) return Math.round(maxFontSize * 0.75);   // Short
-  if (charCount <= 100) return Math.round(maxFontSize * 0.55);  // Medium-short
-  if (charCount <= 150) return Math.round(maxFontSize * 0.45);  // Medium
-  if (charCount <= 200) return Math.round(maxFontSize * 0.38);  // Medium-long
-  if (charCount <= 300) return Math.round(maxFontSize * 0.30);  // Long
-  if (charCount <= 400) return Math.round(maxFontSize * 0.25);  // Very long
-  if (charCount <= 500) return Math.round(maxFontSize * 0.22);  // Extra long
+  // Larger fonts with full width utilization - aim for 2-4 lines for most verses
+  if (charCount <= 40) return maxFontSize;           // Very short: max size (1-2 lines)
+  if (charCount <= 80) return Math.round(maxFontSize * 0.85);   // Short (2-3 lines)
+  if (charCount <= 120) return Math.round(maxFontSize * 0.70);  // Medium-short (3-4 lines)
+  if (charCount <= 180) return Math.round(maxFontSize * 0.55);  // Medium (4-5 lines)
+  if (charCount <= 250) return Math.round(maxFontSize * 0.45);  // Medium-long
+  if (charCount <= 350) return Math.round(maxFontSize * 0.38);  // Long
+  if (charCount <= 500) return Math.round(maxFontSize * 0.32);  // Very long
   return minFontSize;  // Maximum length: minimum size
 };
 
@@ -63,7 +62,7 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: '1840px', height: '920px', padding: '32px' }}>
+          <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: '1880px', height: '960px', padding: '20px' }}>
             {!hideReference && (
               <div 
                 className="font-bold text-center"
@@ -98,7 +97,7 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: '1840px', height: '920px', padding: '32px' }}>
+          <div className="relative z-10 flex flex-col items-center justify-center" style={{ width: '1880px', height: '960px', padding: '20px' }}>
             <div 
               className="font-semibold text-center"
               style={{ fontSize: '100px', color: '#3B82F6', marginBottom: '32px', width: '100%' }}
