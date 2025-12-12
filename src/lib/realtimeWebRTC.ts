@@ -26,15 +26,13 @@ export class AudioRecorder {
   async start(deviceId?: string | null) {
     try {
       const audioConstraints: MediaTrackConstraints = {
-        sampleRate: 24000,
-        channelCount: 1,
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true
       };
       
-      // Use selected device if specified
-      if (deviceId && deviceId !== 'default') {
+      // Use selected device if specified (already validated by caller)
+      if (deviceId) {
         audioConstraints.deviceId = { exact: deviceId };
       }
       
@@ -259,17 +257,34 @@ FORBIDDEN:
 
       // Add local audio track with selected device
       console.log('Requesting microphone access...');
+      
+      // Validate selected device exists before using it
+      let validDeviceId: string | null = null;
+      if (this.selectedDeviceId && this.selectedDeviceId !== 'default') {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const audioDevices = devices.filter(d => d.kind === 'audioinput');
+          const deviceExists = audioDevices.some(d => d.deviceId === this.selectedDeviceId);
+          if (deviceExists) {
+            validDeviceId = this.selectedDeviceId;
+            console.log('Using selected audio device:', validDeviceId);
+          } else {
+            console.warn('Selected audio device not found, using default');
+          }
+        } catch (e) {
+          console.warn('Could not enumerate devices, using default:', e);
+        }
+      }
+      
       const audioConstraints: MediaTrackConstraints = {
-        sampleRate: 24000,
-        channelCount: 1,
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true
       };
       
-      // Use selected device if specified
-      if (this.selectedDeviceId && this.selectedDeviceId !== 'default') {
-        audioConstraints.deviceId = { exact: this.selectedDeviceId };
+      // Only add deviceId constraint if we have a valid device
+      if (validDeviceId) {
+        audioConstraints.deviceId = { exact: validDeviceId };
       }
       
       const ms = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
@@ -286,7 +301,7 @@ FORBIDDEN:
         const volume = Math.min(100, Math.floor(rms * 100 * 10));
         this.onVolumeUpdate(volume);
       });
-      await this.audioRecorder.start(this.selectedDeviceId);
+      await this.audioRecorder.start(validDeviceId);
 
       // Set up data channel for events
       this.dc = this.pc.createDataChannel("oai-events");
