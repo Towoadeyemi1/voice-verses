@@ -23,20 +23,9 @@ export class AudioRecorder {
     }
   }
 
-  async start(deviceId?: string | null) {
+  async startWithStream(stream: MediaStream) {
     try {
-      const audioConstraints: MediaTrackConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      };
-      
-      // Use selected device if specified (already validated by caller)
-      if (deviceId) {
-        audioConstraints.deviceId = { exact: deviceId };
-      }
-      
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      this.stream = stream;
       
       this.audioContext = new AudioContext({
         sampleRate: 24000,
@@ -53,7 +42,7 @@ export class AudioRecorder {
       this.source.connect(this.processor);
       this.processor.connect(this.audioContext.destination);
     } catch (error) {
-      console.error('Error accessing microphone:', error);
+      console.error('Error setting up audio processor:', error);
       throw error;
     }
   }
@@ -67,10 +56,8 @@ export class AudioRecorder {
       this.processor.disconnect();
       this.processor = null;
     }
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
-      this.stream = null;
-    }
+    // Don't stop the stream tracks here - let the caller handle that
+    this.stream = null;
     if (this.audioContext) {
       this.audioContext.close();
       this.audioContext = null;
@@ -291,7 +278,7 @@ FORBIDDEN:
       this.pc.addTrack(ms.getTracks()[0]);
       console.log('Microphone added to peer connection');
 
-      // Set up audio recorder for volume visualization using same device
+      // Set up audio recorder for volume visualization - reuse the same stream
       this.audioRecorder = new AudioRecorder((audioData) => {
         let sum = 0;
         for (let i = 0; i < audioData.length; i++) {
@@ -301,7 +288,7 @@ FORBIDDEN:
         const volume = Math.min(100, Math.floor(rms * 100 * 10));
         this.onVolumeUpdate(volume);
       });
-      await this.audioRecorder.start(validDeviceId);
+      await this.audioRecorder.startWithStream(ms);
 
       // Set up data channel for events
       this.dc = this.pc.createDataChannel("oai-events");
