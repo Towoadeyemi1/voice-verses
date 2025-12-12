@@ -6,18 +6,20 @@ interface DisplayPreviewSlideProps {
 }
 
 // Calculate adaptive font size based on text length to fill 85% of screen
+// More aggressive scaling to ensure text fits and spreads across full width
 const getAdaptiveFontSize = (text: string, maxFontSize: number, minFontSize: number): number => {
   const charCount = text.length;
   
-  // Thresholds for different text lengths (optimized for 1920x1080 at 85% fill)
-  if (charCount <= 50) return maxFontSize;           // Very short: max size
-  if (charCount <= 100) return Math.round(maxFontSize * 0.85);  // Short
-  if (charCount <= 150) return Math.round(maxFontSize * 0.7);   // Medium-short
-  if (charCount <= 200) return Math.round(maxFontSize * 0.6);   // Medium
-  if (charCount <= 300) return Math.round(maxFontSize * 0.5);   // Medium-long
-  if (charCount <= 400) return Math.round(maxFontSize * 0.42);  // Long
-  if (charCount <= 500) return Math.round(maxFontSize * 0.35);  // Very long
-  return minFontSize;  // Extra long: minimum size
+  // More aggressive thresholds to prevent overflow and ensure full width utilization
+  if (charCount <= 30) return maxFontSize;           // Very short: max size
+  if (charCount <= 60) return Math.round(maxFontSize * 0.75);   // Short
+  if (charCount <= 100) return Math.round(maxFontSize * 0.55);  // Medium-short
+  if (charCount <= 150) return Math.round(maxFontSize * 0.45);  // Medium
+  if (charCount <= 200) return Math.round(maxFontSize * 0.38);  // Medium-long
+  if (charCount <= 300) return Math.round(maxFontSize * 0.30);  // Long
+  if (charCount <= 400) return Math.round(maxFontSize * 0.25);  // Very long
+  if (charCount <= 500) return Math.round(maxFontSize * 0.22);  // Extra long
+  return minFontSize;  // Maximum length: minimum size
 };
 
 // Calculate adaptive reference font size
