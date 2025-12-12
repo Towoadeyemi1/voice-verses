@@ -236,10 +236,10 @@ FORBIDDEN:
       // Create peer connection
       this.pc = new RTCPeerConnection();
 
-      // Set up remote audio (AI responses)
+      // Disable remote audio playback - we only want transcription, not AI voice responses
       this.pc.ontrack = (e) => {
-        console.log('Received remote audio track');
-        this.audioEl.srcObject = e.streams[0];
+        console.log('Received remote audio track (playback disabled)');
+        // Not connecting to audioEl - we don't want the AI to speak back
       };
 
       // Add local audio track with selected device
