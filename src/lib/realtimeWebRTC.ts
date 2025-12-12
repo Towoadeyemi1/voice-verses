@@ -360,6 +360,14 @@ FORBIDDEN:
         this.processTranscript(event.transcript);
         break;
 
+      case 'conversation.item.input_audio_transcription.failed':
+        console.error('Transcription failed:', event.error);
+        // Display partial transcript if available in the error
+        if (event.error?.message) {
+          console.log('Transcription error message:', event.error.message);
+        }
+        break;
+
       case 'response.function_call_arguments.done':
         console.log('Function call:', event.name, event.arguments);
         this.handleFunctionCall(event.name, event.arguments);
