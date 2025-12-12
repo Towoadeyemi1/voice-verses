@@ -16,14 +16,14 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
     );
   }
 
-  // Fixed font sizes for 1920x1080 resolution - LARGE for church projection
+  // Fixed font sizes for 1920x1080 resolution - LARGE for church projection (75-85% screen fill)
   const fontSize = slide.textFormatting?.fontSize || 'large';
   const alignment = slide.textFormatting?.alignment || 'center';
   const fontSizeMap = {
-    small: 72,
-    medium: 96,
-    large: 120,
-    xlarge: 144,
+    small: 96,
+    medium: 120,
+    large: 150,
+    xlarge: 180,
   };
   const baseFontSize = fontSizeMap[fontSize];
   
@@ -46,11 +46,11 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center h-full" style={{ width: '1600px', padding: '64px' }}>
+          <div className="relative z-10 flex flex-col items-center justify-center h-full" style={{ width: '1800px', padding: '48px' }}>
             {!hideReference && (
               <div 
                 className="font-bold text-center"
-                style={{ fontSize: '72px', color: '#3B82F6', marginBottom: '48px', width: '100%' }}
+                style={{ fontSize: '96px', color: '#3B82F6', marginBottom: '48px', width: '100%' }}
               >
                 {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
               </div>
@@ -78,17 +78,17 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
           {slide.backgroundMedia && (
             <div className="absolute inset-0 bg-black" style={{ opacity: 1 - (slide.backgroundMedia.opacity || 0.3) }} />
           )}
-          <div className="relative z-10 flex flex-col items-center justify-center h-full" style={{ width: '1600px', padding: '64px' }}>
+          <div className="relative z-10 flex flex-col items-center justify-center h-full" style={{ width: '1800px', padding: '48px' }}>
             <div 
               className="font-semibold text-center"
-              style={{ fontSize: '56px', color: '#3B82F6', marginBottom: '24px', width: '100%' }}
+              style={{ fontSize: '72px', color: '#3B82F6', marginBottom: '32px', width: '100%' }}
             >
               {slide.songTitle}
             </div>
             {slide.section && (
               <div 
                 className="uppercase text-center"
-                style={{ fontSize: '40px', color: '#9CA3AF', marginBottom: '32px', width: '100%' }}
+                style={{ fontSize: '56px', color: '#9CA3AF', marginBottom: '40px', width: '100%' }}
               >
                 {slide.section}
               </div>
