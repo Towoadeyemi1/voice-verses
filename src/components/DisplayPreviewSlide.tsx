@@ -5,6 +5,26 @@ interface DisplayPreviewSlideProps {
   hideReference?: boolean;
 }
 
+// Calculate adaptive font size based on text length to fill 85% of screen
+const getAdaptiveFontSize = (text: string, maxFontSize: number, minFontSize: number): number => {
+  const charCount = text.length;
+  
+  // Thresholds for different text lengths (optimized for 1920x1080 at 85% fill)
+  if (charCount <= 50) return maxFontSize;           // Very short: max size
+  if (charCount <= 100) return Math.round(maxFontSize * 0.85);  // Short
+  if (charCount <= 150) return Math.round(maxFontSize * 0.7);   // Medium-short
+  if (charCount <= 200) return Math.round(maxFontSize * 0.6);   // Medium
+  if (charCount <= 300) return Math.round(maxFontSize * 0.5);   // Medium-long
+  if (charCount <= 400) return Math.round(maxFontSize * 0.42);  // Long
+  if (charCount <= 500) return Math.round(maxFontSize * 0.35);  // Very long
+  return minFontSize;  // Extra long: minimum size
+};
+
+// Calculate adaptive reference font size
+const getAdaptiveReferenceFontSize = (textFontSize: number): number => {
+  return Math.max(48, Math.round(textFontSize * 0.5));
+};
+
 export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPreviewSlideProps) => {
   if (!slide) {
     return (
@@ -16,16 +36,7 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
     );
   }
 
-  // Fixed font sizes for 1920x1080 resolution - MASSIVE for church projection (85% screen fill)
-  const fontSize = slide.textFormatting?.fontSize || 'large';
   const alignment = slide.textFormatting?.alignment || 'center';
-  const fontSizeMap = {
-    small: 140,
-    medium: 180,
-    large: 220,
-    xlarge: 260,
-  };
-  const baseFontSize = fontSizeMap[fontSize];
   
   const alignmentClasses = {
     left: 'text-left',
@@ -41,6 +52,10 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
 
   switch (slide.type) {
     case 'scripture':
+      // Adaptive font sizing: max 280px for short verses, min 80px for long verses
+      const scriptureFontSize = getAdaptiveFontSize(slide.verse.text, 280, 80);
+      const referenceFontSize = getAdaptiveReferenceFontSize(scriptureFontSize);
+      
       return (
         <div className={`relative flex items-center justify-center h-full w-full text-white`} style={{ ...backgroundStyle, width: '1920px', height: '1080px', minWidth: '1920px' }}>
           {slide.backgroundMedia && (
@@ -50,7 +65,7 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
             {!hideReference && (
               <div 
                 className="font-bold text-center"
-                style={{ fontSize: '120px', color: '#3B82F6', marginBottom: '40px', width: '100%' }}
+                style={{ fontSize: `${referenceFontSize}px`, color: '#3B82F6', marginBottom: '40px', width: '100%' }}
               >
                 {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
               </div>
@@ -58,8 +73,8 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
             <div 
               className="text-center"
               style={{ 
-                fontSize: `${baseFontSize}px`,
-                lineHeight: '1.4',
+                fontSize: `${scriptureFontSize}px`,
+                lineHeight: '1.3',
                 width: '100%',
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word',
@@ -73,6 +88,9 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
       );
 
     case 'lyrics':
+      // Adaptive font sizing for lyrics content
+      const lyricsFontSize = getAdaptiveFontSize(slide.content || '', 240, 80);
+      
       return (
         <div className={`relative flex items-center justify-center h-full w-full text-white`} style={{ ...backgroundStyle, width: '1920px', height: '1080px', minWidth: '1920px' }}>
           {slide.backgroundMedia && (
@@ -96,8 +114,8 @@ export const DisplayPreviewSlide = ({ slide, hideReference = false }: DisplayPre
             <div 
               className="text-center"
               style={{ 
-                fontSize: `${baseFontSize}px`,
-                lineHeight: '1.4',
+                fontSize: `${lyricsFontSize}px`,
+                lineHeight: '1.3',
                 width: '100%',
                 whiteSpace: 'pre-line',
                 wordWrap: 'break-word',
