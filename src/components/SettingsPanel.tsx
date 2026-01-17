@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { X, Mic, Type, Palette, HardDrive, Music2 } from 'lucide-react';
+import { X, Mic, Type, Palette, HardDrive, Music2, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 import { BibleVersionSettings } from './BibleVersionSettings';
 import { StorageSettings } from './StorageSettings';
@@ -21,6 +21,7 @@ import { BibleParser } from '@/lib/bibleParser';
 import { BibleVersionType } from '@/types/bibleVersion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { SpeechEngineSettings } from './SpeechEngineSettings';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -112,8 +113,9 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="speech">Speech</TabsTrigger>
           <TabsTrigger value="backgrounds">Backgrounds</TabsTrigger>
           <TabsTrigger value="ccli">CCLI</TabsTrigger>
           <TabsTrigger value="logo">Logo</TabsTrigger>
@@ -268,6 +270,10 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
               Save Settings
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="speech" className="space-y-6 mt-6">
+          <SpeechEngineSettings />
         </TabsContent>
 
         <TabsContent value="backgrounds" className="space-y-6 mt-6">
