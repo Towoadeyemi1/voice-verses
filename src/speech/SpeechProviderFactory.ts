@@ -1,6 +1,7 @@
 import { ISpeechProvider, SpeechSettings, SpeechEngineType } from './ISpeechProvider';
 import { OpenAISpeechProvider } from './providers/OpenAISpeechProvider';
 import { LocalSpeechWSProvider } from './providers/LocalSpeechWSProvider';
+import { WebSpeechProvider } from './providers/WebSpeechProvider';
 
 export interface SpeechProviderCallbacks {
   onTranscript: (text: string, isFinal: boolean) => void;
@@ -24,6 +25,16 @@ export function createSpeechProvider(
         url: settings.localAsrUrl || 'ws://127.0.0.1:8765',
         engine: settings.localEngine || 'vosk',
         language: settings.language || 'en',
+        audioDeviceId: settings.audioDevice || null,
+      },
+      callbacks
+    );
+  }
+
+  if (settings.speechEngine === 'webspeech') {
+    return new WebSpeechProvider(
+      {
+        language: settings.language || 'en-US',
         audioDeviceId: settings.audioDevice || null,
       },
       callbacks

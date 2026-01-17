@@ -7,7 +7,7 @@ export type DetectionInfo = {
   engine?: 'openai' | 'vosk' | 'sherpa' | 'whisper';
 };
 
-export type SpeechEngineType = 'openai' | 'local';
+export type SpeechEngineType = 'openai' | 'local' | 'webspeech';
 export type LocalEngineType = 'vosk' | 'sherpa' | 'whisper';
 export type DetectionAuthorityType = 'tool' | 'transcript' | 'hybrid';
 
