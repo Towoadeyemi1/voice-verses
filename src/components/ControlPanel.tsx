@@ -14,11 +14,16 @@ import { DisplayedVerse, AudioStatus, BibleVerse } from '@/types/bible';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncService } from '@/lib/syncService';
-import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card } from '@/components/ui/card';
 import { ApiKeyDialog } from './ApiKeyDialog';
 import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
+import { 
+  ISpeechProvider, 
+  createSpeechProvider, 
+  loadSpeechSettings,
+  VerseDetectionController 
+} from '@/speech';
 
 interface ControlPanelProps {
   showDisplayMonitor?: boolean;
@@ -49,7 +54,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   const [lastTranscriptSegment, setLastTranscriptSegment] = useState('');
   const [readingMode, setReadingMode] = useState<'reading' | 'explaining' | 'idle'>('idle');
   
-  const realtimeChat = useRef<RealtimeWebRTC | null>(null);
+  const speechProvider = useRef<ISpeechProvider | null>(null);
+  const verseController = useRef<VerseDetectionController | null>(null);
   const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Listen for API fallback events
@@ -130,38 +136,50 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
       setIsConnecting(true);
       setAudioStatus(prev => ({ ...prev, isListening: true, status: 'listening' }));
       
-      // Initialize WebRTC Realtime Chat
-      realtimeChat.current = new RealtimeWebRTC(
-        (text) => {
-          console.log('Transcript received:', text);
+      // Create verse detection controller (centralized detection with dedupe)
+      verseController.current = new VerseDetectionController({
+        onVerseDetected: (verse, detectionInfo) => {
+          console.log('Verse detected:', verse, detectionInfo);
+          handleVerseDetected(verse, detectionInfo);
+        },
+        onTranscriptUpdate: (text) => {
           setTranscript(text);
         },
-        (verse, detectionInfo) => {
-          if (verse) {
-            processTranscript('', verse);
-            
-            // Show different notifications based on detection method
-            if (detectionInfo?.method === 'description') {
-              toast.success('Verse detected from description!', {
-                description: `${verse.book} ${verse.chapter}:${verse.verse} - ${detectionInfo.description} (${detectionInfo.confidence} confidence)`,
-                duration: 5000,
-              });
-            }
-          }
+      });
+
+      // Load speech settings and create provider
+      const settings = loadSpeechSettings();
+      settings.openaiApiKey = apiKey;
+      settings.language = transcriptionLanguage;
+
+      speechProvider.current = createSpeechProvider(settings, {
+        onTranscript: (text, isFinal) => {
+          console.log(`Transcript received (final=${isFinal}):`, text);
+          // Route through centralized verse detection controller
+          verseController.current?.onTranscript(text, isFinal);
         },
-        (volume) => {
+        onVolumeUpdate: (volume) => {
           setAudioStatus(prev => ({ ...prev, volume }));
         },
-        apiKey, // Pass API key to WebRTC class
-        transcriptionLanguage // Pass language preference
-      );
+        onError: (error) => {
+          console.error('Speech provider error:', error);
+          toast.error('Speech recognition error', {
+            description: error.message,
+          });
+        },
+      });
 
-      await realtimeChat.current.init();
+      // Set engine type in controller
+      verseController.current.setEngine(settings.speechEngine);
+
+      await speechProvider.current.init();
       
       setIsConnecting(false);
       setReadingMode('idle');
+      
+      const engineName = settings.speechEngine === 'local' ? settings.localEngine : 'OpenAI';
       toast.success('Listening started', {
-        description: 'Ready to detect Bible references',
+        description: `Using ${engineName} for speech recognition`,
       });
     } catch (error) {
       console.error('Error starting listening:', error);
@@ -170,6 +188,43 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
         description: error instanceof Error ? error.message : 'Unknown error',
       });
       setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle' }));
+    }
+  };
+
+  const handleVerseDetected = (verse: BibleVerse, detectionInfo?: any) => {
+    const startTime = performance.now();
+    const latency = Math.round(performance.now() - startTime);
+    
+    const displayedVerse: DisplayedVerse = {
+      ...verse,
+      timestamp: new Date(),
+      latency,
+    };
+
+    setCurrentVerse(displayedVerse);
+    setRecentVerses(prev => [displayedVerse, ...prev].slice(0, 5));
+    verseController.current?.setCurrentVerse(verse);
+
+    // Broadcast to projection display
+    console.log('ControlPanel broadcasting verse:', displayedVerse);
+    syncService.broadcast({
+      type: 'VERSE_UPDATE',
+      data: {
+        verse: displayedVerse,
+        timestamp: displayedVerse.timestamp,
+        latency: displayedVerse.latency,
+      },
+    });
+
+    toast.success('Verse found!', {
+      description: `${verse.book} ${verse.chapter}:${verse.verse}`,
+    });
+
+    if (detectionInfo?.method === 'description') {
+      toast.info('Detected from description', {
+        description: `${detectionInfo.description} (${detectionInfo.confidence} confidence)`,
+        duration: 3000,
+      });
     }
   };
 
@@ -188,9 +243,14 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
       autoAdvanceTimer.current = null;
     }
     
-    if (realtimeChat.current) {
-      realtimeChat.current.disconnect();
-      realtimeChat.current = null;
+    if (speechProvider.current) {
+      speechProvider.current.disconnect();
+      speechProvider.current = null;
+    }
+    
+    if (verseController.current) {
+      verseController.current.reset();
+      verseController.current = null;
     }
     
     setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle', volume: 0 }));
@@ -201,10 +261,10 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   };
 
   const handleToggleMute = () => {
-    if (realtimeChat.current) {
+    if (speechProvider.current) {
       const newMutedState = !isMicMuted;
       setIsMicMuted(newMutedState);
-      realtimeChat.current.setMicrophoneMuted(newMutedState);
+      speechProvider.current.setMicrophoneMuted(newMutedState);
       toast.info(newMutedState ? 'Microphone muted' : 'Microphone unmuted');
     }
   };
@@ -356,7 +416,11 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   };
 
   const handleManualVerseSelect = (verse: BibleVerse) => {
-    processTranscript('', verse);
+    if (verseController.current) {
+      verseController.current.triggerManualVerse(verse);
+    } else {
+      handleVerseDetected(verse, { method: 'manual' });
+    }
   };
 
   const context = BibleParser.getCurrentContext();
