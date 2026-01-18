@@ -108,27 +108,34 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   }, [transcript]);
 
   const handleStartListening = async () => {
-    // Check if in development mode and need API key
-    const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
-                         window.location.hostname.includes('lovable.dev');
+    // Load speech settings to check which engine is selected
+    const settings = loadSpeechSettings();
     
-    if (isDevelopment) {
-      // Check for saved API key
-      const savedKey = localStorage.getItem('dev_openai_api_key');
+    // Only require API key for OpenAI engine in development mode
+    if (settings.speechEngine === 'openai') {
+      const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
+                           window.location.hostname.includes('lovable.dev') ||
+                           window.location.hostname.includes('localhost');
       
-      if (!savedKey) {
-        // Show dialog to get API key
-        setShowApiKeyDialog(true);
+      if (isDevelopment) {
+        // Check for saved API key
+        const savedKey = localStorage.getItem('dev_openai_api_key');
+        
+        if (!savedKey) {
+          // Show dialog to get API key
+          setShowApiKeyDialog(true);
+          return;
+        }
+        
+        // Use saved key
+        setPendingApiKey(savedKey);
+        startListeningWithKey(savedKey);
         return;
       }
-      
-      // Use saved key
-      setPendingApiKey(savedKey);
-      startListeningWithKey(savedKey);
-    } else {
-      // Production mode - use Azure Function
-      startListeningWithKey(null);
     }
+    
+    // For webspeech, local, or production OpenAI - no key needed upfront
+    startListeningWithKey(null);
   };
 
   const startListeningWithKey = async (apiKey: string | null) => {
