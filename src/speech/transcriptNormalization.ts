@@ -70,11 +70,12 @@ const BOOK_CONTEXT_WORDS = [
 
 /**
  * Convert spoken numbers like "twenty eight" to "28"
+ * Handles the special case of consecutive single-digit numbers (e.g., "one one" → "1 1" not "11")
  */
 function convertSpokenNumber(text: string): string {
   let result = text.toLowerCase();
   
-  // Handle compound numbers like "twenty eight"
+  // Handle compound numbers like "twenty eight" FIRST
   for (const [tens, tensValue] of Object.entries(SPOKEN_NUMBERS)) {
     if (tensValue >= 20 && tensValue <= 90 && tensValue % 10 === 0) {
       for (const [ones, onesValue] of Object.entries(SPOKEN_NUMBERS)) {
@@ -83,6 +84,17 @@ function convertSpokenNumber(text: string): string {
           result = result.replace(pattern, String(tensValue + onesValue));
         }
       }
+    }
+  }
+  
+  // Handle single-digit numbers appearing consecutively (e.g., "one one" → "1 1")
+  // This is critical for verse references like "genesis one one" → "genesis 1 1"
+  const singleDigits = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+  for (const first of singleDigits) {
+    for (const second of singleDigits) {
+      // Match "one one", "two three", etc. and preserve the space between them
+      const pattern = new RegExp(`\\b${first}\\s+${second}\\b`, 'gi');
+      result = result.replace(pattern, `${SPOKEN_NUMBERS[first]} ${SPOKEN_NUMBERS[second]}`);
     }
   }
   
