@@ -78,14 +78,16 @@ const BOOK_CONTEXT_WORDS = [
 function convertSpokenNumber(text: string): string {
   let result = text.toLowerCase();
   
-  // Step 1: Only convert hyphenated compounds to single numbers
-  // "twenty-eight" → "28" but "twenty eight" stays as two words for now
+  // Step 1: Convert TRUE compound numbers (tens + ones) to single numbers
+  // "twenty-eight" OR "twenty eight" → "28" (these are always single numbers)
+  // This is different from "three sixteen" which is chapter + verse
   for (const [tens, tensValue] of Object.entries(SPOKEN_NUMBERS)) {
     if (tensValue >= 20 && tensValue <= 90 && tensValue % 10 === 0) {
       for (const [ones, onesValue] of Object.entries(SPOKEN_NUMBERS)) {
         if (onesValue >= 1 && onesValue <= 9) {
-          const hyphenPattern = new RegExp(`\\b${tens}-${ones}\\b`, 'gi');
-          result = result.replace(hyphenPattern, String(tensValue + onesValue));
+          // Match both hyphenated and space-separated: "thirty-four" OR "thirty four"
+          const compoundPattern = new RegExp(`\\b${tens}[\\s-]${ones}\\b`, 'gi');
+          result = result.replace(compoundPattern, String(tensValue + onesValue));
         }
       }
     }
