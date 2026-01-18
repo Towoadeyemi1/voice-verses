@@ -86,8 +86,8 @@ export const SpeechEngineSettings = () => {
   };
 
   const handleDownload = (platform: 'windows' | 'macos') => {
-    // For now, open releases page. Update to direct downloads after first release
-    window.open(GITHUB_RELEASES_URL, '_blank');
+    const url = platform === 'windows' ? WINDOWS_INSTALLER_URL : MACOS_INSTALLER_URL;
+    window.open(url, '_blank');
   };
 
   const handleFallback = (engine: SpeechEngineType) => {
