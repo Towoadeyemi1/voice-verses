@@ -266,6 +266,60 @@ export function extractReferences(text: string): ExtractedReference[] {
     }
   }
   
+  // Pattern 2b: Book + ConcatenatedNumber (speech engine glued chapter+verse together)
+  // e.g., "john 316" → chapter 3, verse 16
+  // Handles 2-4 digit numbers where first 1-2 digits are chapter
+  const concatenatedPattern = new RegExp(
+    `\\b(${bookPattern})\\s+(\\d{2,4})\\b(?!\\s*[:\\d])`,
+    'gi'
+  );
+  
+  while ((match = concatenatedPattern.exec(normalized)) !== null) {
+    const bookAlias = match[1].toLowerCase();
+    const book = BOOK_ALIASES[bookAlias] || BOOK_ALIASES[bookAlias.replace(/\s+/g, ' ')];
+    
+    if (book) {
+      const numStr = match[2];
+      let chapter: number | null = null;
+      let verse: number | null = null;
+      
+      // Try to split the number intelligently
+      // For 2 digits: 1+1 split (e.g., "11" → chapter 1, verse 1)
+      // For 3 digits: try 1+2 first (e.g., "316" → 3:16), fallback to 2+1 (e.g., "121" → 12:1)
+      // For 4 digits: try 1+3 (e.g., "1119" → 1:119), 2+2 (e.g., "1234" → 12:34), 3+1 (e.g., "1191" → 119:1)
+      
+      if (numStr.length === 2) {
+        chapter = parseInt(numStr[0], 10);
+        verse = parseInt(numStr[1], 10);
+      } else if (numStr.length === 3) {
+        // Prefer 1+2 split (most common: "316" = 3:16)
+        chapter = parseInt(numStr[0], 10);
+        verse = parseInt(numStr.slice(1), 10);
+      } else if (numStr.length === 4) {
+        // Try 2+2 split first (e.g., "1234" = 12:34)
+        chapter = parseInt(numStr.slice(0, 2), 10);
+        verse = parseInt(numStr.slice(2), 10);
+      }
+      
+      if (chapter && verse && chapter > 0 && verse > 0) {
+        // Avoid duplicates
+        const isDuplicate = references.some(
+          r => r.book === book && r.chapter === chapter && r.startVerse === verse
+        );
+        
+        if (!isDuplicate) {
+          references.push({
+            book,
+            chapter,
+            startVerse: verse,
+            raw: match[0],
+            confidence: 'medium', // Lower confidence since we're guessing the split
+          });
+        }
+      }
+    }
+  }
+  
   // Pattern 3: Book + Chapter only (for chapter references like "Psalm 23")
   // e.g., "psalm 23", "john 3"
   const chapterOnlyPattern = new RegExp(
