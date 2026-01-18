@@ -22,10 +22,8 @@ import {
 } from '@/speech';
 import { WebSpeechProvider } from '@/speech/providers/WebSpeechProvider';
 
-// GitHub release URLs - these will work once you push a speech-v* tag
-// To create a release: git tag speech-v1.0.0 && git push origin speech-v1.0.0
-// The workflow at .github/workflows/speech-service-release.yml will build and publish installers
-const GITHUB_RELEASES_URL = 'https://github.com/davitacols/cornerstone-bible/releases';
+// GitHub release URLs for voice-verses repository
+const GITHUB_RELEASES_URL = 'https://github.com/Towoadeyemi1/voice-verses/releases';
 const WINDOWS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/latest/download/CornerstoneSpeechService-Windows.zip`;
 const MACOS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/latest/download/CornerstoneSpeechService.dmg`;
 
