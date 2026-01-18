@@ -70,18 +70,20 @@ const BOOK_CONTEXT_WORDS = [
 
 /**
  * Convert spoken numbers like "twenty eight" to "28"
- * Handles the special case of consecutive single-digit numbers (e.g., "one one" → "1 1" not "11")
+ * CRITICAL: Preserves spaces between consecutive numbers for verse references
+ * e.g., "genesis one one" → "genesis 1 1" (not "genesis 11")
+ * e.g., "john three sixteen" → "john 3 16" (not "john 316")
+ * e.g., "psalm one nineteen one" → "psalm 1 19 1" (not "psalm 11191")
  */
 function convertSpokenNumber(text: string): string {
   let result = text.toLowerCase();
   
-  // Handle compound numbers like "twenty eight" FIRST (only when hyphenated or truly compound)
-  // These are ONLY for cases where the speaker intends a single number like "twenty-eight" = 28
+  // Step 1: Only convert hyphenated compounds to single numbers
+  // "twenty-eight" → "28" but "twenty eight" stays as two words for now
   for (const [tens, tensValue] of Object.entries(SPOKEN_NUMBERS)) {
     if (tensValue >= 20 && tensValue <= 90 && tensValue % 10 === 0) {
       for (const [ones, onesValue] of Object.entries(SPOKEN_NUMBERS)) {
         if (onesValue >= 1 && onesValue <= 9) {
-          // Only match hyphenated compounds (not space-separated, which could be chapter+verse)
           const hyphenPattern = new RegExp(`\\b${tens}-${ones}\\b`, 'gi');
           result = result.replace(hyphenPattern, String(tensValue + onesValue));
         }
@@ -89,25 +91,22 @@ function convertSpokenNumber(text: string): string {
     }
   }
   
-  // Handle ALL consecutive spoken numbers and keep them space-separated
-  // This is critical for verse references like "genesis one one" → "genesis 1 1"
-  // and "john three sixteen" → "john 3 16"
-  const allNumberWords = Object.keys(SPOKEN_NUMBERS);
-  for (const first of allNumberWords) {
-    for (const second of allNumberWords) {
-      // Match "three sixteen", "one one", etc. and preserve the space between them
-      const pattern = new RegExp(`\\b${first}\\s+${second}\\b`, 'gi');
-      const firstVal = SPOKEN_NUMBERS[first];
-      const secondVal = SPOKEN_NUMBERS[second];
-      result = result.replace(pattern, `${firstVal} ${secondVal}`);
-    }
+  // Step 2: Replace all spoken number words with digits, using a special marker
+  // to preserve word boundaries. We use "§" as a temporary marker.
+  const allNumberWords = Object.keys(SPOKEN_NUMBERS).sort((a, b) => b.length - a.length); // Longest first
+  
+  for (const word of allNumberWords) {
+    // Match the word and preserve spacing by using capture groups
+    const pattern = new RegExp(`\\b${word}\\b`, 'gi');
+    result = result.replace(pattern, `§${SPOKEN_NUMBERS[word]}§`);
   }
   
-  // Handle single numbers
-  for (const [word, value] of Object.entries(SPOKEN_NUMBERS)) {
-    const pattern = new RegExp(`\\b${word}\\b`, 'gi');
-    result = result.replace(pattern, String(value));
-  }
+  // Step 3: Now clean up the markers
+  // Two adjacent numbers like "§3§ §16§" should become "3 16" (with space)
+  // Single numbers like "§16§" should become "16"
+  result = result.replace(/§(\d+)§\s+§(\d+)§/g, '$1 $2'); // Adjacent with space → preserve space
+  result = result.replace(/§(\d+)§\s*§(\d+)§/g, '$1 $2'); // Adjacent without space → add space (safety)
+  result = result.replace(/§(\d+)§/g, '$1'); // Remove remaining markers
   
   return result;
 }
