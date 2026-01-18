@@ -15,9 +15,14 @@ import { Play, Square, ChevronLeft, ChevronRight, Monitor, Edit2, ExternalLink, 
 import { toast } from 'sonner';
 import { ShowLogoButton } from '@/components/ShowLogoButton';
 import { cn } from '@/lib/utils';
-import { RealtimeWebRTC } from '@/lib/realtimeWebRTC';
 import { BibleVerse } from '@/types/bible';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { 
+  ISpeechProvider, 
+  createSpeechProvider, 
+  loadSpeechSettings,
+  VerseDetectionController 
+} from '@/speech';
 
 const Presenter = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,7 +39,8 @@ const Presenter = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [audioVolume, setAudioVolume] = useState(0);
-  const realtimeChat = useRef<RealtimeWebRTC | null>(null);
+  const speechProvider = useRef<ISpeechProvider | null>(null);
+  const verseController = useRef<VerseDetectionController | null>(null);
 
   useEffect(() => {
     loadServices();
@@ -92,8 +98,11 @@ const Presenter = () => {
   // Cleanup voice on unmount
   useEffect(() => {
     return () => {
-      if (realtimeChat.current) {
-        realtimeChat.current.disconnect();
+      if (speechProvider.current) {
+        speechProvider.current.disconnect();
+      }
+      if (verseController.current) {
+        verseController.current.reset();
       }
     };
   }, []);
@@ -288,41 +297,75 @@ const Presenter = () => {
       setIsConnecting(true);
       setIsVoiceActive(true);
       
-      realtimeChat.current = new RealtimeWebRTC(
-        (text) => {
-          console.log('Transcript:', text);
+      // Create verse detection controller (centralized detection with dedupe)
+      verseController.current = new VerseDetectionController({
+        onVerseDetected: (verse, detectionInfo) => {
+          console.log('Presenter: Verse detected:', verse, detectionInfo);
+          
+          // Create a scripture slide
+          const scriptureSlide: Slide = {
+            id: `voice-${Date.now()}`,
+            type: 'scripture',
+            title: `${verse.book} ${verse.chapter}:${verse.verse}`,
+            verse: verse,
+            textFormatting: { fontSize: 'medium', alignment: 'center' }
+          };
+          
+          // Broadcast to displays
+          broadcastSlide(scriptureSlide, -1);
+          
+          toast.success('Scripture detected!', {
+            description: `${verse.book} ${verse.chapter}:${verse.verse}`,
+            duration: 3000,
+          });
+        },
+        onTranscriptUpdate: (text) => {
           setTranscript(text);
         },
-        (verse: BibleVerse) => {
-          if (verse) {
-            // Create a scripture slide
-            const scriptureSlide: Slide = {
-              id: `voice-${Date.now()}`,
-              type: 'scripture',
-              title: `${verse.book} ${verse.chapter}:${verse.verse}`,
-              verse: verse,
-              textFormatting: { fontSize: 'medium', alignment: 'center' }
-            };
-            
-            // Broadcast to displays
-            broadcastSlide(scriptureSlide, -1);
-            
-            toast.success('Scripture detected!', {
-              description: `${verse.book} ${verse.chapter}:${verse.verse}`,
-              duration: 3000,
-            });
-          }
-        },
-        (volume) => {
-          setAudioVolume(Math.round(volume));
-        }
-      );
+      });
 
-      await realtimeChat.current.init();
+      // Load speech settings and create provider
+      const settings = loadSpeechSettings();
+      
+      // Check for API key in development mode for OpenAI
+      if (settings.speechEngine === 'openai') {
+        const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
+                             window.location.hostname.includes('lovable.dev');
+        if (isDevelopment) {
+          const savedKey = localStorage.getItem('dev_openai_api_key');
+          if (savedKey) {
+            settings.openaiApiKey = savedKey;
+          }
+        }
+      }
+
+      speechProvider.current = createSpeechProvider(settings, {
+        onTranscript: (text, isFinal) => {
+          console.log(`Presenter: Transcript received (final=${isFinal}):`, text);
+          // Route through centralized verse detection controller
+          verseController.current?.onTranscript(text, isFinal);
+        },
+        onVolumeUpdate: (volume) => {
+          setAudioVolume(Math.round(volume));
+        },
+        onError: (error) => {
+          console.error('Presenter: Speech provider error:', error);
+          toast.error('Speech recognition error', {
+            description: error.message,
+          });
+        },
+      });
+
+      // Set engine type in controller
+      verseController.current.setEngine(settings.speechEngine);
+
+      await speechProvider.current.init();
       setIsConnecting(false);
       
+      const engineName = settings.speechEngine === 'local' ? settings.localEngine : 
+                        settings.speechEngine === 'webspeech' ? 'Browser' : 'OpenAI';
       toast.success('Voice activated', {
-        description: 'Speak scripture references to display them',
+        description: `Using ${engineName} for speech recognition`,
       });
     } catch (error) {
       console.error('Error starting voice:', error);
@@ -335,9 +378,13 @@ const Presenter = () => {
   };
 
   const handleStopVoice = () => {
-    if (realtimeChat.current) {
-      realtimeChat.current.disconnect();
-      realtimeChat.current = null;
+    if (speechProvider.current) {
+      speechProvider.current.disconnect();
+      speechProvider.current = null;
+    }
+    if (verseController.current) {
+      verseController.current.reset();
+      verseController.current = null;
     }
     setIsVoiceActive(false);
     setAudioVolume(0);

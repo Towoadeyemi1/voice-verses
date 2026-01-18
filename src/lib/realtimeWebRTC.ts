@@ -1,5 +1,14 @@
-import { BibleVerse } from '@/types/bible';
-import { BibleParser } from './bibleParser';
+/**
+ * RealtimeWebRTC Module
+ * 
+ * This module provides WebRTC-based speech-to-text using OpenAI's Realtime API.
+ * 
+ * IMPORTANT: This is now TRANSCRIPTION-ONLY. All verse detection is handled
+ * by the centralized VerseDetectionController to prevent duplicate triggers.
+ * 
+ * For new implementations, prefer using OpenAISpeechProvider which implements
+ * the ISpeechProvider interface for consistent API across all speech engines.
+ */
 
 interface SessionData {
   client_secret: {
@@ -65,6 +74,17 @@ export class AudioRecorder {
   }
 }
 
+/**
+ * RealtimeWebRTC - OpenAI Realtime API via WebRTC
+ * 
+ * IMPORTANT: This class is now TRANSCRIPTION-ONLY.
+ * All verse detection is handled by the VerseDetectionController.
+ * The tools, processTranscript, and handleFunctionCall have been removed
+ * to prevent duplicate verse triggers.
+ * 
+ * For new implementations, prefer using OpenAISpeechProvider from
+ * src/speech/providers/OpenAISpeechProvider.ts
+ */
 export class RealtimeWebRTC {
   private pc: RTCPeerConnection | null = null;
   private dc: RTCDataChannel | null = null;
@@ -73,8 +93,7 @@ export class RealtimeWebRTC {
   private selectedDeviceId: string | null = null;
 
   constructor(
-    private onTranscript: (text: string) => void,
-    private onVerseDetected: (verse: BibleVerse | null, detectionInfo?: { method: string; description?: string; confidence?: string }) => void,
+    private onTranscript: (text: string, isFinal: boolean) => void,
     private onVolumeUpdate: (volume: number) => void,
     private apiKey: string | null = null,
     private language: string = 'en'
@@ -119,76 +138,17 @@ export class RealtimeWebRTC {
           },
           body: JSON.stringify({
             model: "gpt-4o-realtime-preview-2024-12-17",
-            modalities: ["text"],  // No audio output - we only want transcription
+            modalities: ["text"],  // No audio output - transcription only
             input_audio_transcription: {
               model: "whisper-1",
               language: this.language
             },
-            instructions: `You are a silent Bible verse detection system for church services. You have deep knowledge of the entire Bible.
-
-CRITICAL: YOU ARE COMPLETELY SILENT. NEVER generate any audio or text responses. ONLY call functions.
-
-YOUR ONLY JOB:
-1. Listen to audio input
-2. Detect Bible verse references or descriptions
-3. Call the appropriate function
-4. DO NOT speak, respond, acknowledge, or make any output except function calls
-
-DETECTION MODES:
-
-A) EXPLICIT REFERENCES → Call display_verse:
-- "John 3:16", "john three sixteen", "Romans 8:28"
-- "Turn to Psalm 23", "Let's read verse 5"
-- "Next verse", "Chapter 3 verse 16"
-
-B) PARAPHRASES/DESCRIPTIONS → Call suggest_verse_from_description:
-- "The verse about God so loved the world" → John 3:16
-- "Where Jesus wept" → John 11:35
-- "The Lord is my shepherd" → Psalm 23:1
-
-FORBIDDEN:
-- Speaking or generating audio responses
-- Acknowledging user input verbally
-- Responding to greetings, questions, or conversation
-- Any output except function calls`,
-            tools: [
-              {
-                type: "function",
-                name: "display_verse",
-                description: "Display a Bible verse when an explicit reference is mentioned",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    book: { type: "string" },
-                    chapter: { type: "number" },
-                    verse: { type: "number" }
-                  },
-                  required: ["book", "chapter", "verse"]
-                }
-              },
-              {
-                type: "function",
-                name: "suggest_verse_from_description",
-                description: "Suggest a Bible verse from description",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    book: { type: "string" },
-                    chapter: { type: "number" },
-                    verse: { type: "number" },
-                    description: { type: "string" },
-                    confidence: { type: "string", enum: ["high", "medium", "low"] }
-                  },
-                  required: ["book", "chapter", "verse", "description", "confidence"]
-                }
-              }
-            ],
-            tool_choice: "auto",
+            // NO TOOLS - transcription only! Verse detection is centralized.
             turn_detection: {
               type: "server_vad",
               threshold: 0.5,
               prefix_padding_ms: 300,
-              silence_duration_ms: 1000
+              silence_duration_ms: 600  // Reduced for lower latency
             }
           }),
         });
@@ -235,10 +195,9 @@ FORBIDDEN:
       // Create peer connection
       this.pc = new RTCPeerConnection();
 
-      // Disable remote audio playback - we only want transcription, not AI voice responses
+      // Disable remote audio playback - we only want transcription
       this.pc.ontrack = (e) => {
         console.log('Received remote audio track (playback disabled)');
-        // Not connecting to audioEl - we don't want the AI to speak back
       };
 
       // Add local audio track with selected device
@@ -355,22 +314,16 @@ FORBIDDEN:
     switch (event.type) {
       case 'conversation.item.input_audio_transcription.completed':
         console.log('Transcript:', event.transcript);
-        this.onTranscript(event.transcript);
-        this.processTranscript(event.transcript);
+        // Emit as final transcript - VerseDetectionController handles parsing
+        this.onTranscript(event.transcript, true);
         break;
 
       case 'conversation.item.input_audio_transcription.failed':
         console.error('Transcription failed:', event.error);
-        // Display partial transcript if available in the error
-        if (event.error?.message) {
-          console.log('Transcription error message:', event.error.message);
-        }
         break;
 
-      case 'response.function_call_arguments.done':
-        console.log('Function call:', event.name, event.arguments);
-        this.handleFunctionCall(event.name, event.arguments);
-        break;
+      // NOTE: Function call handling removed!
+      // All verse detection is now centralized in VerseDetectionController
 
       case 'error':
         console.error('OpenAI API error:', event.error);
@@ -384,72 +337,6 @@ FORBIDDEN:
         console.log('Speech stopped');
         break;
     }
-  }
-
-  private async processTranscript(text: string) {
-    const verse = await BibleParser.parseReference(text);
-    if (verse) {
-      console.log('Verse detected from transcript:', verse);
-      this.onVerseDetected(verse);
-    }
-  }
-
-  private async handleFunctionCall(name: string, args: string) {
-    if (name === 'display_verse') {
-      try {
-        const params = JSON.parse(args);
-        // Default to verse 1 if not specified (for chapter-only references)
-        const verseNum = params.verse || 1;
-        const verse = await BibleParser.getVerse(params.book, params.chapter, verseNum);
-        console.log('Function call - display verse:', verse);
-        this.onVerseDetected(verse, { method: 'explicit' });
-      } catch (error) {
-        console.error('Error parsing function call arguments:', error);
-      }
-    } else if (name === 'suggest_verse_from_description') {
-      try {
-        const params = JSON.parse(args);
-        const verse = await BibleParser.getVerse(params.book, params.chapter, params.verse);
-        console.log('Function call - suggest verse from description:', {
-          verse,
-          description: params.description,
-          confidence: params.confidence
-        });
-        
-        if (verse) {
-          this.onVerseDetected(verse, { 
-            method: 'description',
-            description: params.description,
-            confidence: params.confidence
-          });
-        }
-      } catch (error) {
-        console.error('Error parsing suggest verse arguments:', error);
-      }
-    }
-  }
-
-  sendMessage(text: string) {
-    if (!this.dc || this.dc.readyState !== 'open') {
-      throw new Error('Data channel not ready');
-    }
-
-    const event = {
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'user',
-        content: [
-          {
-            type: 'input_text',
-            text
-          }
-        ]
-      }
-    };
-
-    this.dc.send(JSON.stringify(event));
-    this.dc.send(JSON.stringify({ type: 'response.create' }));
   }
 
   private cleanup() {
