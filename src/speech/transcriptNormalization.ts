@@ -75,26 +75,31 @@ const BOOK_CONTEXT_WORDS = [
 function convertSpokenNumber(text: string): string {
   let result = text.toLowerCase();
   
-  // Handle compound numbers like "twenty eight" FIRST
+  // Handle compound numbers like "twenty eight" FIRST (only when hyphenated or truly compound)
+  // These are ONLY for cases where the speaker intends a single number like "twenty-eight" = 28
   for (const [tens, tensValue] of Object.entries(SPOKEN_NUMBERS)) {
     if (tensValue >= 20 && tensValue <= 90 && tensValue % 10 === 0) {
       for (const [ones, onesValue] of Object.entries(SPOKEN_NUMBERS)) {
         if (onesValue >= 1 && onesValue <= 9) {
-          const pattern = new RegExp(`\\b${tens}[\\s-]?${ones}\\b`, 'gi');
-          result = result.replace(pattern, String(tensValue + onesValue));
+          // Only match hyphenated compounds (not space-separated, which could be chapter+verse)
+          const hyphenPattern = new RegExp(`\\b${tens}-${ones}\\b`, 'gi');
+          result = result.replace(hyphenPattern, String(tensValue + onesValue));
         }
       }
     }
   }
   
-  // Handle single-digit numbers appearing consecutively (e.g., "one one" → "1 1")
+  // Handle ALL consecutive spoken numbers and keep them space-separated
   // This is critical for verse references like "genesis one one" → "genesis 1 1"
-  const singleDigits = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
-  for (const first of singleDigits) {
-    for (const second of singleDigits) {
-      // Match "one one", "two three", etc. and preserve the space between them
+  // and "john three sixteen" → "john 3 16"
+  const allNumberWords = Object.keys(SPOKEN_NUMBERS);
+  for (const first of allNumberWords) {
+    for (const second of allNumberWords) {
+      // Match "three sixteen", "one one", etc. and preserve the space between them
       const pattern = new RegExp(`\\b${first}\\s+${second}\\b`, 'gi');
-      result = result.replace(pattern, `${SPOKEN_NUMBERS[first]} ${SPOKEN_NUMBERS[second]}`);
+      const firstVal = SPOKEN_NUMBERS[first];
+      const secondVal = SPOKEN_NUMBERS[second];
+      result = result.replace(pattern, `${firstVal} ${secondVal}`);
     }
   }
   
