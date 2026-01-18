@@ -100,15 +100,18 @@ function convertSpokenNumber(text: string): string {
   for (const word of allNumberWords) {
     // Match the word and preserve spacing by using capture groups
     const pattern = new RegExp(`\\b${word}\\b`, 'gi');
-    result = result.replace(pattern, `§${SPOKEN_NUMBERS[word]}§`);
+    result = result.replace(pattern, ` §${SPOKEN_NUMBERS[word]}§ `);
   }
   
-  // Step 3: Now clean up the markers
-  // Two adjacent numbers like "§3§ §16§" should become "3 16" (with space)
-  // Single numbers like "§16§" should become "16"
-  result = result.replace(/§(\d+)§\s+§(\d+)§/g, '$1 $2'); // Adjacent with space → preserve space
-  result = result.replace(/§(\d+)§\s*§(\d+)§/g, '$1 $2'); // Adjacent without space → add space (safety)
-  result = result.replace(/§(\d+)§/g, '$1'); // Remove remaining markers
+  // Step 3: Clean up the markers while preserving spaces between numbers
+  // First, normalize multiple spaces around markers
+  result = result.replace(/\s+/g, ' ');
+  
+  // Remove the § markers but keep numbers separated
+  result = result.replace(/§(\d+)§/g, '$1');
+  
+  // Final cleanup of extra spaces
+  result = result.replace(/\s+/g, ' ').trim();
   
   return result;
 }
