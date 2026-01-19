@@ -24,8 +24,8 @@ import { WebSpeechProvider } from '@/speech/providers/WebSpeechProvider';
 
 // GitHub release URLs for voice-verses repository
 const GITHUB_RELEASES_URL = 'https://github.com/Towoadeyemi1/voice-verses/releases';
-const WINDOWS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/latest/download/CornerstoneSpeechService-Windows.zip`;
-const MACOS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/latest/download/CornerstoneSpeechService.dmg`;
+const WINDOWS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/download/speech-v1.0.0/CornerstoneSpeechService-Windows.zip`;
+const MACOS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/download/speech-v1.0.0/CornerstoneSpeechService.dmg`;
 
 export const SpeechEngineSettings = () => {
   const [speechEngine, setSpeechEngine] = useState<SpeechEngineType>('openai');
