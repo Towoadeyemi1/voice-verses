@@ -22,8 +22,8 @@ import {
 } from '@/speech';
 import { WebSpeechProvider } from '@/speech/providers/WebSpeechProvider';
 
-// GitHub release URLs for voice-verses repository
-const GITHUB_RELEASES_URL = 'https://github.com/Towoadeyemi1/voice-verses/releases';
+// GitHub release URLs for cornerstone-speech-releases repository
+const GITHUB_RELEASES_URL = 'https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases';
 const WINDOWS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/download/speech-v1.0.0/CornerstoneSpeechService-Windows.zip`;
 const MACOS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/download/speech-v1.0.0/CornerstoneSpeechService.dmg`;
 
