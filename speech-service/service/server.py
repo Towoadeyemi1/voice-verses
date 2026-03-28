@@ -16,7 +16,7 @@ import websockets
 from vosk import Model, KaldiRecognizer
 
 # Configuration
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 8765
 SAMPLE_RATE = 16000
 MODEL_PATH = os.environ.get("VOSK_MODEL_PATH", "model")
