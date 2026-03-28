@@ -22,10 +22,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    // Initialize storage orchestrator on app start
     storageOrchestrator.initialize().catch(console.error);
-    
-    // Cleanup on unmount
     return () => {
       storageOrchestrator.stopAutoSync();
     };
@@ -36,7 +33,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/projection" element={<Projection />} />
@@ -48,7 +45,6 @@ const App = () => {
             <Route path="/presenter" element={<Presenter />} />
             <Route path="/media-library" element={<MediaLibrary />} />
             <Route path="/install" element={<Install />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
           <HelpAssistant />
