@@ -4,8 +4,10 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
 
-// https://vitejs.dev/config/
+const base = process.env.VITE_BASE_PATH || '/';
+
 export default defineConfig(({ mode }) => ({
+  base,
   server: {
     host: "::",
     port: 8080,
@@ -24,8 +26,8 @@ export default defineConfig(({ mode }) => ({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'any',
-        scope: '/',
-        start_url: '/',
+        scope: base,
+        start_url: base,
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -47,9 +49,8 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // Exclude large Bible JSON files from precaching
         globIgnores: ['**/node_modules/**/*'],
-        maximumFileSizeToCacheInBytes: 25 * 1024 * 1024, // 25 MB to accommodate Bible files
+        maximumFileSizeToCacheInBytes: 25 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -58,7 +59,7 @@ export default defineConfig(({ mode }) => ({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -84,6 +85,6 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
-    chunkSizeWarningLimit: 2000, // Increase to 2MB to avoid warnings for Bible files
+    chunkSizeWarningLimit: 2000,
   },
 }));
