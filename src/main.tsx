@@ -3,7 +3,6 @@ import App from "./App.tsx";
 import "./index.css";
 import { registerSW } from 'virtual:pwa-register';
 
-// Register service worker for PWA
 const updateSW = registerSW({
   onNeedRefresh() {
     if (confirm('New content available. Reload?')) {
@@ -15,4 +14,15 @@ const updateSW = registerSW({
   },
 });
 
-createRoot(document.getElementById("root")!).render(<App />);
+const rootElement = document.getElementById("root");
+
+try {
+  createRoot(rootElement!).render(<App />);
+} catch (err) {
+  rootElement!.innerHTML = `
+    <div style="padding:20px;font-family:monospace;color:red;background:white;min-height:100vh">
+      <h2>App failed to load</h2>
+      <pre>${err instanceof Error ? err.message + '\n\n' + err.stack : String(err)}</pre>
+    </div>
+  `;
+}
