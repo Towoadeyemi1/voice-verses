@@ -65,10 +65,3 @@ coll = COLLECT(
     upx=False,
     name="CornerstoneSpeechService",
 )
-```
-
----
-
-**After committing these three files**, there is one more step. The browser needs to trust the self-signed certificate once. Tell Lovable:
-```
-The local speech service now runs on wss:// instead of ws://. Update the default Local Service URL in Speech Settings from ws://127.0.0.1:8765 to wss://127.0.0.1:8765. Also update any hardcoded ws:// references to wss:// in the speech provider code.
