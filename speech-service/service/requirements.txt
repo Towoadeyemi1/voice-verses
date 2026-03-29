@@ -1,4 +1,5 @@
-vosk>=0.3.45
-websockets>=12.0
-sounddevice>=0.4.6
-numpy>=1.24.0
+vosk
+websockets
+sounddevice
+numpy
+cryptography
