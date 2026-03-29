@@ -64,7 +64,7 @@ Important: The **Bible text remains local** (your existing JSON). Display is alw
 Add:
 - `speechEngine`: `'openai' | 'local'`
 - `localEngine`: `'vosk' | 'sherpa' | 'whisper'` (used only when `speechEngine === 'local'`)
-- `localAsrUrl`: string, default `ws://127.0.0.1:8765`
+- `localAsrUrl`: string, default `wss://127.0.0.1:8765`
 - `detectionAuthorityOpenAI`: `'tool' | 'transcript' | 'hybrid'` (default: `'tool'`)
 
 ### Safety guard
@@ -122,7 +122,7 @@ export function createSpeechProvider(settings: any, callbacks: {
 }) : ISpeechProvider {
   if (settings.speechEngine === 'local') {
     return new LocalSpeechWSProvider({
-      url: settings.localAsrUrl || 'ws://127.0.0.1:8765',
+      url: settings.localAsrUrl || 'wss://127.0.0.1:8765',
       engine: settings.localEngine || 'vosk',
       language: settings.language || 'en',
       audioDeviceId: settings.audioDevice || null,
@@ -253,7 +253,7 @@ Sources:
 ### 9.2 One protocol for all local engines
 The app speaks one WS protocol regardless of whether the local engine is Vosk, Sherpa, or Whisper.
 
-**WS URL:** `ws://127.0.0.1:8765/asr`
+**WS URL:** `wss://127.0.0.1:8765/asr`
 
 **Client -> Server messages**
 1) `hello`
