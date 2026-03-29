@@ -22,7 +22,7 @@ export function createSpeechProvider(
   if (settings.speechEngine === 'local') {
     return new LocalSpeechWSProvider(
       {
-        url: settings.localAsrUrl || 'ws://127.0.0.1:8765',
+        url: settings.localAsrUrl || 'wss://127.0.0.1:8765',
         engine: settings.localEngine || 'vosk',
         language: settings.language || 'en',
         audioDeviceId: settings.audioDevice || null,
