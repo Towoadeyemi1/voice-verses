@@ -40,7 +40,7 @@ python server.py
 
 ## Protocol
 
-The service runs a WebSocket server on `ws://127.0.0.1:8765/asr`
+The service runs a WebSocket server on `wss://127.0.0.1:8765/asr`
 
 ### Server → Client Messages
 ```json
