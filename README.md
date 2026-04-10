@@ -8,7 +8,7 @@ Voice-activated Scripture Projection System
 
 There are several ways of editing your application.
 
-**Use your preferred IDE**
+**Use your preferred IDE.**
 
 Clone this repository and work locally using your preferred IDE.
 
