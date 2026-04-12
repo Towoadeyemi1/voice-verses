@@ -22,7 +22,7 @@ export function createSpeechProvider(
   if (settings.speechEngine === 'local') {
     return new LocalSpeechWSProvider(
       {
-        url: settings.localAsrUrl || 'wss://127.0.0.1:8765',
+        url: settings.localAsrUrl || 'ws://127.0.0.1:8765',
         engine: settings.localEngine || 'vosk',
         language: settings.language || 'en',
         audioDeviceId: settings.audioDevice || null,
@@ -111,7 +111,7 @@ export function loadSpeechSettings(): SpeechSettings {
   return {
     speechEngine: saved.speechEngine || 'openai',
     localEngine: saved.localEngine || 'vosk',
-    localAsrUrl: saved.localAsrUrl || 'wss://127.0.0.1:8765',
+    localAsrUrl: saved.localAsrUrl || 'ws://127.0.0.1:8765',
     detectionAuthorityOpenAI: saved.detectionAuthorityOpenAI || 'transcript',
     openaiApiKey: saved.openaiApiKey || localStorage.getItem('dev_openai_api_key') || null,
     language: localStorage.getItem('transcription_language') || 'en',

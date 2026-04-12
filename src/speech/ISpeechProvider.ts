@@ -24,7 +24,7 @@ export interface SpeechSettings {
 export const DEFAULT_SPEECH_SETTINGS: SpeechSettings = {
   speechEngine: 'openai',
   localEngine: 'vosk',
-  localAsrUrl: 'wss://127.0.0.1:8765',
+  localAsrUrl: 'ws://127.0.0.1:8765',
   detectionAuthorityOpenAI: 'transcript',
   language: 'en',
 };

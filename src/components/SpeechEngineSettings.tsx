@@ -30,7 +30,7 @@ const MACOS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/latest/download/CornerstoneS
 export const SpeechEngineSettings = () => {
   const [speechEngine, setSpeechEngine] = useState<SpeechEngineType>('openai');
   const [localEngine, setLocalEngine] = useState<LocalEngineType>('sherpa');
-  const [localAsrUrl, setLocalAsrUrl] = useState('wss://127.0.0.1:8765');
+  const [localAsrUrl, setLocalAsrUrl] = useState('ws://127.0.0.1:8765');
   const [localStatus, setLocalStatus] = useState<'unknown' | 'checking' | 'online' | 'offline' | 'error'>('unknown');
   const [localStatusMessage, setLocalStatusMessage] = useState<string>('');
   const [availableEngines, setAvailableEngines] = useState<string[]>([]);
@@ -191,7 +191,7 @@ export const SpeechEngineSettings = () => {
               <Input
                 value={localAsrUrl}
                 onChange={(e) => setLocalAsrUrl(e.target.value)}
-                placeholder="wss://127.0.0.1:8765"
+                placeholder="ws://127.0.0.1:8765"
                 className="flex-1"
               />
             </div>
