@@ -63,12 +63,14 @@ export async function checkLocalServiceHealth(url: string): Promise<{
   error?: string;
 }> {
   try {
-    // Convert ws:// to http:// for health check
+    // Convert ws:// to http:// for health check.
+    // Strip any trailing /asr path first, then append /health exactly once.
     const healthUrl = url
       .replace('ws://', 'http://')
       .replace('wss://', 'https://')
-      .replace('/asr', '/health')
-      .replace(/\/$/, '') + '/health';
+      .replace(/\/asr$/, '')
+      .replace(/\/$/, '')
+      + '/health';
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);

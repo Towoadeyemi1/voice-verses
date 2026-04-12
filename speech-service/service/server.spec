@@ -15,7 +15,10 @@ hiddenimports = (
 vosk_dir = Path(vosk.__file__).resolve().parent
 
 if platform.system() == "Darwin":
-    lib_name = "libvosk.dyld"
+    # Try both known macOS library names (older vosk used .dyld, newer uses .dylib)
+    lib_name = "libvosk.dylib"
+    if not (vosk_dir / lib_name).exists():
+        lib_name = "libvosk.dyld"
 elif platform.system() == "Windows":
     lib_name = "libvosk.dll"
 else:

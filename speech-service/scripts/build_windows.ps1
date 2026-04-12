@@ -34,15 +34,9 @@ try {
         Remove-Item "model.zip"
     }
 
-    # Build with PyInstaller
+    # Build with PyInstaller using the spec file so libvosk.dll is bundled correctly
     Write-Host "Building executable..."
-    pyinstaller --onedir --noconsole `
-        --name "CornerstoneSpeechService" `
-        --add-data "$modelPath;model" `
-        --hidden-import vosk `
-        --hidden-import sounddevice `
-        --hidden-import websockets `
-        server.py
+    pyinstaller server.spec --noconfirm
 
     # Create output directory
     $outputDir = Join-Path $scriptPath "..\dist"

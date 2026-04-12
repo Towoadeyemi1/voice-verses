@@ -10,9 +10,33 @@ import base64
 import os
 import sys
 import ssl
+import ctypes
 import tempfile
+import platform
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
+
+# Pre-load the native Vosk library before importing the Python bindings.
+# In a PyInstaller frozen build the dynamic linker cannot find libvosk on its
+# own because the bundle's _internal/vosk subfolder is not on PATH/LD_LIBRARY_PATH.
+# Loading it explicitly here fixes the generic "Failed to create a model" crash.
+if getattr(sys, "frozen", False):
+    _FROZEN_DIR = Path(sys._MEIPASS)
+    _lib_names = {
+        "Windows": "vosk/libvosk.dll",
+        "Darwin":  "vosk/libvosk.dylib",
+        "Linux":   "vosk/libvosk.so",
+    }
+    _lib_rel = _lib_names.get(platform.system())
+    if _lib_rel:
+        _lib_path = _FROZEN_DIR / _lib_rel
+        if _lib_path.exists():
+            try:
+                ctypes.CDLL(str(_lib_path))
+            except OSError as _e:
+                print(f"WARNING: Could not pre-load {_lib_path}: {_e}")
+        else:
+            print(f"WARNING: Native Vosk library not found at {_lib_path}")
 
 import numpy as np
 import websockets

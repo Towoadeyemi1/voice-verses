@@ -33,16 +33,9 @@ if [ ! -d "$MODEL_PATH" ]; then
     rm model.zip
 fi
 
-# Build with PyInstaller
+# Build with PyInstaller using the spec file so libvosk is bundled correctly
 echo "Building application..."
-pyinstaller --onedir --windowed \
-    --name "CornerstoneSpeechService" \
-    --add-data "$MODEL_PATH:model" \
-    --hidden-import vosk \
-    --hidden-import sounddevice \
-    --hidden-import websockets \
-    --osx-bundle-identifier "com.cornerstone.speechservice" \
-    server.py
+pyinstaller server.spec --noconfirm
 
 # Create output directory
 OUTPUT_DIR="$SCRIPT_DIR/../dist"
