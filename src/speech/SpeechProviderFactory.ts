@@ -102,6 +102,15 @@ export async function checkLocalServiceHealth(url: string): Promise<{
 }
 
 /**
+ * Normalize URL protocol: ensure wss:// is migrated to ws:// since the local service no longer uses TLS
+ */
+function normalizeLocalAsrUrl(url: string): string {
+  if (!url) return 'ws://127.0.0.1:8765';
+  // Migrate old wss:// to ws://
+  return url.replace(/^wss:\/\//, 'ws://');
+}
+
+/**
  * Load speech settings from localStorage
  */
 export function loadSpeechSettings(): SpeechSettings {
@@ -111,7 +120,7 @@ export function loadSpeechSettings(): SpeechSettings {
   return {
     speechEngine: saved.speechEngine || 'openai',
     localEngine: saved.localEngine || 'vosk',
-    localAsrUrl: saved.localAsrUrl || 'ws://127.0.0.1:8765',
+    localAsrUrl: normalizeLocalAsrUrl(saved.localAsrUrl) || 'ws://127.0.0.1:8765',
     detectionAuthorityOpenAI: saved.detectionAuthorityOpenAI || 'transcript',
     openaiApiKey: saved.openaiApiKey || localStorage.getItem('dev_openai_api_key') || null,
     language: localStorage.getItem('transcription_language') || 'en',
