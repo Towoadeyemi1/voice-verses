@@ -86,10 +86,14 @@ def load_model():
 
 
 async def health_handler(path, request_headers):
-    """Handle HTTP health check requests"""
+    """Handle HTTP health check requests (websockets <12 API)"""
     if path == "/health":
-        return (200, [("Content-Type", "application/json")],
-                json.dumps({"ok": True, "engines": ["vosk"], "active": "vosk"}).encode())
+        body = json.dumps({"ok": True, "engines": ["vosk"], "active": "vosk"}).encode()
+        return (200, [
+            ("Content-Type", "application/json"),
+            ("Content-Length", str(len(body))),
+            ("Access-Control-Allow-Origin", "*"),
+        ], body)
     return None
 
 

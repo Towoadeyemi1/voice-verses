@@ -1,5 +1,5 @@
 vosk
-websockets
+websockets>=10.0,<12.0
 sounddevice
 numpy
 cryptography
