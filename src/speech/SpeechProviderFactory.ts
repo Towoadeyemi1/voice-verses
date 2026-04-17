@@ -2,6 +2,8 @@ import { ISpeechProvider, SpeechSettings, SpeechEngineType } from './ISpeechProv
 import { OpenAISpeechProvider } from './providers/OpenAISpeechProvider';
 import { LocalSpeechWSProvider } from './providers/LocalSpeechWSProvider';
 import { WebSpeechProvider } from './providers/WebSpeechProvider';
+import { OllamaSpeechProvider, checkOllamaHealth } from './providers/OllamaSpeechProvider';
+export { checkOllamaHealth };
 
 export interface SpeechProviderCallbacks {
   onTranscript: (text: string, isFinal: boolean) => void;
@@ -34,6 +36,19 @@ export function createSpeechProvider(
   if (settings.speechEngine === 'webspeech') {
     return new WebSpeechProvider(
       {
+        language: settings.language || 'en-US',
+        audioDeviceId: settings.audioDevice || null,
+      },
+      callbacks
+    );
+  }
+
+  if (settings.speechEngine === 'ollama') {
+    return new OllamaSpeechProvider(
+      {
+        ollamaUrl: settings.ollamaUrl || 'http://localhost:11434',
+        ollamaModel: settings.ollamaModel || 'llama3.2',
+        apiType: settings.localLlmApiType || 'ollama',
         language: settings.language || 'en-US',
         audioDeviceId: settings.audioDevice || null,
       },
@@ -125,6 +140,9 @@ export function loadSpeechSettings(): SpeechSettings {
     openaiApiKey: saved.openaiApiKey || localStorage.getItem('dev_openai_api_key') || null,
     language: localStorage.getItem('transcription_language') || 'en',
     audioDevice: saved.audioDevice || null,
+    ollamaUrl: saved.ollamaUrl || 'http://localhost:11434',
+    ollamaModel: saved.ollamaModel || 'llama3.2',
+    localLlmApiType: saved.localLlmApiType || 'ollama',
   };
 }
 
@@ -142,6 +160,9 @@ export function saveSpeechSettings(settings: Partial<SpeechSettings>): void {
     localAsrUrl: settings.localAsrUrl ?? current.localAsrUrl,
     detectionAuthorityOpenAI: settings.detectionAuthorityOpenAI ?? current.detectionAuthorityOpenAI,
     audioDevice: settings.audioDevice ?? current.audioDevice,
+    ollamaUrl: settings.ollamaUrl ?? current.ollamaUrl,
+    ollamaModel: settings.ollamaModel ?? current.ollamaModel,
+    localLlmApiType: settings.localLlmApiType ?? current.localLlmApiType,
   };
 
   localStorage.setItem('cornerstone-settings', JSON.stringify(updated));

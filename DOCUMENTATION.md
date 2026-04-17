@@ -100,10 +100,11 @@
 ## Core Features
 
 ### 1. Voice-Activated Scripture Detection
-- Real-time audio transcription using WebRTC
+- Real-time audio transcription via multiple speech engines
 - AI-powered Bible verse reference detection
 - Automatic verse display when references are spoken
 - Support for reading mode (auto-advance verses)
+- Four speech modes: Local (offline service), Local AI (Ollama/LM Studio/Jan), Quick (browser built-in), Cloud (OpenAI)
 
 ### 2. Multi-Display Projection System
 - Main projection display (full-screen for audience)
@@ -189,7 +190,51 @@ The main interface for operators:
 └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
 ```
 
-### Step-by-Step Process
+### Voice Recognition Flow
+
+All speech modes feed into the same central `VerseDetectionController`, which normalises transcripts, extracts references, de-duplicates, and emits verified verse events.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Speech Input (choose one)                     │
+├──────────────┬──────────────┬──────────────┬────────────────────┤
+│  Local       │  Local AI    │  Quick       │  Cloud (OpenAI)    │
+│  (WSProvider)│  (Ollama etc)│  (WebSpeech) │  (OpenAI Realtime) │
+└──────┬───────┴──────┬───────┴──────┬───────┴──────┬─────────────┘
+       │              │              │              │
+       └──────────────┴──────────────┴──────────────┘
+                              │
+                              ▼
+               ┌──────────────────────────┐
+               │  VerseDetectionController │
+               │  - Normalise transcript   │
+               │  - Extract reference      │
+               │  - Dedupe / debounce      │
+               └──────────────┬───────────┘
+                              │
+                              ▼
+              ┌───────────────────────────┐
+              │      Bible Lookup          │
+              └───────────────┬───────────┘
+                              │
+                              ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ Projection  │◀────│ Broadcast   │◀────│   Slide     │
+│   Display   │     │  Channel    │     │  Creation   │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
+
+### Local AI Mode Detail
+
+The `OllamaSpeechProvider` combines two steps:
+1. **Audio capture** — Web Speech API provides a raw transcript
+2. **LLM extraction** — transcript is sent to a local LLM with a focused prompt asking only for a verse reference (e.g. `"John 3:16"` or `"none"`)
+
+Supports two server API formats:
+- **Ollama native** (`POST /api/generate`) — for Ollama
+- **OpenAI-compatible** (`POST /v1/chat/completions`) — for LM Studio, Jan, Llamafile, llama.cpp
+
+### Step-by-Step Process (original OpenAI flow)
 
 1. **Audio Capture**: Microphone captures speaker's voice
 2. **WebRTC Stream**: Audio streamed via WebRTC to OpenAI
@@ -455,6 +500,16 @@ Uses **@dnd-kit** for drag-and-drop functionality:
 | **Display Settings** | Font sizes, colors, backgrounds |
 | **Storage Settings** | Azure sync configuration |
 | **API Keys** | OpenAI key (dev mode only) |
+| **Speech Mode** | Select recognition engine (see table below) |
+
+### Speech Modes
+
+| Mode | Component | Internet | Description |
+|------|-----------|---------|-------------|
+| **Local (Offline)** | `LocalSpeechWSProvider` | No | Connects to the local Cornerstone Speech Service (Sherpa-ONNX, Vosk, or Whisper) via WebSocket. Best for reliable offline use. |
+| **Local AI** | `OllamaSpeechProvider` | No | Browser mic + local LLM (Ollama, LM Studio, Jan, Llamafile). Smart natural-language verse detection. Fully private. |
+| **Quick** | `WebSpeechProvider` | Yes | Browser's built-in Web Speech API. Zero setup, but requires internet and Chrome/Edge/Safari. |
+| **Cloud (OpenAI)** | `OpenAISpeechProvider` | Yes | OpenAI Realtime API via WebRTC. Highest accuracy, incurs API costs. |
 
 ### Scripture Background Settings
 
