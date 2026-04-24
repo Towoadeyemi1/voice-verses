@@ -200,6 +200,47 @@ export const SpeechEngineSettings = () => {
       {/* Local Mode Settings */}
       {speechEngine === 'local' && (
         <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
+          {/* Browser Security Notice */}
+          {window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('127.') && (
+            <Alert className="border-yellow-500/50 bg-yellow-500/10">
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+              <AlertDescription className="space-y-3">
+                <div>
+                  <strong>Running from hosted site:</strong> Browser security prevents this page from accessing localhost services.
+                </div>
+                <div className="space-y-2">
+                  <p className="font-semibold">To use Local (Offline) mode:</p>
+                  <ol className="text-xs space-y-1 list-decimal list-inside ml-2">
+                    <li>Download the project from <a href="https://github.com/Towoadeyemi1/voice-verses" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">GitHub</a></li>
+                    <li>Extract the ZIP file</li>
+                    <li>Open Terminal in the project folder</li>
+                    <li>Run: <code className="bg-background px-1.5 py-0.5 rounded font-mono text-xs">npm install</code> then <code className="bg-background px-1.5 py-0.5 rounded font-mono text-xs">npm run dev</code></li>
+                    <li>Open <code className="bg-background px-1.5 py-0.5 rounded font-mono text-xs">http://localhost:8080</code> in your browser</li>
+                    <li>Install and configure the local speech service</li>
+                  </ol>
+                  <div className="pt-2 flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/archive/refs/heads/main.zip', '_blank')}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download ZIP
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses', '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View on GitHub
+                    </Button>
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Status Banner */}
           {localStatus === 'offline' && (
             <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
@@ -342,6 +383,47 @@ export const SpeechEngineSettings = () => {
       {/* Local AI (Ollama / LM Studio / Jan / etc.) Settings */}
       {speechEngine === 'ollama' && (
         <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
+
+          {/* Browser Security Notice */}
+          {window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('127.') && (
+            <Alert className="border-yellow-500/50 bg-yellow-500/10">
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+              <AlertDescription className="space-y-3">
+                <div>
+                  <strong>Running from hosted site:</strong> Browser security prevents this page from accessing localhost services like Ollama.
+                </div>
+                <div className="space-y-2">
+                  <p className="font-semibold">To use Local AI:</p>
+                  <ol className="text-xs space-y-1 list-decimal list-inside ml-2">
+                    <li>Download the project from <a href="https://github.com/Towoadeyemi1/voice-verses" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">GitHub</a></li>
+                    <li>Extract the ZIP file</li>
+                    <li>Open Terminal in the project folder</li>
+                    <li>Run: <code className="bg-background px-1.5 py-0.5 rounded font-mono text-xs">npm install</code> then <code className="bg-background px-1.5 py-0.5 rounded font-mono text-xs">npm run dev</code></li>
+                    <li>Open <code className="bg-background px-1.5 py-0.5 rounded font-mono text-xs">http://localhost:8080</code> in your browser</li>
+                    <li>Configure Ollama connection in Settings</li>
+                  </ol>
+                  <div className="pt-2 flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/archive/refs/heads/main.zip', '_blank')}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download ZIP
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses', '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View on GitHub
+                    </Button>
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Server Type */}
           <div className="space-y-2">
