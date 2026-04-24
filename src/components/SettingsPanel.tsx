@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { X, Mic, Type, Palette, HardDrive, Music2, Radio } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { X, Mic, Type, Palette, HardDrive, Music2, Radio, Download, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { BibleVersionSettings } from './BibleVersionSettings';
 import { StorageSettings } from './StorageSettings';
@@ -113,13 +114,14 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="speech">Speech</TabsTrigger>
           <TabsTrigger value="backgrounds">Backgrounds</TabsTrigger>
           <TabsTrigger value="ccli">CCLI</TabsTrigger>
           <TabsTrigger value="logo">Logo</TabsTrigger>
           <TabsTrigger value="storage">Storage</TabsTrigger>
+          <TabsTrigger value="download">Download</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-8 mt-6">
@@ -318,6 +320,109 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
 
         <TabsContent value="storage" className="mt-6">
           <StorageSettings />
+        </TabsContent>
+
+        <TabsContent value="download" className="space-y-6 mt-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Download className="w-5 h-5 text-primary" />
+              <h4 className="font-semibold text-foreground">Download & Run Locally</h4>
+            </div>
+
+            <Alert className="border-blue-500/50 bg-blue-500/10">
+              <AlertDescription>
+                <p className="font-semibold mb-2">Why download?</p>
+                <p className="text-sm">
+                  To use <strong>Local (Offline)</strong> or <strong>Local AI (Ollama)</strong> modes, 
+                  you need to run Voice Verses locally on your computer. Browser security prevents 
+                  the hosted web app from accessing localhost services.
+                </p>
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-3">
+              <h5 className="font-semibold text-foreground">Quick Start</h5>
+              <ol className="space-y-2 list-decimal list-inside text-sm">
+                <li>Download the project using one of the buttons below</li>
+                <li>Extract the ZIP file to your preferred location</li>
+                <li>Open Terminal (Mac) or Command Prompt (Windows) in the project folder</li>
+                <li>
+                  Install dependencies:
+                  <code className="block bg-muted px-3 py-2 rounded mt-1 font-mono text-xs">
+                    npm install
+                  </code>
+                </li>
+                <li>
+                  Start the development server:
+                  <code className="block bg-muted px-3 py-2 rounded mt-1 font-mono text-xs">
+                    npm run dev
+                  </code>
+                </li>
+                <li>
+                  Open your browser to:
+                  <code className="block bg-muted px-3 py-2 rounded mt-1 font-mono text-xs">
+                    http://localhost:8080
+                  </code>
+                </li>
+                <li>Configure your local services in Settings → Speech tab</li>
+              </ol>
+            </div>
+
+            <div className="space-y-3">
+              <h5 className="font-semibold text-foreground">Download Options</h5>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="default"
+                  onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/archive/refs/heads/main.zip', '_blank')}
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download ZIP
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses', '_blank')}
+                  className="gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  View on GitHub
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h5 className="font-semibold text-foreground">What works where?</h5>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="text-green-500">✓</span>
+                  <div>
+                    <strong>Hosted PWA (current site):</strong> Cloud (OpenAI) and Quick (Browser) modes work fine
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-500">✓</span>
+                  <div>
+                    <strong>Running locally:</strong> All modes work, including Local (Offline) and Local AI (Ollama)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Alert>
+              <AlertDescription className="text-xs">
+                <strong>Note:</strong> You need Node.js installed on your computer. 
+                Download from{' '}
+                <button
+                  type="button"
+                  onClick={() => window.open('https://nodejs.org', '_blank')}
+                  className="text-primary underline hover:no-underline"
+                >
+                  nodejs.org
+                </button>
+                {' '}if you don't have it yet.
+              </AlertDescription>
+            </Alert>
+          </div>
         </TabsContent>
       </Tabs>
     </Card>
