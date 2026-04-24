@@ -337,56 +337,97 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
                   you need to run Voice Verses locally on your computer. Browser security prevents 
                   the hosted web app from accessing localhost services.
                 </p>
+                <p className="text-sm mt-2">
+                  <strong>Easy option:</strong> Download the desktop installer below (just double-click to install, no Terminal needed!)
+                </p>
               </AlertDescription>
             </Alert>
 
             <div className="space-y-3">
-              <h5 className="font-semibold text-foreground">Quick Start</h5>
-              <ol className="space-y-2 list-decimal list-inside text-sm">
-                <li>Download the project using one of the buttons below</li>
-                <li>Extract the ZIP file to your preferred location</li>
-                <li>Open Terminal (Mac) or Command Prompt (Windows) in the project folder</li>
-                <li>
-                  Install dependencies:
-                  <code className="block bg-muted px-3 py-2 rounded mt-1 font-mono text-xs">
-                    npm install
-                  </code>
-                </li>
-                <li>
-                  Start the development server:
-                  <code className="block bg-muted px-3 py-2 rounded mt-1 font-mono text-xs">
-                    npm run dev
-                  </code>
-                </li>
-                <li>
-                  Open your browser to:
-                  <code className="block bg-muted px-3 py-2 rounded mt-1 font-mono text-xs">
-                    http://localhost:8080
-                  </code>
-                </li>
-                <li>Configure your local services in Settings → Speech tab</li>
-              </ol>
+              <h5 className="font-semibold text-foreground">Installation Steps</h5>
+              
+              <div className="space-y-3">
+                <div>
+                  <p className="font-medium text-sm">For Most Users (Easy):</p>
+                  <ol className="space-y-1 list-decimal list-inside text-sm ml-2 mt-1">
+                    <li>Download the installer for your platform below</li>
+                    <li>Double-click the downloaded file (.dmg or .exe)</li>
+                    <li>Follow the installation prompts</li>
+                    <li>Launch Voice Verses from Applications or Start Menu</li>
+                    <li>Configure Ollama or local services in Settings → Speech</li>
+                  </ol>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <p className="font-medium text-sm">For Developers (Advanced):</p>
+                  <ol className="space-y-1 list-decimal list-inside text-sm ml-2 mt-1">
+                    <li>Download the source code ZIP</li>
+                    <li>Extract and open Terminal in the project folder</li>
+                    <li>Run: <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">npm install</code></li>
+                    <li>Run: <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">npm run dev</code></li>
+                    <li>Open: <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">http://localhost:8080</code></li>
+                  </ol>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-3">
               <h5 className="font-semibold text-foreground">Download Options</h5>
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  variant="default"
-                  onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/archive/refs/heads/main.zip', '_blank')}
-                  className="gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download ZIP
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses', '_blank')}
-                  className="gap-2"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  View on GitHub
-                </Button>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium mb-2">Desktop Installers (Recommended)</p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      variant="default"
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/releases/latest/download/Voice-Verses-1.0.0-arm64.dmg', '_blank')}
+                      className="gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download for Mac (Apple Silicon)
+                    </Button>
+                    <Button
+                      variant="default"
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/releases/latest/download/Voice-Verses-1.0.0.dmg', '_blank')}
+                      className="gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download for Mac (Intel)
+                    </Button>
+                    <Button
+                      variant="default"
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/releases/latest/download/Voice-Verses-Setup-1.0.0.exe', '_blank')}
+                      className="gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download for Windows
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Double-click installer, follow prompts. No Terminal commands needed!
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <p className="text-sm font-medium mb-2">Source Code (For Developers)</p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/archive/refs/heads/main.zip', '_blank')}
+                      className="gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download ZIP
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses', '_blank')}
+                      className="gap-2"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      View on GitHub
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -396,13 +437,19 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
                 <div className="flex items-start gap-2">
                   <span className="text-green-500">✓</span>
                   <div>
-                    <strong>Hosted PWA (current site):</strong> Cloud (OpenAI) and Quick (Browser) modes work fine
+                    <strong>Hosted PWA (this site):</strong> Cloud (OpenAI) and Quick (Browser) modes work perfectly
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-green-500">✓</span>
                   <div>
-                    <strong>Running locally:</strong> All modes work, including Local (Offline) and Local AI (Ollama)
+                    <strong>Desktop App (installer):</strong> ALL modes work, including Local (Offline) and Local AI (Ollama). Recommended for full features.
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-500">✓</span>
+                  <div>
+                    <strong>Running from source:</strong> All modes work, same as desktop app. For developers and advanced users.
                   </div>
                 </div>
               </div>
@@ -410,8 +457,9 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
 
             <Alert>
               <AlertDescription className="text-xs">
-                <strong>Note:</strong> You need Node.js installed on your computer. 
-                Download from{' '}
+                <strong>Note:</strong> The desktop installer includes everything you need. 
+                Node.js is only required if you're running from source code (developers).
+                Download Node.js from{' '}
                 <button
                   type="button"
                   onClick={() => window.open('https://nodejs.org', '_blank')}
@@ -419,7 +467,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
                 >
                   nodejs.org
                 </button>
-                {' '}if you don't have it yet.
+                {' '}if needed.
               </AlertDescription>
             </Alert>
           </div>
