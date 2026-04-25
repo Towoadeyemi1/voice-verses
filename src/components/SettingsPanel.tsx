@@ -379,7 +379,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
                   <div className="flex flex-wrap gap-3">
                     <Button
                       variant="default"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases/latest/download/Voice-Verses-1.0.0-arm64.dmg', '_blank')}
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases/download/voice-verses-v1.0.3/Voice-Verses-1.0.0-arm64.dmg', '_blank')}
                       className="gap-2"
                     >
                       <Download className="w-4 h-4" />
@@ -387,7 +387,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
                     </Button>
                     <Button
                       variant="default"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases/latest/download/Voice-Verses-1.0.0.dmg', '_blank')}
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases/download/voice-verses-v1.0.3/Voice-Verses-1.0.0.dmg', '_blank')}
                       className="gap-2"
                     >
                       <Download className="w-4 h-4" />
@@ -395,7 +395,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
                     </Button>
                     <Button
                       variant="default"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases/latest/download/Voice-Verses-Setup-1.0.0.exe', '_blank')}
+                      onClick={() => window.open('https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases/download/voice-verses-v1.0.3/Voice-Verses-Setup-1.0.0.exe', '_blank')}
                       className="gap-2"
                     >
                       <Download className="w-4 h-4" />
