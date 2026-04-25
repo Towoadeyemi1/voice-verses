@@ -102,6 +102,7 @@
   "build": {
     "appId": "com.voiceverses.app",
     "productName": "Voice Verses",
+    "publish": null,
     "directories": {
       "output": "dist-electron"
     },
