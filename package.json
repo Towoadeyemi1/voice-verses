@@ -15,10 +15,10 @@
     "preview": "vite preview",
     "electron": "electron .",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:8080 && electron .\"",
-    "electron:build": "vite build && electron-builder",
-    "electron:build:mac": "vite build && electron-builder --mac",
-    "electron:build:win": "vite build && electron-builder --win",
-    "electron:build:all": "vite build && electron-builder --mac --win"
+    "electron:build": "vite build && electron-builder --publish never",
+    "electron:build:mac": "vite build && electron-builder --mac --publish never",
+    "electron:build:win": "vite build && electron-builder --win --publish never",
+    "electron:build:all": "vite build && electron-builder --mac --win --publish never"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.29.1",
