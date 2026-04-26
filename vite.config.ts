@@ -4,7 +4,8 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
 
-const base = process.env.VITE_BASE_PATH || '/';
+const isElectronBuild = process.env.ELECTRON_BUILD === 'true';
+const base = isElectronBuild ? './' : (process.env.VITE_BASE_PATH || '/');
 
 export default defineConfig(({ mode }) => ({
   base,
