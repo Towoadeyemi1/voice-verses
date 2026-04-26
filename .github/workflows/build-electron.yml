@@ -47,7 +47,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
-      - name: Create Release
+      - name: Create Release in voice-verses
         uses: softprops/action-gh-release@v1
         with:
           files: |
@@ -57,3 +57,15 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release in cornerstone-speech-releases
+        uses: softprops/action-gh-release@v1
+        with:
+          repository: Towoadeyemi1/cornerstone-speech-releases
+          files: |
+            installer-*/*.dmg
+            installer-*/*.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
