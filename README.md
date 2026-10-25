@@ -56,39 +56,49 @@ This project is built with:
 
 ## Architecture
 
-- **Web app** (`npm run build`): static site, deployed to GitHub Pages by
-  `.github/workflows/deploy-pages.yml`. Uses hash routes (`/voice-verses/#/presenter`)
-  so popups and refreshes work on a sub-path.
-- **Desktop app** (`npm run electron:build`): the same UI in Electron. The
-  recommended way to run it in a church booth: works offline with the local
-  speech engine, and keeps the OpenAI key encrypted in the OS keychain.
-  `npm run electron:preview` runs the built app without packaging.
-- **Azure Functions** (`azure-functions/`, optional): server-side OpenAI token
-  minting, help assistant and blob sync. See `AZURE_DEPLOYMENT.md`.
+- **Desktop app** (`npm run electron:build`): the main way to run Voice Verses in a church.
+  Works offline, keeps API keys encrypted with the OS keychain, and saves the library to a
+  folder. `npm run electron:preview` runs the built app without packaging.
+- **Web app** (`npm run build`): the same UI as a static site on GitHub Pages
+  (`.github/workflows/deploy-pages.yml`), using hash routes (`/voice-verses/#/presenter`).
+  There is no server: keys a user enters stay in their browser.
 
-### Speech engines
+### Hearing: speech engines
 
-Transcription is pluggable (`src/speech/providers`); verse detection is always
-done centrally by `VerseDetectionController`.
+Speech-to-text is pluggable (`src/speech/providers`).
 
 | Engine | Needs | Notes |
 | --- | --- | --- |
 | Browser (Web Speech) | Chrome/Edge/Safari | Default on the web. Free; not available in the desktop app |
 | Local | `speech-service` installed | Offline and private |
-| OpenAI | An OpenAI API key or a token server | Most accurate; uses `gpt-4o-transcribe` |
-| Local AI | Ollama / LM Studio | Browser speech + local LLM for verse matching |
+| OpenAI | An OpenAI API key | Most accurate; transcription-only session with `gpt-4o-transcribe` |
 
-The OpenAI engine gets its short-lived session token from, in order: the token
-server in `VITE_REALTIME_TOKEN_URL`; the desktop app's main process; or the
-user's own key stored in the browser.
+### Understanding: verse detection
+
+`VerseDetectionController` turns transcripts into verses. Named references ("John 3:16",
+"Romans chapter 8 verse 28") are matched by rules, instantly and offline.
+
+The optional **AI verse assistant** (`src/ai`, Settings → Speech) handles passages that are
+quoted or described instead of named. It works with any speech engine and any of:
+Claude (Anthropic API key), OpenAI (API key), Ollama, or another local OpenAI-compatible
+server (LM Studio, Jan, llama.cpp). Answers are checked against the Bible text, and by
+default appear as a suggestion the operator confirms. The in-app help assistant uses the
+same provider.
+
+### Storage
+
+Services and media are saved on the computer (IndexedDB). Optionally, Settings → Storage
+keeps a copy in a **library folder** (`src/lib/library`): one JSON file per item, synced
+both ways. Choosing a folder inside iCloud Drive, Dropbox, OneDrive or Google Drive shares
+the library between computers; if the same service is edited on two computers at once,
+both versions are kept. Single services can also be exported to a `.voiceverses.json` file
+and imported elsewhere.
 
 ### Build-time configuration
 
 | Variable | Purpose |
 | --- | --- |
 | `VITE_BASE_PATH` | Sub-path the web app is served from (`/voice-verses/` on GitHub Pages) |
-| `VITE_REALTIME_TOKEN_URL` | Optional OpenAI token server; when unset, users enter their own key |
-| `VITE_HELP_ASSISTANT_URL` | Optional help assistant backend; when unset, the assistant is hidden |
 
 ## How can I deploy this project?
 

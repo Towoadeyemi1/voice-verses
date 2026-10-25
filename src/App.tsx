@@ -15,17 +15,14 @@ import ServiceBuilder from "./pages/ServiceBuilder";
 import Presenter from "./pages/Presenter";
 import MediaLibrary from "./pages/MediaLibrary";
 import NotFound from "./pages/NotFound";
-import { storageOrchestrator } from "./lib/storageOrchestrator";
+import { librarySync } from "./lib/library/librarySync";
 import { HelpAssistant } from "./components/HelpAssistant";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    storageOrchestrator.initialize().catch(console.error);
-    return () => {
-      storageOrchestrator.stopAutoSync();
-    };
+    librarySync.start();
   }, []);
 
   return (

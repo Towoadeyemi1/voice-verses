@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mic, Wifi, WifiOff, Loader2, Download, ExternalLink, CheckCircle2, XCircle, AlertTriangle, Brain } from 'lucide-react';
+import { Mic, Wifi, WifiOff, Loader2, Download, ExternalLink, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   loadSpeechSettings, 
@@ -20,11 +20,10 @@ import {
   SpeechEngineType,
   LocalEngineType 
 } from '@/speech';
-import { checkOllamaHealth, getDefaultSpeechEngine } from '@/speech/SpeechProviderFactory';
+import { getDefaultSpeechEngine } from '@/speech/SpeechProviderFactory';
 import { isDesktop } from '@/lib/desktop';
-import { OpenAIKeySettings } from './OpenAIKeySettings';
+import { ApiKeySettings } from './ApiKeySettings';
 import { WebSpeechProvider } from '@/speech/providers/WebSpeechProvider';
-import { OllamaSpeechProvider } from '@/speech/providers/OllamaSpeechProvider';
 
 // GitHub release URLs for cornerstone-speech-releases repository
 const GITHUB_RELEASES_URL = 'https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases';
@@ -39,21 +38,12 @@ export const SpeechEngineSettings = () => {
   const [localStatusMessage, setLocalStatusMessage] = useState<string>('');
   const [availableEngines, setAvailableEngines] = useState<string[]>([]);
   const [webSpeechSupported, setWebSpeechSupported] = useState(true);
-  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
-  const [ollamaModel, setOllamaModel] = useState('llama3.2');
-  const [localLlmApiType, setLocalLlmApiType] = useState<'ollama' | 'openai-compatible'>('ollama');
-  const [ollamaStatus, setOllamaStatus] = useState<'unknown' | 'checking' | 'online' | 'offline'>('unknown');
-  const [ollamaStatusMessage, setOllamaStatusMessage] = useState<string>('');
-  const [ollamaModels, setOllamaModels] = useState<string[]>([]);
 
   useEffect(() => {
     const settings = loadSpeechSettings();
     setSpeechEngine(settings.speechEngine);
     setLocalEngine(settings.localEngine);
     setLocalAsrUrl(settings.localAsrUrl);
-    setOllamaUrl(settings.ollamaUrl || 'http://localhost:11434');
-    setOllamaModel(settings.ollamaModel || 'llama3.2');
-    setLocalLlmApiType(settings.localLlmApiType || 'ollama');
     
     // Check Web Speech API support
     setWebSpeechSupported(WebSpeechProvider.isSupported());
@@ -89,31 +79,11 @@ export const SpeechEngineSettings = () => {
     }
   };
 
-  const handleCheckOllama = async () => {
-    setOllamaStatus('checking');
-    setOllamaStatusMessage('');
-    const result = await checkOllamaHealth(ollamaUrl, ollamaModel, localLlmApiType);
-    if (result.ok) {
-      setOllamaStatus('online');
-      setOllamaModels(result.models || []);
-      setOllamaStatusMessage(`Ready — model "${ollamaModel}" available`);
-      toast.success('Local AI connected', { description: `Model "${ollamaModel}" is ready` });
-    } else {
-      setOllamaStatus('offline');
-      setOllamaModels(result.models || []);
-      setOllamaStatusMessage(result.error || 'Connection failed');
-      toast.error('Local AI server not available', { description: result.error });
-    }
-  };
-
   const handleSave = () => {
     saveSpeechSettings({
       speechEngine,
       localEngine,
       localAsrUrl,
-      ollamaUrl,
-      ollamaModel,
-      localLlmApiType,
     });
     toast.success('Speech settings saved');
   };
@@ -184,20 +154,6 @@ export const SpeechEngineSettings = () => {
             </div>
           </div>
 
-          <div className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-            <RadioGroupItem value="ollama" id="ollama" className="mt-0.5" disabled={!webSpeechSupported} />
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="ollama" className={`cursor-pointer font-medium ${!webSpeechSupported ? 'text-muted-foreground' : ''}`}>
-                  Local AI — Ollama, LM Studio, Jan &amp; more
-                </Label>
-                <Brain className="w-3.5 h-3.5 text-purple-500" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Uses your browser’s speech recognition for audio, then a locally-running LLM to identify Bible verse references. The LLM runs on your device; note that some browsers (e.g. Chrome) send audio to their own speech service.
-              </p>
-            </div>
-          </div>
         </RadioGroup>
       </div>
 
@@ -375,226 +331,8 @@ export const SpeechEngineSettings = () => {
       )}
 
       {/* Cloud Mode Info */}
-      {speechEngine === 'openai' && <OpenAIKeySettings />}
-
-      {/* Local AI (Ollama / LM Studio / Jan / etc.) Settings */}
-      {speechEngine === 'ollama' && (
-        <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
-
-          {/* Browser Security Notice */}
-          {!isDesktop && window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('127.') && (
-            <Alert className="border-yellow-500/50 bg-yellow-500/10">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              <AlertDescription className="space-y-3">
-                <div>
-                  <strong>Running from hosted site:</strong> Browser security prevents this page from accessing localhost services like Ollama.
-                </div>
-                <div className="space-y-2">
-                  <p className="font-semibold">To use Local AI:</p>
-                  <ol className="text-xs space-y-1 list-decimal list-inside ml-2">
-                    <li>Download the project from <a href="https://github.com/Towoadeyemi1/voice-verses" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">GitHub</a></li>
-                    <li>Extract the ZIP file</li>
-                    <li>Open Terminal in the project folder</li>
-                    <li>Run: <code className="bg-background px-1.5 py-0.5 rounded font-mono text-xs">npm install</code> then <code className="bg-background px-1.5 py-0.5 rounded font-mono text-xs">npm run dev</code></li>
-                    <li>Open <code className="bg-background px-1.5 py-0.5 rounded font-mono text-xs">http://localhost:8080</code> in your browser</li>
-                    <li>Configure Ollama connection in Settings</li>
-                  </ol>
-                  <div className="pt-2 flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/archive/refs/heads/main.zip', '_blank')}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download ZIP
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses', '_blank')}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View on GitHub
-                    </Button>
-                  </div>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Server Type */}
-          <div className="space-y-2">
-            <Label>Server Type</Label>
-            <Select
-              value={localLlmApiType}
-              onValueChange={(v: 'ollama' | 'openai-compatible') => {
-                setLocalLlmApiType(v);
-                setOllamaStatus('unknown');
-                setOllamaModels([]);
-                // Auto-fill default URL for known server types
-                if (v === 'ollama') setOllamaUrl('http://localhost:11434');
-                if (v === 'openai-compatible') setOllamaUrl('http://localhost:1234');
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ollama">Ollama (native)</SelectItem>
-                <SelectItem value="openai-compatible">OpenAI-compatible server</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Quick Preset Buttons */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Quick presets</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { label: 'Ollama', url: 'http://localhost:11434', type: 'ollama' as const, href: 'https://ollama.com/download' },
-                { label: 'LM Studio', url: 'http://localhost:1234', type: 'openai-compatible' as const, href: 'https://lmstudio.ai' },
-                { label: 'Jan', url: 'http://localhost:1337', type: 'openai-compatible' as const, href: 'https://jan.ai' },
-                { label: 'Llamafile', url: 'http://localhost:8080', type: 'openai-compatible' as const, href: 'https://github.com/Mozilla-Ocho/llamafile' },
-              ].map((preset) => (
-                <Button
-                  key={preset.label}
-                  variant={ollamaUrl === preset.url && localLlmApiType === preset.type ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => {
-                    setOllamaUrl(preset.url);
-                    setLocalLlmApiType(preset.type);
-                    setOllamaStatus('unknown');
-                    setOllamaModels([]);
-                  }}
-                >
-                  {preset.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Setup Instructions — dynamic per server type */}
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-foreground">Setup</p>
-            {localLlmApiType === 'ollama' ? (
-              <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>
-                  Download &amp; install Ollama from{' '}
-                  <button type="button" onClick={() => window.open('https://ollama.com/download', '_blank')} className="text-primary underline hover:no-underline">ollama.com/download</button>
-                </li>
-                <li>In your terminal: <code className="bg-background px-1 rounded font-mono">ollama pull {ollamaModel || 'llama3.2'}</code></li>
-                <li>Click <strong>Test Connection</strong> below</li>
-              </ol>
-            ) : (
-              <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>Download &amp; install your LLM server (LM Studio, Jan, Llamafile, etc.)</li>
-                <li>Load a model inside the application and start the local server</li>
-                <li>Set the URL to match your server’s address and enter the model name exactly</li>
-                <li>Click <strong>Test Connection</strong> below</li>
-              </ol>
-            )}
-          </div>
-
-          {/* URL */}
-          <div className="space-y-2">
-            <Label>Server URL</Label>
-            <Input
-              value={ollamaUrl}
-              onChange={(e) => { setOllamaUrl(e.target.value); setOllamaStatus('unknown'); }}
-              placeholder={localLlmApiType === 'ollama' ? 'http://localhost:11434' : 'http://localhost:1234'}
-            />
-          </div>
-
-          {/* Model */}
-          <div className="space-y-2">
-            <Label>Model Name</Label>
-            <Input
-              value={ollamaModel}
-              onChange={(e) => setOllamaModel(e.target.value)}
-              placeholder="llama3.2"
-            />
-            <p className="text-xs text-muted-foreground">
-              {localLlmApiType === 'ollama'
-                ? <>Recommended: <code className="bg-background px-1 rounded font-mono">llama3.2</code>, <code className="bg-background px-1 rounded font-mono">mistral</code>, <code className="bg-background px-1 rounded font-mono">phi3</code></>
-                : 'Enter the exact model name shown in your LLM server’s interface.'}
-            </p>
-            {ollamaModels.length > 0 && (
-              <p className="text-xs text-muted-foreground">
-                Available on your machine: {ollamaModels.join(', ')}
-              </p>
-            )}
-          </div>
-
-          {/* Status */}
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-background border">
-            {ollamaStatus === 'checking' ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : ollamaStatus === 'online' ? (
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-            ) : ollamaStatus === 'offline' ? (
-              <XCircle className="h-5 w-5 text-destructive" />
-            ) : (
-              <WifiOff className="h-5 w-5 text-muted-foreground" />
-            )}
-            <span className="text-sm flex-1">
-              {ollamaStatus === 'checking' ? 'Checking server...' :
-               ollamaStatus === 'online' ? `✅ ${ollamaStatusMessage}` :
-               ollamaStatus === 'offline' ? `❌ ${ollamaStatusMessage}` :
-               'Not checked'}
-            </span>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCheckOllama}
-              disabled={ollamaStatus === 'checking'}
-            >
-              {ollamaStatus === 'checking' ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Wifi className="h-4 w-4 mr-2" />
-              )}
-              Test Connection
-            </Button>
-            {localLlmApiType === 'ollama' && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => window.open('https://ollama.com/download', '_blank')}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Ollama
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => window.open(`https://ollama.com/library`, '_blank')}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Browse Models
-                </Button>
-              </>
-            )}
-            {localLlmApiType === 'openai-compatible' && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => window.open('https://lmstudio.ai', '_blank')}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  LM Studio
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => window.open('https://jan.ai', '_blank')}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Jan
-                </Button>
-              </>
-            )}
-          </div>
-
-          {!webSpeechSupported && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Local AI mode requires browser speech capture. Please use Chrome, Edge, or Safari.
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
+      {speechEngine === 'openai' && (
+        <ApiKeySettings secret="openai" description="High-accuracy transcription billed to your OpenAI account." />
       )}
 
       {/* Save Button */}

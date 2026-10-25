@@ -2,8 +2,6 @@ import { ISpeechProvider, SpeechSettings, SpeechEngineType } from './ISpeechProv
 import { OpenAISpeechProvider } from './providers/OpenAISpeechProvider';
 import { LocalSpeechWSProvider } from './providers/LocalSpeechWSProvider';
 import { WebSpeechProvider } from './providers/WebSpeechProvider';
-import { OllamaSpeechProvider, checkOllamaHealth } from './providers/OllamaSpeechProvider';
-export { checkOllamaHealth };
 
 export interface SpeechProviderCallbacks {
   onTranscript: (text: string, isFinal: boolean) => void;
@@ -43,19 +41,6 @@ export function createSpeechProvider(
     );
   }
 
-  if (settings.speechEngine === 'ollama') {
-    return new OllamaSpeechProvider(
-      {
-        ollamaUrl: settings.ollamaUrl || 'http://localhost:11434',
-        ollamaModel: settings.ollamaModel || 'llama3.2',
-        apiType: settings.localLlmApiType || 'ollama',
-        language: settings.language || 'en-US',
-        audioDeviceId: settings.audioDevice || null,
-      },
-      callbacks
-    );
-  }
-
   // Default: OpenAI
   return new OpenAISpeechProvider(
     {
@@ -73,8 +58,6 @@ export function getEngineDisplayName(settings: SpeechSettings): string {
       return `local ${settings.localEngine}`;
     case 'webspeech':
       return 'browser speech recognition';
-    case 'ollama':
-      return 'local AI';
     default:
       return 'OpenAI';
   }
@@ -162,15 +145,13 @@ export function loadSpeechSettings(): SpeechSettings {
   const saved = readSavedSettings();
 
   return {
-    speechEngine: saved.speechEngine || getDefaultSpeechEngine(),
+    // The old "Local AI" engine is now the AI verse assistant (src/ai) on top of any engine
+    speechEngine: saved.speechEngine && (saved.speechEngine as string) !== 'ollama' ? saved.speechEngine : getDefaultSpeechEngine(),
     localEngine: saved.localEngine || 'vosk',
     localAsrUrl: normalizeLocalAsrUrl(saved.localAsrUrl) || 'ws://127.0.0.1:8765',
     detectionAuthorityOpenAI: saved.detectionAuthorityOpenAI || 'transcript',
     language: localStorage.getItem('transcription_language') || 'en',
     audioDevice: saved.audioDevice || null,
-    ollamaUrl: saved.ollamaUrl || 'http://localhost:11434',
-    ollamaModel: saved.ollamaModel || 'llama3.2',
-    localLlmApiType: saved.localLlmApiType || 'ollama',
   };
 }
 
@@ -187,9 +168,6 @@ export function saveSpeechSettings(settings: Partial<SpeechSettings>): void {
     localAsrUrl: settings.localAsrUrl ?? current.localAsrUrl,
     detectionAuthorityOpenAI: settings.detectionAuthorityOpenAI ?? current.detectionAuthorityOpenAI,
     audioDevice: settings.audioDevice ?? current.audioDevice,
-    ollamaUrl: settings.ollamaUrl ?? current.ollamaUrl,
-    ollamaModel: settings.ollamaModel ?? current.ollamaModel,
-    localLlmApiType: settings.localLlmApiType ?? current.localLlmApiType,
   };
 
   localStorage.setItem('cornerstone-settings', JSON.stringify(updated));

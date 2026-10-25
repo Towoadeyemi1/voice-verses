@@ -10,10 +10,23 @@ const invoke = (channel, ...args) =>
 
 contextBridge.exposeInMainWorld('voiceVerses', {
   platform: process.platform,
-  openai: {
-    hasApiKey: () => invoke('openai:has-key'),
-    setApiKey: (key) => invoke('openai:set-key', key),
-    clearApiKey: () => invoke('openai:clear-key'),
-    createClientSecret: (session) => invoke('openai:create-client-secret', session),
+  secrets: {
+    has: (name) => invoke('secrets:has', name),
+    set: (name, value) => invoke('secrets:set', name, value),
+    clear: (name) => invoke('secrets:clear', name),
+    fetch: (name, request) => invoke('secrets:fetch', name, request),
+  },
+  library: {
+    getFolder: () => invoke('library:get-folder'),
+    chooseFolder: () => invoke('library:choose-folder'),
+    forgetFolder: () => invoke('library:forget-folder'),
+    list: (dir) => invoke('library:list', dir),
+    read: (path) => invoke('library:read', path),
+    write: (path, text) => invoke('library:write', path, text),
+    onChange: (callback) => {
+      const listener = () => callback();
+      ipcRenderer.on('library:changed', listener);
+      return () => ipcRenderer.removeListener('library:changed', listener);
+    },
   },
 });

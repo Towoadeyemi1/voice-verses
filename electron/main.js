@@ -1,7 +1,8 @@
 import { app, BrowserWindow, ipcMain, shell, systemPreferences } from 'electron';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname, join } from 'path';
-import * as openaiKey from './openaiKey.js';
+import * as secrets from './secrets.js';
+import * as library from './library.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -86,12 +87,20 @@ function handle(channel, fn) {
   });
 }
 
-handle('openai:has-key', () => openaiKey.hasKey());
-handle('openai:set-key', (key) => openaiKey.setKey(key));
-handle('openai:clear-key', () => openaiKey.clearKey());
-handle('openai:create-client-secret', (session) => openaiKey.createClientSecret(session));
+handle('secrets:has', (name) => secrets.hasSecret(name));
+handle('secrets:set', (name, value) => secrets.setSecret(name, value));
+handle('secrets:clear', (name) => secrets.clearSecret(name));
+handle('secrets:fetch', (name, request) => secrets.fetchWithSecret(name, request));
+
+handle('library:get-folder', () => library.getFolder());
+handle('library:choose-folder', () => library.chooseFolder());
+handle('library:forget-folder', () => library.forgetFolder());
+handle('library:list', (dir) => library.list(dir));
+handle('library:read', (path) => library.read(path));
+handle('library:write', (path, text) => library.write(path, text));
 
 app.whenReady().then(async () => {
+  await library.initLibrary();
   if (process.platform === 'darwin') {
     // Prompt for microphone access up front so the first "Start listening" works
     await systemPreferences.askForMediaAccess('microphone').catch(() => false);

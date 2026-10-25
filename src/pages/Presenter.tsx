@@ -24,8 +24,10 @@ import {
   getEngineDisplayName,
   VerseDetectionController 
 } from '@/speech';
-import { hasApiKey } from '@/speech/openai/credentials';
+import { hasSecret } from '@/lib/secrets';
+import { verseAssistantOptions } from '@/ai/detectionOptions';
 import { ApiKeyDialog } from '@/components/ApiKeyDialog';
+import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { appUrl } from '@/lib/appUrl';
 
 const Presenter = () => {
@@ -50,6 +52,7 @@ const Presenter = () => {
   useEffect(() => {
     loadServices();
   }, []);
+  useLibraryUpdated(() => loadServices());
 
   useEffect(() => {
     const serviceId = searchParams.get('service');
@@ -299,7 +302,7 @@ const Presenter = () => {
 
   const handleStartVoice = async () => {
     // Ask for the OpenAI key up front rather than failing mid-connection
-    if (loadSpeechSettings().speechEngine === 'openai' && !(await hasApiKey())) {
+    if (loadSpeechSettings().speechEngine === 'openai' && !(await hasSecret('openai'))) {
       setShowApiKeyDialog(true);
       return;
     }
@@ -333,6 +336,7 @@ const Presenter = () => {
         onTranscriptUpdate: (text) => {
           setTranscript(text);
         },
+        ...verseAssistantOptions((verse) => verseController.current?.triggerManualVerse(verse)),
       });
 
       // Load speech settings and create provider

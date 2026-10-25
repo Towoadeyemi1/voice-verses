@@ -8,6 +8,7 @@ import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { Image, Music, Plus, Trash2, Search, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { PowerPointImport } from '@/components/PowerPointImport';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { SettingsPanel } from '@/components/SettingsPanel';
@@ -48,6 +49,8 @@ const MediaLibrary = () => {
   useEffect(() => {
     loadMedia();
   }, []);
+
+  useLibraryUpdated(() => loadMedia());
 
   const loadMedia = async () => {
     setMedia(await ServiceStorage.getMedia());

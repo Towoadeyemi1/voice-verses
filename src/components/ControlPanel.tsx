@@ -25,7 +25,8 @@ import {
   getEngineDisplayName,
   VerseDetectionController 
 } from '@/speech';
-import { hasApiKey } from '@/speech/openai/credentials';
+import { hasSecret } from '@/lib/secrets';
+import { verseAssistantOptions } from '@/ai/detectionOptions';
 import { appUrl } from '@/lib/appUrl';
 
 interface ControlPanelProps {
@@ -113,7 +114,7 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     const settings = loadSpeechSettings();
 
     // Ask for the OpenAI key up front rather than failing mid-connection
-    if (settings.speechEngine === 'openai' && !(await hasApiKey())) {
+    if (settings.speechEngine === 'openai' && !(await hasSecret('openai'))) {
       setShowApiKeyDialog(true);
       return;
     }
@@ -135,6 +136,7 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
         onTranscriptUpdate: (text) => {
           setTranscript(text);
         },
+        ...verseAssistantOptions((verse) => verseController.current?.triggerManualVerse(verse)),
       });
 
       // Load speech settings and create provider

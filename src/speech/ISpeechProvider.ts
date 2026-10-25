@@ -4,10 +4,10 @@ export type DetectionInfo = {
   method: 'explicit' | 'description' | 'manual' | 'unknown';
   description?: string;
   confidence?: 'high' | 'medium' | 'low';
-  engine?: 'openai' | 'vosk' | 'sherpa' | 'whisper' | 'ollama';
+  engine?: 'openai' | 'vosk' | 'sherpa' | 'whisper' | 'ai';
 };
 
-export type SpeechEngineType = 'openai' | 'local' | 'webspeech' | 'ollama';
+export type SpeechEngineType = 'openai' | 'local' | 'webspeech';
 export type LocalEngineType = 'vosk' | 'sherpa' | 'whisper';
 export type DetectionAuthorityType = 'tool' | 'transcript' | 'hybrid';
 
@@ -18,9 +18,6 @@ export interface SpeechSettings {
   detectionAuthorityOpenAI: DetectionAuthorityType;
   language?: string;
   audioDevice?: string | null;
-  ollamaUrl?: string;
-  ollamaModel?: string;
-  localLlmApiType?: 'ollama' | 'openai-compatible';
 }
 
 export const DEFAULT_SPEECH_SETTINGS: SpeechSettings = {
@@ -29,9 +26,6 @@ export const DEFAULT_SPEECH_SETTINGS: SpeechSettings = {
   localAsrUrl: 'ws://127.0.0.1:8765',
   detectionAuthorityOpenAI: 'transcript',
   language: 'en',
-  ollamaUrl: 'http://localhost:11434',
-  ollamaModel: 'llama3.2',
-  localLlmApiType: 'ollama',
 };
 
 export interface TranscriptCallback {

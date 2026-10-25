@@ -23,11 +23,19 @@ import {
   ExtractedReference 
 } from './referenceExtraction';
 import { DetectionInfo, SpeechEngineType } from './ISpeechProvider';
+import { VerseAssistant } from '@/ai/verseAssistant';
 
 export interface VerseDetectionOptions {
   onVerseDetected: (verse: BibleVerse, info: DetectionInfo) => void;
   onTranscriptUpdate?: (text: string) => void;
   onSuggestion?: (candidates: { ref: string; score: number }[]) => void;
+
+  // Optional AI assistant for described or quoted passages without a reference
+  assistant?: VerseAssistant;
+  /** AI matches are offered here for the operator to confirm */
+  onVerseSuggested?: (verse: BibleVerse, info: DetectionInfo) => void;
+  /** Show high-confidence AI matches directly instead of suggesting them */
+  autoDisplayAiMatches?: boolean;
   
   // Dedupe settings
   dedupeWindowMs?: number;      // Ignore same verse within this window (default: 10000ms)
@@ -50,6 +58,10 @@ export class VerseDetectionController {
   private partialMatchCount: number = 0;
   private currentVerse: BibleVerse | null = null;
   private currentEngine: SpeechEngineType = 'openai';
+  private recentFinals: string[] = [];
+  private assistantRequest: AbortController | null = null;
+  private lastSuggestedKey: string | null = null;
+  private lastSuggestedAt = 0;
   
   private dedupeWindowMs: number;
   private debounceMs: number;
@@ -103,7 +115,9 @@ export class VerseDetectionController {
     // Quick filter - skip expensive processing if unlikely to contain reference
     if (!mightContainVerseReference(cleanText)) {
       // Still check for navigation commands
-      await this.handleNavigationCommands(cleanText);
+      if (!(await this.handleNavigationCommands(cleanText)) && isFinal) {
+        this.askAssistant(cleanText);
+      }
       return;
     }
 
@@ -115,9 +129,13 @@ export class VerseDetectionController {
     
     if (!reference) {
       // No reference found, check navigation
-      await this.handleNavigationCommands(cleanText);
+      if (!(await this.handleNavigationCommands(cleanText)) && isFinal) {
+        this.askAssistant(cleanText);
+      }
       return;
     }
+
+    if (isFinal) this.rememberFinal(cleanText);
 
     console.log('Extracted reference:', reference);
 
@@ -159,11 +177,12 @@ export class VerseDetectionController {
   }
 
   /**
-   * Handle navigation commands ("next verse", "previous verse")
+   * Handle navigation commands ("next verse", "previous verse").
+   * Returns true when the text was a navigation command.
    */
-  private async handleNavigationCommands(text: string): Promise<void> {
+  private async handleNavigationCommands(text: string): Promise<boolean> {
     if (!this.currentVerse) {
-      return;
+      return false;
     }
 
     if (isNextVerseCommand(text)) {
@@ -196,7 +215,63 @@ export class VerseDetectionController {
           engine: this.currentEngine === 'local' ? 'vosk' : 'openai',
         });
       }
+    } else {
+      return false;
     }
+    return true;
+  }
+
+  private rememberFinal(text: string): void {
+    this.recentFinals = [...this.recentFinals, text].slice(-3);
+  }
+
+  /**
+   * Ask the AI assistant about a sentence the rules couldn't place. Only the
+   * latest sentence is in flight; an older request is cancelled.
+   */
+  private askAssistant(text: string): void {
+    const assistant = this.options.assistant;
+    const context = this.recentFinals;
+    this.rememberFinal(text);
+    if (!assistant?.shouldAsk(text)) return;
+
+    this.assistantRequest?.abort();
+    const request = new AbortController();
+    this.assistantRequest = request;
+
+    assistant
+      .identify(text, context, request.signal)
+      .then((match) => (match && !request.signal.aborted ? this.handleAssistantMatch(match.reference, match.confidence, text) : undefined))
+      .catch((error) => {
+        if (!request.signal.aborted) console.warn('AI verse assistant failed:', error);
+      });
+  }
+
+  private async handleAssistantMatch(referenceText: string, confidence: 'high' | 'medium' | 'low', heard: string): Promise<void> {
+    if (confidence === 'low') return;
+
+    // Only accept references that exist in the Bible
+    const reference = extractBestReference(normalizeTranscript(referenceText));
+    if (!reference) return;
+    const verse = await this.lookupVerse(reference);
+    if (!verse) return;
+
+    const info: DetectionInfo = { method: 'description', description: heard, confidence, engine: 'ai' };
+
+    if (this.options.autoDisplayAiMatches && confidence === 'high') {
+      if (this.passesDedupeCheck(reference)) this.triggerVerseDetected(verse, info);
+      return;
+    }
+
+    // Don't offer the verse already on screen, or the same suggestion twice in a row
+    const key = `${verse.book}:${verse.chapter}:${verse.verse}`;
+    const onScreen = key === this.lastDisplayedKey;
+    const repeated = key === this.lastSuggestedKey && Date.now() - this.lastSuggestedAt < this.dedupeWindowMs;
+    if (onScreen || repeated) return;
+
+    this.lastSuggestedKey = key;
+    this.lastSuggestedAt = Date.now();
+    this.options.onVerseSuggested?.(verse, info);
   }
 
   /**
@@ -292,6 +367,10 @@ export class VerseDetectionController {
    * Reset the controller state
    */
   reset(): void {
+    this.assistantRequest?.abort();
+    this.assistantRequest = null;
+    this.recentFinals = [];
+    this.lastSuggestedKey = null;
     this.lastDisplayedKey = null;
     this.lastDisplayedAt = 0;
     this.lastTriggerAt = 0;

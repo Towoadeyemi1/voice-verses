@@ -32,12 +32,8 @@ jobs:
           ELECTRON_BUILD=true npx vite build
           grep -q 'src="./assets/' dist/index.html || { echo "❌ FAIL: desktop build must use relative ./ asset paths"; exit 1; }
           test ! -f dist/sw.js || { echo "❌ FAIL: desktop build must not register a service worker"; exit 1; }
-          node --check electron/main.js && node --check electron/openaiKey.js && node --check electron/preload.cjs
+          for f in electron/*.js electron/*.cjs; do node --check "$f"; done
           echo "✅ Web and desktop builds OK"
-
-      - name: "CHECK 2b: Azure Functions compile"
-        working-directory: azure-functions
-        run: npm install && npx tsc --noEmit
 
       - name: "CHECK 3: Electron build scripts include ELECTRON_BUILD=true"
         run: |

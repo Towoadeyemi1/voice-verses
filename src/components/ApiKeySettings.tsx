@@ -1,42 +1,39 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, KeyRound, Server } from 'lucide-react';
+import { CheckCircle2, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { ApiKeyDialog } from './ApiKeyDialog';
-import { clearApiKey, getCredentialMode, hasApiKey } from '@/speech/openai/credentials';
+import { isDesktop } from '@/lib/desktop';
+import { SECRET_LABELS, SecretName, clearSecret, hasSecret } from '@/lib/secrets';
 
-/** Shows where the OpenAI key lives and lets the user add, replace or remove it. */
-export const OpenAIKeySettings = () => {
-  const mode = getCredentialMode();
+interface ApiKeySettingsProps {
+  secret: SecretName;
+  description: string;
+}
+
+/** Shows whether a provider key is saved and lets the user add, replace or remove it. */
+export const ApiKeySettings = ({ secret, description }: ApiKeySettingsProps) => {
+  const label = SECRET_LABELS[secret];
   const [keySaved, setKeySaved] = useState<boolean | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const refresh = () => {
-    hasApiKey().then(setKeySaved).catch(() => setKeySaved(false));
+    hasSecret(secret).then(setKeySaved).catch(() => setKeySaved(false));
   };
 
-  useEffect(refresh, []);
-
-  if (mode === 'token-server') {
-    return (
-      <div className="p-4 rounded-lg border bg-muted/30 flex gap-2 text-sm text-muted-foreground">
-        <Server className="w-4 h-4 mt-0.5 shrink-0" />
-        OpenAI access is provided by this site's token server. No API key needed.
-      </div>
-    );
-  }
+  useEffect(refresh, [secret]);
 
   const handleRemove = async () => {
-    await clearApiKey();
+    await clearSecret(secret);
     refresh();
-    toast.success('OpenAI API key removed');
+    toast.success(`${label} API key removed`);
   };
 
   return (
     <div className="p-4 rounded-lg border bg-muted/30 space-y-3">
       <p className="text-sm text-muted-foreground">
-        High-accuracy transcription billed to your OpenAI account.{' '}
-        {mode === 'desktop'
+        {description}{' '}
+        {isDesktop
           ? 'Your key is encrypted with the operating system keychain.'
           : 'Your key is stored only in this browser.'}
       </p>
@@ -44,11 +41,11 @@ export const OpenAIKeySettings = () => {
         <div className="flex items-center gap-2 text-sm">
           {keySaved ? (
             <>
-              <CheckCircle2 className="w-4 h-4 text-green-500" /> API key saved
+              <CheckCircle2 className="w-4 h-4 text-green-500" /> {label} key saved
             </>
           ) : (
             <>
-              <KeyRound className="w-4 h-4 text-muted-foreground" /> No API key saved
+              <KeyRound className="w-4 h-4 text-muted-foreground" /> No {label} key saved
             </>
           )}
         </div>
@@ -65,11 +62,13 @@ export const OpenAIKeySettings = () => {
       </div>
       <ApiKeyDialog
         open={dialogOpen}
+        secret={secret}
+        purpose={description}
         onClose={(saved) => {
           setDialogOpen(false);
           if (saved) {
             refresh();
-            toast.success('OpenAI API key saved');
+            toast.success(`${label} API key saved`);
           }
         }}
       />

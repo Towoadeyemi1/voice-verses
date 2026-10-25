@@ -4,9 +4,6 @@
  * We only need speech-to-text, so we open a transcription session rather than
  * a full voice-conversation session: no model responses, no audio output, and
  * transcription-model pricing. Verse detection stays in VerseDetectionController.
- *
- * Keep in sync with azure-functions/realtime-token/index.ts, which builds the
- * same session server-side.
  */
 
 export const OPENAI_API_BASE = 'https://api.openai.com/v1';

@@ -1,5 +1,10 @@
 # Cornerstone Bible - Technical Documentation
 
+> **Outdated (October 2026).** This document describes the earlier Azure-based design
+> (Azure Functions, Azure Blob Storage, OpenAI Realtime preview), which has been retired.
+> See the Architecture section of `README.md` for the current design: desktop app,
+> pluggable speech engines, the optional AI verse assistant, and library-folder storage.
+
 ## Overview
 
 **Cornerstone Bible** is a voice-activated Scripture projection system designed for churches and worship environments. It uses real-time speech recognition powered by OpenAI's Realtime API to detect Bible verse references spoken by pastors/speakers and automatically displays them on a projection screen.

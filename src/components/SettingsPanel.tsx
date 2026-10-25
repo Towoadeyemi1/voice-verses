@@ -23,6 +23,7 @@ import { BibleVersionType } from '@/types/bibleVersion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { SpeechEngineSettings } from './SpeechEngineSettings';
+import { AiAssistantSettings } from './AiAssistantSettings';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -276,6 +277,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
 
         <TabsContent value="speech" className="space-y-6 mt-6">
           <SpeechEngineSettings />
+          <AiAssistantSettings />
         </TabsContent>
 
         <TabsContent value="backgrounds" className="space-y-6 mt-6">
@@ -333,7 +335,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
               <AlertDescription>
                 <p className="font-semibold mb-2">Why download?</p>
                 <p className="text-sm">
-                  To use <strong>Local (Offline)</strong> or <strong>Local AI (Ollama)</strong> modes, 
+                  To use <strong>Local (Offline)</strong> speech or an AI assistant running on this computer (Ollama), 
                   you need to run Voice Verses locally on your computer. Browser security prevents 
                   the hosted web app from accessing localhost services.
                 </p>
@@ -354,7 +356,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
                     <li>Double-click the downloaded file (.dmg or .exe)</li>
                     <li>Follow the installation prompts</li>
                     <li>Launch Voice Verses from Applications or Start Menu</li>
-                    <li>Configure Ollama or local services in Settings → Speech</li>
+                    <li>Choose a speech engine and, optionally, the AI verse assistant in Settings → Speech</li>
                   </ol>
                 </div>
 
@@ -443,7 +445,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
                 <div className="flex items-start gap-2">
                   <span className="text-green-500">✓</span>
                   <div>
-                    <strong>Desktop App (installer):</strong> ALL modes work, including Local (Offline) and Local AI (Ollama). Recommended for full features.
+                    <strong>Desktop App (installer):</strong> ALL modes work, including Local (Offline) speech and a local AI assistant (Ollama). Recommended for full features.
                   </div>
                 </div>
                 <div className="flex items-start gap-2">

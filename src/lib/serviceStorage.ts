@@ -1,8 +1,18 @@
 import { Service, MediaItem } from '@/types/service';
 import { indexedDBService } from './indexedDBService';
+import { notifyLocalChange, setDeletion } from './library/localChanges';
 
 const SERVICES_KEY = 'cornerstone-services';
 const MEDIA_KEY = 'cornerstone-media';
+
+export interface SaveOptions {
+  /** The change came from the library folder: keep its timestamp and don't sync it back */
+  fromSync?: boolean;
+}
+
+function stamp<T extends { updatedAt?: string }>(item: T, options?: SaveOptions): T {
+  return options?.fromSync ? item : { ...item, updatedAt: new Date().toISOString() };
+}
 
 export class ServiceStorage {
   static async getServices(): Promise<Service[]> {
@@ -73,7 +83,8 @@ export class ServiceStorage {
     }
   }
 
-  static async saveService(service: Service): Promise<void> {
+  static async saveService(service: Service, options?: SaveOptions): Promise<void> {
+    service = stamp(service, options);
     try {
       const services = await this.getServices();
       const index = services.findIndex(s => s.id === service.id);
@@ -87,13 +98,21 @@ export class ServiceStorage {
       console.error('Error saving service:', error);
       throw error;
     }
+    if (!options?.fromSync) {
+      setDeletion('services', service.id, null);
+      notifyLocalChange();
+    }
   }
 
-  static async deleteService(id: string): Promise<void> {
+  static async deleteService(id: string, options?: SaveOptions): Promise<void> {
     try {
       const services = await this.getServices();
       const filtered = services.filter(s => s.id !== id);
       await indexedDBService.saveServices(filtered);
+      if (!options?.fromSync) {
+        setDeletion('services', id, new Date().toISOString());
+        notifyLocalChange();
+      }
     } catch (error) {
       console.error('Error deleting service:', error);
       throw error;
@@ -142,7 +161,8 @@ export class ServiceStorage {
     }
   }
 
-  static async saveMediaItem(item: MediaItem): Promise<void> {
+  static async saveMediaItem(item: MediaItem, options?: SaveOptions): Promise<void> {
+    item = stamp(item, options);
     try {
       const items = await this.getMedia();
       const index = items.findIndex(m => m.id === item.id);
@@ -156,13 +176,21 @@ export class ServiceStorage {
       console.error('Error saving media item:', error);
       throw error;
     }
+    if (!options?.fromSync) {
+      setDeletion('media', item.id, null);
+      notifyLocalChange();
+    }
   }
 
-  static async deleteMediaItem(id: string): Promise<void> {
+  static async deleteMediaItem(id: string, options?: SaveOptions): Promise<void> {
     try {
       const items = await this.getMedia();
       const filtered = items.filter(m => m.id !== id);
       await indexedDBService.saveMedia(filtered);
+      if (!options?.fromSync) {
+        setDeletion('media', id, new Date().toISOString());
+        notifyLocalChange();
+      }
     } catch (error) {
       console.error('Error deleting media item:', error);
       throw error;
