@@ -40,16 +40,16 @@ export const ApiKeyDialog = ({ open, onClose }: ApiKeyDialogProps) => {
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleCancel()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>OpenAI API Key Required (Development Mode)</DialogTitle>
+          <DialogTitle>OpenAI API Key Required</DialogTitle>
           <DialogDescription>
-            You're running in development mode. Enter your OpenAI API key to test voice control.
+            This version of the app has no token server. Enter your OpenAI API key to use OpenAI voice recognition.
           </DialogDescription>
         </DialogHeader>
 
         <Alert>
           <InfoIcon className="h-4 w-4" />
           <AlertDescription className="text-xs">
-            <strong>Development Only:</strong> For production, deploy to Azure and set the OPENAI_API_KEY environment variable in your Static Web App configuration.
+            Your key is stored only in this browser. Alternatively, choose the Web Speech or local speech engine in Settings, which need no key.
           </AlertDescription>
         </Alert>
 

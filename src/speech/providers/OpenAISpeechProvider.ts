@@ -1,3 +1,4 @@
+import { getRealtimeTokenUrl } from '@/lib/realtimeToken';
 import { 
   ISpeechProvider, 
   TranscriptCallback, 
@@ -84,15 +85,17 @@ export class OpenAISpeechProvider implements ISpeechProvider {
     try {
       console.log('OpenAISpeechProvider: Initializing WebRTC connection...');
 
-      // Check if we're in development (Lovable preview) or production (Azure)
-      const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
-                           window.location.hostname.includes('lovable.dev');
+      // Use the server token endpoint when one exists; otherwise (GitHub Pages,
+      // Electron, local dev) call OpenAI directly with the user's API key
+      const tokenUrl = getRealtimeTokenUrl();
       
       let EPHEMERAL_KEY: string;
       
-      if (isDevelopment && this.config.apiKey) {
-        // DEVELOPMENT: Use provided API key
-        console.log('Development mode: Using provided OpenAI API key');
+      if (!tokenUrl) {
+        if (!this.config.apiKey) {
+          throw new Error('OpenAI API key required. Enter your key when prompted, or choose another speech engine in Settings.');
+        }
+        console.log('No token server: using provided OpenAI API key');
         
         const tokenResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
           method: "POST",
@@ -127,11 +130,9 @@ export class OpenAISpeechProvider implements ISpeechProvider {
         const data = await tokenResponse.json();
         EPHEMERAL_KEY = data.client_secret.value;
       } else {
-        // PRODUCTION: Use Azure Function
-        const AZURE_FUNCTION_URL = `${window.location.origin}/api/realtime-token`;
-        console.log('Fetching ephemeral token from:', AZURE_FUNCTION_URL);
+        console.log('Fetching ephemeral token from:', tokenUrl);
         
-        const tokenResponse = await fetch(AZURE_FUNCTION_URL, {
+        const tokenResponse = await fetch(tokenUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

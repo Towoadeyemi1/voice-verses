@@ -1,3 +1,4 @@
+import { getRealtimeTokenUrl } from '@/lib/realtimeToken';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { AudioVisualizer } from './AudioVisualizer';
@@ -111,13 +112,9 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     // Load speech settings to check which engine is selected
     const settings = loadSpeechSettings();
     
-    // Only require API key for OpenAI engine in development mode
+    // OpenAI needs the user's API key when there is no token server (e.g. GitHub Pages)
     if (settings.speechEngine === 'openai') {
-      const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
-                           window.location.hostname.includes('lovable.dev') ||
-                           window.location.hostname.includes('localhost');
-      
-      if (isDevelopment) {
+      if (!getRealtimeTokenUrl()) {
         // Check for saved API key
         const savedKey = localStorage.getItem('dev_openai_api_key');
         

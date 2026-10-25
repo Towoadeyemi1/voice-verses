@@ -1,3 +1,4 @@
+import { getRealtimeTokenUrl } from '@/lib/realtimeToken';
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -327,11 +328,9 @@ const Presenter = () => {
       // Load speech settings and create provider
       const settings = loadSpeechSettings();
       
-      // Check for API key in development mode for OpenAI
+      // OpenAI needs the user's API key when there is no token server (e.g. GitHub Pages)
       if (settings.speechEngine === 'openai') {
-        const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
-                             window.location.hostname.includes('lovable.dev');
-        if (isDevelopment) {
+        if (!getRealtimeTokenUrl()) {
           const savedKey = localStorage.getItem('dev_openai_api_key');
           if (savedKey) {
             settings.openaiApiKey = savedKey;
