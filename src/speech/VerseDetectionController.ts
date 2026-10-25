@@ -57,7 +57,7 @@ export class VerseDetectionController {
   private lastPartialReference: ExtractedReference | null = null;
   private partialMatchCount: number = 0;
   private currentVerse: BibleVerse | null = null;
-  private currentEngine: SpeechEngineType = 'openai';
+  private currentEngine: SpeechEngineType = 'builtin';
   private recentFinals: string[] = [];
   private assistantRequest: AbortController | null = null;
   private lastSuggestedKey: string | null = null;
@@ -112,21 +112,20 @@ export class VerseDetectionController {
     // Notify transcript update
     this.options.onTranscriptUpdate?.(cleanText);
 
-    // Quick filter - skip expensive processing if unlikely to contain reference
-    if (!mightContainVerseReference(cleanText)) {
-      // Still check for navigation commands
-      if (!(await this.handleNavigationCommands(cleanText)) && isFinal) {
-        this.askAssistant(cleanText);
-      }
-      return;
+    // Quick filter - skip expensive parsing when there is no number at all
+    let reference: ExtractedReference | null = null;
+    if (mightContainVerseReference(cleanText)) {
+      const normalized = normalizeTranscript(cleanText);
+      console.log('Normalized transcript:', normalized);
+      reference = extractBestReference(normalized);
     }
 
-    // Normalize and extract references
-    const normalized = normalizeTranscript(cleanText);
-    console.log('Normalized transcript:', normalized);
+    // Speech engines sometimes split a reference across two segments
+    // ("...second timothy three" | "sixteen tells us...")
+    if (!reference && isFinal) {
+      reference = this.referenceAcrossSegments(cleanText);
+    }
 
-    const reference = extractBestReference(normalized);
-    
     if (!reference) {
       // No reference found, check navigation
       if (!(await this.handleNavigationCommands(cleanText)) && isFinal) {
@@ -171,7 +170,7 @@ export class VerseDetectionController {
       this.triggerVerseDetected(verse, {
         method: 'explicit',
         confidence: reference.confidence,
-        engine: this.currentEngine === 'local' ? 'vosk' : 'openai', // Default to vosk for local
+        engine: this.currentEngine,
       });
     }
   }
@@ -197,7 +196,7 @@ export class VerseDetectionController {
         this.triggerVerseDetected(nextVerse, {
           method: 'explicit',
           confidence: 'high',
-          engine: this.currentEngine === 'local' ? 'vosk' : 'openai',
+          engine: this.currentEngine,
         });
       }
     } else if (isPreviousVerseCommand(text)) {
@@ -212,13 +211,29 @@ export class VerseDetectionController {
         this.triggerVerseDetected(prevVerse, {
           method: 'explicit',
           confidence: 'high',
-          engine: this.currentEngine === 'local' ? 'vosk' : 'openai',
+          engine: this.currentEngine,
         });
       }
     } else {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Look for a reference that starts in the previous final segment and ends in
+   * this one. References entirely inside the previous segment were already handled.
+   */
+  private referenceAcrossSegments(text: string): ExtractedReference | null {
+    const previous = this.recentFinals[this.recentFinals.length - 1];
+    if (!previous) return null;
+
+    const tail = previous.split(/\s+/).slice(-6).join(' ');
+    const boundary = normalizeTranscript(tail).length;
+    const spanning = extractReferences(`${tail} ${text}`).filter(
+      (r) => r.confidence !== 'low' && (r.index ?? 0) < boundary && (r.index ?? 0) + r.raw.length > boundary,
+    );
+    return spanning[spanning.length - 1] ?? null;
   }
 
   private rememberFinal(text: string): void {

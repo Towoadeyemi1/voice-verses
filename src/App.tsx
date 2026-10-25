@@ -16,13 +16,25 @@ import Presenter from "./pages/Presenter";
 import MediaLibrary from "./pages/MediaLibrary";
 import NotFound from "./pages/NotFound";
 import { librarySync } from "./lib/library/librarySync";
+import { desktop } from "./lib/desktop";
+import { isDisplayWindow } from "./lib/appUrl";
+import { toast } from "sonner";
 import { HelpAssistant } from "./components/HelpAssistant";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
+    // Display windows (projection etc.) only show slides; the operator window does the rest
+    if (isDisplayWindow()) return;
     librarySync.start();
+    return desktop?.onUpdateAvailable(({ version, url }) => {
+      toast(`Voice Verses ${version} is available`, {
+        description: 'Download it and replace the app in Applications when convenient.',
+        duration: Infinity,
+        action: { label: 'Download', onClick: () => window.open(url, '_blank') },
+      });
+    });
   }, []);
 
   return (

@@ -5,7 +5,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 import { chat } from '@/ai/providers';
+import { isDisplayRoute } from '@/lib/appUrl';
 import { AI_SETTINGS_CHANGED_EVENT, AiAssistantSettings, loadAiSettings } from '@/ai/settings';
 
 const HELP_SYSTEM_PROMPT = `You are the built-in help assistant for Voice Verses, church presentation software that listens to a sermon and puts the Bible verses being read on screen. Help church volunteers set it up and use it. Keep answers short, friendly and practical, with numbered steps where useful.
@@ -29,6 +31,7 @@ interface Message {
 /** Uses the AI verse assistant's provider; hidden until one is set up. */
 export const HelpAssistant = () => {
   const [settings, setSettings] = useState(loadAiSettings);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const reload = () => setSettings(loadAiSettings());
@@ -36,7 +39,8 @@ export const HelpAssistant = () => {
     return () => window.removeEventListener(AI_SETTINGS_CHANGED_EVENT, reload);
   }, []);
 
-  if (!settings.enabled || !settings.model) return null;
+  // Never on congregation-facing screens
+  if (!settings.enabled || !settings.model || isDisplayRoute(pathname)) return null;
   return <HelpAssistantChat settings={settings} />;
 };
 

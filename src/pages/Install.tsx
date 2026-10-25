@@ -1,9 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, Monitor, Smartphone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { DesktopDownloads } from '@/components/DesktopDownloads';
 import { useEffect, useState } from 'react';
 
 const Install = () => {
+  const navigate = useNavigate();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
@@ -43,6 +46,21 @@ const Install = () => {
           </p>
         </div>
 
+        <Card className="border-primary">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5" />
+              Desktop app (recommended for churches)
+            </CardTitle>
+            <CardDescription>
+              Works offline with built-in speech recognition. One installer, nothing else to set up.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DesktopDownloads />
+          </CardContent>
+        </Card>
+
         {isInstallable && (
           <Card className="border-primary bg-primary/5">
             <CardHeader>
@@ -67,7 +85,7 @@ const Install = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Monitor className="h-5 w-5" />
-                Desktop Installation
+                Install the website as an app
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -135,7 +153,7 @@ const Install = () => {
         </Card>
 
         <div className="text-center">
-          <Button variant="outline" onClick={() => window.location.href = '/'}>
+          <Button variant="outline" onClick={() => navigate('/')}>
             Return to App
           </Button>
         </div>

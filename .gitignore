@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Speech models, downloaded by scripts/fetch-models.mjs
+resources/models/
+dist-electron/

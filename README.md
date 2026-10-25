@@ -56,7 +56,8 @@ This project is built with:
 
 ## Architecture
 
-- **Desktop app** (`npm run electron:build`): the main way to run Voice Verses in a church.
+- **Desktop app** (`BUILD_GUIDE.md`): the main way to run Voice Verses in a church. One
+  installer per platform includes the speech model; it updates itself from GitHub Releases.
   Works offline, keeps API keys encrypted with the OS keychain, and saves the library to a
   folder. `npm run electron:preview` runs the built app without packaging.
 - **Web app** (`npm run build`): the same UI as a static site on GitHub Pages
@@ -69,9 +70,13 @@ Speech-to-text is pluggable (`src/speech/providers`).
 
 | Engine | Needs | Notes |
 | --- | --- | --- |
-| Browser (Web Speech) | Chrome/Edge/Safari | Default on the web. Free; not available in the desktop app |
-| Local | `speech-service` installed | Offline and private |
-| OpenAI | An OpenAI API key | Most accurate; transcription-only session with `gpt-4o-transcribe` |
+| Built-in | Desktop app | Default on desktop. Offline, free, private: NVIDIA Parakeet + Silero VAD via sherpa-onnx, in a background process (`electron/speech`) |
+| Browser (Web Speech) | Chrome/Edge | Default on the web. Free; audio goes to the browser maker |
+| OpenAI | An OpenAI API key | Cloud transcription with `gpt-4o-transcribe` |
+
+How the built-in engine was chosen, and how to re-run the comparison:
+[`docs/speech-engine-evaluation.md`](docs/speech-engine-evaluation.md). Settings →
+Speech → **Test with a recording** runs it on any recorded service.
 
 ### Understanding: verse detection
 

@@ -210,12 +210,18 @@ function normalizeVersePatterns(text: string): string {
     '$1'
   );
   
-  // "verse sixteen" → ":16" (for context-based parsing)
+  // "verse sixteen" / "verses eight" → ":16" (for context-based parsing)
   result = result.replace(
-    /verse\s+(\d+)/gi,
+    /verses?\s+(\d+)/gi,
     ':$1'
   );
-  
+
+  // "2 :4" (from "two verse four") → "2:4"
+  result = result.replace(/(\d+)\s+:(\d+)/g, '$1:$2');
+
+  // "8 and 9" / "8 to 9" / "8 through 9" after a verse → range "8-9"
+  result = result.replace(/:(\d+)\s+(?:and|to|through|thru|-)\s+(\d+)/gi, ':$1-$2');
+
   return result;
 }
 
@@ -255,15 +261,7 @@ export function normalizeTranscript(text: string): string {
  * Used for quick filtering before more expensive parsing
  */
 export function mightContainVerseReference(text: string): boolean {
-  const normalized = text.toLowerCase();
-  
-  // Check for common patterns
-  const patterns = [
-    /\d+:\d+/,                    // 3:16
-    /\d+\s+\d+/,                  // 3 16
-    /chapter|verse|psalm/i,       // chapter, verse, psalm
-    /john|matthew|genesis|romans|corinthians|peter|timothy|james|luke|mark|acts|revelation/i,
-  ];
-  
-  return patterns.some(p => p.test(normalized));
+  // Every reference has a number once spoken numbers are converted
+  // ("zephaniah three seventeen" → "zephaniah 3 17")
+  return /\d/.test(normalizeTranscript(text));
 }

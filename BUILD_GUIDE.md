@@ -1,57 +1,60 @@
-# Building Voice Verses Desktop Installers
+# Building and releasing the desktop app
 
-## Quick Start
+## Releasing (recommended)
 
-Once Node.js is installed and you've extracted the project:
+Releases are built by GitHub Actions (`.github/workflows/build-electron.yml`):
 
 ```bash
-cd voice-verses-main
-npm install
-npm run electron:build:mac
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
-This creates: `dist-electron/Voice Verses-1.0.0.dmg`
+This builds, on GitHub's Mac and Windows machines:
 
-Users can then double-click the .dmg to install like any Mac app!
+| File | For |
+| --- | --- |
+| `Voice-Verses-mac-arm64.dmg` | Macs with an Apple chip (M1 and later) |
+| `Voice-Verses-mac-x64.dmg` | Intel Macs |
+| `Voice-Verses-Setup-win-x64.exe` | Windows 10 and later |
 
-## What Gets Created
+and publishes them as a GitHub Release, together with the `latest*.yml` files the
+installed apps use to update themselves. The website's download buttons
+(`src/lib/releases.ts`) always point at the latest release, so nothing needs
+changing on the site.
 
-**For Mac:**
-- `Voice Verses-1.0.0.dmg` (Intel Macs)
-- `Voice Verses-1.0.0-arm64.dmg` (Apple Silicon Macs)
+Each installer includes everything: the app, the speech engine and the speech
+model (about 700 MB in total). Nothing else needs installing.
 
-**For Windows (if you build on Mac with Wine or on Windows):**
-- `Voice Verses Setup 1.0.0.exe`
+## Code signing (optional, recommended before sharing widely)
 
-## Next Steps After Building
+Without signing, macOS asks people to approve the app in System Settings →
+Privacy & Security the first time, Windows shows a SmartScreen warning, and Mac
+copies show an "update available" notice instead of updating themselves.
 
-1. **Test the installer** - Double-click the .dmg and install
-2. **Launch the app** - It opens like a normal desktop app  
-3. **Test Ollama** - Go to Settings → Speech, configure Ollama (localhost:11434), it works!
-4. **Upload to GitHub** - Create a new Release and attach the .dmg/.exe files
-5. **Update Download tab** - Point users to the GitHub Release page
+To sign, add these repository secrets (Settings → Secrets and variables → Actions);
+the workflow uses them automatically when present:
 
-## Icon Files (Optional but Recommended)
+| Secret | What it is |
+| --- | --- |
+| `MAC_CERTIFICATE_P12_BASE64` | "Developer ID Application" certificate exported as .p12, base64-encoded |
+| `MAC_CERTIFICATE_PASSWORD` | Password of that .p12 |
+| `APPLE_ID` | Apple ID of the developer account (for notarization) |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for that Apple ID (appleid.apple.com) |
+| `APPLE_TEAM_ID` | Team ID from the Apple Developer account |
+| `WIN_CERTIFICATE_P12_BASE64` | Windows code-signing certificate as .p12, base64-encoded |
+| `WIN_CERTIFICATE_PASSWORD` | Password of that .p12 |
 
-Before building, add proper icons to the `public` folder:
-- `icon.icns` for Mac (convert from PNG at https://cloudconvert.com/png-to-icns)
-- `icon.ico` for Windows
-- Use the existing logo/favicon as the source image
+## Building on your own computer
 
-Without these, the app uses a default Electron icon.
+Needs Node.js 22.
 
-## Distribution
+```bash
+npm install --legacy-peer-deps
+npm run electron:build:mac     # or electron:build:win on Windows
+```
 
-Once you have the .dmg file, you can:
-1. Create a GitHub Release at https://github.com/Towoadeyemi1/voice-verses/releases/new
-2. Upload the .dmg and .exe files as release assets
-3. Users download and install like any normal app
-4. Update the Settings → Download tab to link to the GitHub Release
+`npm run models` (run automatically by the build scripts) downloads the speech
+model into `resources/models` the first time (about 480 MB).
 
-##Benefits for Users
-
-✅ Double-click install (no Terminal commands needed)
-✅ Shows up in Applications folder  
-✅ All features work (Ollama, local speech, everything)
-✅ No browser security restrictions
-✅ Professional user experience
+For development: `npm run electron:dev` runs the app against the Vite dev
+server; `npm run electron:preview` runs the built app without packaging.

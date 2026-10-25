@@ -197,7 +197,11 @@ export interface ExtractedReference {
   endVerse?: number;     // For ranges
   raw: string;           // Original matched text
   confidence: 'high' | 'medium' | 'low';
+  index?: number;        // Position in the normalized text, for spoken order
 }
+
+// Books with a single chapter: "Jude verse 3" / "Obadiah 17" mean chapter 1
+const SINGLE_CHAPTER_BOOKS = new Set(['Obadiah', 'Philemon', '2 John', '3 John', 'Jude']);
 
 /**
  * Extract all verse references from text
@@ -209,6 +213,24 @@ export function extractReferences(text: string): ExtractedReference[] {
 
   const normalized = normalizeTranscript(text);
   const references: ExtractedReference[] = [];
+
+  // Pattern 0: single-chapter book + verse, e.g. "obadiah :17", "jude 3"
+  const singleChapterPattern = new RegExp(`\\b(${bookPattern})\\s*:?(\\d+)(?:-(\\d+))?\\b(?!\\s*:)`, 'gi');
+  let single;
+  while ((single = singleChapterPattern.exec(normalized)) !== null) {
+    const book = BOOK_ALIASES[single[1].toLowerCase()];
+    if (book && SINGLE_CHAPTER_BOOKS.has(book)) {
+      references.push({
+        book,
+        chapter: 1,
+        startVerse: parseInt(single[2], 10),
+        endVerse: single[3] ? parseInt(single[3], 10) : undefined,
+        raw: single[0],
+        confidence: 'high',
+        index: single.index,
+      });
+    }
+  }
   
   // Pattern 1: Book + Chapter:Verse (or Chapter:Verse-Verse for ranges)
   // e.g., "john 3:16", "1 corinthians 13:4-7"
@@ -222,7 +244,7 @@ export function extractReferences(text: string): ExtractedReference[] {
     const bookAlias = match[1].toLowerCase();
     const book = BOOK_ALIASES[bookAlias] || BOOK_ALIASES[bookAlias.replace(/\s+/g, ' ')];
     
-    if (book) {
+    if (book && !SINGLE_CHAPTER_BOOKS.has(book)) {
       references.push({
         book,
         chapter: parseInt(match[2], 10),
@@ -230,6 +252,7 @@ export function extractReferences(text: string): ExtractedReference[] {
         endVerse: match[4] ? parseInt(match[4], 10) : undefined,
         raw: match[0],
         confidence: 'high',
+        index: match.index,
       });
     }
   }
@@ -245,7 +268,7 @@ export function extractReferences(text: string): ExtractedReference[] {
     const bookAlias = match[1].toLowerCase();
     const book = BOOK_ALIASES[bookAlias] || BOOK_ALIASES[bookAlias.replace(/\s+/g, ' ')];
     
-    if (book) {
+    if (book && !SINGLE_CHAPTER_BOOKS.has(book)) {
       // Avoid duplicates
       const isDuplicate = references.some(
         r => r.book === book && 
@@ -261,6 +284,7 @@ export function extractReferences(text: string): ExtractedReference[] {
           endVerse: match[4] ? parseInt(match[4], 10) : undefined,
           raw: match[0],
           confidence: 'medium',
+          index: match.index,
         });
       }
     }
@@ -268,9 +292,10 @@ export function extractReferences(text: string): ExtractedReference[] {
   
   // Pattern 2b: Book + ConcatenatedNumber (speech engine glued chapter+verse together)
   // e.g., "john 316" → chapter 3, verse 16
-  // Handles 2-4 digit numbers where first 1-2 digits are chapter
+  // Handles 3-4 digit numbers where first 1-2 digits are chapter. Two digits
+  // ("psalm 23") are far more often a chapter, handled by Pattern 3.
   const concatenatedPattern = new RegExp(
-    `\\b(${bookPattern})\\s+(\\d{2,4})\\b(?!\\s*[:\\d])`,
+    `\\b(${bookPattern})\\s+(\\d{3,4})\\b(?!\\s*[:\\d])`,
     'gi'
   );
   
@@ -278,7 +303,7 @@ export function extractReferences(text: string): ExtractedReference[] {
     const bookAlias = match[1].toLowerCase();
     const book = BOOK_ALIASES[bookAlias] || BOOK_ALIASES[bookAlias.replace(/\s+/g, ' ')];
     
-    if (book) {
+    if (book && !SINGLE_CHAPTER_BOOKS.has(book)) {
       const numStr = match[2];
       let chapter: number | null = null;
       let verse: number | null = null;
@@ -314,6 +339,7 @@ export function extractReferences(text: string): ExtractedReference[] {
             startVerse: verse,
             raw: match[0],
             confidence: 'medium', // Lower confidence since we're guessing the split
+            index: match.index,
           });
         }
       }
@@ -331,7 +357,7 @@ export function extractReferences(text: string): ExtractedReference[] {
     const bookAlias = match[1].toLowerCase();
     const book = BOOK_ALIASES[bookAlias] || BOOK_ALIASES[bookAlias.replace(/\s+/g, ' ')];
     
-    if (book) {
+    if (book && !SINGLE_CHAPTER_BOOKS.has(book)) {
       // Avoid duplicates
       const isDuplicate = references.some(
         r => r.book === book && r.chapter === parseInt(match[2], 10)
@@ -344,6 +370,7 @@ export function extractReferences(text: string): ExtractedReference[] {
           startVerse: 1,  // Default to verse 1 for chapter references
           raw: match[0],
           confidence: 'low',
+          index: match.index,
         });
       }
     }
@@ -353,37 +380,32 @@ export function extractReferences(text: string): ExtractedReference[] {
 }
 
 /**
- * Extract the most likely single reference from text
- * Prefers high confidence matches
+ * Extract the reference to show for a piece of speech: the most recently
+ * spoken one, ignoring chapter-only mentions when a full reference is present.
  */
 export function extractBestReference(text: string): ExtractedReference | null {
   const references = extractReferences(text);
-  
   if (references.length === 0) {
     return null;
   }
-  
-  // Sort by confidence (high > medium > low) and return first
-  const sorted = references.sort((a, b) => {
-    const order = { high: 0, medium: 1, low: 2 };
-    return order[a.confidence] - order[b.confidence];
-  });
-  
-  return sorted[0];
+
+  const specific = references.filter(r => r.confidence !== 'low');
+  const candidates = specific.length > 0 ? specific : references;
+  return candidates.reduce((latest, r) => ((r.index ?? 0) > (latest.index ?? 0) ? r : latest));
 }
 
 /**
  * Check if a reference is the "next verse" command
  */
 export function isNextVerseCommand(text: string): boolean {
-  const normalized = text.toLowerCase().trim();
-  return /\b(next|next verse|next one|continue|go on)\b/i.test(normalized);
+  // Explicit phrases only: "next" or "continue" alone are common in ordinary speech
+  return /\b(next verse|following verse|the verse after)\b/i.test(text);
 }
 
 /**
  * Check if a reference is the "previous verse" command
  */
 export function isPreviousVerseCommand(text: string): boolean {
-  const normalized = text.toLowerCase().trim();
-  return /\b(previous|prev|back|go back|last verse)\b/i.test(normalized);
+  // Explicit phrases only: "back" is common in ordinary speech ("come back to that")
+  return /\b(previous verse|verse before|go back a verse)\b/i.test(text);
 }

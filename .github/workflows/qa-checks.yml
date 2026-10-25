@@ -32,7 +32,7 @@ jobs:
           ELECTRON_BUILD=true npx vite build
           grep -q 'src="./assets/' dist/index.html || { echo "❌ FAIL: desktop build must use relative ./ asset paths"; exit 1; }
           test ! -f dist/sw.js || { echo "❌ FAIL: desktop build must not register a service worker"; exit 1; }
-          for f in electron/*.js electron/*.cjs; do node --check "$f"; done
+          for f in electron/*.js electron/*.cjs electron/speech/*; do node --check "$f"; done
           echo "✅ Web and desktop builds OK"
 
       - name: "CHECK 3: Electron build scripts include ELECTRON_BUILD=true"
@@ -62,7 +62,7 @@ jobs:
             exit 1
           fi
 
-      - name: "CHECK 6: Release workflow has contents:write permission"
+      - name: "CHECK 6: Release workflow can publish releases"
         run: |
           if grep -q "contents: write" .github/workflows/build-electron.yml; then
             echo "✅ release job has contents:write permission"
@@ -71,50 +71,25 @@ jobs:
             exit 1
           fi
 
-      - name: "CHECK 7: Release workflow publishes to cornerstone-speech-releases"
+      - name: "CHECK 7: Download links match installer file names"
         run: |
-          if grep -q "cornerstone-speech-releases" .github/workflows/build-electron.yml; then
-            echo "✅ workflow publishes to cornerstone-speech-releases"
-          else
-            echo "❌ FAIL: workflow does not publish to cornerstone-speech-releases"
-            exit 1
-          fi
+          node -e "
+            const build = require('./package.json').build;
+            const links = require('fs').readFileSync('src/lib/releases.ts', 'utf8');
+            const expected = [
+              build.mac.artifactName.replace('\${arch}', 'arm64').replace('\${ext}', 'dmg'),
+              build.mac.artifactName.replace('\${arch}', 'x64').replace('\${ext}', 'dmg'),
+              build.nsis.artifactName.replace('\${arch}', 'x64').replace('\${ext}', 'exe'),
+            ];
+            const missing = expected.filter((name) => !links.includes(name));
+            if (missing.length) { console.error('❌ FAIL: src/lib/releases.ts lacks', missing); process.exit(1); }
+            console.log('✅ Download links match installer names:', expected.join(', '));
+          "
 
-      - name: "CHECK 8: Download links point to cornerstone-speech-releases"
+      - name: "CHECK 8: Speech engine and detector"
         run: |
-          if grep -q "cornerstone-speech-releases" src/components/SettingsPanel.tsx; then
-            echo "✅ Download links point to cornerstone-speech-releases"
-          else
-            echo "❌ FAIL: Download links do not point to cornerstone-speech-releases"
-            exit 1
-          fi
-
-      - name: "CHECK 9: Download filenames use dots (Voice.Verses format)"
-        run: |
-          if grep -q "Voice.Verses-1.0.0-arm64.dmg" src/components/SettingsPanel.tsx && \
-             grep -q "Voice.Verses.Setup.1.0.0.exe" src/components/SettingsPanel.tsx; then
-            echo "✅ Download filenames match electron-builder output format"
-          else
-            echo "❌ FAIL: Download filenames don't match electron-builder output (should use dots: Voice.Verses-...)"
-            exit 1
-          fi
-
-      - name: "CHECK 10: Verify live release exists in cornerstone-speech-releases"
-        env:
-          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
-        run: |
-          RELEASE=$(gh release view --repo Towoadeyemi1/cornerstone-speech-releases --json tagName,assets 2>/dev/null || echo "NOT_FOUND")
-          if echo "$RELEASE" | grep -q "NOT_FOUND"; then
-            echo "❌ FAIL: No release found in cornerstone-speech-releases"
-            exit 1
-          fi
-          if echo "$RELEASE" | grep -q ".dmg" && echo "$RELEASE" | grep -q ".exe"; then
-            echo "✅ Live release exists with .dmg and .exe assets"
-            echo "$RELEASE" | grep -o '"name":"[^"]*"' | head -5
-          else
-            echo "❌ FAIL: Latest release is missing .dmg or .exe assets"
-            exit 1
-          fi
+          npx esbuild tools/speech-eval/detector-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/detector-check.cjs --log-level=error
+          node /tmp/detector-check.cjs
 
       - name: QA Summary
         if: success()

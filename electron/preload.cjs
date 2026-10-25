@@ -10,11 +10,29 @@ const invoke = (channel, ...args) =>
 
 contextBridge.exposeInMainWorld('voiceVerses', {
   platform: process.platform,
+  getVersion: () => invoke('app:version'),
+  onUpdateAvailable: (callback) => {
+    const listener = (_event, info) => callback(info);
+    ipcRenderer.on('app:update-available', listener);
+    return () => ipcRenderer.removeListener('app:update-available', listener);
+  },
   secrets: {
     has: (name) => invoke('secrets:has', name),
     set: (name, value) => invoke('secrets:set', name, value),
     clear: (name) => invoke('secrets:clear', name),
     fetch: (name, request) => invoke('secrets:fetch', name, request),
+  },
+  speech: {
+    isAvailable: () => invoke('speech:available'),
+    start: (mode) => invoke('speech:start', mode),
+    sendAudio: (session, samples) => ipcRenderer.send('speech:audio', session, samples),
+    finish: (session) => ipcRenderer.send('speech:finish', session),
+    stop: (session) => ipcRenderer.send('speech:stop', session),
+    onEvent: (callback) => {
+      const listener = (_event, message) => callback(message);
+      ipcRenderer.on('speech:event', listener);
+      return () => ipcRenderer.removeListener('speech:event', listener);
+    },
   },
   library: {
     getFolder: () => invoke('library:get-folder'),
