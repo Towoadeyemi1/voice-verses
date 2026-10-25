@@ -20,7 +20,9 @@ import {
   SpeechEngineType,
   LocalEngineType 
 } from '@/speech';
-import { checkOllamaHealth } from '@/speech/SpeechProviderFactory';
+import { checkOllamaHealth, getDefaultSpeechEngine } from '@/speech/SpeechProviderFactory';
+import { isDesktop } from '@/lib/desktop';
+import { OpenAIKeySettings } from './OpenAIKeySettings';
 import { WebSpeechProvider } from '@/speech/providers/WebSpeechProvider';
 import { OllamaSpeechProvider } from '@/speech/providers/OllamaSpeechProvider';
 
@@ -30,7 +32,7 @@ const WINDOWS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/latest/download/Cornerston
 const MACOS_INSTALLER_URL = `${GITHUB_RELEASES_URL}/latest/download/CornerstoneSpeechService.dmg`;
 
 export const SpeechEngineSettings = () => {
-  const [speechEngine, setSpeechEngine] = useState<SpeechEngineType>('openai');
+  const [speechEngine, setSpeechEngine] = useState<SpeechEngineType>(getDefaultSpeechEngine);
   const [localEngine, setLocalEngine] = useState<LocalEngineType>('sherpa');
   const [localAsrUrl, setLocalAsrUrl] = useState('ws://127.0.0.1:8765');
   const [localStatus, setLocalStatus] = useState<'unknown' | 'checking' | 'online' | 'offline' | 'error'>('unknown');
@@ -163,7 +165,9 @@ export const SpeechEngineSettings = () => {
               <p className="text-xs text-muted-foreground mt-1">
                 {webSpeechSupported 
                   ? "Uses your browser's built-in speech recognition. No setup required."
-                  : "Not supported in this browser. Try Chrome, Edge, or Safari."}
+                  : isDesktop
+                    ? "Not available in the desktop app. Use Local or OpenAI instead."
+                    : "Not supported in this browser. Try Chrome, Edge, or Safari."}
               </p>
             </div>
           </div>
@@ -190,7 +194,7 @@ export const SpeechEngineSettings = () => {
                 <Brain className="w-3.5 h-3.5 text-purple-500" />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Uses your browser’s mic for audio, then a locally-running LLM to intelligently identify Bible verse references. Fully private — no data leaves your device.
+                Uses your browser’s speech recognition for audio, then a locally-running LLM to identify Bible verse references. The LLM runs on your device; note that some browsers (e.g. Chrome) send audio to their own speech service.
               </p>
             </div>
           </div>
@@ -201,7 +205,7 @@ export const SpeechEngineSettings = () => {
       {speechEngine === 'local' && (
         <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
           {/* Browser Security Notice */}
-          {window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('127.') && (
+          {!isDesktop && window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('127.') && (
             <Alert className="border-yellow-500/50 bg-yellow-500/10">
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
               <AlertDescription className="space-y-3">
@@ -371,21 +375,14 @@ export const SpeechEngineSettings = () => {
       )}
 
       {/* Cloud Mode Info */}
-      {speechEngine === 'openai' && (
-        <div className="p-4 rounded-lg border bg-muted/30">
-          <p className="text-sm text-muted-foreground">
-            Using OpenAI Realtime API for high-accuracy transcription. 
-            Requires internet and configured API key. Usage incurs costs.
-          </p>
-        </div>
-      )}
+      {speechEngine === 'openai' && <OpenAIKeySettings />}
 
       {/* Local AI (Ollama / LM Studio / Jan / etc.) Settings */}
       {speechEngine === 'ollama' && (
         <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
 
           {/* Browser Security Notice */}
-          {window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('127.') && (
+          {!isDesktop && window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('127.') && (
             <Alert className="border-yellow-500/50 bg-yellow-500/10">
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
               <AlertDescription className="space-y-3">

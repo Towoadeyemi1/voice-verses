@@ -1,43 +1,31 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { guardRequest, json } from "../shared/guard";
+
+const MAX_MESSAGES = 20;
+const MAX_MESSAGE_LENGTH = 2000;
 
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
-  // Handle CORS
-  context.res = {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS'
-    }
-  };
-
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    context.res.status = 204;
-    return;
-  }
+  const cors = guardRequest(context, req);
+  if (!cors) return;
 
   try {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     if (!OPENAI_API_KEY) {
       context.log.error('OPENAI_API_KEY is not set');
-      context.res = {
-        status: 500,
-        body: { error: 'OPENAI_API_KEY is not configured' },
-        headers: context.res.headers
-      };
+      json(context, 500, { error: 'Help assistant is not configured' }, cors);
       return;
     }
 
-    const { messages } = await req.json();
-
-    if (!messages || !Array.isArray(messages)) {
-      context.res = {
-        status: 400,
-        body: { error: 'Messages array is required' },
-        headers: context.res.headers
-      };
+    // Only plain user/assistant turns from the client; the system prompt is ours
+    const rawMessages = req.body?.messages;
+    if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
+      json(context, 400, { error: 'Messages array is required' }, cors);
       return;
     }
+    const messages = rawMessages
+      .filter(m => (m?.role === 'user' || m?.role === 'assistant') && typeof m.content === 'string')
+      .slice(-MAX_MESSAGES)
+      .map(m => ({ role: m.role, content: m.content.slice(0, MAX_MESSAGE_LENGTH) }));
 
     context.log('Calling OpenAI chat completion...');
 
@@ -94,39 +82,16 @@ Keep answers concise, friendly, and focused on practical steps.`
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      context.log.error('OpenAI API error:', response.status, errorText);
-      context.res = {
-        status: 500,
-        body: { error: `OpenAI API error: ${response.status}` },
-        headers: context.res.headers
-      };
+      context.log.error('OpenAI API error:', response.status, await response.text());
+      json(context, 502, { error: `OpenAI request failed (${response.status})` }, cors);
       return;
     }
 
     const data = await response.json();
-    context.log('OpenAI response received successfully');
-
-    context.res = {
-      status: 200,
-      body: data,
-      headers: {
-        ...context.res.headers,
-        'Content-Type': 'application/json'
-      }
-    };
+    json(context, 200, data, cors);
   } catch (error) {
     context.log.error("Error in help assistant:", error);
-    context.res = {
-      status: 500,
-      body: { 
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
-      },
-      headers: {
-        ...context.res.headers,
-        'Content-Type': 'application/json'
-      }
-    };
+    json(context, 502, { error: 'Could not reach OpenAI' }, cors);
   }
 };
 

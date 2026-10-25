@@ -12,23 +12,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: "CHECK 1: Vite base path uses ./ for electron builds"
-        run: |
-          if grep -q "isElectronBuild ? './' :" vite.config.ts; then
-            echo "✅ Vite base path: relative ./ set for electron builds"
-          else
-            echo "❌ FAIL: vite.config.ts does not set base to './' for electron builds"
-            exit 1
-          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-      - name: "CHECK 2: PWA disabled for electron builds"
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: "CHECK 1: Type check"
+        run: npx tsc -p tsconfig.app.json --noEmit
+
+      - name: "CHECK 2: Web and desktop builds"
         run: |
-          if grep -q "!isElectronBuild && VitePWA" vite.config.ts; then
-            echo "✅ PWA disabled for electron builds"
-          else
-            echo "❌ FAIL: PWA plugin is not disabled for electron builds — will cause blank screen"
-            exit 1
-          fi
+          VITE_BASE_PATH=/voice-verses/ npm run build
+          test -f dist/sw.js || { echo "❌ FAIL: web build has no service worker"; exit 1; }
+          grep -q 'src="/voice-verses/assets/' dist/index.html || { echo "❌ FAIL: web build ignores VITE_BASE_PATH"; exit 1; }
+
+          rm -rf dist
+          ELECTRON_BUILD=true npx vite build
+          grep -q 'src="./assets/' dist/index.html || { echo "❌ FAIL: desktop build must use relative ./ asset paths"; exit 1; }
+          test ! -f dist/sw.js || { echo "❌ FAIL: desktop build must not register a service worker"; exit 1; }
+          node --check electron/main.js && node --check electron/openaiKey.js && node --check electron/preload.cjs
+          echo "✅ Web and desktop builds OK"
+
+      - name: "CHECK 2b: Azure Functions compile"
+        working-directory: azure-functions
+        run: npm install && npx tsc --noEmit
 
       - name: "CHECK 3: Electron build scripts include ELECTRON_BUILD=true"
         run: |

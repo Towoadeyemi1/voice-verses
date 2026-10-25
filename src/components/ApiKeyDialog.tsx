@@ -5,99 +5,90 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
+import { toast } from 'sonner';
+import { isDesktop } from '@/lib/desktop';
+import { setApiKey as saveApiKey } from '@/speech/openai/credentials';
 
 interface ApiKeyDialogProps {
   open: boolean;
-  onClose: (apiKey: string | null) => void;
+  /** Called with true once a key has been saved, false if cancelled */
+  onClose: (saved: boolean) => void;
 }
 
 export const ApiKeyDialog = ({ open, onClose }: ApiKeyDialogProps) => {
   const [apiKey, setApiKey] = useState('');
-  const [saveToLocalStorage, setSaveToLocalStorage] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Load saved API key from localStorage
-    const savedKey = localStorage.getItem('dev_openai_api_key');
-    if (savedKey) {
-      setApiKey(savedKey);
-    }
-  }, []);
+    if (open) setApiKey('');
+  }, [open]);
 
-  const handleSubmit = () => {
-    if (apiKey.trim()) {
-      if (saveToLocalStorage) {
-        localStorage.setItem('dev_openai_api_key', apiKey.trim());
-      }
-      onClose(apiKey.trim());
+  const handleSubmit = async () => {
+    if (!apiKey.trim() || saving) return;
+    setSaving(true);
+    try {
+      await saveApiKey(apiKey);
+      onClose(true);
+    } catch (error) {
+      toast.error('Could not save API key', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    } finally {
+      setSaving(false);
     }
-  };
-
-  const handleCancel = () => {
-    onClose(null);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleCancel()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose(false)}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>OpenAI API Key Required</DialogTitle>
           <DialogDescription>
-            This version of the app has no token server. Enter your OpenAI API key to use OpenAI voice recognition.
+            The OpenAI speech engine uses your OpenAI account. Enter an API key to continue.
           </DialogDescription>
         </DialogHeader>
 
         <Alert>
           <InfoIcon className="h-4 w-4" />
           <AlertDescription className="text-xs">
-            Your key is stored only in this browser. Alternatively, choose the Web Speech or local speech engine in Settings, which need no key.
+            {isDesktop
+              ? 'The key is encrypted with your operating system keychain and never leaves this computer except to talk to OpenAI.'
+              : 'The key is stored only in this browser. Anyone with access to this browser profile could read it.'}{' '}
+            Prefer no key? Choose browser or local speech recognition in Settings → Speech Engine.
           </AlertDescription>
         </Alert>
 
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="apiKey">OpenAI API Key</Label>
-            <Input
-              id="apiKey"
-              type="password"
-              placeholder="sk-..."
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-              autoFocus
-            />
-            <p className="text-xs text-muted-foreground">
-              Get your API key from{' '}
-              <a
-                href="https://platform.openai.com/api-keys"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                OpenAI Platform
-              </a>
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="saveKey"
-              checked={saveToLocalStorage}
-              onChange={(e) => setSaveToLocalStorage(e.target.checked)}
-              className="rounded"
-            />
-            <Label htmlFor="saveKey" className="text-sm cursor-pointer">
-              Save key to browser (for testing convenience)
-            </Label>
-          </div>
+        <div className="space-y-2 py-4">
+          <Label htmlFor="apiKey">OpenAI API Key</Label>
+          <Input
+            id="apiKey"
+            type="password"
+            placeholder="sk-..."
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            autoComplete="off"
+            autoFocus
+          />
+          <p className="text-xs text-muted-foreground">
+            Get your API key from{' '}
+            <a
+              href="https://platform.openai.com/api-keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              OpenAI Platform
+            </a>
+          </p>
         </div>
 
         <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={handleCancel}>
+          <Button variant="outline" onClick={() => onClose(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!apiKey.trim()}>
-            Continue
+          <Button onClick={handleSubmit} disabled={!apiKey.trim() || saving}>
+            Save and Continue
           </Button>
         </div>
       </DialogContent>

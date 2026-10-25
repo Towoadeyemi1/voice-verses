@@ -1,6 +1,7 @@
 import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { Card } from '@/components/ui/card';
 import { Monitor } from 'lucide-react';
+import { appUrl } from '@/lib/appUrl';
 
 const DisplayManager = () => {
   return (
@@ -23,7 +24,9 @@ const DisplayManager = () => {
           </h3>
           <ol className="space-y-2 text-sm text-muted-foreground">
             <li><strong>Step 1:</strong> Open three separate browser windows</li>
-            <li><strong>Step 2:</strong> Navigate to: <code className="bg-background px-2 py-1 rounded">/projection</code>, <code className="bg-background px-2 py-1 rounded">/lower-third</code>, <code className="bg-background px-2 py-1 rounded">/confidence</code></li>
+            <li><strong>Step 2:</strong> Open these addresses: {['/projection', '/lower-third', '/confidence'].map((route) => (
+              <code key={route} className="bg-background px-2 py-1 rounded mr-1 break-all">{appUrl(route)}</code>
+            ))}</li>
             <li><strong>Step 3:</strong> Drag each window to its assigned DeckLink display (SDI output)</li>
             <li><strong>Step 4:</strong> Press F11 (or Cmd+Ctrl+F) to make each window fullscreen</li>
             <li><strong>Step 5:</strong> Use this Display Manager on your main screen to monitor all outputs</li>

@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "electron": "electron .",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:8080 && electron .\"",
+    "electron:preview": "cross-env ELECTRON_BUILD=true vite build && cross-env ELECTRON_LOAD_DIST=1 electron .",
     "electron:build": "cross-env ELECTRON_BUILD=true vite build && electron-builder --publish never",
     "electron:build:mac": "cross-env ELECTRON_BUILD=true vite build && electron-builder --mac --publish never",
     "electron:build:win": "cross-env ELECTRON_BUILD=true vite build && electron-builder --win --publish never",
@@ -121,7 +122,10 @@
           "arch": ["x64", "arm64"]
         }
       ],
-      "darkModeSupport": true
+      "darkModeSupport": true,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Voice Verses listens to the sermon to detect and display Bible verses."
+      }
     },
     "win": {
       "icon": "public/icon.ico",

@@ -95,28 +95,47 @@ Functions in bible-verse-detector-func:
         Invoke url: https://bible-verse-detector-func.azurewebsites.net/api/realtime-token
 ```
 
-**Copy this URL** - you'll need it to update your frontend code.
+**Copy this URL** - you'll need it to configure the frontend build.
 
-## Update Frontend
-
-After deployment, update the `AZURE_FUNCTION_URL` in your frontend code:
-
-1. Open `src/lib/realtimeWebRTC.ts`
-2. Replace `'YOUR_AZURE_FUNCTION_URL_HERE'` with your actual Azure Function URL
-
-Example:
-```typescript
-const AZURE_FUNCTION_URL = 'https://bible-verse-detector-func.azurewebsites.net/api/realtime-token';
+### Step 8: Allow your site's origin
+The functions only answer browser requests from origins you list. Add the site
+that hosts the app (no trailing slash):
+```bash
+az functionapp config appsettings set \
+  --name bible-verse-detector-func \
+  --resource-group bible-verse-detector-rg \
+  --settings "ALLOWED_ORIGINS=https://towoadeyemi1.github.io" "RATE_LIMIT_PER_HOUR=60"
 ```
+Leave Azure Portal → Function App → CORS empty; the functions set CORS headers themselves.
+
+## Configure the Frontend
+
+The web app reads the endpoint at build time. Set it as a repository variable
+or in the build step of `.github/workflows/deploy-pages.yml`:
+
+```yaml
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /voice-verses/
+          VITE_REALTIME_TOKEN_URL: https://bible-verse-detector-func.azurewebsites.net/api/realtime-token
+          VITE_HELP_ASSISTANT_URL: https://bible-verse-detector-func.azurewebsites.net/api/help-assistant
+```
+
+Without `VITE_REALTIME_TOKEN_URL`, the web app asks each user for their own
+OpenAI API key instead. Without `VITE_HELP_ASSISTANT_URL`, the help assistant
+button is hidden.
 
 ## Verify Deployment
 
 Test your deployed function:
 ```bash
-curl -X POST https://bible-verse-detector-func.azurewebsites.net/api/realtime-token
+curl -X POST https://bible-verse-detector-func.azurewebsites.net/api/realtime-token \
+  -H "Content-Type: application/json" -d '{"language":"en"}'
 ```
 
-You should receive a JSON response with an ephemeral token.
+You should receive `{ "value": "ek_...", "expires_at": ... }`, a client secret
+valid for two minutes.
 
 ## Monitoring
 
@@ -143,9 +162,9 @@ Azure Functions on Consumption Plan pricing:
 - Check if OPENAI_API_KEY is set correctly in Application Settings
 - View logs using `func azure functionapp logstream`
 
-### CORS errors
-- The function is configured with `Access-Control-Allow-Origin: *`
-- If issues persist, configure CORS in Azure Portal under Function App → CORS
+### CORS errors / "Origin not allowed"
+- Add the site's exact origin (scheme + host, no path) to `ALLOWED_ORIGINS`
+- Make sure Azure Portal → Function App → CORS is empty, so it doesn't override the function's headers
 
 ### Build errors
 - Ensure Node.js version is 18.x or higher
@@ -163,4 +182,4 @@ az group delete --name bible-verse-detector-rg --yes
 
 - [Azure Functions Documentation](https://docs.microsoft.com/en-us/azure/azure-functions/)
 - [Azure Functions Pricing](https://azure.microsoft.com/en-us/pricing/details/functions/)
-- [OpenAI Realtime API Documentation](https://platform.openai.com/docs/guides/realtime)
+- [OpenAI Realtime transcription](https://developers.openai.com/api/docs/guides/realtime-transcription)

@@ -16,7 +16,6 @@ export interface SpeechSettings {
   localEngine: LocalEngineType;
   localAsrUrl: string;
   detectionAuthorityOpenAI: DetectionAuthorityType;
-  openaiApiKey?: string | null;
   language?: string;
   audioDevice?: string | null;
   ollamaUrl?: string;

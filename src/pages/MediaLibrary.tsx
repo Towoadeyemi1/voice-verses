@@ -8,7 +8,6 @@ import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { Image, Music, Plus, Trash2, Search, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
-import { SongSelectImport } from '@/components/SongSelectImport';
 import { PowerPointImport } from '@/components/PowerPointImport';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { SettingsPanel } from '@/components/SettingsPanel';
@@ -30,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { appUrl } from '@/lib/appUrl';
 
 const MediaLibrary = () => {
   const [media, setMedia] = useState<MediaItem[]>([]);
@@ -152,7 +152,7 @@ const MediaLibrary = () => {
   });
 
   const handleOpenLowerThird = () => {
-    window.open('/lower-third', '_blank', 'width=1280,height=720');
+    window.open(appUrl('/lower-third'), '_blank', 'width=1280,height=720');
   };
 
   return (
@@ -192,7 +192,7 @@ const MediaLibrary = () => {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => window.open('/display-manager', '_blank', 'width=1400,height=900')}
+                      onClick={() => window.open(appUrl('/display-manager'), '_blank', 'width=1400,height=900')}
                       className="h-7 px-2 hover:bg-primary/10"
                       title="Open in window"
                     >
@@ -303,9 +303,7 @@ const MediaLibrary = () => {
             </Card>
           )}
 
-          {/* SongSelect Integration */}
           <div className="space-y-4">
-            <SongSelectImport onImportComplete={loadMedia} />
             <PowerPointImport onImportComplete={loadMedia} />
           </div>
 

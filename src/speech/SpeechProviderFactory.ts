@@ -59,12 +59,25 @@ export function createSpeechProvider(
   // Default: OpenAI
   return new OpenAISpeechProvider(
     {
-      apiKey: settings.openaiApiKey || null,
       language: settings.language || 'en',
       audioDeviceId: settings.audioDevice || null,
     },
     callbacks
   );
+}
+
+/** Human-readable engine name for status messages */
+export function getEngineDisplayName(settings: SpeechSettings): string {
+  switch (settings.speechEngine) {
+    case 'local':
+      return `local ${settings.localEngine}`;
+    case 'webspeech':
+      return 'browser speech recognition';
+    case 'ollama':
+      return 'local AI';
+    default:
+      return 'OpenAI';
+  }
 }
 
 /**
@@ -119,25 +132,40 @@ export async function checkLocalServiceHealth(url: string): Promise<{
 /**
  * Normalize URL protocol: ensure wss:// is migrated to ws:// since the local service no longer uses TLS
  */
-function normalizeLocalAsrUrl(url: string): string {
+function normalizeLocalAsrUrl(url: string | undefined): string {
   if (!url) return 'ws://127.0.0.1:8765';
   // Migrate old wss:// to ws://
   return url.replace(/^wss:\/\//, 'ws://');
 }
 
 /**
+ * Default engine when the user hasn't chosen one: the browser's built-in
+ * recognition (free, no setup) where it works, otherwise OpenAI. The desktop
+ * app can't use Web Speech, and stores the OpenAI key securely.
+ */
+export function getDefaultSpeechEngine(): SpeechEngineType {
+  return WebSpeechProvider.isSupported() ? 'webspeech' : 'openai';
+}
+
+function readSavedSettings(): Partial<SpeechSettings> {
+  try {
+    return JSON.parse(localStorage.getItem('cornerstone-settings') || '{}') ?? {};
+  } catch {
+    return {};
+  }
+}
+
+/**
  * Load speech settings from localStorage
  */
 export function loadSpeechSettings(): SpeechSettings {
-  const savedSettings = localStorage.getItem('cornerstone-settings');
-  const saved = savedSettings ? JSON.parse(savedSettings) : {};
+  const saved = readSavedSettings();
 
   return {
-    speechEngine: saved.speechEngine || 'openai',
+    speechEngine: saved.speechEngine || getDefaultSpeechEngine(),
     localEngine: saved.localEngine || 'vosk',
     localAsrUrl: normalizeLocalAsrUrl(saved.localAsrUrl) || 'ws://127.0.0.1:8765',
     detectionAuthorityOpenAI: saved.detectionAuthorityOpenAI || 'transcript',
-    openaiApiKey: saved.openaiApiKey || localStorage.getItem('dev_openai_api_key') || null,
     language: localStorage.getItem('transcription_language') || 'en',
     audioDevice: saved.audioDevice || null,
     ollamaUrl: saved.ollamaUrl || 'http://localhost:11434',
@@ -150,8 +178,7 @@ export function loadSpeechSettings(): SpeechSettings {
  * Save speech settings to localStorage
  */
 export function saveSpeechSettings(settings: Partial<SpeechSettings>): void {
-  const savedSettings = localStorage.getItem('cornerstone-settings');
-  const current = savedSettings ? JSON.parse(savedSettings) : {};
+  const current = readSavedSettings();
 
   const updated = {
     ...current,

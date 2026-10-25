@@ -1,6 +1,3 @@
-import kjvData from '@/data/kjv-complete.json';
-import asvRawData from '@/data/asv-complete.json';
-import webRawData from '@/data/web-complete.json';
 import { BibleVerse, BibleContext } from '@/types/bible';
 import { BibleVersionType } from '@/types/bibleVersion';
 import { convertBibleSuperSearchToStandard } from './bibleConverter';
@@ -11,32 +8,47 @@ interface BibleBook {
   chapters: string[][];
 }
 
-// Convert ASV and WEB to standard format on load
-const asvData = convertBibleSuperSearchToStandard(asvRawData as any);
-const webData = convertBibleSuperSearchToStandard(webRawData as any);
+type OfflineVersion = 'kjv' | 'asv' | 'web';
+
+// Each translation is ~5 MB, so load only the one in use, on first need
+const loaders: Record<OfflineVersion, () => Promise<BibleBook[]>> = {
+  kjv: async () => (await import('@/data/kjv-complete.json')).default as BibleBook[],
+  asv: async () => convertBibleSuperSearchToStandard((await import('@/data/asv-complete.json')).default as any),
+  web: async () => convertBibleSuperSearchToStandard((await import('@/data/web-complete.json')).default as any),
+};
+
+const loadedBibles = new Map<OfflineVersion, Promise<BibleBook[]>>();
+
+const loadOfflineBible = (version: OfflineVersion): Promise<BibleBook[]> => {
+  let bible = loadedBibles.get(version);
+  if (!bible) {
+    bible = loaders[version]();
+    // Allow a retry if the chunk failed to download
+    bible.catch(() => loadedBibles.delete(version));
+    loadedBibles.set(version, bible);
+  }
+  return bible;
+};
 
 let currentVersion: BibleVersionType = 'kjv';
 let customBibleData: BibleBook[] | null = null;
 let esvApiKey: string | null = null;
 let nltApiKey: string | null = null;
 
-const getBibleData = (): BibleBook[] => {
-  if (currentVersion === 'custom' && customBibleData) {
+const getBibleData = async (version: BibleVersionType = currentVersion): Promise<BibleBook[]> => {
+  if (version === 'custom' && customBibleData) {
     return customBibleData;
   }
-  
-  switch (currentVersion) {
+
+  switch (version) {
     case 'asv':
-      return asvData;
     case 'web':
-      return webData;
-    case 'kjv':
+      return loadOfflineBible(version);
     default:
-      return kjvData as BibleBook[];
+      // KJV, and the offline fallback for API-based versions
+      return loadOfflineBible('kjv');
   }
 };
-
-const bibleBooks = kjvData as BibleBook[];
 
 export class BibleParser {
   private static context: BibleContext | null = null;
@@ -110,7 +122,7 @@ export class BibleParser {
     }
 
     // Handle offline versions
-    const books = getBibleData();
+    const books = await getBibleData();
     const book = books.find(b => 
       b.name.toLowerCase() === bookName.toLowerCase() || 
       b.abbrev.toLowerCase() === bookName.toLowerCase()
@@ -219,20 +231,14 @@ export class BibleParser {
     }
   }
 
-  private static fallbackToOffline(bookName: string, chapterNum: number, verseNum: number, reason: string): BibleVerse | null {
+  private static async fallbackToOffline(bookName: string, chapterNum: number, verseNum: number, reason: string): Promise<BibleVerse | null> {
     console.warn(`Falling back to KJV: ${reason}`);
     
-    // Temporarily switch to KJV to get the verse
-    const originalVersion = currentVersion;
-    currentVersion = 'kjv';
-    
-    const books = getBibleData();
+    const books = await getBibleData('kjv');
     const book = books.find(b => 
       b.name.toLowerCase() === bookName.toLowerCase() || 
       b.abbrev.toLowerCase() === bookName.toLowerCase()
     );
-    
-    currentVersion = originalVersion; // Restore original version
     
     if (!book) {
       console.error(`Book not found in KJV: ${bookName}`);
@@ -410,13 +416,12 @@ export class BibleParser {
     const normalized = bookMap[book.toLowerCase()];
     if (normalized) return normalized;
     
-    // Try to find book by partial match
-    const books = getBibleData();
-    const found = books.find(b => 
-      b.name.toLowerCase().startsWith(book.toLowerCase())
+    // Try to find book by partial match against canonical names (in canon order)
+    const found = Object.values(bookMap).find(name =>
+      name.toLowerCase().startsWith(book.toLowerCase())
     );
     
-    return found ? found.name : book;
+    return found ?? book;
   }
 
   static getCurrentContext(): BibleContext | null {
@@ -427,13 +432,13 @@ export class BibleParser {
     this.context = context;
   }
 
-  static getAllBooks(): string[] {
-    const books = getBibleData();
+  static async getAllBooks(): Promise<string[]> {
+    const books = await getBibleData();
     return books.map(b => b.name);
   }
 
-  static getBookChapterCount(bookName: string): number {
-    const books = getBibleData();
+  static async getBookChapterCount(bookName: string): Promise<number> {
+    const books = await getBibleData();
     const book = books.find(b => b.name.toLowerCase() === bookName.toLowerCase());
     return book ? book.chapters.length : 0;
   }
@@ -441,6 +446,12 @@ export class BibleParser {
   static setVersion(version: BibleVersionType): void {
     currentVersion = version;
     localStorage.setItem('cornerstone-bible-version', version);
+    this.preload();
+  }
+
+  /** Start downloading the selected translation so the first lookup is instant. */
+  static preload(): void {
+    getBibleData().catch(error => console.error('Failed to load Bible data:', error));
   }
 
   static getVersion(): BibleVersionType {
@@ -465,6 +476,7 @@ export class BibleParser {
     this.getVersion();
     this.loadCustomBible();
     this.loadApiKeys();
+    this.preload();
   }
 
   static setApiKey(version: 'esv' | 'nlt', apiKey: string): void {
@@ -490,7 +502,7 @@ export class BibleParser {
 
   // Get multiple verses from a range or full chapter
   static async getVerses(bookName: string, chapterNum: number, startVerse?: number, endVerse?: number): Promise<BibleVerse[]> {
-    const books = getBibleData();
+    const books = await getBibleData();
     const book = books.find(b => 
       b.name.toLowerCase() === bookName.toLowerCase() || 
       b.abbrev.toLowerCase() === bookName.toLowerCase()
@@ -557,7 +569,7 @@ export class BibleParser {
     return verse ? [verse] : [];
   }
 
-  static exportCurrentVersion(): any {
+  static async exportCurrentVersion(): Promise<{ version: BibleVersionType; data: BibleBook[] } | null> {
     if (currentVersion === 'esv' || currentVersion === 'nlt') {
       console.error('Cannot export API-based versions');
       return null;
@@ -572,7 +584,7 @@ export class BibleParser {
 
     return {
       version: currentVersion,
-      data: getBibleData(),
+      data: await getBibleData(),
     };
   }
 }

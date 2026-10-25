@@ -1,4 +1,3 @@
-import { getRealtimeTokenUrl } from '@/lib/realtimeToken';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { AudioVisualizer } from './AudioVisualizer';
@@ -23,8 +22,11 @@ import {
   ISpeechProvider, 
   createSpeechProvider, 
   loadSpeechSettings,
+  getEngineDisplayName,
   VerseDetectionController 
 } from '@/speech';
+import { hasApiKey } from '@/speech/openai/credentials';
+import { appUrl } from '@/lib/appUrl';
 
 interface ControlPanelProps {
   showDisplayMonitor?: boolean;
@@ -45,7 +47,6 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   const [isConnecting, setIsConnecting] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
-  const [pendingApiKey, setPendingApiKey] = useState<string | null>(null);
   const [transcriptionLanguage, setTranscriptionLanguage] = useState(() => {
     return localStorage.getItem('transcription_language') || 'en';
   });
@@ -87,11 +88,11 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   }, [transcriptionLanguage]);
 
   const handleOpenLowerThird = () => {
-    window.open('/lower-third', '_blank', 'width=1280,height=720');
+    window.open(appUrl('/lower-third'), '_blank', 'width=1280,height=720');
   };
 
   const handleOpenDisplayManagerWindow = () => {
-    window.open('/display-manager', '_blank', 'width=1400,height=900');
+    window.open(appUrl('/display-manager'), '_blank', 'width=1400,height=900');
   };
 
   // Cleanup on unmount
@@ -109,33 +110,18 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   }, [transcript]);
 
   const handleStartListening = async () => {
-    // Load speech settings to check which engine is selected
     const settings = loadSpeechSettings();
-    
-    // OpenAI needs the user's API key when there is no token server (e.g. GitHub Pages)
-    if (settings.speechEngine === 'openai') {
-      if (!getRealtimeTokenUrl()) {
-        // Check for saved API key
-        const savedKey = localStorage.getItem('dev_openai_api_key');
-        
-        if (!savedKey) {
-          // Show dialog to get API key
-          setShowApiKeyDialog(true);
-          return;
-        }
-        
-        // Use saved key
-        setPendingApiKey(savedKey);
-        startListeningWithKey(savedKey);
-        return;
-      }
+
+    // Ask for the OpenAI key up front rather than failing mid-connection
+    if (settings.speechEngine === 'openai' && !(await hasApiKey())) {
+      setShowApiKeyDialog(true);
+      return;
     }
-    
-    // For webspeech, local, or production OpenAI - no key needed upfront
-    startListeningWithKey(null);
+
+    startListening();
   };
 
-  const startListeningWithKey = async (apiKey: string | null) => {
+  const startListening = async () => {
     try {
       setIsConnecting(true);
       setAudioStatus(prev => ({ ...prev, isListening: true, status: 'listening' }));
@@ -153,7 +139,6 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
 
       // Load speech settings and create provider
       const settings = loadSpeechSettings();
-      settings.openaiApiKey = apiKey;
       settings.language = transcriptionLanguage;
 
       speechProvider.current = createSpeechProvider(settings, {
@@ -181,9 +166,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
       setIsConnecting(false);
       setReadingMode('idle');
       
-      const engineName = settings.speechEngine === 'local' ? settings.localEngine : 'OpenAI';
       toast.success('Listening started', {
-        description: `Using ${engineName} for speech recognition`,
+        description: `Using ${getEngineDisplayName(settings)}`,
       });
     } catch (error) {
       console.error('Error starting listening:', error);
@@ -232,12 +216,10 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     }
   };
 
-  const handleApiKeyDialogClose = (apiKey: string | null) => {
+  const handleApiKeyDialogClose = (saved: boolean) => {
     setShowApiKeyDialog(false);
-    
-    if (apiKey) {
-      setPendingApiKey(apiKey);
-      startListeningWithKey(apiKey);
+    if (saved) {
+      startListening();
     }
   };
 

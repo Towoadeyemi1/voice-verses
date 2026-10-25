@@ -101,7 +101,6 @@ export class LocalSpeechWSProvider implements ISpeechProvider {
     } catch (error) {
       console.error("Error initializing local speech provider:", error);
       this.cleanup();
-      this.errorCallback?.(error instanceof Error ? error : new Error('Unknown error'));
       throw error;
     }
   }

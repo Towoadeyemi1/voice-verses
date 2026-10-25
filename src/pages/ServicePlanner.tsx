@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { ModeNav } from '@/components/ModeNav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
+import { appUrl } from '@/lib/appUrl';
 
 const ServicePlanner = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -80,7 +81,7 @@ const ServicePlanner = () => {
   }, [services]);
 
   const handleOpenLowerThird = () => {
-    window.open('/lower-third', '_blank', 'width=1280,height=720');
+    window.open(appUrl('/lower-third'), '_blank', 'width=1280,height=720');
   };
 
   return (
@@ -120,7 +121,7 @@ const ServicePlanner = () => {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => window.open('/display-manager', '_blank', 'width=1400,height=900')}
+                      onClick={() => window.open(appUrl('/display-manager'), '_blank', 'width=1400,height=900')}
                       className="h-7 px-2 hover:bg-primary/10"
                       title="Open in window"
                     >

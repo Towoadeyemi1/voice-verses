@@ -5,6 +5,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { readErrorResponse } from '@/lib/errors';
+
+// Backend for the assistant (azure-functions/help-assistant). Hidden when not configured.
+const HELP_ASSISTANT_URL: string | undefined = import.meta.env.VITE_HELP_ASSISTANT_URL || undefined;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -12,6 +16,11 @@ interface Message {
 }
 
 export const HelpAssistant = () => {
+  if (!HELP_ASSISTANT_URL) return null;
+  return <HelpAssistantChat url={HELP_ASSISTANT_URL} />;
+};
+
+const HelpAssistantChat = ({ url }: { url: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -38,7 +47,7 @@ export const HelpAssistant = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://cornerstone-church-presenter.azurewebsites.net/api/help-assistant', {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +58,7 @@ export const HelpAssistant = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        throw new Error(await readErrorResponse(response));
       }
 
       const data = await response.json();
@@ -61,7 +70,9 @@ export const HelpAssistant = () => {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Help assistant error:', error);
-      toast.error('Failed to get help response. Please try again.');
+      toast.error('Failed to get help response', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     } finally {
       setIsLoading(false);
     }

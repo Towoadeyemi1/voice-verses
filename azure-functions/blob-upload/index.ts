@@ -1,25 +1,13 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { BlobServiceClient } from "@azure/storage-blob";
+import { guardRequest } from "../shared/guard";
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
-  // CORS headers
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-
-  // Handle OPTIONS request
-  if (req.method === "OPTIONS") {
-    context.res = {
-      status: 200,
-      headers: corsHeaders,
-    };
-    return;
-  }
+  const corsHeaders = guardRequest(context, req, "POST");
+  if (!corsHeaders) return;
 
   try {
     const { filename, data } = req.body;

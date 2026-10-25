@@ -15,7 +15,6 @@ import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
 import { ManualSearch } from '@/components/ManualSearch';
 import { PPTXImport } from '@/components/PPTXImport';
-import { SongSelectImport } from '@/components/SongSelectImport';
 import { LyricsEditor } from '@/components/LyricsEditor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -33,10 +32,8 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import {
   Dialog,
   DialogContent,
@@ -62,72 +59,10 @@ import { PageHeader } from '@/components/PageHeader';
 import { ModeNav } from '@/components/ModeNav';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
-
-// Sortable wrapper for sections
-function SortableSection({ section, children }: { section: ServiceSection; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
-  
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style}>
-      <div className="flex items-start gap-2">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mt-4 hover:text-primary">
-          <GripVertical className="w-5 h-5 text-muted-foreground" />
-        </div>
-        <div className="flex-1">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-// Sortable wrapper for subsections
-function SortableSubsection({ subsection, children }: { subsection: ServiceSubsection; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: subsection.id });
-  
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style}>
-      <div className="flex items-start gap-2">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mt-3 hover:text-primary">
-          <GripVertical className="w-4 h-4 text-muted-foreground" />
-        </div>
-        <div className="flex-1">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-// Sortable wrapper for slides
-function SortableSlide({ slide, children }: { slide: Slide; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: slide.id });
-  
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style}>
-      <div className="flex items-center gap-2">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing hover:text-primary">
-          <GripVertical className="w-3 h-3 text-muted-foreground" />
-        </div>
-        <div className="flex-1">{children}</div>
-      </div>
-    </div>
-  );
-}
+import { SortableSection, SortableSubsection, SortableSlide } from '@/components/service-builder/SortableItems';
+import { NotesDialog } from '@/components/service-builder/NotesDialog';
+import { ScriptureReferenceDialog } from '@/components/service-builder/ScriptureReferenceDialog';
+import { WORSHIP_SONGS_TEMPLATE, parseWorshipSongsCsv, addSongsToWorshipSection } from '@/lib/worshipSongImport';
 
 const ServiceBuilder = () => {
   const { serviceId } = useParams();
@@ -139,9 +74,6 @@ const ServiceBuilder = () => {
   const [notesDialog, setNotesDialog] = useState<{ type: 'section' | 'subsection' | 'slide'; id: string; sectionId?: string; subsectionId?: string } | null>(null);
   const [notesContent, setNotesContent] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [songSelectMatches, setSongSelectMatches] = useState<Array<{ songTitle: string; index: number; lyrics: string }>>([]);
-  const [showSongSelectDialog, setShowSongSelectDialog] = useState(false);
-  const [pendingImportData, setPendingImportData] = useState<{ parsedSongs: ServiceSubsection[]; worshipSection: ServiceSection | null } | null>(null);
   const [showScriptureDialog, setShowScriptureDialog] = useState(false);
   const [scriptureReference, setScriptureReference] = useState('');
   const [showLyricsEditor, setShowLyricsEditor] = useState(false);
@@ -610,27 +542,7 @@ const ServiceBuilder = () => {
   };
 
   const handleDownloadTemplate = () => {
-    const template = `Song Title,Lyrics
-"Amazing Grace","Verse 1
-Amazing grace how sweet the sound
-That saved a wretch like me
-
-Chorus
-I once was lost but now I'm found
-Was blind but now I see
-
-Verse 2
-Through many dangers toils and snares
-I have already come"
-"Example Song 2","Verse 1
-First verse line 1
-First verse line 2
-
-Chorus
-Chorus line 1
-Chorus line 2"`;
-
-    const blob = new Blob([template], { type: 'text/csv' });
+    const blob = new Blob([WORSHIP_SONGS_TEMPLATE], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -643,257 +555,34 @@ Chorus line 2"`;
   };
 
   const handleImportWorshipSongs = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const input = event.target;
+    const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
 
-    if (!file.name.endsWith('.csv')) {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
       toast.error('Please upload a CSV file');
-      event.target.value = '';
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split('\n');
-      
-      // Skip header row
-      const dataLines = lines.slice(1).filter(line => line.trim());
-      
-      if (dataLines.length === 0) {
-        toast.error('No songs found in template');
-        return;
-      }
-
-      // Find or create Worship section
-      let worshipSection = service?.sections?.find(s => s.name.toLowerCase() === 'worship');
-      
-      if (!worshipSection) {
-        worshipSection = {
-          id: `section-${Date.now()}`,
-          name: 'Worship',
-          subsections: [],
-        };
-      }
-
-      const parsedSongs: ServiceSubsection[] = [];
-      const potentialMatches: Array<{ songTitle: string; index: number; lyrics: string }> = [];
-
-      for (let index = 0; index < dataLines.length; index++) {
-        const line = dataLines[index];
-        // Simple CSV parsing (handles quoted fields)
-        const match = line.match(/^"([^"]+)","([^"]*)"$/);
-        if (!match) continue;
-
-        const [, songTitle, lyrics] = match;
-        
-        // If lyrics are empty or minimal, collect as potential SongSelect match
-        if (!lyrics || lyrics.trim().length < 50) {
-          potentialMatches.push({ songTitle, index, lyrics });
-          continue;
-        }
-        
-        // Parse manual lyrics into slides (separated by blank lines)
-        if (lyrics && lyrics.trim()) {
-          const sections = lyrics.split(/\n\n+/).filter(s => s.trim());
-          const slides: LyricsSlide[] = sections.map((section, slideIndex) => {
-            const lines = section.trim().split('\n');
-            const sectionName = lines[0].toLowerCase().includes('verse') ? 'verse' :
-                               lines[0].toLowerCase().includes('chorus') ? 'chorus' :
-                               lines[0].toLowerCase().includes('bridge') ? 'bridge' : undefined;
-            const content = sectionName ? lines.slice(1).join('\n') : section;
-            
-            return {
-              id: `slide-import-${Date.now()}-${index}-${slideIndex}`,
-              type: 'lyrics',
-              title: `${songTitle} - Slide ${slideIndex + 1}`,
-              songTitle,
-              slideNumber: slideIndex + 1,
-              totalSlides: sections.length,
-              content: content.trim(),
-              section: sectionName,
-            };
-          });
-
-          parsedSongs.push({
-            id: `subsection-import-${Date.now()}-${index}`,
-            name: songTitle,
-            slides,
-          });
-        } else {
-          toast.warning(`"${songTitle}" has no lyrics and was not found in SongSelect`);
-        }
-      }
-
-      // If there are potential SongSelect matches, show confirmation dialog
-      if (potentialMatches.length > 0) {
-        setSongSelectMatches(potentialMatches);
-        setPendingImportData({ parsedSongs, worshipSection });
-        setShowSongSelectDialog(true);
-        toast.info(`Found ${potentialMatches.length} song(s) that might be in SongSelect`);
-        return;
-      }
-
-      // Update service with imported songs (when no SongSelect matches)
-      setService(prev => {
-        if (!prev) return null;
-        
-        const existingSection = prev.sections?.find(s => s.name.toLowerCase() === 'worship');
-        
-        if (existingSection) {
-          // Add to existing Worship section
-          return {
-            ...prev,
-            sections: prev.sections.map(s => 
-              s.id === existingSection.id 
-                ? { ...s, subsections: [...s.subsections, ...parsedSongs] }
-                : s
-            ),
-          };
-        } else {
-          // Create new Worship section
-          return {
-            ...prev,
-            sections: [
-              ...(prev.sections || []),
-              { ...worshipSection!, subsections: parsedSongs }
-            ],
-          };
-        }
-      });
-
-      toast.success(`Imported ${parsedSongs.length} song(s) to Worship section`);
-    };
-
-    reader.onerror = () => {
+    let text: string;
+    try {
+      text = await file.text();
+    } catch {
       toast.error('Failed to read file');
-    };
-
-    reader.readAsText(file);
-    event.target.value = '';
-  };
-
-  const handleSongSelectImport = (songTitle: string, slides: LyricsSlide[]) => {
-    // Find active section or Worship section
-    let targetSection = service?.sections?.find(s => s.id === selectedSection);
-    
-    // If no active section or it's not appropriate, find/create Worship section
-    if (!targetSection || !targetSection.name.toLowerCase().includes('worship')) {
-      targetSection = service?.sections?.find(s => s.name.toLowerCase() === 'worship');
-      
-      if (!targetSection) {
-        targetSection = {
-          id: `section-${Date.now()}`,
-          name: 'Worship',
-          subsections: [],
-        };
-      }
+      return;
     }
 
-    const newSubsection: ServiceSubsection = {
-      id: `subsection-${Date.now()}`,
-      name: songTitle,
-      slides,
-    };
+    const { songs, skipped } = parseWorshipSongsCsv(text);
+    skipped.forEach(title => toast.warning(`"${title}" has no lyrics - skipped`));
 
-    setService(prev => {
-      if (!prev) return null;
-      
-      const existingSection = prev.sections?.find(s => s.id === targetSection!.id);
-      
-      if (existingSection) {
-        return {
-          ...prev,
-          sections: prev.sections.map(s =>
-            s.id === targetSection!.id
-              ? { ...s, subsections: [...s.subsections, newSubsection] }
-              : s
-          ),
-        };
-      } else {
-        return {
-          ...prev,
-          sections: [...(prev.sections || []), { ...targetSection!, subsections: [newSubsection] }],
-        };
-      }
-    });
-
-    toast.success(`Added "${songTitle}" as new subsection`);
-  };
-
-  const handleSongSelectConfirmation = async (useSongSelect: boolean) => {
-    if (!pendingImportData) return;
-
-    const { parsedSongs, worshipSection } = pendingImportData;
-
-    if (useSongSelect) {
-      // User wants to try importing from SongSelect
-      toast.info(`Attempting to import ${songSelectMatches.length} song(s) from SongSelect...`);
-      
-      // TODO: Call SongSelect API for each match
-      // For now, just show info message
-      for (const match of songSelectMatches) {
-        toast.info(`SongSelect API integration pending for "${match.songTitle}"`);
-        // When implemented, this would call handleSongSelectImport with the fetched data
-        // const songData = await fetchFromSongSelect(match.songTitle);
-        // if (songData) handleSongSelectImport(match.songTitle, songData.slides);
-      }
-    } else {
-      // User wants to skip SongSelect and add songs without lyrics
-      for (const match of songSelectMatches) {
-        if (match.lyrics && match.lyrics.trim()) {
-          // If there are some lyrics, parse them
-          const sections = match.lyrics.split(/\n\n+/).filter(s => s.trim());
-          const slides: LyricsSlide[] = sections.map((section, slideIndex) => ({
-            id: `slide-manual-${Date.now()}-${match.index}-${slideIndex}`,
-            type: 'lyrics',
-            title: `${match.songTitle} - Slide ${slideIndex + 1}`,
-            songTitle: match.songTitle,
-            slideNumber: slideIndex + 1,
-            totalSlides: sections.length,
-            content: section.trim(),
-          }));
-          
-          parsedSongs.push({
-            id: `subsection-manual-${Date.now()}-${match.index}`,
-            name: match.songTitle,
-            slides,
-          });
-        } else {
-          toast.warning(`"${match.songTitle}" has no lyrics - skipped`);
-        }
-      }
+    if (songs.length === 0) {
+      toast.error('No songs with lyrics found in the file');
+      return;
     }
 
-    // Update service with all parsed songs
-    setService(prev => {
-      if (!prev) return null;
-      
-      const existingSection = prev.sections?.find(s => s.name.toLowerCase() === 'worship');
-      
-      if (existingSection) {
-        return {
-          ...prev,
-          sections: prev.sections.map(s => 
-            s.id === existingSection.id 
-              ? { ...s, subsections: [...s.subsections, ...parsedSongs] }
-              : s
-          ),
-        };
-      } else {
-        return {
-          ...prev,
-          sections: [...(prev.sections || []), { ...worshipSection!, subsections: parsedSongs }],
-        };
-      }
-    });
-
-    toast.success(`Imported ${parsedSongs.length} song(s) to Worship section`);
-    
-    // Reset dialog state
-    setShowSongSelectDialog(false);
-    setSongSelectMatches([]);
-    setPendingImportData(null);
+    setService(prev => (prev ? addSongsToWorshipSection(prev, songs) : prev));
+    toast.success(`Imported ${songs.length} song(s) to Worship section`);
   };
 
   const addSlideToSubsection = (slide: Slide) => {
@@ -1261,16 +950,6 @@ Chorus line 2"`;
               )}
 
               <div className="border-t pt-4">
-                <Label className="mb-2 block">SongSelect Integration</Label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Import songs from CCLI SongSelect - creates new subsection in active or Worship section
-                </p>
-                <SongSelectImport 
-                  onImportComplete={(songTitle, slides) => handleSongSelectImport(songTitle, slides)}
-                />
-              </div>
-
-              <div className="border-t pt-4">
                 <Label>Service Info</Label>
                 <Input
                   value={service.name}
@@ -1324,7 +1003,7 @@ Chorus line 2"`;
                 <SortableContext items={service.sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-3">
                     {service.sections.map((section) => (
-                      <SortableSection key={section.id} section={section}>
+                      <SortableSection key={section.id} id={section.id}>
                         <Collapsible open={!section.collapsed} onOpenChange={() => toggleSectionCollapse(section.id)}>
                           <Card className={`${selectedSection === section.id ? 'border-primary' : ''} ${activeId === section.id ? 'ring-2 ring-primary' : ''}`}>
                             <div className="p-4">
@@ -1382,7 +1061,7 @@ Chorus line 2"`;
                                   <SortableContext items={section.subsections.map(sub => sub.id)} strategy={verticalListSortingStrategy}>
                                     <div className="space-y-2 ml-8">
                                       {section.subsections.map((subsection) => (
-                                        <SortableSubsection key={subsection.id} subsection={subsection}>
+                                        <SortableSubsection key={subsection.id} id={subsection.id}>
                                           <Card className={`p-3 ${selectedSubsection === subsection.id ? 'border-primary bg-primary/5' : ''} ${activeId === subsection.id ? 'ring-2 ring-primary' : ''}`}>
                                              <div className="flex items-center justify-between mb-2">
                                               <Input 
@@ -1454,7 +1133,7 @@ Chorus line 2"`;
                                                  <SortableContext items={subsection.slides.map(slide => slide.id)} strategy={verticalListSortingStrategy}>
                                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-3 auto-rows-fr">
                                                       {subsection.slides.map((slide) => (
-                                                         <SortableSlide key={slide.id} slide={slide}>
+                                                         <SortableSlide key={slide.id} id={slide.id}>
                                                            <Card className={`group relative overflow-hidden hover-scale cursor-pointer flex flex-col min-h-0 h-full ${activeId === slide.id ? 'ring-2 ring-primary' : ''}`}>
                                                              {/* Slide Preview with WYSIWYG */}
                                                              <div className="aspect-video bg-black relative overflow-hidden flex-shrink-0">
@@ -2054,121 +1733,26 @@ Chorus line 2"`;
         </Dialog>
       )}
 
-      {/* Notes Dialog */}
       {notesDialog && (
-        <Dialog open={true} onOpenChange={() => setNotesDialog(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {notesDialog.type === 'section' && 'Operator Notes (Private)'}
-                {notesDialog.type === 'subsection' && 'Presenter Notes (Confidence Monitor)'}
-                {notesDialog.type === 'slide' && 'Slide Notes'}
-              </DialogTitle>
-              <DialogDescription>
-                {notesDialog.type === 'section' && 'Private notes for operators only'}
-                {notesDialog.type === 'subsection' && 'Visible on confidence monitor'}
-                {notesDialog.type === 'slide' && 'Notes for this specific slide'}
-              </DialogDescription>
-            </DialogHeader>
-            <Textarea
-              value={notesContent}
-              onChange={(e) => setNotesContent(e.target.value)}
-              placeholder="Enter notes..."
-              className="min-h-[200px]"
-            />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setNotesDialog(null)}>Cancel</Button>
-              <Button onClick={saveNotes}>Save Notes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <NotesDialog
+          target={notesDialog.type}
+          value={notesContent}
+          onChange={setNotesContent}
+          onSave={saveNotes}
+          onCancel={() => setNotesDialog(null)}
+        />
       )}
 
-      {/* Scripture Dialog */}
-      <Dialog open={showScriptureDialog} onOpenChange={setShowScriptureDialog}>
-        <DialogContent className="sm:max-w-md bg-background border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Add Scripture</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Enter a scripture reference. Examples: John 3:16, John 3:1-16, or John 3 (full chapter)
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="scripture-ref" className="text-sm font-medium text-foreground">
-                Scripture Reference
-              </Label>
-              <Input
-                id="scripture-ref"
-                value={scriptureReference}
-                onChange={(e) => setScriptureReference(e.target.value)}
-                placeholder="e.g., John 3:16"
-                className="bg-background border-input text-foreground placeholder:text-muted-foreground"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleScriptureSubmit();
-                  }
-                }}
-                autoFocus
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setScriptureReference('');
-                setShowScriptureDialog(false);
-              }}
-              className="border-border"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleScriptureSubmit}
-              disabled={!scriptureReference.trim()}
-            >
-              OK
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* SongSelect Confirmation Dialog */}
-      {showSongSelectDialog && (
-        <Dialog open={true} onOpenChange={() => setShowSongSelectDialog(false)}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Import from SongSelect?</DialogTitle>
-              <DialogDescription>
-                {songSelectMatches.length} song(s) have minimal or no lyrics. Would you like to try importing them from CCLI SongSelect?
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-2 py-4">
-              <p className="text-sm font-medium">Songs to check:</p>
-              <ul className="text-sm text-muted-foreground space-y-1 max-h-40 overflow-y-auto">
-                {songSelectMatches.map((match, idx) => (
-                  <li key={idx}>• {match.songTitle}</li>
-                ))}
-              </ul>
-              <p className="text-xs text-muted-foreground mt-4">
-                Note: If SongSelect API is not configured, songs will be added without lyrics.
-              </p>
-            </div>
-            <DialogFooter className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => handleSongSelectConfirmation(false)}
-              >
-                Skip SongSelect
-              </Button>
-              <Button onClick={() => handleSongSelectConfirmation(true)}>
-                Import from SongSelect
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <ScriptureReferenceDialog
+        open={showScriptureDialog}
+        reference={scriptureReference}
+        onReferenceChange={setScriptureReference}
+        onSubmit={handleScriptureSubmit}
+        onCancel={() => {
+          setScriptureReference('');
+          setShowScriptureDialog(false);
+        }}
+      />
     </div>
   );
 };
