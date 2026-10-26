@@ -158,7 +158,7 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
     }
   };
 
-  const handleExportVersion = () => {
+  const handleExportVersion = async () => {
     if (selectedVersion === 'esv' || selectedVersion === 'nlt') {
       toast.error('Cannot export API-based versions', {
         description: 'Only offline versions (KJV, ASV, WEB) can be exported',
@@ -168,7 +168,7 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
 
     setIsExporting(true);
     try {
-      const data = BibleParser.exportCurrentVersion();
+      const data = await BibleParser.exportCurrentVersion();
       if (!data) {
         toast.error('No data to export');
         return;

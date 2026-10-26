@@ -1,13 +1,57 @@
-import { app, BrowserWindow } from 'electron';
-import { fileURLToPath } from 'url';
+import { app, BrowserWindow, ipcMain, shell, systemPreferences } from 'electron';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname, join } from 'path';
+import * as secrets from './secrets.js';
+import * as library from './library.js';
+import * as speech from './speech/index.js';
+import { initUpdates } from './updates.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+// ELECTRON_LOAD_DIST=1 runs the built app unpackaged (npm run electron:preview)
+const isDev = process.env.NODE_ENV === 'development' || (!app.isPackaged && process.env.ELECTRON_LOAD_DIST !== '1');
+const DEV_URL = 'http://localhost:8080';
+const appIndexUrl = pathToFileURL(join(__dirname, '../dist/index.html')).href;
 
 let mainWindow;
+
+const webPreferences = {
+  preload: join(__dirname, 'preload.cjs'),
+  nodeIntegration: false,
+  contextIsolation: true,
+  sandbox: true,
+  webSecurity: true,
+};
+
+/** True for pages that belong to this app (dev server or bundled files). */
+function isAppUrl(url) {
+  return isDev ? url.startsWith(DEV_URL) : url.startsWith(appIndexUrl);
+}
+
+function hardenWindow(win) {
+  // Projection/confidence/lower-third windows open in-app; external links open in the browser
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAppUrl(url)) {
+      return { action: 'allow', overrideBrowserWindowOptions: { webPreferences } };
+    }
+    if (url.startsWith('https://') || url.startsWith('http://')) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
+  win.webContents.on('did-create-window', hardenWindow);
+
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!isAppUrl(url)) {
+      event.preventDefault();
+      if (url.startsWith('https://') || url.startsWith('http://')) {
+        shell.openExternal(url);
+      }
+    }
+  });
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -15,23 +59,19 @@ function createWindow() {
     height: 900,
     minWidth: 800,
     minHeight: 600,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      webSecurity: true,
-    },
+    webPreferences,
     icon: join(__dirname, '../public/favicon.ico'),
     titleBarStyle: 'default',
     title: 'Voice Verses - Bible Projection',
   });
 
-  // Load the app
+  hardenWindow(mainWindow);
+
   if (isDev) {
-    mainWindow.loadURL('http://localhost:8080');
+    mainWindow.loadURL(DEV_URL);
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(join(__dirname, '../dist/index.html'));
-    mainWindow.webContents.openDevTools();
   }
 
   mainWindow.on('closed', () => {
@@ -39,7 +79,53 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+/** Only our own pages may use the privileged IPC channels. */
+const fromApp = (event) => isAppUrl(event.senderFrame?.url ?? '');
+
+function handle(channel, fn) {
+  ipcMain.handle(channel, (event, ...args) => {
+    if (!fromApp(event)) {
+      throw new Error('Unauthorized');
+    }
+    return fn(...args, event);
+  });
+}
+
+// High-frequency one-way messages (audio) use send/on rather than invoke
+function listen(channel, fn) {
+  ipcMain.on(channel, (event, ...args) => {
+    if (fromApp(event)) fn(...args);
+  });
+}
+
+handle('secrets:has', (name) => secrets.hasSecret(name));
+handle('secrets:set', (name, value) => secrets.setSecret(name, value));
+handle('secrets:clear', (name) => secrets.clearSecret(name));
+handle('secrets:fetch', (name, request) => secrets.fetchWithSecret(name, request));
+
+handle('library:get-folder', () => library.getFolder());
+handle('library:choose-folder', () => library.chooseFolder());
+handle('library:forget-folder', () => library.forgetFolder());
+handle('library:list', (dir) => library.list(dir));
+handle('library:read', (path) => library.read(path));
+handle('library:write', (path, text) => library.write(path, text));
+
+handle('app:version', () => app.getVersion());
+handle('speech:available', () => speech.isAvailable());
+handle('speech:start', (mode, event) => speech.start(event.sender, mode));
+listen('speech:audio', (session, samples) => speech.sendAudio(session, samples));
+listen('speech:finish', (session) => speech.finish(session));
+listen('speech:stop', (session) => speech.stop(session));
+
+app.whenReady().then(async () => {
+  await library.initLibrary();
+  if (process.platform === 'darwin') {
+    // Prompt for microphone access up front so the first "Start listening" works
+    await systemPreferences.askForMediaAccess('microphone').catch(() => false);
+  }
+  createWindow();
+  initUpdates();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

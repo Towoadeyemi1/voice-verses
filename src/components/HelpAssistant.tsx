@@ -5,18 +5,51 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
+import { chat } from '@/ai/providers';
+import { isDisplayRoute } from '@/lib/appUrl';
+import { AI_SETTINGS_CHANGED_EVENT, AiAssistantSettings, loadAiSettings } from '@/ai/settings';
+
+const HELP_SYSTEM_PROMPT = `You are the built-in help assistant for Voice Verses, church presentation software that listens to a sermon and puts the Bible verses being read on screen. Help church volunteers set it up and use it. Keep answers short, friendly and practical, with numbered steps where useful.
+
+What the app does:
+- Scripture (voice): click Start Listening; say references like "John 3:16" or "Romans chapter 8 verse 28"; "next verse" / "previous verse" move along. Quick Search (Ctrl+K) finds a verse by typing.
+- Speech engines (Settings → Speech): browser speech recognition (free, Chrome/Edge, website only), local speech service (offline), or OpenAI (most accurate, needs an OpenAI API key).
+- AI verse assistant (Settings → Speech): optional; recognises described or quoted passages using Claude, OpenAI, Ollama or another local model server. Matches appear as suggestions with a Show button unless automatic display is on.
+- Displays: the projection, confidence monitor and lower-third outputs each open in their own window; drag each to its screen and make it full screen. The Display Manager shows all outputs.
+- Services: the Service Planner creates services by date; the Service Builder adds sections, songs (including CSV import of worship songs), scripture, images and announcements, reordered by drag and drop; the Presenter runs a service. Services can be exported to a file and imported on another computer.
+- Library folder (Settings → Storage): keeps a copy of services and media in a folder; choose one in iCloud Drive, Dropbox, OneDrive or Google Drive to share between computers.
+- Bible versions (Settings → General): KJV, ASV and WEB work offline; ESV and NLT need their own API keys.
+
+If you don't know the answer, say so rather than guessing.`;
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
+/** Uses the AI verse assistant's provider; hidden until one is set up. */
 export const HelpAssistant = () => {
+  const [settings, setSettings] = useState(loadAiSettings);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const reload = () => setSettings(loadAiSettings());
+    window.addEventListener(AI_SETTINGS_CHANGED_EVENT, reload);
+    return () => window.removeEventListener(AI_SETTINGS_CHANGED_EVENT, reload);
+  }, []);
+
+  // Never on congregation-facing screens
+  if (!settings.enabled || !settings.model || isDisplayRoute(pathname)) return null;
+  return <HelpAssistantChat settings={settings} />;
+};
+
+const HelpAssistantChat = ({ settings }: { settings: AiAssistantSettings }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hi! I\'m here to help you set up and use the Cornerstone Church Presenter app. Ask me anything about microphone setup, displays, scripture search, or service building!'
+      content: 'Hi! I\'m here to help you set up and use Voice Verses. Ask me anything about microphone setup, displays, scripture search, or service building!'
     }
   ]);
   const [input, setInput] = useState('');
@@ -38,30 +71,19 @@ export const HelpAssistant = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://cornerstone-church-presenter.azurewebsites.net/api/help-assistant', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMessage]
-        })
+      // Skip the greeting: conversations sent to the model must start with the user
+      const reply = await chat(settings, {
+        system: HELP_SYSTEM_PROMPT,
+        messages: [...messages.slice(1), userMessage],
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-
-      const data = await response.json();
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: data.choices[0].message.content
-      };
+      const assistantMessage: Message = { role: 'assistant', content: reply };
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Help assistant error:', error);
-      toast.error('Failed to get help response. Please try again.');
+      toast.error('Failed to get help response', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
     } finally {
       setIsLoading(false);
     }

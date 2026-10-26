@@ -21,8 +21,14 @@ import {
   ISpeechProvider, 
   createSpeechProvider, 
   loadSpeechSettings,
+  getEngineDisplayName,
   VerseDetectionController 
 } from '@/speech';
+import { hasSecret } from '@/lib/secrets';
+import { verseAssistantOptions } from '@/ai/detectionOptions';
+import { ApiKeyDialog } from '@/components/ApiKeyDialog';
+import { useLibraryUpdated } from '@/hooks/use-library-updated';
+import { appUrl } from '@/lib/appUrl';
 
 const Presenter = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,6 +36,7 @@ const Presenter = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [currentService, setCurrentService] = useState<Service | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [isPresenting, setIsPresenting] = useState(false);
   const [editingSlideIndex, setEditingSlideIndex] = useState<number | null>(null);
   const [showDisplayMonitor, setShowDisplayMonitor] = useState(true);
@@ -45,6 +52,7 @@ const Presenter = () => {
   useEffect(() => {
     loadServices();
   }, []);
+  useLibraryUpdated(() => loadServices());
 
   useEffect(() => {
     const serviceId = searchParams.get('service');
@@ -286,13 +294,19 @@ const Presenter = () => {
   };
 
   const handleOpenWindows = () => {
-    window.open('/projection', '_blank', 'width=1920,height=1080');
-    window.open('/confidence', '_blank', 'width=1280,height=720');
-    window.open('/lower-third', '_blank', 'width=1280,height=720');
+    window.open(appUrl('/projection'), '_blank', 'width=1920,height=1080');
+    window.open(appUrl('/confidence'), '_blank', 'width=1280,height=720');
+    window.open(appUrl('/lower-third'), '_blank', 'width=1280,height=720');
     toast.success('Display windows opened');
   };
 
   const handleStartVoice = async () => {
+    // Ask for the OpenAI key up front rather than failing mid-connection
+    if (loadSpeechSettings().speechEngine === 'openai' && !(await hasSecret('openai'))) {
+      setShowApiKeyDialog(true);
+      return;
+    }
+
     try {
       setIsConnecting(true);
       setIsVoiceActive(true);
@@ -322,22 +336,11 @@ const Presenter = () => {
         onTranscriptUpdate: (text) => {
           setTranscript(text);
         },
+        ...verseAssistantOptions((verse) => verseController.current?.triggerManualVerse(verse)),
       });
 
       // Load speech settings and create provider
       const settings = loadSpeechSettings();
-      
-      // Check for API key in development mode for OpenAI
-      if (settings.speechEngine === 'openai') {
-        const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
-                             window.location.hostname.includes('lovable.dev');
-        if (isDevelopment) {
-          const savedKey = localStorage.getItem('dev_openai_api_key');
-          if (savedKey) {
-            settings.openaiApiKey = savedKey;
-          }
-        }
-      }
 
       speechProvider.current = createSpeechProvider(settings, {
         onTranscript: (text, isFinal) => {
@@ -362,10 +365,8 @@ const Presenter = () => {
       await speechProvider.current.init();
       setIsConnecting(false);
       
-      const engineName = settings.speechEngine === 'local' ? settings.localEngine : 
-                        settings.speechEngine === 'webspeech' ? 'Browser' : 'OpenAI';
       toast.success('Voice activated', {
-        description: `Using ${engineName} for speech recognition`,
+        description: `Using ${getEngineDisplayName(settings)}`,
       });
     } catch (error) {
       console.error('Error starting voice:', error);
@@ -669,6 +670,14 @@ const Presenter = () => {
           </div>
         </div>
       )}
+
+      <ApiKeyDialog
+        open={showApiKeyDialog}
+        onClose={(saved) => {
+          setShowApiKeyDialog(false);
+          if (saved) handleStartVoice();
+        }}
+      />
     </div>
   );
 };

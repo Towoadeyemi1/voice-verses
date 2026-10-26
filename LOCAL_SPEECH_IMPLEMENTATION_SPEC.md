@@ -1,5 +1,9 @@
 # Cornerstone Bible — Local Speech + Verse Suggestion Upgrade (Lovable Implementation Spec)
 
+> **Superseded (October 2026).** The separate Python/Vosk speech service this spec describes
+> has been replaced by speech recognition built into the desktop app (NVIDIA Parakeet via
+> sherpa-onnx). See `docs/speech-engine-evaluation.md` and the Architecture section of `README.md`.
+
 ## 1) Goals and constraints
 
 ### Primary goals

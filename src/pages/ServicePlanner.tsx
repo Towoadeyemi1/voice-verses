@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Service } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
-import { Calendar, Plus, Edit, Trash2, Copy } from 'lucide-react';
+import { Calendar, Plus, Edit, Trash2, Copy, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
@@ -14,6 +14,9 @@ import { PageHeader } from '@/components/PageHeader';
 import { ModeNav } from '@/components/ModeNav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
+import { appUrl } from '@/lib/appUrl';
+import { useLibraryUpdated } from '@/hooks/use-library-updated';
+import { SERVICE_EXPORT_EXTENSION, exportService, importService } from '@/lib/library/files';
 
 const ServicePlanner = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -30,6 +33,8 @@ const ServicePlanner = () => {
     const allServices = await ServiceStorage.getServices();
     setServices(allServices);
   };
+
+  useLibraryUpdated(() => loadServices());
 
   const getServicesForDate = (date: Date) => {
     return services.filter(s => 
@@ -72,6 +77,41 @@ const ServicePlanner = () => {
     toast.success('Service duplicated');
   };
 
+  const handleExportService = (service: Service) => {
+    const blob = new Blob([exportService(service)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${service.name.replace(/[^\w\s-]/g, '').trim() || 'service'}${SERVICE_EXPORT_EXTENSION}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
+  const handleImportService = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const imported = importService(await file.text());
+      const exists = services.some(s => s.id === imported.id);
+      // Importing next to the original keeps both instead of overwriting
+      const service: Service = exists
+        ? { ...imported, id: Date.now().toString(), name: `${imported.name} (imported)` }
+        : imported;
+      await ServiceStorage.saveService(service);
+      await loadServices();
+      setSelectedDate(service.date);
+      toast.success(`Imported "${service.name}"`);
+    } catch (error) {
+      toast.error('Could not import service', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  };
+
   const todayServices = getServicesForDate(selectedDate);
   const [templates, setTemplates] = useState<Service[]>([]);
   
@@ -80,7 +120,7 @@ const ServicePlanner = () => {
   }, [services]);
 
   const handleOpenLowerThird = () => {
-    window.open('/lower-third', '_blank', 'width=1280,height=720');
+    window.open(appUrl('/lower-third'), '_blank', 'width=1280,height=720');
   };
 
   return (
@@ -120,7 +160,7 @@ const ServicePlanner = () => {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => window.open('/display-manager', '_blank', 'width=1400,height=900')}
+                      onClick={() => window.open(appUrl('/display-manager'), '_blank', 'width=1400,height=900')}
                       className="h-7 px-2 hover:bg-primary/10"
                       title="Open in window"
                     >
@@ -182,6 +222,18 @@ const ServicePlanner = () => {
                   >
                     Today
                   </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <label className="cursor-pointer">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Import Service
+                      <input
+                        type="file"
+                        accept={`${SERVICE_EXPORT_EXTENSION},.json,application/json`}
+                        className="hidden"
+                        onChange={handleImportService}
+                      />
+                    </label>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -237,8 +289,17 @@ const ServicePlanner = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDuplicateService(service)}
+                          title="Duplicate"
                         >
                           <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleExportService(service)}
+                          title="Export to a file"
+                        >
+                          <Download className="w-4 h-4" />
                         </Button>
                         <Button
                           size="sm"

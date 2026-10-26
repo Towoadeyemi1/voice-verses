@@ -16,7 +16,10 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
-    !isElectronBuild && VitePWA({
+    VitePWA({
+      // Desktop builds load from file://, where service workers don't apply. The plugin
+      // stays registered (disabled) so `virtual:pwa-register` still resolves to a no-op.
+      disable: isElectronBuild,
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
@@ -77,15 +80,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'bible-kjv': ['./src/data/kjv-complete.json'],
-          'bible-asv': ['./src/data/asv-complete.json'],
-          'bible-web': ['./src/data/web-complete.json'],
-        },
-      },
-    },
     chunkSizeWarningLimit: 2000,
   },
 }));

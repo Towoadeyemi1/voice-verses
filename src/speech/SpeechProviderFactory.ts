@@ -1,9 +1,7 @@
 import { ISpeechProvider, SpeechSettings, SpeechEngineType } from './ISpeechProvider';
 import { OpenAISpeechProvider } from './providers/OpenAISpeechProvider';
-import { LocalSpeechWSProvider } from './providers/LocalSpeechWSProvider';
+import { BuiltInSpeechProvider } from './providers/BuiltInSpeechProvider';
 import { WebSpeechProvider } from './providers/WebSpeechProvider';
-import { OllamaSpeechProvider, checkOllamaHealth } from './providers/OllamaSpeechProvider';
-export { checkOllamaHealth };
 
 export interface SpeechProviderCallbacks {
   onTranscript: (text: string, isFinal: boolean) => void;
@@ -20,129 +18,73 @@ export function createSpeechProvider(
   callbacks: SpeechProviderCallbacks
 ): ISpeechProvider {
   console.log('Creating speech provider with engine:', settings.speechEngine);
+  const audioDeviceId = settings.audioDevice || null;
 
-  if (settings.speechEngine === 'local') {
-    return new LocalSpeechWSProvider(
-      {
-        url: settings.localAsrUrl || 'ws://127.0.0.1:8765',
-        engine: settings.localEngine || 'vosk',
-        language: settings.language || 'en',
-        audioDeviceId: settings.audioDevice || null,
-      },
-      callbacks
-    );
+  switch (settings.speechEngine) {
+    case 'builtin':
+      return new BuiltInSpeechProvider({ audioDeviceId }, callbacks);
+    case 'webspeech':
+      return new WebSpeechProvider({ language: settings.language || 'en-US', audioDeviceId }, callbacks);
+    case 'openai':
+      return new OpenAISpeechProvider({ language: settings.language || 'en', audioDeviceId }, callbacks);
   }
+}
 
-  if (settings.speechEngine === 'webspeech') {
-    return new WebSpeechProvider(
-      {
-        language: settings.language || 'en-US',
-        audioDeviceId: settings.audioDevice || null,
-      },
-      callbacks
-    );
+/** Human-readable engine name for status messages */
+export function getEngineDisplayName(settings: SpeechSettings): string {
+  switch (settings.speechEngine) {
+    case 'builtin':
+      return 'built-in speech recognition';
+    case 'webspeech':
+      return 'browser speech recognition';
+    case 'openai':
+      return 'OpenAI';
   }
-
-  if (settings.speechEngine === 'ollama') {
-    return new OllamaSpeechProvider(
-      {
-        ollamaUrl: settings.ollamaUrl || 'http://localhost:11434',
-        ollamaModel: settings.ollamaModel || 'llama3.2',
-        apiType: settings.localLlmApiType || 'ollama',
-        language: settings.language || 'en-US',
-        audioDeviceId: settings.audioDevice || null,
-      },
-      callbacks
-    );
-  }
-
-  // Default: OpenAI
-  return new OpenAISpeechProvider(
-    {
-      apiKey: settings.openaiApiKey || null,
-      language: settings.language || 'en',
-      audioDeviceId: settings.audioDevice || null,
-    },
-    callbacks
-  );
 }
 
 /**
- * Check if a local speech service is available
+ * Default engine when the user hasn't chosen one: built-in recognition in the
+ * desktop app; on the web, the browser's own (free, no setup) where it works,
+ * otherwise OpenAI.
  */
-export async function checkLocalServiceHealth(url: string): Promise<{
-  ok: boolean;
-  engines?: string[];
-  active?: string;
-  version?: string;
-  error?: string;
-}> {
+export function getDefaultSpeechEngine(): SpeechEngineType {
+  if (BuiltInSpeechProvider.isSupported()) return 'builtin';
+  return WebSpeechProvider.isSupported() ? 'webspeech' : 'openai';
+}
+
+const ENGINES: SpeechEngineType[] = ['builtin', 'webspeech', 'openai'];
+
+function isUsable(engine: unknown): engine is SpeechEngineType {
+  switch (engine) {
+    case 'builtin':
+      return BuiltInSpeechProvider.isSupported();
+    case 'webspeech':
+      return WebSpeechProvider.isSupported();
+    default:
+      return ENGINES.includes(engine as SpeechEngineType);
+  }
+}
+
+function readSavedSettings(): Record<string, unknown> {
   try {
-    // Convert ws:// to http:// for health check.
-    // Strip any trailing /asr path first, then append /health exactly once.
-    const healthUrl = url
-      .replace('ws://', 'http://')
-      .replace('wss://', 'https://')
-      .replace(/\/asr$/, '')
-      .replace(/\/$/, '')
-      + '/health';
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(healthUrl, {
-      method: 'GET',
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return { ok: false, error: `HTTP ${response.status}` };
-    }
-
-    const data = await response.json();
-    return {
-      ok: data.ok ?? true,
-      engines: data.engines || [],
-      active: data.active,
-      version: data.version,
-    };
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      return { ok: false, error: 'Connection timeout' };
-    }
-    return { ok: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    return JSON.parse(localStorage.getItem('cornerstone-settings') || '{}') ?? {};
+  } catch {
+    return {};
   }
-}
-
-/**
- * Normalize URL protocol: ensure wss:// is migrated to ws:// since the local service no longer uses TLS
- */
-function normalizeLocalAsrUrl(url: string): string {
-  if (!url) return 'ws://127.0.0.1:8765';
-  // Migrate old wss:// to ws://
-  return url.replace(/^wss:\/\//, 'ws://');
 }
 
 /**
  * Load speech settings from localStorage
  */
 export function loadSpeechSettings(): SpeechSettings {
-  const savedSettings = localStorage.getItem('cornerstone-settings');
-  const saved = savedSettings ? JSON.parse(savedSettings) : {};
+  const saved = readSavedSettings();
 
   return {
-    speechEngine: saved.speechEngine || 'openai',
-    localEngine: saved.localEngine || 'vosk',
-    localAsrUrl: normalizeLocalAsrUrl(saved.localAsrUrl) || 'ws://127.0.0.1:8765',
-    detectionAuthorityOpenAI: saved.detectionAuthorityOpenAI || 'transcript',
-    openaiApiKey: saved.openaiApiKey || localStorage.getItem('dev_openai_api_key') || null,
+    // Engines from earlier builds ("local" speech service, "ollama") or ones this
+    // platform can't run fall back to the default. Ollama now lives in the AI assistant.
+    speechEngine: isUsable(saved.speechEngine) ? saved.speechEngine : getDefaultSpeechEngine(),
     language: localStorage.getItem('transcription_language') || 'en',
-    audioDevice: saved.audioDevice || null,
-    ollamaUrl: saved.ollamaUrl || 'http://localhost:11434',
-    ollamaModel: saved.ollamaModel || 'llama3.2',
-    localLlmApiType: saved.localLlmApiType || 'ollama',
+    audioDevice: (saved.audioDevice as string) || null,
   };
 }
 
@@ -150,19 +92,12 @@ export function loadSpeechSettings(): SpeechSettings {
  * Save speech settings to localStorage
  */
 export function saveSpeechSettings(settings: Partial<SpeechSettings>): void {
-  const savedSettings = localStorage.getItem('cornerstone-settings');
-  const current = savedSettings ? JSON.parse(savedSettings) : {};
+  const current = readSavedSettings();
 
   const updated = {
     ...current,
     speechEngine: settings.speechEngine ?? current.speechEngine,
-    localEngine: settings.localEngine ?? current.localEngine,
-    localAsrUrl: settings.localAsrUrl ?? current.localAsrUrl,
-    detectionAuthorityOpenAI: settings.detectionAuthorityOpenAI ?? current.detectionAuthorityOpenAI,
     audioDevice: settings.audioDevice ?? current.audioDevice,
-    ollamaUrl: settings.ollamaUrl ?? current.ollamaUrl,
-    ollamaModel: settings.ollamaModel ?? current.ollamaModel,
-    localLlmApiType: settings.localLlmApiType ?? current.localLlmApiType,
   };
 
   localStorage.setItem('cornerstone-settings', JSON.stringify(updated));

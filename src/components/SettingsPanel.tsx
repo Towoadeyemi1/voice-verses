@@ -23,6 +23,8 @@ import { BibleVersionType } from '@/types/bibleVersion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { SpeechEngineSettings } from './SpeechEngineSettings';
+import { DesktopDownloads } from './DesktopDownloads';
+import { AiAssistantSettings } from './AiAssistantSettings';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -276,6 +278,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
 
         <TabsContent value="speech" className="space-y-6 mt-6">
           <SpeechEngineSettings />
+          <AiAssistantSettings />
         </TabsContent>
 
         <TabsContent value="backgrounds" className="space-y-6 mt-6">
@@ -326,150 +329,21 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Download className="w-5 h-5 text-primary" />
-              <h4 className="font-semibold text-foreground">Download & Run Locally</h4>
+              <h4 className="font-semibold text-foreground">Desktop app</h4>
             </div>
-
-            <Alert className="border-blue-500/50 bg-blue-500/10">
-              <AlertDescription>
-                <p className="font-semibold mb-2">Why download?</p>
-                <p className="text-sm">
-                  To use <strong>Local (Offline)</strong> or <strong>Local AI (Ollama)</strong> modes, 
-                  you need to run Voice Verses locally on your computer. Browser security prevents 
-                  the hosted web app from accessing localhost services.
-                </p>
-                <p className="text-sm mt-2">
-                  <strong>Easy option:</strong> Download the desktop installer below (just double-click to install, no Terminal needed!)
-                </p>
-              </AlertDescription>
-            </Alert>
-
-            <div className="space-y-3">
-              <h5 className="font-semibold text-foreground">Installation Steps</h5>
-              
-              <div className="space-y-3">
-                <div>
-                  <p className="font-medium text-sm">For Most Users (Easy):</p>
-                  <ol className="space-y-1 list-decimal list-inside text-sm ml-2 mt-1">
-                    <li>Download the installer for your platform below</li>
-                    <li>Double-click the downloaded file (.dmg or .exe)</li>
-                    <li>Follow the installation prompts</li>
-                    <li>Launch Voice Verses from Applications or Start Menu</li>
-                    <li>Configure Ollama or local services in Settings → Speech</li>
-                  </ol>
-                </div>
-
-                <div className="pt-2 border-t">
-                  <p className="font-medium text-sm">For Developers (Advanced):</p>
-                  <ol className="space-y-1 list-decimal list-inside text-sm ml-2 mt-1">
-                    <li>Download the source code ZIP</li>
-                    <li>Extract and open Terminal in the project folder</li>
-                    <li>Run: <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">npm install</code></li>
-                    <li>Run: <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">npm run dev</code></li>
-                    <li>Open: <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">http://localhost:8080</code></li>
-                  </ol>
-                </div>
-              </div>
+            <p className="text-sm text-muted-foreground">
+              The desktop app is the recommended way to run Voice Verses in church: speech recognition runs on the
+              computer (no internet or API key needed), keys are kept in the system keychain, and the library can be
+              saved to a folder. This website version works too, using browser or OpenAI speech recognition.
+            </p>
+            <DesktopDownloads />
+            <div className="pt-4 border-t text-sm text-muted-foreground">
+              Developers: the source code is on{' '}
+              <a href="https://github.com/Towoadeyemi1/voice-verses" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                GitHub
+              </a>
+              .
             </div>
-
-            <div className="space-y-3">
-              <h5 className="font-semibold text-foreground">Download Options</h5>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium mb-2">Desktop Installers (Recommended)</p>
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      variant="default"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases/latest/download/Voice.Verses-1.0.0-arm64.dmg', '_blank')}
-                      className="gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download for Mac (Apple Silicon)
-                    </Button>
-                    <Button
-                      variant="default"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases/latest/download/Voice.Verses-1.0.0.dmg', '_blank')}
-                      className="gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download for Mac (Intel)
-                    </Button>
-                    <Button
-                      variant="default"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/cornerstone-speech-releases/releases/latest/download/Voice.Verses.Setup.1.0.0.exe', '_blank')}
-                      className="gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download for Windows
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Double-click installer, follow prompts. No Terminal commands needed!
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t">
-                  <p className="text-sm font-medium mb-2">Source Code (For Developers)</p>
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses/archive/refs/heads/main.zip', '_blank')}
-                      className="gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download ZIP
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => window.open('https://github.com/Towoadeyemi1/voice-verses', '_blank')}
-                      className="gap-2"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      View on GitHub
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h5 className="font-semibold text-foreground">What works where?</h5>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-start gap-2">
-                  <span className="text-green-500">✓</span>
-                  <div>
-                    <strong>Hosted PWA (this site):</strong> Cloud (OpenAI) and Quick (Browser) modes work perfectly
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-green-500">✓</span>
-                  <div>
-                    <strong>Desktop App (installer):</strong> ALL modes work, including Local (Offline) and Local AI (Ollama). Recommended for full features.
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-green-500">✓</span>
-                  <div>
-                    <strong>Running from source:</strong> All modes work, same as desktop app. For developers and advanced users.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Alert>
-              <AlertDescription className="text-xs">
-                <strong>Note:</strong> The desktop installer includes everything you need. 
-                Node.js is only required if you're running from source code (developers).
-                Download Node.js from{' '}
-                <button
-                  type="button"
-                  onClick={() => window.open('https://nodejs.org', '_blank')}
-                  className="text-primary underline hover:no-underline"
-                >
-                  nodejs.org
-                </button>
-                {' '}if needed.
-              </AlertDescription>
-            </Alert>
           </div>
         </TabsContent>
       </Tabs>

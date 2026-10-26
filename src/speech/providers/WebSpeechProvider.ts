@@ -5,6 +5,7 @@ import {
   ErrorCallback,
   SpeechEngineType 
 } from '../ISpeechProvider';
+import { isDesktop } from '@/lib/desktop';
 
 interface WebSpeechProviderConfig {
   language: string;
@@ -132,6 +133,8 @@ export class WebSpeechProvider implements ISpeechProvider {
   }
 
   static isSupported(): boolean {
+    // Electron exposes the API but has no speech backend, so it always fails with "network"
+    if (isDesktop) return false;
     return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
   }
 
@@ -230,7 +233,6 @@ export class WebSpeechProvider implements ISpeechProvider {
     } catch (error) {
       console.error('Error initializing WebSpeechProvider:', error);
       this.cleanup();
-      this.errorCallback?.(error instanceof Error ? error : new Error('Unknown error'));
       throw error;
     }
   }

@@ -54,6 +54,57 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Architecture
+
+- **Desktop app** (`BUILD_GUIDE.md`): the main way to run Voice Verses in a church. One
+  installer per platform includes the speech model; it updates itself from GitHub Releases.
+  Works offline, keeps API keys encrypted with the OS keychain, and saves the library to a
+  folder. `npm run electron:preview` runs the built app without packaging.
+- **Web app** (`npm run build`): the same UI as a static site on GitHub Pages
+  (`.github/workflows/deploy-pages.yml`), using hash routes (`/voice-verses/#/presenter`).
+  There is no server: keys a user enters stay in their browser.
+
+### Hearing: speech engines
+
+Speech-to-text is pluggable (`src/speech/providers`).
+
+| Engine | Needs | Notes |
+| --- | --- | --- |
+| Built-in | Desktop app | Default on desktop. Offline, free, private: NVIDIA Parakeet + Silero VAD via sherpa-onnx, in a background process (`electron/speech`) |
+| Browser (Web Speech) | Chrome/Edge | Default on the web. Free; audio goes to the browser maker |
+| OpenAI | An OpenAI API key | Cloud transcription with `gpt-4o-transcribe` |
+
+How the built-in engine was chosen, and how to re-run the comparison:
+[`docs/speech-engine-evaluation.md`](docs/speech-engine-evaluation.md). Settings →
+Speech → **Test with a recording** runs it on any recorded service.
+
+### Understanding: verse detection
+
+`VerseDetectionController` turns transcripts into verses. Named references ("John 3:16",
+"Romans chapter 8 verse 28") are matched by rules, instantly and offline.
+
+The optional **AI verse assistant** (`src/ai`, Settings → Speech) handles passages that are
+quoted or described instead of named. It works with any speech engine and any of:
+Claude (Anthropic API key), OpenAI (API key), Ollama, or another local OpenAI-compatible
+server (LM Studio, Jan, llama.cpp). Answers are checked against the Bible text, and by
+default appear as a suggestion the operator confirms. The in-app help assistant uses the
+same provider.
+
+### Storage
+
+Services and media are saved on the computer (IndexedDB). Optionally, Settings → Storage
+keeps a copy in a **library folder** (`src/lib/library`): one JSON file per item, synced
+both ways. Choosing a folder inside iCloud Drive, Dropbox, OneDrive or Google Drive shares
+the library between computers; if the same service is edited on two computers at once,
+both versions are kept. Single services can also be exported to a `.voiceverses.json` file
+and imported elsewhere.
+
+### Build-time configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_BASE_PATH` | Sub-path the web app is served from (`/voice-verses/` on GitHub Pages) |
+
 ## How can I deploy this project?
 
 This project can be deployed to any static hosting service that supports Vite applications.

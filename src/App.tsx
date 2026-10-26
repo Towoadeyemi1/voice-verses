@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import Index from "./pages/Index";
 import Projection from "./pages/Projection";
@@ -15,17 +15,26 @@ import ServiceBuilder from "./pages/ServiceBuilder";
 import Presenter from "./pages/Presenter";
 import MediaLibrary from "./pages/MediaLibrary";
 import NotFound from "./pages/NotFound";
-import { storageOrchestrator } from "./lib/storageOrchestrator";
+import { librarySync } from "./lib/library/librarySync";
+import { desktop } from "./lib/desktop";
+import { isDisplayWindow } from "./lib/appUrl";
+import { toast } from "sonner";
 import { HelpAssistant } from "./components/HelpAssistant";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    storageOrchestrator.initialize().catch(console.error);
-    return () => {
-      storageOrchestrator.stopAutoSync();
-    };
+    // Display windows (projection etc.) only show slides; the operator window does the rest
+    if (isDisplayWindow()) return;
+    librarySync.start();
+    return desktop?.onUpdateAvailable(({ version, url }) => {
+      toast(`Voice Verses ${version} is available`, {
+        description: 'Download it and replace the app in Applications when convenient.',
+        duration: Infinity,
+        action: { label: 'Download', onClick: () => window.open(url, '_blank') },
+      });
+    });
   }, []);
 
   return (
@@ -33,7 +42,8 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter basename={import.meta.env.BASE_URL}>
+        {/* Hash routing works on GitHub Pages sub-paths and file:// in the desktop app */}
+        <HashRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/projection" element={<Projection />} />
@@ -48,7 +58,7 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
           <HelpAssistant />
-        </BrowserRouter>
+        </HashRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );

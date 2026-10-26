@@ -94,6 +94,7 @@ export interface Service {
   isTemplate: boolean;
   templateName?: string;
   serviceLogo?: string; // URL or base64 data of service logo
+  updatedAt?: string; // ISO time of the last local edit, used to sync the library folder
   // Legacy support
   slides?: Slide[];
 }
@@ -105,6 +106,7 @@ export interface MediaItem {
   category?: string;
   tags?: string[];
   createdAt: Date;
+  updatedAt?: string; // ISO time of the last local edit, used to sync the library folder
   // For images
   url?: string;
   // For songs

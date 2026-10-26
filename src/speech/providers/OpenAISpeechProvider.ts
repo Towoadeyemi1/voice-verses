@@ -5,11 +5,19 @@ import {
   ErrorCallback,
   SpeechEngineType 
 } from '../ISpeechProvider';
+import { readErrorResponse } from '@/lib/errors';
+import { createClientSecret } from '../openai/credentials';
+import { OPENAI_API_BASE } from '../openai/realtimeSession';
 
 interface OpenAIProviderConfig {
-  apiKey: string | null;
   language: string;
   audioDeviceId: string | null;
+}
+
+interface RealtimeServerEvent {
+  type: string;
+  transcript?: string;
+  error?: { message?: string };
 }
 
 interface OpenAIProviderCallbacks {
@@ -21,17 +29,17 @@ interface OpenAIProviderCallbacks {
 /**
  * OpenAI Realtime Speech Provider
  * 
- * This provider uses OpenAI's Realtime API via WebRTC for speech-to-text.
- * IMPORTANT: This provider is now TRANSCRIPTION-ONLY. All verse detection
- * is handled centrally by the VerseDetectionController.
+ * Streams the microphone to an OpenAI Realtime transcription session over
+ * WebRTC. TRANSCRIPTION-ONLY: all verse detection is handled centrally by the
+ * VerseDetectionController.
  */
 export class OpenAISpeechProvider implements ISpeechProvider {
   private pc: RTCPeerConnection | null = null;
   private dc: RTCDataChannel | null = null;
-  private audioEl: HTMLAudioElement;
   private stream: MediaStream | null = null;
   private audioContext: AudioContext | null = null;
-  private processor: ScriptProcessorNode | null = null;
+  private analyser: AnalyserNode | null = null;
+  private volumeTimer: number | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
   private connected: boolean = false;
   
@@ -43,9 +51,6 @@ export class OpenAISpeechProvider implements ISpeechProvider {
     private config: OpenAIProviderConfig,
     private callbacks: OpenAIProviderCallbacks
   ) {
-    this.audioEl = document.createElement("audio");
-    this.audioEl.autoplay = true;
-    
     // Register callbacks immediately
     this.transcriptCallback = callbacks.onTranscript;
     this.volumeCallback = callbacks.onVolumeUpdate;
@@ -84,128 +89,34 @@ export class OpenAISpeechProvider implements ISpeechProvider {
     try {
       console.log('OpenAISpeechProvider: Initializing WebRTC connection...');
 
-      // Check if we're in development (Lovable preview) or production (Azure)
-      const isDevelopment = window.location.hostname.includes('lovableproject.com') || 
-                           window.location.hostname.includes('lovable.dev');
-      
-      let EPHEMERAL_KEY: string;
-      
-      if (isDevelopment && this.config.apiKey) {
-        // DEVELOPMENT: Use provided API key
-        console.log('Development mode: Using provided OpenAI API key');
-        
-        const tokenResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${this.config.apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-realtime-preview-2024-12-17",
-            modalities: ["text"],  // No audio output - we only want transcription
-            input_audio_transcription: {
-              model: "whisper-1",
-              language: this.config.language
-            },
-            // NO TOOLS - transcription only!
-            // NO INSTRUCTIONS about verse detection - all centralized now
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 600  // Reduced for lower latency
-            }
-          }),
-        });
+      const clientSecret = await createClientSecret(this.config.language);
+      console.log('Ephemeral client secret received');
 
-        if (!tokenResponse.ok) {
-          const errorText = await tokenResponse.text();
-          console.error('OpenAI API error:', tokenResponse.status, errorText);
-          throw new Error(`OpenAI API error: ${tokenResponse.status}`);
-        }
-
-        const data = await tokenResponse.json();
-        EPHEMERAL_KEY = data.client_secret.value;
-      } else {
-        // PRODUCTION: Use Azure Function
-        const AZURE_FUNCTION_URL = `${window.location.origin}/api/realtime-token`;
-        console.log('Fetching ephemeral token from:', AZURE_FUNCTION_URL);
-        
-        const tokenResponse = await fetch(AZURE_FUNCTION_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ language: this.config.language })
-        });
-
-        if (!tokenResponse.ok) {
-          const errorText = await tokenResponse.text();
-          console.error('Token request failed:', errorText);
-          throw new Error(`Failed to get ephemeral token: ${errorText}`);
-        }
-
-        const data = await tokenResponse.json();
-        
-        if (!data.client_secret?.value) {
-          console.error('Invalid token response:', data);
-          throw new Error("Invalid token response from server");
-        }
-
-        EPHEMERAL_KEY = data.client_secret.value;
-      }
-      
-      console.log('Ephemeral token received');
-
-      // Create peer connection
       this.pc = new RTCPeerConnection();
 
-      // Disable remote audio playback - we only want transcription
-      this.pc.ontrack = (e) => {
-        console.log('Received remote audio track (playback disabled)');
+      // Transcription sessions send no audio back; ignore any remote track
+      this.pc.ontrack = () => {};
+
+      this.pc.onconnectionstatechange = () => {
+        const state = this.pc?.connectionState;
+        // 'disconnected' can recover on its own; 'failed' cannot
+        if (state === 'failed') {
+          console.error('OpenAI connection state:', state);
+          this.connected = false;
+          this.errorCallback?.(new Error('Lost connection to OpenAI. Check your internet connection and start listening again.'));
+        }
       };
 
-      // Add local audio track with selected device
-      console.log('Requesting microphone access...');
-      
-      // Validate selected device exists before using it
-      let validDeviceId: string | null = null;
-      if (this.config.audioDeviceId && this.config.audioDeviceId !== 'default') {
-        try {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          const audioDevices = devices.filter(d => d.kind === 'audioinput');
-          const deviceExists = audioDevices.some(d => d.deviceId === this.config.audioDeviceId);
-          if (deviceExists) {
-            validDeviceId = this.config.audioDeviceId;
-            console.log('Using selected audio device:', validDeviceId);
-          } else {
-            console.warn('Selected audio device not found, using default');
-          }
-        } catch (e) {
-          console.warn('Could not enumerate devices, using default:', e);
-        }
-      }
-      
-      const audioConstraints: MediaTrackConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      };
-      
-      if (validDeviceId) {
-        audioConstraints.deviceId = { exact: validDeviceId };
-      }
-      
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: await this.buildAudioConstraints(),
+      });
       this.pc.addTrack(this.stream.getTracks()[0]);
       console.log('Microphone added to peer connection');
 
-      // Set up audio processing for volume visualization
       this.setupVolumeMonitor();
 
-      // Set up data channel for events
-      this.dc = this.pc.createDataChannel("oai-events");
-      
+      this.dc = this.pc.createDataChannel('oai-events');
+
       this.dc.onopen = () => {
         console.log('Data channel opened');
         this.connected = true;
@@ -213,8 +124,7 @@ export class OpenAISpeechProvider implements ISpeechProvider {
 
       this.dc.onmessage = (e) => {
         try {
-          const event = JSON.parse(e.data);
-          this.handleEvent(event);
+          this.handleEvent(JSON.parse(e.data));
         } catch (error) {
           console.error('Error parsing data channel message:', error);
         }
@@ -222,7 +132,7 @@ export class OpenAISpeechProvider implements ISpeechProvider {
 
       this.dc.onerror = (error) => {
         console.error('Data channel error:', error);
-        this.errorCallback?.(new Error('Data channel error'));
+        this.errorCallback?.(new Error('OpenAI data channel error'));
       };
 
       this.dc.onclose = () => {
@@ -230,101 +140,102 @@ export class OpenAISpeechProvider implements ISpeechProvider {
         this.connected = false;
       };
 
-      // Create and set local description
-      console.log('Creating WebRTC offer...');
       const offer = await this.pc.createOffer();
       await this.pc.setLocalDescription(offer);
 
-      // Connect to OpenAI's Realtime API
-      const baseUrl = "https://api.openai.com/v1/realtime";
-      const model = "gpt-4o-realtime-preview-2024-12-17";
-      
       console.log('Connecting to OpenAI Realtime API...');
-      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
-        method: "POST",
+      const sdpResponse = await fetch(`${OPENAI_API_BASE}/realtime/calls`, {
+        method: 'POST',
         body: offer.sdp,
         headers: {
-          Authorization: `Bearer ${EPHEMERAL_KEY}`,
-          "Content-Type": "application/sdp"
+          Authorization: `Bearer ${clientSecret}`,
+          'Content-Type': 'application/sdp',
         },
       });
 
       if (!sdpResponse.ok) {
-        const errorText = await sdpResponse.text();
-        console.error('OpenAI connection failed:', errorText);
-        throw new Error(`Failed to connect to OpenAI: ${errorText}`);
+        throw new Error(`Failed to connect to OpenAI: ${await readErrorResponse(sdpResponse)}`);
       }
 
-      const answer: RTCSessionDescriptionInit = {
-        type: "answer",
-        sdp: await sdpResponse.text(),
-      };
-      
-      await this.pc.setRemoteDescription(answer);
+      await this.pc.setRemoteDescription({ type: 'answer', sdp: await sdpResponse.text() });
       console.log('WebRTC connection established successfully');
-
     } catch (error) {
-      console.error("Error initializing OpenAI provider:", error);
+      console.error('Error initializing OpenAI provider:', error);
       this.cleanup();
-      this.errorCallback?.(error instanceof Error ? error : new Error('Unknown error'));
-      throw error;
+      // Reported to the caller through the rejected promise (not onError) so the
+      // user sees a single "failed to start" message
+      throw error instanceof Error ? error : new Error('Unknown error');
     }
+  }
+
+  private async buildAudioConstraints(): Promise<MediaTrackConstraints> {
+    const constraints: MediaTrackConstraints = {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+    };
+
+    const deviceId = this.config.audioDeviceId;
+    if (deviceId && deviceId !== 'default') {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        if (devices.some(d => d.kind === 'audioinput' && d.deviceId === deviceId)) {
+          constraints.deviceId = { exact: deviceId };
+        } else {
+          console.warn('Selected audio device not found, using default');
+        }
+      } catch (e) {
+        console.warn('Could not enumerate devices, using default:', e);
+      }
+    }
+
+    return constraints;
   }
 
   private setupVolumeMonitor(): void {
     if (!this.stream) return;
 
     try {
-      this.audioContext = new AudioContext({ sampleRate: 24000 });
+      this.audioContext = new AudioContext();
       this.source = this.audioContext.createMediaStreamSource(this.stream);
-      this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
-      
-      this.processor.onaudioprocess = (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
+      this.analyser = this.audioContext.createAnalyser();
+      this.analyser.fftSize = 2048;
+      this.source.connect(this.analyser);
+
+      const samples = new Float32Array(this.analyser.fftSize);
+      this.volumeTimer = window.setInterval(() => {
+        if (!this.analyser) return;
+        this.analyser.getFloatTimeDomainData(samples);
         let sum = 0;
-        for (let i = 0; i < inputData.length; i++) {
-          sum += inputData[i] * inputData[i];
+        for (let i = 0; i < samples.length; i++) {
+          sum += samples[i] * samples[i];
         }
-        const rms = Math.sqrt(sum / inputData.length);
-        const volume = Math.min(100, Math.floor(rms * 100 * 10));
-        this.volumeCallback?.(volume);
-      };
-      
-      this.source.connect(this.processor);
-      this.processor.connect(this.audioContext.destination);
+        const rms = Math.sqrt(sum / samples.length);
+        this.volumeCallback?.(Math.min(100, Math.floor(rms * 1000)));
+      }, 100);
     } catch (error) {
       console.error('Error setting up volume monitor:', error);
     }
   }
 
-  private handleEvent(event: any): void {
-    console.log('OpenAI event:', event.type);
-
+  private handleEvent(event: RealtimeServerEvent): void {
     switch (event.type) {
       case 'conversation.item.input_audio_transcription.completed':
         console.log('Transcript received:', event.transcript);
-        // Emit as final transcript - VerseDetectionController will handle parsing
-        this.transcriptCallback?.(event.transcript, true);
+        // Final transcripts only: VerseDetectionController parses references
+        // and navigation commands, which must not fire on every partial delta
+        if (event.transcript) {
+          this.transcriptCallback?.(event.transcript, true);
+        }
         break;
 
       case 'conversation.item.input_audio_transcription.failed':
         console.error('Transcription failed:', event.error);
         break;
 
-      // NOTE: We no longer handle function calls here!
-      // All verse detection is centralized in VerseDetectionController
-
       case 'error':
         console.error('OpenAI API error:', event.error);
         this.errorCallback?.(new Error(event.error?.message || 'OpenAI API error'));
-        break;
-
-      case 'input_audio_buffer.speech_started':
-        console.log('Speech detected');
-        break;
-
-      case 'input_audio_buffer.speech_stopped':
-        console.log('Speech stopped');
         break;
     }
   }
@@ -334,10 +245,11 @@ export class OpenAISpeechProvider implements ISpeechProvider {
       this.source.disconnect();
       this.source = null;
     }
-    if (this.processor) {
-      this.processor.disconnect();
-      this.processor = null;
+    if (this.volumeTimer !== null) {
+      clearInterval(this.volumeTimer);
+      this.volumeTimer = null;
     }
+    this.analyser = null;
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
