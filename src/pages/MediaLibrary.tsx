@@ -9,7 +9,6 @@ import { ServiceStorage } from '@/lib/serviceStorage';
 import { Image, Music, Plus, Trash2, Search, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
-import { PowerPointImport } from '@/components/PowerPointImport';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { PageHeader } from '@/components/PageHeader';
@@ -305,10 +304,6 @@ const MediaLibrary = () => {
               </div>
             </Card>
           )}
-
-          <div className="space-y-4">
-            <PowerPointImport onImportComplete={loadMedia} />
-          </div>
 
           {/* Media Grid */}
           {filteredMedia.length === 0 ? (

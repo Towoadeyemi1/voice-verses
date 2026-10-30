@@ -1,5 +1,7 @@
 import { Slide } from '@/types/service';
 import { useEffect, useRef, useState } from 'react';
+import { FitText } from './FitText';
+import { VerseText } from './VerseText';
 
 interface SlideDisplayProps {
   slide: Slide | null;
@@ -81,15 +83,9 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
                 {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
               </div>
             )}
-            <div 
-              className="leading-relaxed text-center break-words"
-              style={{ 
-                fontSize: `${scaledFontSize}px`,
-                lineHeight: '1.6'
-              }}
-            >
-              {slide.verse.text}
-            </div>
+            <FitText maxFontSize={scaledFontSize} className="text-center break-words" style={{ lineHeight: '1.6' }}>
+              <VerseText text={slide.verse.text} />
+            </FitText>
           </div>
         </div>
       );
@@ -115,15 +111,9 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
                 {slide.section}
               </div>
             )}
-            <div 
-              className="leading-relaxed text-center whitespace-pre-line break-words"
-              style={{ 
-                fontSize: `${scaledFontSize}px`,
-                lineHeight: '1.6'
-              }}
-            >
+            <FitText maxFontSize={scaledFontSize} className="text-center whitespace-pre-line break-words" style={{ lineHeight: '1.6' }}>
               {slide.content}
-            </div>
+            </FitText>
             <div 
               className="text-muted-foreground text-center"
               style={{ fontSize: `${Math.max(12, 24 * scale)}px`, marginTop: `${Math.max(16, 32 * scale)}px` }}

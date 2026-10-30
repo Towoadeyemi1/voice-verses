@@ -13,6 +13,7 @@
  */
 
 import { BibleVerse } from '@/types/bible';
+import { isReadingNextVerse } from './readAlong';
 import { BibleParser } from '@/lib/bibleParser';
 import { normalizeTranscript, mightContainVerseReference } from './transcriptNormalization';
 import { 
@@ -127,8 +128,9 @@ export class VerseDetectionController {
     }
 
     if (!reference) {
-      // No reference found, check navigation
-      if (!(await this.handleNavigationCommands(cleanText)) && isFinal) {
+      // No reference found: a navigation command, the next verse being read aloud, or a described passage
+      if (await this.handleNavigationCommands(cleanText)) return;
+      if (isFinal && !(await this.followReading(cleanText))) {
         this.askAssistant(cleanText);
       }
       return;
@@ -217,6 +219,15 @@ export class VerseDetectionController {
     } else {
       return false;
     }
+    return true;
+  }
+
+  /** Moves to the next verse when the preacher reads it aloud. Returns true if it did. */
+  private async followReading(text: string): Promise<boolean> {
+    if (!this.currentVerse) return false;
+    const next = await BibleParser.getVerse(this.currentVerse.book, this.currentVerse.chapter, this.currentVerse.verse + 1);
+    if (!next || !isReadingNextVerse(text, this.currentVerse.text, next.text)) return false;
+    this.triggerVerseDetected(next, { method: 'explicit', confidence: 'medium', engine: this.currentEngine });
     return true;
   }
 

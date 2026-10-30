@@ -9,7 +9,6 @@ import { ManualSearch } from './ManualSearch';
 import { DisplayMonitor } from './DisplayMonitor';
 import { PageHeader } from './PageHeader';
 import { ModeNav } from './ModeNav';
-import { BibleParser } from '@/lib/bibleParser';
 import { DisplayedVerse, AudioStatus, BibleVerse } from '@/types/bible';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -20,14 +19,17 @@ import { ApiKeyDialog } from './ApiKeyDialog';
 import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 import { 
   ISpeechProvider, 
+  DetectionInfo,
   createSpeechProvider, 
   loadSpeechSettings,
   getEngineDisplayName,
   VerseDetectionController 
 } from '@/speech';
 import { hasSecret } from '@/lib/secrets';
+import { desktop } from '@/lib/desktop';
 import { verseAssistantOptions } from '@/ai/detectionOptions';
 import { appUrl } from '@/lib/appUrl';
+import { sendVerseToProPresenter } from '@/lib/proPresenter';
 
 interface ControlPanelProps {
   showDisplayMonitor?: boolean;
@@ -37,7 +39,7 @@ interface ControlPanelProps {
 export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: ControlPanelProps) => {
   const [audioStatus, setAudioStatus] = useState<AudioStatus>({
     isListening: false,
-    volume: 45,
+    volume: 0,
     status: 'idle',
   });
 
@@ -51,15 +53,9 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   const [transcriptionLanguage, setTranscriptionLanguage] = useState(() => {
     return localStorage.getItem('transcription_language') || 'en';
   });
-  
-  // Verse range tracking
-  const [verseRange, setVerseRange] = useState<{ start: number; end: number } | null>(null);
-  const [lastTranscriptSegment, setLastTranscriptSegment] = useState('');
-  const [readingMode, setReadingMode] = useState<'reading' | 'explaining' | 'idle'>('idle');
-  
+
   const speechProvider = useRef<ISpeechProvider | null>(null);
   const verseController = useRef<VerseDetectionController | null>(null);
-  const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Listen for API fallback events
   useEffect(() => {
@@ -102,13 +98,6 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
       handleStopListening();
     };
   }, []);
-
-  // Process transcript whenever it changes
-  useEffect(() => {
-    if (transcript && audioStatus.isListening) {
-      processTranscript(transcript);
-    }
-  }, [transcript]);
 
   const handleStartListening = async () => {
     const settings = loadSpeechSettings();
@@ -166,8 +155,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
       await speechProvider.current.init();
       
       setIsConnecting(false);
-      setReadingMode('idle');
       
+      desktop?.setListening(true);
       toast.success('Listening started', {
         description: `Using ${getEngineDisplayName(settings)}`,
       });
@@ -181,30 +170,24 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     }
   };
 
-  const handleVerseDetected = (verse: BibleVerse, detectionInfo?: any) => {
-    const startTime = performance.now();
-    const latency = Math.round(performance.now() - startTime);
-    
+  const handleVerseDetected = (verse: BibleVerse, detectionInfo?: DetectionInfo) => {
     const displayedVerse: DisplayedVerse = {
       ...verse,
       timestamp: new Date(),
-      latency,
     };
 
     setCurrentVerse(displayedVerse);
     setRecentVerses(prev => [displayedVerse, ...prev].slice(0, 5));
     verseController.current?.setCurrentVerse(verse);
 
-    // Broadcast to projection display
-    console.log('ControlPanel broadcasting verse:', displayedVerse);
     syncService.broadcast({
       type: 'VERSE_UPDATE',
       data: {
         verse: displayedVerse,
         timestamp: displayedVerse.timestamp,
-        latency: displayedVerse.latency,
       },
     });
+    sendVerseToProPresenter(verse);
 
     toast.success('Verse found!', {
       description: `${verse.book} ${verse.chapter}:${verse.verse}`,
@@ -226,11 +209,6 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
   };
 
   const handleStopListening = () => {
-    if (autoAdvanceTimer.current) {
-      clearTimeout(autoAdvanceTimer.current);
-      autoAdvanceTimer.current = null;
-    }
-    
     if (speechProvider.current) {
       speechProvider.current.disconnect();
       speechProvider.current = null;
@@ -242,9 +220,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     }
     
     setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle', volume: 0 }));
-    setReadingMode('idle');
-    setVerseRange(null);
     setIsMicMuted(false);
+    desktop?.setListening(false);
     toast.info('Listening stopped');
   };
 
@@ -257,152 +234,6 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     }
   };
 
-  const analyzeReadingMode = (text: string, currentVerseText?: string): 'reading' | 'explaining' => {
-    if (!currentVerseText) return 'explaining';
-    
-    // Check if transcript contains significant portions of current verse text
-    const verseWords = currentVerseText.toLowerCase().split(' ').filter(w => w.length > 3);
-    const transcriptLower = text.toLowerCase();
-    
-    let matchCount = 0;
-    verseWords.forEach(word => {
-      if (transcriptLower.includes(word)) matchCount++;
-    });
-    
-    const matchRatio = matchCount / verseWords.length;
-    
-    // If more than 30% of verse words are in transcript, likely reading
-    return matchRatio > 0.3 ? 'reading' : 'explaining';
-  };
-
-  const checkForNextVerseText = (text: string, nextVerse: BibleVerse | null): boolean => {
-    if (!nextVerse) return false;
-    
-    // Check if transcript contains beginning of next verse
-    const nextVerseWords = nextVerse.text.toLowerCase().split(' ').slice(0, 5);
-    const transcriptLower = text.toLowerCase();
-    
-    let matchCount = 0;
-    nextVerseWords.forEach(word => {
-      if (word.length > 3 && transcriptLower.includes(word)) matchCount++;
-    });
-    
-    return matchCount >= 3;
-  };
-
-  const processTranscript = async (text: string, verseOverride?: any) => {
-    const startTime = performance.now();
-    
-    // Clear any pending auto-advance
-    if (autoAdvanceTimer.current) {
-      clearTimeout(autoAdvanceTimer.current);
-      autoAdvanceTimer.current = null;
-    }
-    
-    // Check for explicit "next" command
-    if (/\b(next|next verse)\b/i.test(text) && currentVerse) {
-      const nextVerse = BibleParser.getVerse(
-        currentVerse.book,
-        currentVerse.chapter,
-        currentVerse.verse + 1
-      );
-      
-      if (nextVerse) {
-        verseOverride = nextVerse;
-        setReadingMode('reading');
-      }
-    }
-    
-    // Check for range specifications (e.g., "1 to 10", "1 to end")
-    const rangeMatch = text.match(/(\d+)\s+(?:to|through|-)\s+(?:(\d+)|end)/i);
-    if (rangeMatch) {
-      const start = parseInt(rangeMatch[1]);
-      const end = rangeMatch[2] ? parseInt(rangeMatch[2]) : 999;
-      setVerseRange({ start, end });
-      console.log('Range detected:', { start, end });
-    }
-    
-    const verse = verseOverride || await BibleParser.parseReference(text);
-    const endTime = performance.now();
-    const latency = Math.round(endTime - startTime);
-
-    if (verse) {
-      const displayedVerse: DisplayedVerse = {
-        ...verse,
-        timestamp: new Date(),
-        latency,
-      };
-
-      setCurrentVerse(displayedVerse);
-      setRecentVerses(prev => [displayedVerse, ...prev].slice(0, 5));
-
-      // Broadcast to projection display
-      console.log('ControlPanel broadcasting voice-controlled verse:', displayedVerse);
-      syncService.broadcast({
-        type: 'VERSE_UPDATE',
-        data: {
-          verse: displayedVerse,
-          timestamp: displayedVerse.timestamp,
-          latency: displayedVerse.latency,
-        },
-      });
-
-      toast.success('Verse found!', {
-        description: `${verse.book} ${verse.chapter}:${verse.verse}`,
-      });
-      
-      // If range is set, enter reading mode
-      if (verseRange) {
-        setReadingMode('reading');
-      }
-      return;
-    }
-    
-    // Analyze current transcript for reading vs explaining
-    if (currentVerse && text !== lastTranscriptSegment) {
-      setLastTranscriptSegment(text);
-      
-      const mode = analyzeReadingMode(text, currentVerse.text);
-      console.log('Reading mode:', mode, 'Text:', text);
-      
-      if (mode === 'reading') {
-        setReadingMode('reading');
-        
-        // Check if next verse is being read
-        const nextVerse = await BibleParser.getVerse(
-          currentVerse.book,
-          currentVerse.chapter,
-          currentVerse.verse + 1
-        );
-        
-        if (checkForNextVerseText(text, nextVerse)) {
-          console.log('Detected next verse being read, auto-advancing...');
-          processTranscript('', nextVerse);
-          return;
-        }
-        
-        // If in range and reading mode, schedule auto-advance after brief pause
-        if (verseRange && currentVerse.verse < verseRange.end) {
-          autoAdvanceTimer.current = setTimeout(async () => {
-            const next = await BibleParser.getVerse(
-              currentVerse.book,
-              currentVerse.chapter,
-              currentVerse.verse + 1
-            );
-            
-            if (next && readingMode === 'reading') {
-              console.log('Auto-advancing to next verse in range...');
-              processTranscript('', next);
-            }
-          }, 2000); // Wait 2 seconds of silence before advancing
-        }
-      } else {
-        setReadingMode('explaining');
-        console.log('Speaker is explaining, staying on current verse');
-      }
-    }
-  };
-
   const handleManualVerseSelect = (verse: BibleVerse) => {
     if (verseController.current) {
       verseController.current.triggerManualVerse(verse);
@@ -411,14 +242,13 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     }
   };
 
-  const context = BibleParser.getCurrentContext();
 
   return (
     <div className="min-h-screen bg-background p-2 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
         <PageHeader
-          title="Cornerstone Bible"
-          description="Voice-Activated Scripture Projection System"
+          title="Voice Verses"
+          description="Scripture on screen as it is preached"
           showSettings={showSettings}
           onToggleSettings={() => setShowSettings(!showSettings)}
           showDisplayMonitor={showDisplayMonitor}
@@ -444,14 +274,13 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
             <AudioVisualizer
               isListening={audioStatus.isListening}
               volume={audioStatus.volume}
-              latency={currentVerse?.latency}
               isMuted={isMicMuted}
               onToggleMute={handleToggleMute}
             />
 
             <TranscriptWindow
               transcript={transcript}
-              highlightedText={context ? `${context.book} ${context.chapter}` : undefined}
+              highlightedText={currentVerse ? `${currentVerse.book} ${currentVerse.chapter}` : undefined}
               isListening={audioStatus.isListening}
               onStop={handleStopListening}
             />
@@ -459,7 +288,6 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
             <VerseDisplay
               verse={currentVerse}
               timestamp={currentVerse?.timestamp}
-              latency={currentVerse?.latency}
             />
 
             {/* Control Buttons */}
@@ -537,8 +365,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
                 </div>
                 <CollapsibleContent>
                   <ContextTracker
-                    currentBook={context?.book}
-                    currentChapter={context?.chapter}
+                    currentBook={currentVerse?.book}
+                    currentChapter={currentVerse?.chapter}
                     recentVerses={recentVerses}
                   />
                 </CollapsibleContent>

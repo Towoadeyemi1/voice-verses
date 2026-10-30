@@ -61,6 +61,20 @@ const check = (label: string, got: string | null, want: string | null) => {
   await detector.onTranscript('next verse', true);
   check('"next verse" after 2 Timothy 3:16', got, '2 Timothy 3:17');
 
+  // Reading a passage aloud: the screen follows to the next verse, and only then
+  const reading = async (heard: string) => {
+    let shown: string | null = null;
+    const d = new VerseDetectionController({ onVerseDetected: (v) => (shown = `${v.book} ${v.chapter}:${v.verse}`) });
+    await d.onTranscript('John 3:16', true);
+    shown = null;
+    await pause();
+    await d.onTranscript(heard, true);
+    return shown;
+  };
+  check('reading John 3:17 aloud after John 3:16', await reading('For God sent not his Son into the world to condemn the world, but that the world through him might be saved'), 'John 3:17');
+  check('reading John 3:16 again', await reading('For God so loved the world that he gave his only begotten Son'), null);
+  check('preaching about John 3:16', await reading('Do you understand how much God loved the world? He gave everything.'), null);
+
   if (failures) {
     print(`\n${failures} detector check(s) failed`);
     process.exit(1);

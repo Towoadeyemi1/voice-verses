@@ -90,6 +90,20 @@ server (LM Studio, Jan, llama.cpp). Answers are checked against the Bible text, 
 default appear as a suggestion the operator confirms. The in-app help assistant uses the
 same provider.
 
+### Showing it: outputs and ProPresenter
+
+Voice Verses has its own projection, confidence monitor and green-screen lower third
+windows. They all follow one shared "what is live" record (`src/lib/syncService.ts`), so a
+window opened or reloaded mid-service shows what is on screen at once. Text shrinks to
+fit, and the KJV's supplied words show in italics. The desktop app (`electron/outputs.js`)
+remembers which screen each window goes on and keeps the computer awake during a service.
+
+Churches that run **ProPresenter** (7.9 or later) can send the verses there instead, or as
+well: Settings → ProPresenter (`electron/propresenter.js`). ProPresenter's API has no Bible
+endpoint, so verses go through a ProPresenter message named "Voice Verses" with `{Verse}`
+and `{Reference}` tokens; ProPresenter's own theme and Looks decide how and where it shows.
+`node tools/propresenter-check.mjs` tests the client against a stand-in ProPresenter.
+
 ### Storage
 
 Services and media are saved on the computer (IndexedDB). Optionally, Settings → Storage

@@ -1,7 +1,15 @@
 import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { Card } from '@/components/ui/card';
 import { Monitor } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { appUrl } from '@/lib/appUrl';
+import { isDesktop } from '@/lib/desktop';
+
+const OUTPUTS = [
+  { route: '/projection', label: 'Projection', size: 'width=1280,height=720' },
+  { route: '/confidence', label: 'Confidence monitor', size: 'width=1280,height=720' },
+  { route: '/lower-third', label: 'Lower third', size: 'width=1280,height=720' },
+];
 
 const DisplayManager = () => {
   return (
@@ -20,17 +28,37 @@ const DisplayManager = () => {
         <Card className="p-6 bg-muted/50">
           <h3 className="font-semibold mb-3 flex items-center gap-2">
             <Monitor className="w-4 h-4" />
-            Setup Instructions
+            Setting up the screens
           </h3>
-          <ol className="space-y-2 text-sm text-muted-foreground">
-            <li><strong>Step 1:</strong> Open three separate browser windows</li>
-            <li><strong>Step 2:</strong> Open these addresses: {['/projection', '/lower-third', '/confidence'].map((route) => (
-              <code key={route} className="bg-background px-2 py-1 rounded mr-1 break-all">{appUrl(route)}</code>
-            ))}</li>
-            <li><strong>Step 3:</strong> Drag each window to its assigned DeckLink display (SDI output)</li>
-            <li><strong>Step 4:</strong> Press F11 (or Cmd+Ctrl+F) to make each window fullscreen</li>
-            <li><strong>Step 5:</strong> Use this Display Manager on your main screen to monitor all outputs</li>
+          <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+            <li>
+              Open the output windows: <strong>Open Windows</strong> in the Presenter, or the buttons below.
+            </li>
+            <li>
+              Drag each window to its screen (projector, stage monitor) and <strong>double-click</strong> it to fill the
+              screen. Double-click again to make it a window again.
+            </li>
+            {isDesktop ? (
+              <li>
+                The desktop app remembers where each window goes. With a projector connected, the projection opens on
+                it, full screen, by itself.
+              </li>
+            ) : (
+              <li>The desktop app remembers where each window goes; in a browser, place them again each time.</li>
+            )}
+            <li>
+              For a livestream, capture the <strong>Lower third</strong> window in OBS or vMix (window capture) and key
+              out the green. Using ProPresenter? Turn on Settings → ProPresenter and the verses go to your ProPresenter
+              screens and stream instead.
+            </li>
           </ol>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {OUTPUTS.map(({ route, label, size }) => (
+              <Button key={route} variant="outline" size="sm" onClick={() => window.open(appUrl(route), '_blank', size)}>
+                {label}
+              </Button>
+            ))}
+          </div>
         </Card>
       </div>
     </div>

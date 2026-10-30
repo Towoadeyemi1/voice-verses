@@ -40,7 +40,7 @@ const Install = () => {
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-foreground">Install Cornerstone Bible</h1>
+          <h1 className="text-4xl font-bold text-foreground">Install Voice Verses</h1>
           <p className="text-xl text-muted-foreground">
             Get instant access to voice-activated scripture projection
           </p>
@@ -74,7 +74,7 @@ const Install = () => {
             </CardHeader>
             <CardContent>
               <Button onClick={handleInstallClick} size="lg" className="w-full">
-                Install Cornerstone Bible
+                Install Voice Verses
               </Button>
             </CardContent>
           </Card>
@@ -93,7 +93,7 @@ const Install = () => {
                 <h3 className="font-semibold mb-2">Chrome / Edge:</h3>
                 <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
                   <li>Click the install icon in the address bar</li>
-                  <li>Or click the three dots menu → "Install Cornerstone Bible"</li>
+                  <li>Or click the three dots menu → "Install Voice Verses"</li>
                   <li>The app will open in its own window</li>
                 </ol>
               </div>

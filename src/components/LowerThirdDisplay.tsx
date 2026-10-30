@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { BibleVerse } from '@/types/bible';
 import { Slide } from '@/types/service';
+import { FitText } from './FitText';
+import { VerseText } from './VerseText';
 
 interface LowerThirdDisplayProps {
   verse: BibleVerse | null;
@@ -134,10 +136,12 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
     >
       {hasContent && (
         <div
-          className={`max-w-4xl transition-all duration-500 ${
+          className={`max-w-4xl flex flex-col transition-all duration-500 ${
             show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           } ${getTemplateClasses()}`}
           style={{ 
+            // A lower third stays in the lower part of the screen; long verses shrink to fit
+            maxHeight: 400,
             ...getBackgroundStyle(),
             borderColor: settings.template === 'modern' ? settings.accentColor : undefined,
             borderBottomColor: settings.template === 'minimal' ? settings.accentColor : undefined,
@@ -145,16 +149,10 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
         >
         {verse ? (
           // Scripture Display
-          <div className="space-y-2">
-            <p 
-              className="leading-relaxed font-serif"
-              style={{ 
-                fontSize: `${settings.fontSize}px`,
-                color: settings.textColor,
-              }}
-            >
-              "{verse.text}"
-            </p>
+          <div className="flex flex-col min-h-0 gap-2">
+            <FitText maxFontSize={settings.fontSize} className="leading-relaxed font-serif" style={{ color: settings.textColor }}>
+              <VerseText text={verse.text} />
+            </FitText>
 
             {/* Reference */}
             <div className="flex items-center gap-3 pt-2">
@@ -179,16 +177,10 @@ export const LowerThirdDisplay = ({ verse, slide }: LowerThirdDisplayProps) => {
           </div>
         ) : slide && slide.type === 'lyrics' ? (
           // Lyrics Display
-          <div className="space-y-2">
-            <p 
-              className="leading-relaxed whitespace-pre-line"
-              style={{ 
-                fontSize: `${settings.fontSize}px`,
-                color: settings.textColor,
-              }}
-            >
+          <div className="flex flex-col min-h-0 gap-2">
+            <FitText maxFontSize={settings.fontSize} className="leading-relaxed whitespace-pre-line" style={{ color: settings.textColor }}>
               {slide.content}
-            </p>
+            </FitText>
 
             {/* Song title and section */}
             <div className="flex items-center gap-3 pt-2">

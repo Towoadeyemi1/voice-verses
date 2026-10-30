@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { SpeechEngineSettings } from './SpeechEngineSettings';
 import { DesktopDownloads } from './DesktopDownloads';
 import { AiAssistantSettings } from './AiAssistantSettings';
+import { ProPresenterSettings } from './ProPresenterSettings';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -116,9 +117,10 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 h-auto">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="speech">Speech</TabsTrigger>
+          <TabsTrigger value="propresenter">ProPresenter</TabsTrigger>
           <TabsTrigger value="backgrounds">Backgrounds</TabsTrigger>
           <TabsTrigger value="ccli">CCLI</TabsTrigger>
           <TabsTrigger value="logo">Logo</TabsTrigger>
@@ -315,6 +317,10 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
               Save Settings
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="propresenter" className="mt-6">
+          <ProPresenterSettings />
         </TabsContent>
 
         <TabsContent value="logo" className="space-y-6 mt-6">

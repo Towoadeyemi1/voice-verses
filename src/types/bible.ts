@@ -12,7 +12,6 @@ export interface BibleContext {
 
 export interface DisplayedVerse extends BibleVerse {
   timestamp: Date;
-  latency: number;
 }
 
 export interface AudioStatus {

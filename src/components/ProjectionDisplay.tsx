@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { BibleVerse } from '@/types/bible';
 import { ProjectionSettings } from '@/pages/Projection';
+import { FitText } from './FitText';
+import { VerseText } from './VerseText';
 
 interface ProjectionDisplayProps {
   verse: BibleVerse | null;
@@ -86,7 +88,7 @@ export const ProjectionDisplay = ({ verse, settings: propSettings }: ProjectionD
     return (
       <div 
         ref={containerRef}
-        className="min-h-screen w-screen flex items-center justify-center"
+        className="h-full w-full flex items-center justify-center"
         style={{ backgroundColor: settings.backgroundColor, color: settings.textColor }}
       >
         <div className="text-center space-y-4 px-8">
@@ -123,7 +125,7 @@ export const ProjectionDisplay = ({ verse, settings: propSettings }: ProjectionD
   return (
     <div 
       ref={containerRef}
-      className="min-h-screen w-screen flex flex-col items-center justify-center overflow-hidden"
+      className="h-full w-full flex flex-col items-center justify-center overflow-hidden"
       style={{ 
         backgroundColor: settings.backgroundColor,
         color: settings.textColor,
@@ -137,19 +139,13 @@ export const ProjectionDisplay = ({ verse, settings: propSettings }: ProjectionD
         style={{ textAlign: settings.textAlign, gap: `${Math.max(16, 32 * scale)}px` }}
       >
         {/* Verse Text - Takes up most of the space */}
-        <div className="flex-1 flex items-center justify-center w-full" style={{ paddingLeft: `${Math.max(16, 32 * scale)}px`, paddingRight: `${Math.max(16, 32 * scale)}px` }}>
-          <p 
-            className="leading-relaxed"
-            style={{ 
-              fontSize: `${scaledFontSize}px`,
-              fontFamily: settings.fontFamily,
-              color: settings.textColor,
-              lineHeight: '1.4',
-              maxWidth: '90%',
-            }}
+        <div className="flex-1 min-h-0 flex flex-col w-full" style={{ paddingLeft: `${Math.max(16, 32 * scale)}px`, paddingRight: `${Math.max(16, 32 * scale)}px` }}>
+          <FitText
+            maxFontSize={scaledFontSize}
+            style={{ fontFamily: settings.fontFamily, color: settings.textColor, lineHeight: '1.4' }}
           >
-            {verse.text}
-          </p>
+            <VerseText text={verse.text} />
+          </FitText>
         </div>
 
         {/* Reference - Fixed at bottom */}

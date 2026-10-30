@@ -3,7 +3,7 @@ import { ProjectionDisplay } from '@/components/ProjectionDisplay';
 import { SlideDisplay } from '@/components/SlideDisplay';
 import { BibleVerse } from '@/types/bible';
 import { Slide } from '@/types/service';
-import { syncService } from '@/lib/syncService';
+import { SyncMessage, syncService } from '@/lib/syncService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Settings } from 'lucide-react';
+import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-active';
 
 export interface ProjectionSettings {
   backgroundColor: string;
@@ -41,88 +42,43 @@ const Projection = () => {
   const [settings, setSettings] = useState<ProjectionSettings>(defaultSettings);
   const [displayMode, setDisplayMode] = useState<'slide' | 'verse' | 'logo'>('slide');
   const [logoUrl, setLogoUrl] = useState<string>('');
+  const pointerActive = usePointerActive();
+  useDoubleClickFullscreen();
 
   useEffect(() => {
-    console.log('Projection window mounted');
-    
     // Load settings from localStorage
     const savedSettings = localStorage.getItem('cornerstone-projection-settings');
     if (savedSettings) {
       setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
     }
 
-    // Request current slide from presenter on load
-    console.log('Projection: Requesting current slide from presenter');
-    const requestChannel = new BroadcastChannel('cornerstone-display-request');
-    requestChannel.postMessage({ type: 'request-current-slide' });
-    console.log('Projection: Request sent');
-    requestChannel.close();
-
-    // Listen for logo display commands
-    const handleLogoDisplay = (event: MessageEvent) => {
-      if (event.data?.type === 'show-logo' && event.data?.logoUrl) {
-        setLogoUrl(event.data.logoUrl);
+    const handle = (message: SyncMessage) => {
+      if (message.type === 'LOGO') {
+        setLogoUrl(message.data.logoUrl ?? '');
+        setCurrentSlide(null);
+        setVerse(null);
         setDisplayMode('logo');
-      }
-    };
-
-    // Listen via BroadcastChannel
-    const channel = new BroadcastChannel('cornerstone-display');
-    channel.addEventListener('message', handleLogoDisplay);
-
-    // Check for logo in localStorage on load
-    const currentDisplay = localStorage.getItem('cornerstone-current-display');
-    if (currentDisplay) {
-      try {
-        const displayData = JSON.parse(currentDisplay);
-        if (displayData.type === 'show-logo' && displayData.logoUrl) {
-          setLogoUrl(displayData.logoUrl);
-          setDisplayMode('logo');
-        }
-      } catch (e) {
-        console.error('Failed to parse display data', e);
-      }
-    }
-
-    const unsubscribe = syncService.subscribe((message) => {
-      console.log('Projection received message:', message);
-      
-      // Handle slide updates from Presenter
-      if (message.type === 'SLIDE_UPDATE') {
-        console.log('Projection handling SLIDE_UPDATE:', message.data);
-        
-        if (message.data.slide) {
-          const slide = message.data.slide;
-          setCurrentSlide(slide);
-          
-          // Extract verse for scripture slides (for legacy ProjectionDisplay component)
-          if (slide.type === 'scripture' && slide.verse) {
-            setVerse(slide.verse);
-          }
-          
-          setDisplayMode('slide');
-          console.log('Projection updated to show slide:', slide.title);
-        } else {
-          // Clear display when slide is null
-          setCurrentSlide(null);
-          setVerse(null);
-          setDisplayMode('slide');
-          console.log('Projection cleared (no slide)');
-        }
-      }
-      // Handle voice-controlled scripture (VERSE_UPDATE from Scripture page)
-      else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
-        console.log('Projection handling VERSE_UPDATE (voice-controlled):', message.data.verse);
+      } else if (message.type === 'SLIDE_UPDATE') {
+        const slide = message.data.slide ?? null;
+        setCurrentSlide(slide);
+        setVerse(slide?.type === 'scripture' && slide.verse ? slide.verse : null);
+        setDisplayMode('slide');
+      } else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
+        // Voice-controlled scripture from the Scripture page
         setVerse(message.data.verse);
         setCurrentSlide(null);
         setDisplayMode('verse');
-        console.log('Projection showing voice-controlled verse:', `${message.data.verse.book} ${message.data.verse.chapter}:${message.data.verse.verse}`);
       }
-    });
+    };
+
+    // Opened or reloaded mid-service: show what is live now
+    const live = syncService.current();
+    if (live) handle(live);
+
+    const unsubscribe = syncService.subscribe(handle);
 
     return () => {
       unsubscribe();
-      channel.close();
     };
   }, []);
 
@@ -138,8 +94,8 @@ const Projection = () => {
   };
 
   return (
-    <>
-      {displayMode === 'logo' ? (
+    <div style={{ cursor: pointerActive || showSettings ? 'auto' : 'none' }}>
+      {displayMode === 'logo' && logoUrl ? (
         <div 
           className="fixed inset-0 flex items-center justify-center"
           style={{ backgroundColor: settings.backgroundColor }}
@@ -155,29 +111,27 @@ const Projection = () => {
           <SlideDisplay slide={currentSlide} className="h-full w-full" />
         </div>
       ) : displayMode === 'verse' ? (
-        <ProjectionDisplay verse={verse} settings={settings} />
-      ) : (
-        <div 
-          className="fixed inset-0 flex items-center justify-center text-white/50"
-          style={{ backgroundColor: settings.backgroundColor }}
-        >
-          <p className="text-2xl">Waiting for content...</p>
+        <div className="fixed inset-0">
+          <ProjectionDisplay verse={verse} settings={settings} />
         </div>
+      ) : (
+        // Nothing live: a plain screen, no text for the congregation
+        <div className="fixed inset-0" style={{ backgroundColor: settings.backgroundColor }} />
       )}
       
-      {/* Settings Toggle Button */}
-      <Button
+      {/* Settings button, only while the mouse is moving */}
+      {(pointerActive || showSettings) && <Button
         onClick={() => setShowSettings(!showSettings)}
         className="fixed top-4 right-4 z-50"
         variant="outline"
         size="icon"
       >
         <Settings className="w-4 h-4" />
-      </Button>
+      </Button>}
 
       {/* Settings Panel */}
       {showSettings && (
-        <Card className="fixed top-16 right-4 z-50 w-96 p-6 max-h-[calc(100vh-5rem)] overflow-y-auto bg-background/95 backdrop-blur">
+        <Card className="settings-panel fixed top-16 right-4 z-50 w-96 p-6 max-h-[calc(100vh-5rem)] overflow-y-auto bg-background/95 backdrop-blur">
           <h3 className="text-lg font-semibold mb-4">Projection Settings</h3>
           
           <div className="space-y-6">
@@ -316,7 +270,7 @@ const Projection = () => {
           </div>
         </Card>
       )}
-    </>
+    </div>
   );
 };
 

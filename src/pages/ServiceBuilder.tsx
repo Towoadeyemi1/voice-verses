@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { LAST_SERVICE_KEY } from '@/lib/serviceStorage';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,6 @@ import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
 import { ManualSearch } from '@/components/ManualSearch';
-import { PPTXImport } from '@/components/PPTXImport';
 import { LyricsEditor } from '@/components/LyricsEditor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -97,6 +97,8 @@ const ServiceBuilder = () => {
         const found = services.find(s => s.id === serviceId);
         if (found) {
           setService(found);
+          // The Presenter opens the service being worked on
+          localStorage.setItem(LAST_SERVICE_KEY, found.id);
           if (found.sections?.length > 0) {
             setSelectedSection(found.sections[0].id);
             if (found.sections[0].subsections?.length > 0) {
@@ -533,14 +535,6 @@ const ServiceBuilder = () => {
     input.click();
   };
 
-  const handlePPTXImport = (slides: ImageSlide[]) => {
-    if (!selectedSubsection) {
-      toast.error('Please select a subsection first');
-      return;
-    }
-    slides.forEach(slide => addSlideToSubsection(slide));
-  };
-
   const handleDownloadTemplate = () => {
     const blob = new Blob([WORSHIP_SONGS_TEMPLATE], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -924,7 +918,6 @@ const ServiceBuilder = () => {
                         <ImageIcon className="w-4 h-4 mr-2" />
                         Image
                       </Button>
-                      <PPTXImport onImport={handlePPTXImport} />
                       <Label htmlFor="file-upload" className="cursor-pointer">
                         <div className="flex items-center justify-start w-full px-4 py-2 text-sm font-medium border rounded-md hover:bg-accent">
                           <Upload className="w-4 h-4 mr-2" />

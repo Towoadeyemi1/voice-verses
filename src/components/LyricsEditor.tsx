@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { LyricsSlide, MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
-import { Music, Search, Eye, Upload, X } from 'lucide-react';
+import { Music, Eye, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Select,
@@ -62,8 +62,6 @@ export function LyricsEditor({ open, onClose, onSave, initialSongTitle = '', ini
   const [backgroundMedia, setBackgroundMedia] = useState<string | undefined>(undefined);
   const [backgroundOpacity, setBackgroundOpacity] = useState(60);
   const [media, setMedia] = useState<MediaItem[]>([]);
-  const [ccliNumber, setCcliNumber] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [previewSlides, setPreviewSlides] = useState<LyricsSlide[]>([]);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -79,14 +77,6 @@ export function LyricsEditor({ open, onClose, onSave, initialSongTitle = '', ini
       setPreviewSlides(slides);
     }
   }, [lyrics, songTitle, linesPerSlide, includeTitleCard, fontSettings]);
-
-  const handleSongSelectSearch = () => {
-    if (ccliNumber) {
-      toast.info('SongSelect API integration required. Please add CCLI number manually for now.');
-    } else if (searchQuery) {
-      toast.info('SongSelect API integration required. Please search manually for now.');
-    }
-  };
 
   const parseLyricsToSlides = (): LyricsSlide[] => {
     const slides: LyricsSlide[] = [];
@@ -248,70 +238,17 @@ export function LyricsEditor({ open, onClose, onSave, initialSongTitle = '', ini
         <DialogHeader>
           <DialogTitle>Add Song Lyrics</DialogTitle>
           <DialogDescription>
-            Search SongSelect, configure formatting, and preview your slides
+            Paste the lyrics, choose the formatting and preview the slides
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="input" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="search">SongSelect Search</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="input">Manual Input</TabsTrigger>
             <TabsTrigger value="preview">Preview Slides</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="flex-1 pr-4">
-            <TabsContent value="search" className="space-y-4 mt-4">
-              <Card className="p-4">
-                <div className="space-y-4">
-                  <div>
-                    <Label>CCLI Number</Label>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        placeholder="Enter CCLI number"
-                        value={ccliNumber}
-                        onChange={(e) => setCcliNumber(e.target.value)}
-                      />
-                      <Button onClick={handleSongSelectSearch}>
-                        <Search className="w-4 h-4 mr-2" />
-                        Search
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or search by song name</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Search Songs</Label>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        placeholder="Search for a song..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                      <Button onClick={handleSongSelectSearch}>
-                        <Search className="w-4 h-4 mr-2" />
-                        Search
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <p className="text-sm text-muted-foreground">
-                      <strong>Note:</strong> SongSelect integration requires API configuration. 
-                      Contact your administrator to set up CCLI SongSelect API access.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="input" className="space-y-4 mt-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="space-y-4">

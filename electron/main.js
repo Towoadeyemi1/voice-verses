@@ -3,6 +3,8 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname, join } from 'path';
 import * as secrets from './secrets.js';
 import * as library from './library.js';
+import * as proPresenter from './propresenter.js';
+import { keepAwake, outputWindowOptions, trackOutputWindow } from './outputs.js';
 import * as speech from './speech/index.js';
 import { initUpdates } from './updates.js';
 
@@ -33,7 +35,7 @@ function hardenWindow(win) {
   // Projection/confidence/lower-third windows open in-app; external links open in the browser
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (isAppUrl(url)) {
-      return { action: 'allow', overrideBrowserWindowOptions: { webPreferences } };
+      return { action: 'allow', overrideBrowserWindowOptions: { ...outputWindowOptions(url), webPreferences } };
     }
     if (url.startsWith('https://') || url.startsWith('http://')) {
       shell.openExternal(url);
@@ -41,7 +43,10 @@ function hardenWindow(win) {
     return { action: 'deny' };
   });
 
-  win.webContents.on('did-create-window', hardenWindow);
+  win.webContents.on('did-create-window', (child, details) => {
+    hardenWindow(child);
+    trackOutputWindow(child, details.url);
+  });
 
   win.webContents.on('will-navigate', (event, url) => {
     if (!isAppUrl(url)) {
@@ -110,7 +115,19 @@ handle('library:list', (dir) => library.list(dir));
 handle('library:read', (path) => library.read(path));
 handle('library:write', (path, text) => library.write(path, text));
 
+handle('propresenter:status', (connection) => proPresenter.status(connection));
+handle('propresenter:themes', (connection) => proPresenter.themeSlides(connection));
+handle('propresenter:create-message', (connection, theme) => proPresenter.createMessage(connection, theme));
+handle('propresenter:show', (connection, verse) => proPresenter.showVerse(connection, verse));
+handle('propresenter:clear', (connection, options) => proPresenter.clear(connection, options));
+
 handle('app:version', () => app.getVersion());
+// While listening, the computer must not sleep (it would stop hearing the preacher)
+handle('power:listening', (listening, event) => {
+  const reason = `listening-${event.sender.id}`;
+  keepAwake(reason, Boolean(listening));
+  event.sender.once('destroyed', () => keepAwake(reason, false));
+});
 handle('speech:available', () => speech.isAvailable());
 handle('speech:start', (mode, event) => speech.start(event.sender, mode));
 listen('speech:audio', (session, samples) => speech.sendAudio(session, samples));

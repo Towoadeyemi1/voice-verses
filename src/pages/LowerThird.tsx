@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { LowerThirdDisplay, LowerThirdSettings } from '@/components/LowerThirdDisplay';
 import { BibleVerse } from '@/types/bible';
 import { Slide } from '@/types/service';
-import { syncService } from '@/lib/syncService';
+import { SyncMessage, syncService } from '@/lib/syncService';
+import { ScaledStage } from '@/components/ScaledStage';
+import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-active';
 import { Button } from '@/components/ui/button';
 import { Settings, X } from 'lucide-react';
 import { Label } from '@/components/ui/label';
@@ -14,6 +16,8 @@ const LowerThird = () => {
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [verse, setVerse] = useState<BibleVerse | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const pointerActive = usePointerActive();
+  useDoubleClickFullscreen();
   const [settings, setSettings] = useState<LowerThirdSettings>({
     template: 'classic',
     position: 'bottom-center',
@@ -31,40 +35,25 @@ const LowerThird = () => {
       setSettings((prev) => ({ ...prev, ...JSON.parse(savedSettings) }));
     }
 
-    // Subscribe to slide updates
-    const unsubscribe = syncService.subscribe((message) => {
-      console.log('LowerThird received message:', message);
-      
-      // Handle slide updates from Presenter
+    const handle = (message: SyncMessage) => {
       if (message.type === 'SLIDE_UPDATE') {
-        console.log('LowerThird handling SLIDE_UPDATE:', message.data);
-        
-        if (message.data.slide) {
-          const slide = message.data.slide;
-          setCurrentSlide(slide);
-          
-          // Extract verse for scripture slides
-          if (slide.type === 'scripture' && slide.verse) {
-            setVerse(slide.verse);
-          } else {
-            setVerse(null);
-          }
-          
-          console.log('LowerThird updated to show slide:', slide.title);
-        } else {
-          setCurrentSlide(null);
-          setVerse(null);
-          console.log('LowerThird cleared (no slide)');
-        }
-      }
-      // Handle voice-controlled scripture (VERSE_UPDATE from Scripture page)
-      else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
-        console.log('LowerThird handling VERSE_UPDATE (voice-controlled):', message.data.verse);
+        const slide = message.data.slide ?? null;
+        setCurrentSlide(slide);
+        setVerse(slide?.type === 'scripture' && slide.verse ? slide.verse : null);
+      } else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
+        // Voice-controlled scripture from the Scripture page
         setVerse(message.data.verse);
         setCurrentSlide(null);
-        console.log('LowerThird showing voice-controlled verse:', `${message.data.verse.book} ${message.data.verse.chapter}:${message.data.verse.verse}`);
+      } else if (message.type === 'LOGO') {
+        setVerse(null);
+        setCurrentSlide(null);
       }
-    });
+    };
+
+    // Opened or reloaded mid-service: show what is live now
+    const live = syncService.current();
+    if (live) handle(live);
+    const unsubscribe = syncService.subscribe(handle);
 
     return () => {
       unsubscribe();
@@ -83,82 +72,68 @@ const LowerThird = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#00FF00]">
-      {/* Always render LowerThirdDisplay as overlay */}
-      <LowerThirdDisplay verse={verse} slide={currentSlide} />
-      
-      {/* Waiting state when no verse */}
-      {!verse && !currentSlide && (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center space-y-4 px-8 bg-black/50 rounded-lg p-8">
-            <div className="w-16 h-16 mx-auto rounded-full border-4 border-white/30 flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                strokeWidth="2"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <p className="text-xl text-white/80 font-light">
-              Waiting for Scripture...
-            </p>
-            <p className="text-sm text-white/60">
-              Chroma Key Ready (Green Screen)
-            </p>
-          </div>
-        </div>
-      )}
-      
-      {/* Display slide title/info for non-scripture slides */}
-      {currentSlide && currentSlide.type !== 'scripture' && (
-        <div 
-          className="absolute"
-          style={{
-            bottom: settings.position.includes('bottom') ? '5%' : settings.position.includes('top') ? 'auto' : '50%',
-            top: settings.position.includes('top') ? '5%' : 'auto',
-            left: settings.position.includes('left') ? '5%' : settings.position.includes('center') ? '50%' : 'auto',
-            right: settings.position.includes('right') ? '5%' : 'auto',
-            transform: settings.position.includes('center') ? 'translateX(-50%)' : 'none',
-          }}
-        >
+    <div className="relative h-screen w-screen bg-[#00FF00]" style={{ cursor: pointerActive || showSettings ? 'auto' : 'none' }}>
+      <ScaledStage className="absolute inset-0">
+        <LowerThirdDisplay verse={verse} slide={currentSlide} />
+
+        {/* Other slides (announcements, media) show just their title */}
+        {currentSlide && currentSlide.type !== 'scripture' && currentSlide.type !== 'lyrics' && (
           <div
-            className="rounded-lg px-8 py-4"
+            className="absolute"
             style={{
-              backgroundColor: settings.showBackground 
-                ? `#000000${Math.round((settings.backgroundOpacity || 0.8) * 255).toString(16).padStart(2, '0')}`
-                : 'transparent',
+              bottom: settings.position.includes('bottom') ? '5%' : settings.position.includes('top') ? 'auto' : '50%',
+              top: settings.position.includes('top') ? '5%' : 'auto',
+              left: settings.position.includes('left') ? '5%' : settings.position.includes('center') ? '50%' : 'auto',
+              right: settings.position.includes('right') ? '5%' : 'auto',
+              transform: settings.position.includes('center') ? 'translateX(-50%)' : 'none',
             }}
           >
-            <p
-              className="font-bold text-center"
+            <div
+              className="rounded-lg px-8 py-4"
               style={{
-                fontSize: `${settings.fontSize}px`,
-                color: settings.textColor,
-                textShadow: !settings.showBackground ? '2px 2px 4px rgba(0,0,0,0.8)' : 'none',
+                backgroundColor: settings.showBackground
+                  ? `#000000${Math.round((settings.backgroundOpacity || 0.8) * 255).toString(16).padStart(2, '0')}`
+                  : 'transparent',
               }}
             >
-              {currentSlide.title}
-            </p>
+              <p
+                className="font-bold text-center"
+                style={{
+                  fontSize: `${settings.fontSize}px`,
+                  color: settings.textColor,
+                  textShadow: !settings.showBackground ? '2px 2px 4px rgba(0,0,0,0.8)' : 'none',
+                }}
+              >
+                {currentSlide.title}
+              </p>
+            </div>
+          </div>
+        )}
+      </ScaledStage>
+
+      {/* Setup hint, only while the mouse is moving: the green must stay clean for keying */}
+      {!verse && !currentSlide && pointerActive && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-center space-y-2 bg-black/50 rounded-lg p-8">
+            <p className="text-xl text-white/80 font-light">Waiting for scripture</p>
+            <p className="text-sm text-white/60">Key out the green (#00FF00) in your streaming software</p>
           </div>
         </div>
       )}
-      
-      {/* Settings Toggle Button */}
-      <Button
+
+      {/* Settings button, only while the mouse is moving */}
+      {(pointerActive || showSettings) && <Button
         variant="outline"
         size="icon"
         className="fixed top-4 right-4 z-50 bg-background/95 backdrop-blur"
         onClick={() => setShowSettings(!showSettings)}
       >
         {showSettings ? <X className="h-4 w-4" /> : <Settings className="h-4 w-4" />}
-      </Button>
+      </Button>}
 
       {/* Settings Panel */}
       {showSettings && (
-        <div className="fixed top-16 right-4 z-50 w-80 bg-background/95 backdrop-blur border rounded-lg shadow-lg p-6 space-y-6 max-h-[calc(100vh-5rem)] overflow-y-auto">
+        <div className="settings-panel fixed top-16 right-4 z-50 w-80 bg-background/95 backdrop-blur border rounded-lg shadow-lg p-6 space-y-6 max-h-[calc(100vh-5rem)] overflow-y-auto">
           <div>
             <h2 className="text-lg font-semibold mb-4">Lower Third Settings</h2>
             <p className="text-sm text-muted-foreground mb-4">
@@ -171,7 +146,7 @@ const LowerThird = () => {
             <Label>Template</Label>
             <Select 
               value={settings.template} 
-              onValueChange={(value) => updateSettings({ template: value as any })}
+              onValueChange={(value) => updateSettings({ template: value as LowerThirdSettings['template'] })}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -191,7 +166,7 @@ const LowerThird = () => {
             <Label>Position</Label>
             <Select 
               value={settings.position} 
-              onValueChange={(value) => updateSettings({ position: value as any })}
+              onValueChange={(value) => updateSettings({ position: value as LowerThirdSettings['position'] })}
             >
               <SelectTrigger>
                 <SelectValue />
