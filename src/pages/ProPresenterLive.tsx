@@ -45,9 +45,10 @@ function inputLabel(): string {
 }
 
 /**
- * The whole app for a church that runs ProPresenter: listen to the preacher,
- * and put each verse heard on ProPresenter's screens. By default the operator
- * approves each verse before it is sent.
+ * Optional companion screen for an operator who only sends verses to
+ * ProPresenter: listen to the preacher and put each verse heard on
+ * ProPresenter's screens, approved first unless that is turned off.
+ * The full app is one click away.
  */
 const ProPresenterLive = () => {
   const [connection, setConnection] = useState<Connection>({ state: 'checking' });
@@ -337,9 +338,8 @@ const ProPresenterLive = () => {
         )}
 
         <p className="text-center text-xs text-muted-foreground">
-          Not using ProPresenter for your screens?{' '}
           <button type="button" className="underline" onClick={() => saveAppMode('screens')}>
-            Use Voice Verses' own screens and service planning
+            Back to the full Voice Verses app
           </button>
         </p>
       </div>

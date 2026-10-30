@@ -240,22 +240,23 @@ export function ProPresenterSettings() {
       </Card>
 
       {loadAppMode() === 'screens' && (
-        <Alert>
-          <MonitorPlay className="h-4 w-4" />
-          <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
-            <span>Does ProPresenter run all your screens? Use the simple ProPresenter screen instead of this one.</span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                update({ enabled: true });
-                saveAppMode('propresenter');
-              }}
-            >
-              Switch to the simple screen
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <div className="rounded-lg border p-4 text-sm space-y-2">
+          <p className="font-medium">Optional: companion screen</p>
+          <p className="text-muted-foreground">
+            For a second operator whose only job is sending verses to ProPresenter, Voice Verses can open on a
+            stripped-down screen: listen, approve each verse, previous/next, clear. Everything else stays available.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              update({ enabled: true });
+              saveAppMode('propresenter');
+            }}
+          >
+            Open the companion screen
+          </Button>
+        </div>
       )}
 
       <Card>
