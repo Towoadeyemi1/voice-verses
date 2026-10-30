@@ -26,14 +26,13 @@ import { SpeechEngineSettings } from './SpeechEngineSettings';
 import { DesktopDownloads } from './DesktopDownloads';
 import { AiAssistantSettings } from './AiAssistantSettings';
 import { ProPresenterSettings } from './ProPresenterSettings';
+import { MicrophoneSettings } from './MicrophoneSettings';
 
 interface SettingsPanelProps {
   onClose: () => void;
 }
 
 export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
-  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
-  const [selectedDevice, setSelectedDevice] = useState<string>('default');
   const [fontSize, setFontSize] = useState<number>(72);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [autoScroll, setAutoScroll] = useState(true);
@@ -55,7 +54,6 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       setTheme(settings.theme || 'dark');
       setAutoScroll(settings.autoScroll ?? true);
       setShowReference(settings.showReference ?? true);
-      setSelectedDevice(settings.audioDevice || 'default');
       setCcliLicense(settings.ccliLicense || '');
     }
     
@@ -65,30 +63,15 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       setTranscriptionLanguage(savedLanguage);
     }
 
-    // Get audio devices - need to request permission first to get labels
-    const getAudioDevices = async () => {
-      try {
-        // Request permission first to get device labels
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const audioInputs = devices.filter((device) => 
-          device.kind === 'audioinput' && device.deviceId !== ''
-        );
-        console.log('Audio devices found:', audioInputs);
-        setAudioDevices(audioInputs);
-      } catch (error) {
-        console.error('Error getting audio devices:', error);
-      }
-    };
-    getAudioDevices();
   }, []);
   const saveSettings = () => {
+    // Keep what other panels saved here (speech engine, input device and channel)
     const settings = {
+      ...JSON.parse(localStorage.getItem('cornerstone-settings') || '{}'),
       fontSize,
       theme,
       autoScroll,
       showReference,
-      audioDevice: selectedDevice,
       ccliLicense,
     };
     localStorage.setItem('cornerstone-settings', JSON.stringify(settings));
@@ -136,25 +119,7 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
               <h4 className="font-semibold text-foreground">Audio Settings</h4>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="audio-device">Microphone / Input Device</Label>
-              <Select value={selectedDevice} onValueChange={setSelectedDevice}>
-                <SelectTrigger id="audio-device">
-                  <SelectValue placeholder="Select audio device" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="default">Default</SelectItem>
-                  {audioDevices.map((device) => (
-                    <SelectItem key={device.deviceId} value={device.deviceId}>
-                      {device.label || `Microphone ${device.deviceId.slice(0, 8)}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Select the microphone or line-in input for voice recognition
-              </p>
-            </div>
+            <MicrophoneSettings />
 
             <div className="space-y-2">
               <Label htmlFor="transcription-language">Transcription Language</Label>

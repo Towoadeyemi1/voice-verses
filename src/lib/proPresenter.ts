@@ -40,13 +40,15 @@ export const connectionOf = ({ host, port }: ProPresenterSettings): ProPresenter
 // Report a failure once, not for every verse, until sending works again
 let failing = false;
 
-async function send(action: (settings: ProPresenterSettings) => Promise<void>): Promise<void> {
+/** Runs a request if sending is turned on. True when ProPresenter accepted it. */
+async function send(action: (settings: ProPresenterSettings) => Promise<void>): Promise<boolean> {
   const settings = loadProPresenterSettings();
-  if (!desktop || !settings.enabled) return;
+  if (!desktop || !settings.enabled) return false;
   try {
     await action(settings);
     if (failing) toast.success('ProPresenter is receiving verses again');
     failing = false;
+    return true;
   } catch (error) {
     if (!failing) {
       toast.error('Could not send the verse to ProPresenter', {
@@ -55,10 +57,11 @@ async function send(action: (settings: ProPresenterSettings) => Promise<void>): 
       });
     }
     failing = true;
+    return false;
   }
 }
 
-export function sendVerseToProPresenter(verse: BibleVerse): Promise<void> {
+export function sendVerseToProPresenter(verse: BibleVerse): Promise<boolean> {
   return send((settings) =>
     desktop!.proPresenter.show(connectionOf(settings), {
       reference: verseReference(verse),
@@ -68,6 +71,6 @@ export function sendVerseToProPresenter(verse: BibleVerse): Promise<void> {
   );
 }
 
-export function clearProPresenter(): Promise<void> {
+export function clearProPresenter(): Promise<boolean> {
   return send((settings) => desktop!.proPresenter.clear(connectionOf(settings), { stage: settings.stage }));
 }

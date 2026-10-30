@@ -6,9 +6,12 @@ import {
   ErrorCallback,
   SpeechEngineType,
 } from '../ISpeechProvider';
+import { channelCountOf, createChannelCapture, openMicrophone } from '../audioInput';
 
 interface BuiltInProviderConfig {
   audioDeviceId: string | null;
+  /** One channel of a multichannel input (e.g. the pulpit mic in a desk feed), or null */
+  audioChannel: number | null;
 }
 
 interface BuiltInProviderCallbacks {
@@ -19,18 +22,6 @@ interface BuiltInProviderCallbacks {
 
 const SAMPLE_RATE = 16000;
 const CHUNK = SAMPLE_RATE / 10; // send 100 ms at a time
-
-// Copies microphone frames out of the audio thread
-const CAPTURE_WORKLET = `
-class CaptureProcessor extends AudioWorkletProcessor {
-  process(inputs) {
-    const channel = inputs[0] && inputs[0][0];
-    if (channel) this.port.postMessage(channel.slice(0));
-    return true;
-  }
-}
-registerProcessor('capture-processor', CaptureProcessor);
-`;
 
 /**
  * Built-in on-device speech recognition (desktop app only).
@@ -100,25 +91,18 @@ export class BuiltInSpeechProvider implements ISpeechProvider {
       // Loads the model on first use (a few seconds)
       this.session = await desktop.speech.start('live');
 
-      const audio: MediaTrackConstraints = { echoCancellation: false, noiseSuppression: true, autoGainControl: true, channelCount: 1 };
-      if (this.config.audioDeviceId && this.config.audioDeviceId !== 'default') {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        if (devices.some((d) => d.kind === 'audioinput' && d.deviceId === this.config.audioDeviceId)) {
-          audio.deviceId = { exact: this.config.audioDeviceId };
-        }
-      }
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio });
+      this.stream = await openMicrophone({ deviceId: this.config.audioDeviceId, channel: this.config.audioChannel });
 
       // The browser resamples the microphone to the model's 16 kHz
       this.audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
-      const moduleUrl = URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: 'application/javascript' }));
-      await this.audioContext.audioWorklet.addModule(moduleUrl);
-      URL.revokeObjectURL(moduleUrl);
-
       const source = this.audioContext.createMediaStreamSource(this.stream);
-      const capture = new AudioWorkletNode(this.audioContext, 'capture-processor');
+      const capture = await createChannelCapture(
+        this.audioContext,
+        source,
+        channelCountOf(this.stream),
+        this.config.audioChannel ?? 0,
+      );
       capture.port.onmessage = (e: MessageEvent<Float32Array>) => this.handleFrame(e.data);
-      source.connect(capture);
 
       this.connected = true;
     } catch (error) {

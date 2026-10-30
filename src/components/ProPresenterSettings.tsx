@@ -16,6 +16,7 @@ import {
   saveProPresenterSettings,
 } from '@/lib/proPresenter';
 import { DOWNLOAD_PAGE_URL } from '@/lib/releases';
+import { loadAppMode, saveAppMode } from '@/lib/appMode';
 
 const TEST_VERSE = {
   reference: 'John 3:16',
@@ -128,7 +129,10 @@ export function ProPresenterSettings() {
             <li>
               In ProPresenter, open <strong>Settings → Network</strong> and turn on <strong>Enable Network</strong>.
             </li>
-            <li>Enter the port shown there. If ProPresenter runs on another computer, enter that computer's IP address.</li>
+            <li>
+              Enter the port shown there. If ProPresenter runs on a different computer from Voice Verses, also enter
+              the IP address shown there (both computers must be on the same network).
+            </li>
           </ol>
 
           <div className="grid grid-cols-3 gap-3">
@@ -234,6 +238,25 @@ export function ProPresenterSettings() {
           </div>
         </CardContent>
       </Card>
+
+      {loadAppMode() === 'screens' && (
+        <Alert>
+          <MonitorPlay className="h-4 w-4" />
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+            <span>Does ProPresenter run all your screens? Use the simple ProPresenter screen instead of this one.</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                update({ enabled: true });
+                saveAppMode('propresenter');
+              }}
+            >
+              Switch to the simple screen
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>

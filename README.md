@@ -98,8 +98,11 @@ window opened or reloaded mid-service shows what is on screen at once. Text shri
 fit, and the KJV's supplied words show in italics. The desktop app (`electron/outputs.js`)
 remembers which screen each window goes on and keeps the computer awake during a service.
 
-Churches that run **ProPresenter** (7.9 or later) can send the verses there instead, or as
-well: Settings → ProPresenter (`electron/propresenter.js`). ProPresenter's API has no Bible
+Churches that run **ProPresenter** (7.9 or later) choose "We use ProPresenter" on first start:
+the app becomes one simple screen (`src/pages/ProPresenterLive.tsx`) that listens and sends
+each verse to ProPresenter, after the operator approves it unless that is turned off. The
+microphone can be one channel of a multichannel desk feed (`src/speech/audioInput.ts`).
+Settings → ProPresenter also works from the full app: Settings → ProPresenter (`electron/propresenter.js`). ProPresenter's API has no Bible
 endpoint, so verses go through a ProPresenter message named "Voice Verses" with `{Verse}`
 and `{Reference}` tokens; ProPresenter's own theme and Looks decide how and where it shows.
 `node tools/propresenter-check.mjs` tests the client against a stand-in ProPresenter.
