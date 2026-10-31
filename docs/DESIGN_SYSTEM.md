@@ -5,11 +5,11 @@
 - A tinted timeline, with only the current part solid.
 - A single status capsule in place of six toolbar buttons.
 - One suggestion at a time.
-- Take in the colour team's colour.
+- Take as a quiet raised graphite button, with a green arrow when Next is ready. The owner rejected it in the team colour (yellow).
 - The other screens shown as chips.
 - The layout follows the window size by itself, with no Laptop or 45″ switch.
 
-Where design 4 differs from the rules below, design 4 wins, pending the owner's verdict.
+Where design 4 differs from the rules below, design 4 wins. The owner approved it ("Proceed"), and it is built into the live screen in 1.4.0; `PRODUCT_SPEC.md` §8 lists the components.
 
 The earlier reference mock-up is [`design/live-redesign-v3.html`](design/live-redesign-v3.html). It is interactive and covers before the service, worship, preaching, light, dark, colour teams and an ultrawide monitor. Designs 1 and 2 were rejected. They are not kept in the repository, because they quoted copyrighted worship lyrics and the repository is public (churches can of course use those songs in the app under their CCLI licence); their lessons are in `LESSONS.md` → Design.
 

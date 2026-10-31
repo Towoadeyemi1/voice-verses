@@ -170,21 +170,32 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
   - Desktop watches the `services/` and `media/` subfolders; the browser uses the File System Access API.
 - **AI slides** (`src/ai/slideGenerator.ts`, `AiSlidesDialog`): from a bulletin or sermon notes, makes announcement or sermon slides through a JSON schema, with scripture references resolved to real verses.
 
-## 8. The operator's live screen (1.3.x, `components/LiveWorkspace.tsx`)
+## 8. The operator's live screen (1.4.0, design 4, `components/LiveWorkspace.tsx`)
 
-- A top bar has Start listening, Song, Auto/Preview first, Countdown, Clear to logo and Settings.
-- Resizable panels:
-  - Library (Bible, Songs, Service).
-  - Slide grid of the loaded item.
-  - Reading follower with verse chips and the lit word.
-  - Suggestions with % and a preview.
-  - Preview and Live screens, plus the lower-third and confidence previews.
-- **Keys:** arrows move, Space or Enter sends, Esc clears, Ctrl/⌘K searches.
-- **The target design is design 3** (`docs/design/live-redesign-v3.html`, `docs/DESIGN_SYSTEM.md`):
-  - The order of service as a timeline.
-  - On Air (red) and Next (green) with one Take button.
-  - One lane for what was heard and the suggestions.
-  - Colour taken from the content and the colour team.
+- **Top bar:**
+  - The service name and date, which opens a menu of the other pages.
+  - `StatusCapsule`: Start/Stop listening, a level meter, what the app is following, Mute, ♪ Song, and Auto / Ask first.
+  - Search (⌘K), Countdown, Settings, and a clock with "ends hh:mm" or "n min over".
+- **Timeline** (`live/ServiceTimeline.tsx`):
+  - Today's service (or the one opened last), with each item as wide as its minutes. The length is the item's timer, or a typical length for its kind.
+  - Each item is tinted by kind; the current one is solid with its progress.
+  - It scrolls sideways; click an item to load it.
+- **Now pane** (`live/NowPane.tsx`), the same pattern for scripture and songs:
+  - A title and status, plus step chips: verses of the passage or near the live verse, or a song's sections (V1, C, V2.1…). Red marks live and green marks next.
+  - The verse being read, large in Newsreader, with the word being read underlined at the reader's pace (`usePacedWord`).
+  - What comes next, faded underneath.
+  - "Heard" (the last words recognised).
+- **Suggestion bar** (`live/SuggestionBar.tsx`): one suggestion at a time, with a confidence ring, "n more", Show now, Use (puts it in Next), and dismiss.
+- **Screens column** (`live/ScreensColumn.tsx`):
+  - Live (red frame), with Logo and Clear.
+  - **Take** (Space): a raised graphite button whose arrow turns green when Next is ready.
+  - Next (green frame).
+  - The stream and stage screens, as chips (below 1900px) or live pictures (1900px and up).
+  - Monitors keep the projector's shape and fit the window's height (`.monitor-fit`).
+- **Library:** a column at 1900px and wider; otherwise a drawer from the left. The palette (`live/CommandPalette.tsx`, ⌘K or Ctrl+K) finds references, service items, songs and actions.
+- **Layout by window width:** under 1000px, one column; 1000–1900px, Now and Screens; 1900px and up, Library, Now and Screens.
+- **Keys:** Space or Enter = Take (or the next item); ←/→ = previous/next; Esc = clear the words; ⌘K = search.
+- **Colours:** warm graphite tokens in `index.css`; `--live` and `--next` for meaning. The live look's colours softly light the window.
 
 ## 9. Keys, AI and privacy
 

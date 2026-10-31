@@ -20,13 +20,13 @@ const audio = process.argv[3] || path.join(OUT, 'sermon.wav');
   for (let i = 0; i < 160; i++) {
     await win.waitForTimeout(500);
     const live = await win.evaluate(() => { try { const m = JSON.parse(localStorage.getItem('voice-verses-live') || 'null'); const v = m?.data?.verse; return v ? `${v.book} ${v.chapter}:${v.verse}` : m?.data?.slide?.songTitle ?? ''; } catch { return ''; } });
-    const sugg = await win.evaluate(() => [...document.querySelectorAll('.cursor-pointer.rounded-md.border')].map((d) => d.innerText.split('\n').slice(0, 2).join(' ')).join(' || '));
+    // The suggestion bar shows one suggestion at a time
+    const sugg = await win.evaluate(() => document.querySelector('[data-suggestion]')?.textContent?.replace(/\s+/g, ' ').slice(0, 140) ?? '');
     const state = `live=${live} sugg=[${sugg}]`;
     if (state !== last) { console.log(`${((Date.now() - t0) / 1000).toFixed(1)}s ${state}`); last = state; }
     if (live) seen.add(live);
-    if (/Amazing Grace/.test(sugg)) {
-      const card = win.locator('.cursor-pointer.rounded-md.border', { hasText: 'Amazing Grace' }).first();
-      await card.getByRole('button', { name: 'Send' }).click().catch(() => {});
+    if (/singing Amazing Grace/.test(sugg)) {
+      await win.locator('[data-suggestion]').getByRole('button', { name: 'Show now' }).click().catch(() => {});
     }
   }
   await win.screenshot({ path: `${OUT}/sermon-${mode}.png` });

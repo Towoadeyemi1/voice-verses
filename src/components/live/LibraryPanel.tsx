@@ -40,18 +40,6 @@ export const LibraryPanel = ({
   const [serviceId, setServiceId] = useState<string>('');
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Ctrl/Cmd+K: straight to the search box
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
   useEffect(() => {
     if (!serviceId && services[0]) setServiceId(services[0].id);
   }, [services, serviceId]);

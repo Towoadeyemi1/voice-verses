@@ -23,7 +23,7 @@ description: How changes to Voice Verses are made, checked, committed, reviewed 
 9. **CI:** the `qa` check must pass on the latest commit. If it fails, reproduce locally, fix, and push again. Never skip tests and never push empty commits.
 10. **Merge** with a merge commit once `qa` passes. The owner has asked for finished work to be merged. Then unsubscribe from the PR.
 11. **Tell the owner** in plain words what changed, and that they can publish `vX.Y.Z` (see the `release` skill).
-12. **Record:** add new lessons to `docs/LESSONS.md` and new decisions to `docs/DECISIONS.md`. Update `docs/PRODUCT_SPEC.md` for any behaviour change, and the open-work list in `CLAUDE.md`.
+12. **Record:** update `docs/OWNER_REQUESTS.md` (new requests, and the status of what shipped). Add new lessons to `docs/LESSONS.md` and new decisions to `docs/DECISIONS.md`. Update `docs/PRODUCT_SPEC.md` for any behaviour change, and the open-work list in `CLAUDE.md`.
 
 ## Never
 

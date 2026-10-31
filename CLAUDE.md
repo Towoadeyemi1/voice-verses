@@ -8,6 +8,7 @@ Read these before changing anything:
 
 | Read | When |
 | --- | --- |
+| [`docs/OWNER_REQUESTS.md`](docs/OWNER_REQUESTS.md) | **Everything the owner has asked for, and its status. Read it first; add new requests the moment they are made.** |
 | [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md) | What the app does: every feature, number and saved setting. The source of truth for rebuilding it. |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Why it is built this way. Don't reverse a decision without a new reason. |
 | [`docs/LESSONS.md`](docs/LESSONS.md) | Mistakes already made and how they were fixed. Check before debugging. |
@@ -95,7 +96,7 @@ Settings live in `localStorage`, which every window shares, so outputs update th
 
 ## Open work (keep this list current)
 
-- Build the approved design into the app. The latest is design 4 (`docs/design/live-redesign-v4.html`, awaiting the owner's verdict); see `docs/DESIGN_SYSTEM.md`. The redesign PR #8 (1.4.0) is on hold and stale.
+- Design 4 is in the live screen (1.4.0). Next, restyle the Service, Media, Templates and Settings pages to match (`docs/DESIGN_SYSTEM.md`). The redesign PR #8 (1.4.0) is on hold and stale.
 - Restyle the other pages (Service, Media, Templates, Settings) to the design system.
 - Native DeckLink SDI output. It needs the Blackmagic Desktop Video SDK and testing on the owner's ProPresenter computer through Remote Control.
 - Transitions, props/messages layers, multiple timers, a stage layout editor, live captions and translation, verses on phones (QR), PowerPoint and Planning Center import, Stream Deck/remote control, NDI, CCLI reporting.
