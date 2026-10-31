@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Verses Design 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the page IS the app and fills whatever window it is in. Two calm zones:
+   what is being said (large, the next part faded below it) and the screens (Live above,
+   one Take button, Next below). The service is a quiet tinted timeline; strong colour is
+   kept for meaning: red = live, green = next, the colour team = what you can press. */
+:root {
+  --bg: #f1eee9;
+  --surface: #f8f6f2;
+  --raised: #ffffff;
+  --ink: #1c1b1f;
+  --ink-2: rgba(28, 27, 31, 0.62);
+  --ink-3: rgba(28, 27, 31, 0.4);
+  --hair: rgba(28, 27, 31, 0.07);
+  --fill: rgba(28, 27, 31, 0.05);
+  --glass: rgba(248, 246, 242, 0.75);
+  --accent: #d9961f;
+  --accent-ink: #2a1d04;
+  --accent-tint: rgba(217, 150, 31, 0.14);
+  --live: #ff3b30;
+  --next: #1fa84b;
+  --glow: 0.1;
+  --lift: 0 1px 2px rgba(20, 15, 30, .05), 0 8px 28px rgba(20, 15, 30, .08);
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Figtree", "Segoe UI Variable Text", system-ui, sans-serif;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Figtree", "Segoe UI Variable Display", system-ui, sans-serif;
+  --word: "Newsreader", "New York", "Iowan Old Style", Georgia, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111013;
+    --surface: #18171b;
+    --raised: #211f25;
+    --ink: #f5f3f7;
+    --ink-2: rgba(245, 243, 247, 0.64);
+    --ink-3: rgba(245, 243, 247, 0.38);
+    --hair: rgba(255, 255, 255, 0.06);
+    --fill: rgba(255, 255, 255, 0.05);
+    --glass: rgba(24, 23, 27, 0.72);
+    --accent: #f0b44a;
+    --accent-tint: rgba(240, 180, 74, 0.14);
+    --live: #ff453a;
+    --next: #30d158;
+    --glow: 0.22;
+    --lift: 0 1px 1px rgba(0, 0, 0, .3), 0 12px 36px rgba(0, 0, 0, .4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111013;
+  --surface: #18171b;
+  --raised: #211f25;
+  --ink: #f5f3f7;
+  --ink-2: rgba(245, 243, 247, 0.64);
+  --ink-3: rgba(245, 243, 247, 0.38);
+  --hair: rgba(255, 255, 255, 0.06);
+  --fill: rgba(255, 255, 255, 0.05);
+  --glass: rgba(24, 23, 27, 0.72);
+  --accent: #f0b44a;
+  --accent-tint: rgba(240, 180, 74, 0.14);
+  --live: #ff453a;
+  --next: #30d158;
+  --glow: 0.22;
+  --lift: 0 1px 1px rgba(0, 0, 0, .3), 0 12px 36px rgba(0, 0, 0, .4);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--ui); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+.num { font-variant-numeric: tabular-nums; }
+svg { flex-shrink: 0; }
+
+/* ===== The app: fills the window ===== */
+.app { position: relative; height: 100vh; min-height: 640px; display: grid; grid-template-rows: 60px auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); overflow: hidden; padding-bottom: 60px; /* room for the mock-up controls */ }
+.ambient { position: absolute; inset: 0; pointer-events: none; opacity: var(--glow); transition: background 1.4s ease;
+  background: radial-gradient(45% 60% at 82% 40%, var(--g1), transparent 70%), radial-gradient(35% 45% at 72% 95%, var(--g2), transparent 70%); }
+.app > *:not(.ambient) { position: relative; }
+
+/* Top bar: who, the one status, the clock */
+.top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 24px; gap: 16px; }
+.who b { display: block; font: 600 15px/1.2 var(--display); letter-spacing: -0.01em; }
+.who span { font-size: 13px; color: var(--ink-3); }
+.status { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 8px 0 16px; border-radius: 20px; background: var(--glass); backdrop-filter: blur(20px) saturate(1.5); box-shadow: 0 0 0 1px var(--hair); font-size: 14px; font-weight: 500; }
+.wave { display: inline-flex; gap: 2.5px; align-items: center; height: 16px; }
+.wave i { width: 3px; height: 40%; border-radius: 2px; background: var(--next); animation: wv 1s ease-in-out infinite; }
+.wave i:nth-child(2) { animation-delay: .12s; } .wave i:nth-child(3) { animation-delay: .24s; } .wave i:nth-child(4) { animation-delay: .36s; } .wave i:nth-child(5) { animation-delay: .48s; }
+@keyframes wv { 50% { height: 100%; } }
+.status .what { color: var(--ink-2); }
+.mode { display: inline-flex; padding: 3px; border-radius: 16px; background: var(--fill); }
+.mode button { height: 28px; padding: 0 12px; border-radius: 13px; font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.mode button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.right { display: flex; align-items: center; justify-content: end; gap: 6px; }
+.icon-btn { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-2); }
+.icon-btn:hover { background: var(--fill); color: var(--ink); }
+.clock { text-align: right; margin-left: 10px; line-height: 1.15; }
+.clock b { display: block; font: 600 20px var(--display); letter-spacing: -0.01em; }
+.clock span { font-size: 12.5px; color: var(--ink-3); }
+.clock .over { color: #e8710c; }
+
+/* The service: a quiet tinted timeline */
+.timeline { padding: 4px 24px 16px; }
+.tl-scroll { overflow-x: auto; scrollbar-width: none; border-radius: 12px; }
+.tl-scroll::-webkit-scrollbar { display: none; }
+.tl { display: flex; gap: 3px; height: 44px; }
+.part { position: relative; flex-shrink: 0; height: 44px; border-radius: 10px; padding: 0 12px; display: flex; align-items: center; gap: 8px; overflow: hidden; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--ink);
+  background: color-mix(in oklab, var(--c) 16%, transparent); transition: opacity .3s, background .3s; }
+.part::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+.part small { font-weight: 500; color: var(--ink-3); font-size: 12px; }
+.part span { overflow: hidden; text-overflow: ellipsis; }
+.part.past { opacity: .42; }
+.part.current { background: var(--c); color: #fff; }
+.part.current::before { background: #fff; }
+.part.current small { color: rgba(255,255,255,.75); }
+.part .fill { position: absolute; inset: 0 auto 0 0; background: rgba(0,0,0,.14); pointer-events: none; }
+.part .fill::after { content: ""; position: absolute; right: 0; top: 6px; bottom: 6px; width: 2px; border-radius: 1px; background: #fff; }
+.part > * { position: relative; }
+
+/* Body */
+.body { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(380px, 33vw, 720px); min-height: 0; }
+.library { display: none; }
+@media (min-width: 1900px) {
+  .body { grid-template-columns: 300px minmax(0, 1fr) clamp(560px, 34vw, 900px); }
+  .library { display: flex; }
+}
+@media (max-width: 1000px) {
+  .app { height: auto; overflow: visible; }
+  .body { grid-template-columns: 1fr; }
+}
+
+.library { flex-direction: column; gap: 4px; padding: 8px 12px 24px 24px; overflow: auto; }
+.library h3 { margin: 14px 8px 6px; font: 600 13px var(--ui); color: var(--ink-3); }
+.library .search { height: 38px; border-radius: 11px; background: var(--fill); display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--ink-3); font-size: 14px; }
+.library button { text-align: left; padding: 8px 10px; border-radius: 9px; font-size: 14px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; }
+.library button:hover { background: var(--fill); }
+.library button.sel { background: var(--accent-tint); color: var(--ink); font-weight: 600; }
+.library button em { font-style: normal; color: var(--ink-3); font-size: 13px; }
+
+/* What is being said */
+.now { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: 12px 40px 24px; min-height: 0; gap: 12px; }
+.now-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.now-head h1 { margin: 0; font: 700 30px/1.1 var(--display); letter-spacing: -0.025em; }
+.now-head .sub { color: var(--ink-3); font-size: 14px; }
+.steps { display: flex; gap: 6px; margin-left: auto; }
+.step { min-width: 36px; height: 36px; padding: 0 10px; border-radius: 18px; font-size: 14px; font-weight: 600; color: var(--ink-2); background: var(--fill); }
+.step.done { color: var(--ink-3); background: transparent; }
+.step.live { background: var(--live); color: #fff; }
+.step.next { box-shadow: inset 0 0 0 2px var(--next); color: var(--ink); background: transparent; }
+.stage-text { align-self: center; min-width: 0; }
+.stage-text .words { font: 400 clamp(34px, 3.3vw, 60px)/1.28 var(--word); letter-spacing: -0.012em; margin: 0; text-wrap: pretty; max-width: 30ch; }
+.words span { color: var(--ink-3); transition: color .2s; }
+.words span.said { color: var(--ink); }
+.words span.at { color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 8px; }
+.stage-text .then { margin-top: 28px; font: 400 clamp(17px, 1.3vw, 22px)/1.45 var(--word); color: var(--ink-3); max-width: 52ch; }
+.stage-text .then b { font: 600 13px var(--ui); color: var(--next); margin-right: 8px; }
+.lines .line { display: block; }
+.big-count { font: 600 clamp(96px, 11vw, 190px)/1 var(--display); letter-spacing: -0.045em; }
+.loop { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 22px; }
+.loop span { padding: 8px 14px; border-radius: 12px; background: var(--fill); font-size: 14px; color: var(--ink-2); }
+.loop span.on { background: var(--accent-tint); color: var(--ink); font-weight: 600; }
+
+/* What was heard, and one suggestion at a time */
+.heard { display: flex; align-items: center; gap: 10px; font-size: 14.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+.heard .q { overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left; }
+.heard .q bdi { direction: ltr; }
+.idea { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 12px 12px 12px 14px; border-radius: 18px; background: var(--raised); box-shadow: var(--lift); }
+.idea[hidden] { display: none; }
+.ring { position: relative; width: 44px; height: 44px; }
+.ring svg { transform: rotate(-90deg); }
+.ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12.5px; }
+.idea .t b { font-size: 15px; }
+.idea .t b small { font-weight: 500; color: var(--ink-3); font-size: 13px; margin-left: 6px; }
+.idea .t p { margin: 1px 0 0; font: 400 15px/1.35 var(--word); color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idea .acts { display: flex; gap: 6px; }
+.btn { height: 38px; padding: 0 14px; border-radius: 12px; font-size: 14px; font-weight: 600; background: var(--fill); }
+.btn:hover { filter: brightness(.97); }
+.btn.primary { background: var(--accent-tint); color: var(--ink); }
+
+/* The screens */
+.screens { display: flex; flex-direction: column; gap: 12px; padding: 4px 24px 24px 8px; min-height: 0; }
+.label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.label .dot { width: 8px; height: 8px; border-radius: 50%; }
+.label .ref { color: var(--ink-3); font-weight: 500; }
+.label .end { margin-left: auto; }
+.text-btn { height: 30px; padding: 0 10px; border-radius: 9px; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.text-btn:hover { background: var(--fill); color: var(--ink); }
+.text-btn kbd { font: 600 11px var(--ui); color: var(--ink-3); margin-left: 4px; }
+.screen { container-type: inline-size; border-radius: 14px; overflow: hidden; aspect-ratio: var(--shape, 16 / 9); position: relative; display: grid; place-items: center; color: #fff; text-align: center; background: var(--bg-slide, #000); }
+.screen.live { box-shadow: 0 0 0 2px var(--live), 0 18px 50px -22px var(--live); }
+.screen.next { box-shadow: 0 0 0 2px var(--next); }
+.screen .txt { font: 400 4.4cqw/1.32 var(--word); padding: 0 9cqw; text-shadow: 0 2px 14px rgba(0,0,0,.45); }
+.screen .lbl { display: block; margin-top: 1.8cqw; font: 600 2.3cqw var(--ui); letter-spacing: .04em; color: var(--accent); }
+.screen .count { font: 600 15cqw/1 var(--display); letter-spacing: -0.04em; }
+.screen .logo { font: 600 4cqw var(--display); opacity: .85; }
+.screen .bar { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--live); transition: width .3s; }
+.take { height: 56px; border-radius: 16px; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; gap: 10px; font: 600 17px var(--display); letter-spacing: -0.01em; box-shadow: 0 8px 24px -10px var(--accent); transition: transform .12s; }
+.take:active { transform: scale(.985); }
+.take kbd { font: 600 12px var(--ui); padding: 2px 7px; border-radius: 6px; background: rgba(0,0,0,.12); }
+.others { display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: 12px; background: var(--fill); font-size: 13.5px; font-weight: 500; color: var(--ink-2); }
+.chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+.chip i.off { background: var(--ink-3); }
+.peek { display: none; }
+@media (min-width: 1900px) {
+  .others { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .others .chip { display: none; }
+  .peek { display: block; }
+  .peek small { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-3); margin-bottom: 6px; }
+  .peek small i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+  .mini { container-type: inline-size; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; position: relative; background: #000; color: #fff; }
+}
+.mini.cam { background: radial-gradient(40% 70% at 50% 35%, #8a6a52, transparent 70%), linear-gradient(#3b2f2a, #120e0c); }
+.mini .lt { position: absolute; left: 6cqw; right: 22cqw; bottom: 8cqw; padding: 2.4cqw 4cqw; border-left: 1.4cqw solid var(--accent); background: rgba(12,12,16,.84); font: 400 4.6cqw/1.3 var(--word); }
+.mini .st { position: absolute; inset: 0; padding: 6cqw; font: 500 5.6cqw/1.3 var(--ui); display: grid; align-content: space-between; }
+.mini .st b { color: #ffd60a; }
+
+/* Command search */
+.palette { position: fixed; inset: 0; z-index: 20; display: none; place-items: start center; padding-top: 14vh; background: rgba(0,0,0,.22); }
+.palette.open { display: grid; }
+.pal { width: min(620px, calc(100vw - 32px)); border-radius: 18px; background: var(--glass); backdrop-filter: blur(30px) saturate(1.6); box-shadow: var(--lift), 0 0 0 1px var(--hair); overflow: hidden; }
+.pal input { width: 100%; height: 58px; border: 0; background: transparent; padding: 0 22px; font: 500 18px var(--ui); color: var(--ink); outline: none; border-bottom: 1px solid var(--hair); }
+.pal ul { list-style: none; margin: 0; padding: 8px; }
+.pal li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; font-size: 15px; cursor: pointer; }
+.pal li.sel { background: var(--accent-tint); }
+.pal li span { margin-left: auto; color: var(--ink-3); font-size: 13px; }
+
+/* Mock-up controls (not part of the app) */
+.demo { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 10; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; border-radius: 16px; background: rgba(20, 20, 24, .86); color: #f4f2f6; backdrop-filter: blur(16px); box-shadow: 0 12px 34px rgba(0,0,0,.35); font-size: 12.5px; max-width: calc(100vw - 32px); overflow-x: auto; }
+.demo .tag { color: rgba(255,255,255,.55); white-space: nowrap; }
+.demo .grp { display: flex; gap: 2px; padding: 2px; border-radius: 11px; background: rgba(255,255,255,.08); }
+.demo button { height: 28px; padding: 0 10px; border-radius: 9px; font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,.7); white-space: nowrap; }
+.demo button[aria-pressed="true"] { background: rgba(255,255,255,.18); color: #fff; }
+.demo .sw { width: 12px; height: 12px; border-radius: 50%; display: inline-block; vertical-align: -2px; }
+.demo .size { white-space: nowrap; color: #fff; font-weight: 600; padding-right: 8px; }
+
+/* Notes below the app */
+.notes { max-width: 1120px; margin: 0 auto; padding: 56px 24px 120px; display: grid; gap: 32px; }
+.notes h2 { margin: 0 0 8px; font: 700 26px/1.2 var(--display); letter-spacing: -0.02em; text-wrap: balance; }
+.notes p { margin: 0; color: var(--ink-2); max-width: 68ch; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 14px; }
+.cols div { background: var(--surface); border-radius: 16px; padding: 18px 20px; box-shadow: 0 0 0 1px var(--hair); }
+.cols h3 { margin: 0 0 4px; font: 600 15.5px var(--display); }
+.cols p { font-size: 14.5px; }
+.tiers { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14.5px; background: var(--surface); border-radius: 16px; overflow: hidden; box-shadow: 0 0 0 1px var(--hair); }
+.tiers th, .tiers td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+.tiers th { font-size: 13px; color: var(--ink-3); font-weight: 600; }
+.tiers tr:last-child td { border-bottom: 0; }
+.tiers tr.cur td { background: var(--accent-tint); }
+.tiers-wrap { overflow-x: auto; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="ambient"></div>
+
+  <header class="top">
+    <div class="who"><b>Sunday Service</b><span>Main hall · 2 November</span></div>
+    <div class="status" role="status">
+      <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <span id="status-text">Listening</span><span class="what" id="status-what">· following John 5</span>
+      <div class="mode" role="group" aria-label="How verses go on screen">
+        <button id="mode-auto" aria-pressed="true" title="Verses go on screen by themselves when the app is sure">Auto</button>
+        <button id="mode-ask" aria-pressed="false" title="Verses wait in Next until you press Take">Ask first</button>
+      </div>
+    </div>
+    <div class="right">
+      <button class="icon-btn" id="open-search" title="Search verses, songs and actions (⌘K)" aria-label="Search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <button class="icon-btn" title="Settings" aria-label="Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <div class="clock"><b class="num" id="clock">10:41</b><span id="clock-note">ends <span class="over">11:41</span></span></div>
+    </div>
+  </header>
+
+  <nav class="timeline" aria-label="Order of service">
+    <div class="tl-scroll" id="tl-scroll"><div class="tl" id="tl"></div></div>
+  </nav>
+
+  <div class="body">
+    <aside class="library" aria-label="Library">
+      <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Find a verse, song or picture</div>
+      <h3>John 5</h3>
+      <div id="lib-verses"></div>
+      <h3>Today's songs</h3>
+      <button>Holy, Holy, Holy<em>10:10</em></button>
+      <button>Amazing Grace<em>10:16</em></button>
+      <button>Be Thou My Vision<em>11:28</em></button>
+      <h3>Pictures</h3>
+      <button>Welcome slide<em>Lobby</em></button>
+      <button>Giving<em>Offering</em></button>
+    </aside>
+
+    <main class="now" id="now"></main>
+
+    <section class="screens" aria-label="Screens">
+      <div class="label"><span class="dot" style="background:var(--live)"></span>Live<span class="ref" id="live-ref">John 5:9</span><span class="end"><button class="text-btn" id="clear" title="Take everything off the screens and show the logo">Clear<kbd>Esc</kbd></button></span></div>
+      <div class="screen live" id="live"></div>
+      <button class="take" id="take"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Take<kbd>Space</kbd></button>
+      <div class="label"><span class="dot" style="background:var(--next)"></span>Next<span class="ref" id="next-ref">John 5:10</span></div>
+      <div class="screen next" id="next"></div>
+      <div class="others">
+        <span class="chip"><i></i>Stream</span>
+        <span class="chip"><i></i>Stage</span>
+        <span class="chip"><i class="off"></i>Lobby</span>
+        <div class="peek"><small><i></i>Stream lower third</small><div class="mini cam" id="m-stream"></div></div>
+        <div class="peek"><small><i></i>Stage monitor</small><div class="mini" id="m-stage"></div></div>
+        <div class="peek"><small><i style="background:var(--ink-3)"></i>Lobby</small><div class="mini" style="display:grid;place-items:center;font:600 7cqw var(--display)">Welcome home</div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="palette" id="palette" role="dialog" aria-label="Search">
+  <div class="pal"><input id="pal-input" placeholder="John 3:16, Amazing Grace, countdown 5, clear…" autocomplete="off"><ul id="pal-list"></ul></div>
+</div>
+
+<div class="demo" aria-label="Mock-up controls">
+  <span class="size" id="size">1600 × 1000</span>
+  <span class="tag">Mock-up:</span>
+  <div class="grp"><button data-sc="before">Before</button><button data-sc="worship">Worship</button><button data-sc="preaching" aria-pressed="true">Preaching</button></div>
+  <div class="grp"><button data-team="gold" aria-pressed="true"><span class="sw" style="background:#f0b44a"></span></button><button data-team="advent"><span class="sw" style="background:#a78bfa"></span></button><button data-team="ocean"><span class="sw" style="background:#38bdf8"></span></button><button data-team="pentecost"><span class="sw" style="background:#fb7185"></span></button></div>
+  <div class="grp"><button data-theme-set="dark">Dark</button><button data-theme-set="light">Light</button></div>
+</div>
+
+<section class="notes">
+  <div>
+    <h2>It fits the screen by itself</h2>
+    <p>There is no Laptop or 45″ switch. The app measures its window and picks a layout, and changes it the moment you resize or move to another monitor. Try resizing this window; the size in the dark bar below updates. The projector, lower third and stage outputs already match their own screens' shapes (Settings → Screens → "Match the screen", in 1.3.7).</p>
+    <div class="tiers-wrap">
+      <table class="tiers">
+        <thead><tr><th>Window width</th><th>What you get</th></tr></thead>
+        <tbody>
+          <tr data-tier="narrow"><td>Under 1000 px</td><td>One column: what is being said, then the screens. For a small laptop or a split screen.</td></tr>
+          <tr data-tier="standard"><td>1000–1900 px</td><td>Two columns: what is being said, and the screens. The other screens are small chips. MacBooks, 24″ and 27″ monitors.</td></tr>
+          <tr data-tier="wide"><td>1900 px and up</td><td>The library opens as a column, the screens grow, and the stream, stage and lobby show as live pictures. 34″–49″ ultrawides, 5K iMacs.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div>
+    <h2>What changed from design 3</h2>
+    <div class="cols">
+      <div><h3>One pattern for everything</h3><p>Scripture, songs and the countdown all work the same way: what is on now, large, with what comes next faded below it. Learn it once.</p></div>
+      <div><h3>Calmer colour</h3><p>The service parts are soft tints instead of nine loud blocks. Only the part happening now is solid. Strong colour is kept for meaning: red is live, green is next, and the colour team marks what you can press.</p></div>
+      <div><h3>One status, not six buttons</h3><p>The top bar has one capsule that says what the app is doing ("Listening · following John 5", or "Following the singers") with Auto or Ask first beside it. Song mode switches itself when singing starts.</p></div>
+      <div><h3>One suggestion at a time</h3><p>Instead of three cards, the best guess appears in one quiet bar with how sure it is, and only when there is one. "Use" puts it in Next and Take sends it.</p></div>
+      <div><h3>The Take button in your colour</h3><p>Take is the only filled button on the screen, in the colour team's colour, so the next step is never in doubt. Space does the same.</p></div>
+      <div><h3>Fewer labels, bigger words</h3><p>No small capitals everywhere. Four text sizes. The verse can be as large as 60 px on a big monitor, and the word being read is underlined in your colour.</p></div>
+    </div>
+  </div>
+</section>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  // KJV and public-domain hymn text only
+  const VERSES = [
+    [8, 'Jesus saith unto him, Rise, take up thy bed, and walk.'],
+    [9, 'And immediately the man was made whole, and took up his bed, and walked: and on the same day was the sabbath.'],
+    [10, 'The Jews therefore said unto him that was cured, It is the sabbath day: it is not lawful for thee to carry thy bed.'],
+    [11, 'He answered them, He that made me whole, the same said unto me, Take up thy bed, and walk.'],
+    [12, 'Then asked they him, What man is that which said unto thee, Take up thy bed, and walk?'],
+    [13, 'And he that was healed wist not who it was: for Jesus had conveyed himself away, a multitude being in that place.'],
+  ];
+  const STANZAS = [
+    ['Verse 1', ['Amazing grace! how sweet the sound', 'That saved a wretch like me!', 'I once was lost, but now am found;', 'Was blind, but now I see.']],
+    ['Verse 2', ['’Twas grace that taught my heart to fear,', 'And grace my fears relieved;', 'How precious did that grace appear', 'The hour I first believed!']],
+    ['Verse 3', ['Through many dangers, toils, and snares,', 'I have already come;', '’Tis grace hath brought me safe thus far,', 'And grace will lead me home.']],
+    ['Verse 4', ['When we’ve been there ten thousand years,', 'Bright shining as the sun,', 'We’ve no less days to sing God’s praise', 'Than when we’d first begun.']],
+  ];
+  const ORDER = [
+    { t: 0, m: 5, title: 'Countdown', c: '#64748b', sc: 'before' },
+    { t: 5, m: 5, title: 'Welcome', c: '#f97316' },
+    { t: 10, m: 6, title: 'Holy, Holy, Holy', c: '#8b5cf6', sc: 'worship' },
+    { t: 16, m: 7, title: 'Amazing Grace', c: '#8b5cf6', sc: 'worship' },
+    { t: 23, m: 5, title: 'Prayer', c: '#14b8a6' },
+    { t: 28, m: 6, title: 'Notices', c: '#f59e0b' },
+    { t: 34, m: 40, title: 'Sermon · Rise, take up thy bed', c: '#3b82f6', sc: 'preaching' },
+    { t: 74, m: 8, title: 'Altar call', c: '#f43f5e' },
+    { t: 82, m: 6, title: 'Offering', c: '#22c55e' },
+    { t: 88, m: 7, title: 'Be Thou My Vision', c: '#8b5cf6' },
+    { t: 95, m: 5, title: 'Benediction', c: '#6366f1' },
+  ];
+  const PX = 22;
+  const TEAMS = {
+    gold: { light: '#d9961f', dark: '#f0b44a', ink: '#2a1d04' },
+    advent: { light: '#7c3aed', dark: '#a78bfa', ink: '#ffffff', inkDark: '#1b0d38' },
+    ocean: { light: '#0284c7', dark: '#38bdf8', ink: '#ffffff', inkDark: '#03243a' },
+    pentecost: { light: '#e11d48', dark: '#fb7185', ink: '#ffffff', inkDark: '#3b0614' },
+  };
+  const SCENES = {
+    before: { now: -4, bg: 'radial-gradient(60% 80% at 30% 20%, #14b8a6aa, transparent 70%), linear-gradient(150deg, #0b2530, #0f172a 60%, #1e1b4b)', glow: ['#0d9488', '#4338ca'] },
+    worship: { now: 19, bg: 'radial-gradient(50% 70% at 70% 15%, #f59e0bcc, transparent 70%), linear-gradient(160deg, #2a0f1f, #6b1d3a 55%, #b4410f)', glow: ['#db2777', '#ea580c'] },
+    preaching: { now: 41, bg: 'radial-gradient(55% 60% at 75% 85%, #f97316aa, transparent 70%), linear-gradient(165deg, #141a46, #33195a 55%, #5b2333)', glow: ['#4f46e5', '#c2410c'] },
+  };
+  const IDEAS = [
+    ['Mark 2:11', 'I say unto thee, Arise, and take up thy bed, and go thy way into thine house.', 0.93],
+    ['Matthew 11:28', 'Come unto me, all ye that labour and are heavy laden, and I will give you rest.', 0.64],
+  ];
+
+  const S = { scene: 'preaching', mode: 'auto', team: 'gold', verse: 1, word: 0, stanza: 2, line: 0, count: 272, cleared: false, picked: null, air: null, idea: 0 };
+  const clock = (min) => { const t = 600 + min; return `${Math.floor(t / 60)}:${String(((t % 60) + 60) % 60).padStart(2, '0')}`; };
+  const slide = (body, label) => `<div class="txt">${body}${label ? `<span class="lbl">${label}</span>` : ''}</div>`;
+  const words = (t) => t.split(' ');
+
+  // ---- Timeline ----
+  $('tl').innerHTML = ORDER.map((o, i) => `<button class="part" data-i="${i}" style="--c:${o.c};width:${o.m * PX}px" title="${clock(o.t)} ${esc(o.title)}"><span>${esc(o.title)}</span><small>${clock(o.t)}</small></button>`).join('');
+  $('tl').querySelectorAll('.part').forEach((b) => b.addEventListener('click', () => { const o = ORDER[+b.dataset.i]; setScene(o.sc || (o.t < 34 ? 'before' : 'preaching')); }));
+  function paintTimeline() {
+    const now = SCENES[S.scene].now;
+    [...$('tl').children].forEach((el, i) => {
+      const o = ORDER[i]; const on = now >= o.t && now < o.t + o.m;
+      el.classList.toggle('past', o.t + o.m <= now);
+      el.classList.toggle('current', on);
+      el.querySelector('.fill')?.remove();
+      if (on) el.insertAdjacentHTML('afterbegin', `<div class="fill" style="width:${((now - o.t) / o.m) * 100}%"></div>`);
+    });
+    $('clock').textContent = clock(Math.max(now, -4));
+    $('clock-note').innerHTML = S.scene === 'before' ? 'starts at 10:00' : S.scene === 'worship' ? '<span class="over">1 min over</span>' : 'ends <span class="over">11:41</span>';
+    const cur = $('tl').querySelector('.current') || $('tl').children[0];
+    $('tl-scroll').scrollTo({ left: Math.max(0, cur.offsetLeft - 120), behavior: 'smooth' });
+  }
+
+  // ---- Render ----
+  function render() {
+    const sc = SCENES[S.scene];
+    document.documentElement.style.setProperty('--g1', sc.glow[0]);
+    document.documentElement.style.setProperty('--g2', sc.glow[1]);
+    $('live').style.setProperty('--bg-slide', S.cleared ? '#000' : sc.bg);
+    $('next').style.setProperty('--bg-slide', sc.bg);
+    const now = $('now');
+
+    if (S.scene === 'preaching') {
+      const [n, t] = VERSES[S.verse]; const nx = VERSES[(S.verse + 1) % VERSES.length]; const w = words(t);
+      now.innerHTML = `
+        <div class="now-head"><h1>John 5:8–13</h1><span class="sub">King James Version · following the reader</span>
+          <div class="steps">${VERSES.map(([v], i) => `<button class="step ${i < S.verse ? 'done' : i === S.verse ? 'live' : i === S.verse + 1 ? 'next' : ''}" data-v="${i}" aria-label="Verse ${v}">${v}</button>`).join('')}</div></div>
+        <div class="stage-text">
+          <p class="words">${w.map((x, i) => `<span class="${i < S.word ? 'said' : i === S.word ? 'at' : ''}">${esc(x)}</span>`).join(' ')}</p>
+          <div class="then"><b>Next · verse ${nx[0]}</b>${esc(nx[1])}</div>
+        </div>
+        <div>${heard(`…${w.slice(Math.max(0, S.word - 10), S.word + 1).join(' ')}`)}${idea()}</div>`;
+      now.querySelectorAll('.step').forEach((b) => b.addEventListener('click', () => { S.verse = +b.dataset.v; S.word = 0; S.air = null; S.cleared = false; render(); }));
+      $('live').innerHTML = S.cleared ? '<div class="logo">Grace Church</div>' : S.air ? slide(esc(S.air[1]), `${S.air[0]} KJV`) : slide(esc(t), `John 5:${n} KJV`) + `<div class="bar" style="width:${(S.word / w.length) * 100}%"></div>`;
+      $('next').innerHTML = S.picked ? slide(esc(S.picked[1]), `${S.picked[0]} KJV`) : S.air ? slide(esc(t), `John 5:${n} KJV`) : slide(esc(nx[1]), `John 5:${nx[0]} KJV`);
+      $('live-ref').textContent = S.cleared ? 'Logo' : S.air ? S.air[0] : `John 5:${n}`;
+      $('next-ref').textContent = S.picked ? `${S.picked[0]} · waiting for Take` : S.air ? `back to John 5:${n}` : S.mode === 'auto' ? `John 5:${nx[0]} · goes up when verse ${n} ends` : `John 5:${nx[0]} · waiting for Take`;
+      $('status-text').textContent = 'Listening'; $('status-what').textContent = '· following John 5';
+      $('m-stream').innerHTML = S.cleared ? '' : `<div class="lt">${esc(t.slice(0, 54))}…</div>`;
+      $('m-stage').innerHTML = `<div class="st"><b>${clock(41)} · 33 min left</b><span>${esc(t.slice(0, 60))}…</span></div>`;
+    }
+
+    if (S.scene === 'worship') {
+      const [name, lines] = STANZAS[S.stanza]; const [nname, nlines] = STANZAS[(S.stanza + 1) % STANZAS.length];
+      now.innerHTML = `
+        <div class="now-head"><h1>Amazing Grace</h1><span class="sub">John Newton · following the singers</span>
+          <div class="steps">${STANZAS.map(([nm], i) => `<button class="step ${i < S.stanza ? 'done' : i === S.stanza ? 'live' : i === S.stanza + 1 ? 'next' : ''}" data-s="${i}">${nm.replace('Verse ', 'V')}</button>`).join('')}</div></div>
+        <div class="stage-text">
+          <p class="words lines">${lines.map((l, j) => `<span class="line ${j < S.line ? 'said' : j === S.line ? 'at' : ''}">${esc(l)}</span>`).join('')}</p>
+          <div class="then"><b>Next · ${nname}</b>${esc(nlines[0])} …</div>
+        </div>
+        <div>${heard(`…${lines[S.line]}`)}</div>`;
+      now.querySelectorAll('.step').forEach((b) => b.addEventListener('click', () => { S.stanza = +b.dataset.s; S.line = 0; S.cleared = false; render(); }));
+      $('live').innerHTML = S.cleared ? '<div class="logo">Grace Church</div>' : slide(lines.map(esc).join('<br>'));
+      $('next').innerHTML = slide(nlines.map(esc).join('<br>'));
+      $('live-ref').textContent = S.cleared ? 'Logo' : `Amazing Grace · ${name}`;
+      $('next-ref').textContent = `${nname} · ${S.mode === 'auto' ? 'goes up when they sing it' : 'waiting for Take'}`;
+      $('status-text').textContent = 'Listening'; $('status-what').textContent = '· following the singers';
+      $('m-stream').innerHTML = S.cleared ? '' : `<div class="lt">${esc(lines[S.line])}</div>`;
+      $('m-stage').innerHTML = `<div class="st"><b>${clock(19)} · ${name}</b><span>${esc(lines.join(' / ')).slice(0, 70)}…</span></div>`;
+    }
+
+    if (S.scene === 'before') {
+      const mm = Math.floor(S.count / 60), ss = String(S.count % 60).padStart(2, '0');
+      const notices = ['Welcome home', 'Youth night · Friday 7pm', 'Baptisms · 16 November', 'Give online'];
+      now.innerHTML = `
+        <div class="now-head"><h1>Before the service</h1><span class="sub">Listening starts when the countdown ends</span></div>
+        <div class="stage-text"><div class="big-count num">${mm}:${ss}</div>
+          <div class="loop">${notices.map((x, i) => `<span class="${i === Math.floor(S.count / 8) % 4 ? 'on' : ''}">${x}</span>`).join('')}</div></div>
+        <div>${heard('Pulpit mic is ready · speech runs on this computer, no internet needed')}</div>`;
+      $('live').innerHTML = S.cleared ? '<div class="logo">Grace Church</div>' : `<div><div class="count num">${mm}:${ss}</div><span class="lbl">The service starts soon</span></div>`;
+      $('next').innerHTML = slide('Welcome home', 'Grace Church');
+      $('live-ref').textContent = 'Countdown'; $('next-ref').textContent = 'Welcome · when the countdown ends';
+      $('status-text').textContent = 'Ready'; $('status-what').textContent = '· pulpit mic';
+      $('m-stream').innerHTML = `<div class="lt">Starting soon · ${mm}:${ss}</div>`;
+      $('m-stage').innerHTML = `<div class="st"><b>${mm}:${ss}</b><span>Service starts at 10:00</span></div>`;
+    }
+
+    $('lib-verses').innerHTML = VERSES.map(([v, t], i) => `<button class="${S.scene === 'preaching' && i === S.verse ? 'sel' : ''}">${v}  ${esc(t.slice(0, 24))}…</button>`).join('');
+    now.querySelector('#use')?.addEventListener('click', () => { S.picked = IDEAS[S.idea]; render(); });
+    now.querySelector('#more')?.addEventListener('click', () => { S.idea = (S.idea + 1) % IDEAS.length; render(); });
+  }
+  const heard = (text) => `<div class="heard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="q"><bdi>${esc(text)}</bdi></span></div>`;
+  function idea() {
+    const [ref, text, p] = IDEAS[S.idea];
+    const r = 19, c = 2 * Math.PI * r, col = p >= 0.9 ? 'var(--next)' : 'var(--accent)';
+    const picked = S.picked && S.picked[0] === ref;
+    return `<div class="idea" style="margin-top:10px">
+      <div class="ring"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="${r}" fill="none" stroke="var(--hair)" stroke-width="4"/><circle cx="22" cy="22" r="${r}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${c * p} ${c}"/></svg><b>${Math.round(p * 100)}</b></div>
+      <div class="t"><b>Sounds like ${ref}<small>${Math.round(p * 100)}% sure</small></b><p>${esc(text)}</p></div>
+      <div class="acts"><button class="btn" id="more">${IDEAS.length - 1} more</button><button class="btn primary" id="use">${picked ? 'In Next ✓' : 'Use'}</button></div></div>`;
+  }
+
+  // ---- Actions ----
+  function take() {
+    S.cleared = false;
+    if (S.scene === 'preaching') {
+      if (S.picked) { S.air = S.picked; S.picked = null; }
+      else if (S.air) S.air = null;
+      else { S.verse = (S.verse + 1) % VERSES.length; S.word = 0; }
+    } else if (S.scene === 'worship') { S.stanza = (S.stanza + 1) % STANZAS.length; S.line = 0; }
+    else S.count = 0;
+    render();
+  }
+  function setScene(sc) {
+    S.scene = sc; S.cleared = false; S.picked = null; S.air = null;
+    document.querySelectorAll('[data-sc]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sc === sc)));
+    render(); paintTimeline();
+  }
+  const isDark = () => document.documentElement.dataset.theme === 'dark' || (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+  function setTeam(t) {
+    S.team = t; const tm = TEAMS[t]; const d = isDark();
+    const a = d ? tm.dark : tm.light;
+    const root = document.documentElement.style;
+    root.setProperty('--accent', a);
+    root.setProperty('--accent-ink', d ? (tm.inkDark || tm.ink) : tm.ink);
+    root.setProperty('--accent-tint', `color-mix(in oklab, ${a} ${d ? 16 : 14}%, transparent)`);
+    document.querySelectorAll('[data-team]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.team === t)));
+  }
+  function setMode(m) { S.mode = m; $('mode-auto').setAttribute('aria-pressed', String(m === 'auto')); $('mode-ask').setAttribute('aria-pressed', String(m === 'ask')); render(); }
+
+  setInterval(() => {
+    if (S.scene !== 'preaching' || S.cleared || S.air) return;
+    const n = words(VERSES[S.verse][1]).length;
+    if (S.word < n - 1) { S.word++; render(); }
+    else if (S.mode === 'auto' && !S.picked) { S.word = n; render(); setTimeout(() => { if (S.scene === 'preaching' && S.word >= n) take(); }, 700); }
+  }, 330);
+  setInterval(() => {
+    if (S.scene === 'worship' && !S.cleared) { if (S.line < 3) { S.line++; render(); } else if (S.mode === 'auto') take(); }
+    if (S.scene === 'before' && S.count > 0) { S.count--; render(); }
+  }, 1700);
+
+  // ---- Search ----
+  const ITEMS = [
+    ['John 3:16', 'For God so loved the world…', () => { setScene('preaching'); S.picked = ['John 3:16', 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.']; render(); }],
+    ['Mark 2:11', 'Arise, and take up thy bed…', () => { setScene('preaching'); S.picked = IDEAS[0]; render(); }],
+    ['Amazing Grace', 'Song · 4 verses', () => setScene('worship')],
+    ['Countdown 5 minutes', 'Projector and stream', () => { S.count = 300; setScene('before'); }],
+    ['Clear to the logo', 'Esc', () => { S.cleared = true; render(); }],
+    ['Ask before showing', 'Verses wait in Next', () => setMode('ask')],
+  ];
+  let sel = 0, shown = ITEMS;
+  const openPal = () => { $('palette').classList.add('open'); $('pal-input').value = ''; filter(); $('pal-input').focus(); };
+  const closePal = () => $('palette').classList.remove('open');
+  function filter() { const q = $('pal-input').value.toLowerCase(); shown = ITEMS.filter((i) => `${i[0]} ${i[1]}`.toLowerCase().includes(q)); sel = 0; paint(); }
+  function paint() {
+    $('pal-list').innerHTML = shown.map((i, n) => `<li class="${n === sel ? 'sel' : ''}" data-n="${n}">${esc(i[0])}<span>${esc(i[1])}</span></li>`).join('') || '<li>Nothing found. Try a reference like Psalm 23.</li>';
+    $('pal-list').querySelectorAll('li[data-n]').forEach((li) => li.addEventListener('click', () => { shown[+li.dataset.n][2](); closePal(); }));
+  }
+  $('pal-input').addEventListener('input', filter);
+  $('pal-input').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { sel = Math.min(shown.length - 1, sel + 1); paint(); e.preventDefault(); }
+    if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); paint(); e.preventDefault(); }
+    if (e.key === 'Enter' && shown[sel]) { shown[sel][2](); closePal(); }
+    if (e.key === 'Escape') closePal();
+  });
+  $('palette').addEventListener('click', (e) => { if (e.target === $('palette')) closePal(); });
+  $('open-search').addEventListener('click', openPal);
+
+  // ---- Wiring ----
+  $('take').addEventListener('click', take);
+  $('clear').addEventListener('click', () => { S.cleared = true; render(); });
+  $('mode-auto').addEventListener('click', () => setMode('auto'));
+  $('mode-ask').addEventListener('click', () => setMode('ask'));
+  document.querySelectorAll('[data-sc]').forEach((b) => b.addEventListener('click', () => setScene(b.dataset.sc)));
+  document.querySelectorAll('[data-team]').forEach((b) => b.addEventListener('click', () => setTeam(b.dataset.team)));
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    setTeam(S.team);
+  }));
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPal(); return; }
+    if ($('palette').classList.contains('open')) return;
+    if (e.code === 'Space') { e.preventDefault(); take(); }
+    if (e.key === 'Escape') { S.cleared = true; render(); }
+  });
+
+  // The layout follows the window: show its size and which layout is in use
+  function measure() {
+    const w = window.innerWidth, h = window.innerHeight;
+    const tier = w < 1000 ? 'narrow' : w < 1900 ? 'standard' : 'wide';
+    $('size').textContent = `${w} × ${h} · ${tier === 'narrow' ? 'one column' : tier === 'standard' ? 'two columns' : 'wide layout'}`;
+    document.querySelectorAll('[data-tier]').forEach((r) => r.classList.toggle('cur', r.dataset.tier === tier));
+  }
+  window.addEventListener('resize', measure);
+
+  setTeam('gold'); setScene('preaching'); measure();
+})();
+</script>
+</body>
+</html>

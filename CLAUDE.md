@@ -69,7 +69,10 @@ To check changes end to end, use `tools/e2e/` and the `e2e-electron` skill. Run 
 5. **Outputs share one renderer.** The projector, lower third, previews and designer all draw through `TemplateRenderer` on a stage 1080 tall, with its width set by the screen shape. What the operator sees is what the room sees.
 6. **Outputs never need dragging.** Settings → Screens puts each output on its display. Output windows never steal focus (`showInactive`).
 7. **Keep listening in the background.** Don't add timers or animations that the browser throttles in a hidden window. The Electron throttling switches in `main.js` must stay.
-8. **Copyright.** Don't reproduce copyrighted lyrics or Bible translations in code, tests, docs or mock-ups. Use KJV/WEB/ASV and public-domain hymns. Licensed translations come only through API.Bible, ESV or NLT at run time, and their text is never stored on disk.
+8. **Copyright: the church's library versus the public code.**
+   - **In the app,** a church can import and keep any song it is licensed to use, such as SongSelect songs under its CCLI licence. The app must make this easy, and credit each song (title, writers, copyright, CCLI number, licence number).
+   - **In this repository** (code, tests, docs, mock-ups), never put copyrighted lyrics or Bible text. The repository is public, and a church's CCLI licence covers its own use, not publishing lyrics to the world. Use KJV/WEB/ASV and public-domain hymns. Song titles are fine.
+   - **Licensed Bible translations** (NKJV, NIV and others) come through API.Bible, ESV or NLT at run time and are not stored on disk, as their terms require.
 9. **Accessibility and clarity.** Red means on air and green means next, always with words as well as colour. Hit targets are at least 36px. Key text is never smaller than 13px. Esc clears, Space takes, ⌘K searches.
 10. **Write UI text from the volunteer's side of the screen.** Plain words and active voice, and say exactly what a control does. No jargon such as "IPC", "template assignment" or "ephemeral".
 
@@ -92,7 +95,7 @@ Settings live in `localStorage`, which every window shares, so outputs update th
 
 ## Open work (keep this list current)
 
-- Build design 3 into the app: `docs/design/live-redesign-v3.html` and `docs/DESIGN_SYSTEM.md`. The redesign PR #8 (1.4.0) is on hold and stale.
+- Build the approved design into the app. The latest is design 4 (`docs/design/live-redesign-v4.html`, awaiting the owner's verdict); see `docs/DESIGN_SYSTEM.md`. The redesign PR #8 (1.4.0) is on hold and stale.
 - Restyle the other pages (Service, Media, Templates, Settings) to the design system.
 - Native DeckLink SDI output. It needs the Blackmagic Desktop Video SDK and testing on the owner's ProPresenter computer through Remote Control.
 - Transitions, props/messages layers, multiple timers, a stage layout editor, live captions and translation, verses on phones (QR), PowerPoint and Planning Center import, Stream Deck/remote control, NDI, CCLI reporting.

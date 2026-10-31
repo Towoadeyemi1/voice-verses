@@ -75,5 +75,7 @@ Check this list before debugging. Add every new mistake that cost time.
   - Colour must carry meaning.
   - The order of service scrolls sideways.
   - Follow `DESIGN_SYSTEM.md`, and show a mock-up before building.
-- **Mock-ups 1 and 2 quoted copyrighted worship lyrics, and so did the test songs and the lyrics placeholder.** All were replaced with public-domain hymns (Amazing Grace, Holy Holy Holy, the Doxology, It Is Well). Song titles are fine; lyrics are not.
+- **Mock-ups 1 and 2 quoted copyrighted worship lyrics, and so did the test songs and the lyrics placeholder.** All were replaced with public-domain hymns (Amazing Grace, Holy Holy Holy, the Doxology, It Is Well). Song titles are fine; lyrics are not. **This is only about the public code.** The owner's library holds the SongSelect songs they paid for, and the app is built to import, show and follow them. When explaining this rule, say that clearly: the owner was alarmed when it sounded as if their own songs weren't allowed.
+- **Owner on design 3:** "can be better aesthetically and looking very clean, intuitive and very easy to use". They also asked why the mock-up had Laptop and 45″ switches instead of detecting the screen. Mock-ups must adapt to the real window, as the app does, never with pretend device switches.
+- **The `.now` class was used twice again in design 4**, for the current timeline part and for the main pane. Also, `.app > * { position: relative }` turned the absolute ambient layer into a grid item and shifted every row. Exclude overlay layers from such rules, and give the app grid `grid-template-columns: minmax(0, 1fr)`, so a long scroller can't widen the page.
 - **The header didn't line up with the body:** use one container width or padding for the header and the content.

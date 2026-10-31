@@ -1,6 +1,17 @@
 # Design system (design 3)
 
-The reference mock-up is [`design/live-redesign-v3.html`](design/live-redesign-v3.html). It is interactive and covers before the service, worship, preaching, light, dark, colour teams and an ultrawide monitor. Designs 1 and 2 were rejected. They are not kept in the repo because they quoted copyrighted worship lyrics; their lessons are in `LESSONS.md` → Design.
+**Latest: design 4** ([`design/live-redesign-v4.html`](design/live-redesign-v4.html)) refines design 3 after the owner said it "can be better aesthetically and looking very clean, intuitive and very easy to use". The changes:
+- One pattern everywhere: the current item large, with the next one faded below it.
+- A tinted timeline, with only the current part solid.
+- A single status capsule in place of six toolbar buttons.
+- One suggestion at a time.
+- Take in the colour team's colour.
+- The other screens shown as chips.
+- The layout follows the window size by itself, with no Laptop or 45″ switch.
+
+Where design 4 differs from the rules below, design 4 wins, pending the owner's verdict.
+
+The earlier reference mock-up is [`design/live-redesign-v3.html`](design/live-redesign-v3.html). It is interactive and covers before the service, worship, preaching, light, dark, colour teams and an ultrawide monitor. Designs 1 and 2 were rejected. They are not kept in the repository, because they quoted copyrighted worship lyrics and the repository is public (churches can of course use those songs in the app under their CCLI licence); their lessons are in `LESSONS.md` → Design.
 
 ## What the owner asked for (non-negotiable)
 
