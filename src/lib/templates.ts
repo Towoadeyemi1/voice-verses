@@ -142,8 +142,9 @@ const base: Omit<Template, 'id' | 'name'> = {
     uppercase: false,
     shadow: true,
     outline: 0,
+    highlight: 'team:highlight',
   },
-  label: { show: true, position: 'below', fontSize: 46, color: '#f5c451', includeVersion: true },
+  label: { show: true, position: 'below', fontSize: 46, color: 'team:highlight', includeVersion: true },
   logo: { show: false, position: 'bottom-right', size: 8 },
 };
 
@@ -190,6 +191,31 @@ export const BUILT_IN_TEMPLATES: Template[] = [
     panel: { show: true, color: '#000000', opacity: 0.78, radius: 14 },
     text: { ...base.text, fontSize: 46, align: 'left', verticalAlign: 'bottom', shadow: false, lineHeight: 1.3 },
     label: { ...base.label, position: 'below', fontSize: 30 },
+  },
+  {
+    ...base,
+    id: 'stream-bar-team',
+    name: 'Lower third – colour bar',
+    background: { type: 'color', color: '#00ff00', dim: 0 },
+    area: { x: 9, y: 74, width: 80, height: 20 },
+    panel: { show: false, color: '#000000', opacity: 0.8, radius: 0 },
+    text: { ...base.text, fontFamily: FONTS[5].value, fontSize: 44, fontWeight: 600, align: 'left', verticalAlign: 'middle', shadow: false, lineHeight: 1.25 },
+    label: { ...base.label, position: 'above', fontSize: 30, color: 'team:highlight' },
+    layers: [
+      { id: 'bar', kind: 'shape', name: 'Bar', x: 6, y: 72, width: 86, height: 24, opacity: 0.92, fill: 'team:background', fillTo: 'team:secondary', radius: 18 },
+      { id: 'accent', kind: 'shape', name: 'Accent line', x: 6, y: 72, width: 1.2, height: 24, opacity: 1, fill: 'team:primary', radius: 6 },
+    ],
+  },
+  {
+    ...base,
+    id: 'stream-bar-light',
+    name: 'Lower third – light card',
+    background: { type: 'color', color: '#00ff00', dim: 0 },
+    area: { x: 10, y: 75, width: 78, height: 18 },
+    panel: { show: false, color: '#ffffff', opacity: 0.95, radius: 0 },
+    text: { ...base.text, fontFamily: FONTS[5].value, fontSize: 42, fontWeight: 600, color: '#111827', align: 'left', verticalAlign: 'middle', shadow: false, lineHeight: 1.25 },
+    label: { ...base.label, position: 'above', fontSize: 28, color: 'team:primary' },
+    layers: [{ id: 'card', kind: 'shape', name: 'Card', x: 7, y: 73, width: 84, height: 22, opacity: 0.96, fill: '#ffffff', radius: 22 }],
   },
 ];
 

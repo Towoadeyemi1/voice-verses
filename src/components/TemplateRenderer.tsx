@@ -1,6 +1,8 @@
 import { CSSProperties, ReactNode } from 'react';
 import { DesignLayer, Template } from '@/lib/templates';
 import { RichText } from '@/lib/richText';
+import { withTeamColors } from '@/lib/colorTeams';
+import { useColorTeam } from '@/hooks/use-color-team';
 import { useLogo, useMediaUrl } from '@/hooks/use-templates';
 import { FitText } from './FitText';
 
@@ -37,7 +39,7 @@ const hexToRgba = (hex: string, alpha: number) => {
  * operator sees is what the room sees.
  */
 export const TemplateRenderer = ({
-  template,
+  template: look,
   content,
   overrides,
   transparent = false,
@@ -48,6 +50,9 @@ export const TemplateRenderer = ({
   /** No background at all (for OBS/vMix browser sources, which show what is behind) */
   transparent?: boolean;
 }) => {
+  // Colours written as "team:…" take the colour team's colours
+  const team = useColorTeam();
+  const template = withTeamColors(look, team);
   const { background, area, panel, text, label, logo } = template;
   const mediaSrc = useMediaUrl(background.type === 'color' ? undefined : background.mediaId);
   const logoUrl = useLogo();
