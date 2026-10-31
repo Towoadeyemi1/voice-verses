@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Verses Design 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one fixed screen, no modes. The service runs across the top as a timeline
+   (width = minutes, a playhead at the time now). The words being followed fill the middle.
+   The screens sit on the right like a switcher: ON AIR (red frame) above, NEXT (green frame)
+   below, one Take button between. Colour comes from content: the live slide lights the
+   window, each part of the service has its colour, and the church's colour team is the accent. */
+:root {
+  --page: #efebe5;          /* warm paper, never stark white */
+  --win: #f7f4ef;
+  --surface: #ffffff;
+  --sunken: #ebe6de;
+  --ink: #1d1b20;
+  --ink-2: #5d5862;
+  --ink-3: #96909b;
+  --line: rgba(40, 30, 50, 0.08);
+  --glass: rgba(250, 247, 242, 0.72);
+  --accent: #e0a12f;        /* colour team: Gold */
+  --accent-soft: rgba(224, 161, 47, 0.16);
+  --on-accent: #241a05;
+  --air: #ff3b30;           /* on air (broadcast red) */
+  --next: #1fb954;          /* next (broadcast green) */
+  --glow-a: #4338ca;
+  --glow-b: #c2410c;
+  --glow-strength: 0.14;
+  --shadow: 0 1px 2px rgba(30, 20, 40, .06), 0 10px 30px rgba(30, 20, 40, .08);
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Figtree", "Segoe UI Variable Text", system-ui, sans-serif;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Figtree", "Segoe UI Variable Display", system-ui, sans-serif;
+  --word: "Newsreader", "New York", "Iowan Old Style", Georgia, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0e0d10;
+    --win: #161518;
+    --surface: #1f1d22;
+    --sunken: #121114;
+    --ink: #f4f1f6;
+    --ink-2: #b2abb7;
+    --ink-3: #78727e;
+    --line: rgba(255, 245, 255, 0.07);
+    --glass: rgba(30, 28, 34, 0.7);
+    --accent-soft: rgba(240, 180, 74, 0.16);
+    --air: #ff453a;
+    --next: #30d158;
+    --glow-strength: 0.32;
+    --shadow: 0 1px 1px rgba(0, 0, 0, .35), 0 16px 40px rgba(0, 0, 0, .45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0e0d10;
+  --win: #161518;
+  --surface: #1f1d22;
+  --sunken: #121114;
+  --ink: #f4f1f6;
+  --ink-2: #b2abb7;
+  --ink-3: #78727e;
+  --line: rgba(255, 245, 255, 0.07);
+  --glass: rgba(30, 28, 34, 0.7);
+  --accent-soft: rgba(240, 180, 74, 0.16);
+  --air: #ff453a;
+  --next: #30d158;
+  --glow-strength: 0.32;
+  --shadow: 0 1px 1px rgba(0, 0, 0, .35), 0 16px 40px rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--page); color: var(--ink); font: 15px/1.5 var(--ui); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---- Page around the mock-up ---- */
+.intro { max-width: 1240px; margin: 0 auto; padding: 32px 24px 18px; display: flex; flex-wrap: wrap; gap: 18px 32px; align-items: end; justify-content: space-between; }
+.intro h1 { font: 700 34px/1.1 var(--display); letter-spacing: -0.02em; margin: 0 0 8px; text-wrap: balance; }
+.intro p { margin: 0; color: var(--ink-2); max-width: 62ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; }
+.seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 11px; background: var(--sunken); }
+.seg button { border: 0; background: transparent; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; vertical-align: -2px; margin-right: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+
+.stage-wrap { padding: 0 24px; }
+.frame { position: relative; margin: 0 auto; }
+.frame > .app { position: absolute; top: 0; left: 0; transform-origin: top left; }
+
+/* ---- The app window ---- */
+.app {
+  width: 1600px; height: 1000px; border-radius: 16px; overflow: hidden; position: relative;
+  background: var(--win); box-shadow: var(--shadow), 0 0 0 1px var(--line);
+  display: grid; grid-template-rows: 52px 96px 1fr;
+}
+.app.wide { width: 2240px; }
+/* The live slide lights the room: its colours glow softly behind everything */
+.ambient { position: absolute; inset: 0; pointer-events: none; opacity: var(--glow-strength); transition: background 1.2s ease;
+  background: radial-gradient(60% 70% at 85% 25%, var(--glow-a), transparent 70%), radial-gradient(50% 60% at 60% 100%, var(--glow-b), transparent 70%); }
+.app > *:not(.ambient):not(.palette) { position: relative; }
+
+.toolbar { display: flex; align-items: center; gap: 14px; padding: 0 16px; background: var(--glass); backdrop-filter: blur(24px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.lights { display: flex; gap: 8px; margin-right: 6px; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+.lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
+.service-name { line-height: 1.15; }
+.service-name b { font: 600 14px var(--display); display: block; }
+.service-name span { font-size: 12px; color: var(--ink-3); }
+.cmd { margin: 0 auto; width: 460px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 9px; border: 0; background: var(--sunken); color: var(--ink-3); font-size: 13px; text-align: left; }
+.cmd kbd { margin-left: auto; }
+kbd { font: 600 11px var(--ui); padding: 1px 6px; border-radius: 5px; background: var(--surface); color: var(--ink-2); box-shadow: 0 1px 0 var(--line), inset 0 0 0 1px var(--line); }
+.pill { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border-radius: 15px; border: 0; background: var(--sunken); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.pill.on { background: var(--accent-soft); color: var(--ink); }
+.meter { display: inline-flex; gap: 2px; align-items: end; height: 14px; }
+.meter i { width: 3px; border-radius: 2px; background: var(--next); height: 30%; animation: lvl 0.9s ease-in-out infinite; }
+.meter i:nth-child(2) { animation-delay: .15s; } .meter i:nth-child(3) { animation-delay: .3s; } .meter i:nth-child(4) { animation-delay: .45s; }
+@keyframes lvl { 0%,100% { height: 25%; } 50% { height: 100%; } }
+.mini-seg { display: inline-flex; background: var(--sunken); border-radius: 15px; padding: 2px; }
+.mini-seg button { border: 0; background: transparent; height: 26px; padding: 0 11px; border-radius: 13px; font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+.mini-seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.dots { display: inline-flex; gap: 4px; } .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--next); }
+
+/* ---- Running order as a timeline ---- */
+.timeline { padding: 10px 0 12px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; align-items: stretch; }
+.tl-scroll { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding: 0 16px; position: relative; }
+.tl-scroll::-webkit-scrollbar { display: none; }
+.tl-track { position: relative; height: 72px; }
+.ruler { position: absolute; top: 0; left: 0; right: 0; height: 16px; }
+.ruler span { position: absolute; top: 0; font-size: 10.5px; color: var(--ink-3); transform: translateX(-50%); }
+.segs { position: absolute; top: 18px; left: 0; height: 52px; }
+.segment { position: absolute; top: 0; height: 52px; border: 0; border-radius: 10px; padding: 7px 10px; text-align: left; color: #fff; overflow: hidden;
+  background: linear-gradient(135deg, var(--c1), var(--c2)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); transition: filter .3s, opacity .3s; }
+.segment small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .82; white-space: nowrap; }
+.segment b { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.segment.past { filter: saturate(.25) brightness(.8); opacity: .6; }
+.segment.now { box-shadow: inset 0 0 0 2px rgba(255,255,255,.85), 0 6px 18px -6px var(--c1); }
+.segment .done { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(255,255,255,.16); pointer-events: none; }
+.playhead { position: absolute; top: 14px; bottom: -4px; width: 2px; background: var(--air); border-radius: 2px; box-shadow: 0 0 0 3px rgba(255,59,48,.15); transition: left .6s ease; pointer-events: none; }
+.playhead::before { content: attr(data-time); position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font: 700 10.5px var(--ui); color: #fff; background: var(--air); padding: 0 5px; border-radius: 4px; }
+.tl-status { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 0 18px; border-left: 1px solid var(--line); min-width: 180px; }
+.tl-status b { font: 700 22px var(--display); letter-spacing: -0.01em; }
+.tl-status span { font-size: 12px; color: var(--ink-3); }
+.tl-status .late { color: #e8590c; font-weight: 600; }
+
+/* ---- Body ---- */
+.body { display: grid; grid-template-columns: 60px minmax(0, 1fr) 532px; min-height: 0; }
+.app.wide .body { grid-template-columns: 320px minmax(0, 1fr) 640px; }
+.rail { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0; border-right: 1px solid var(--line); }
+.rail button { width: 40px; height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--ink-3); display: grid; place-items: center; }
+.rail button:hover { background: var(--sunken); color: var(--ink); }
+.rail svg { width: 20px; height: 20px; }
+.library { display: none; border-right: 1px solid var(--line); padding: 14px; overflow: hidden; flex-direction: column; gap: 10px; }
+.app.wide .rail { display: none; }
+.app.wide .library { display: flex; }
+.lib-search { height: 34px; border-radius: 9px; background: var(--sunken); display: flex; align-items: center; padding: 0 12px; color: var(--ink-3); font-size: 13px; }
+.lib-list { display: flex; flex-direction: column; gap: 2px; }
+.lib-list div { padding: 7px 10px; border-radius: 8px; font-size: 13.5px; display: flex; justify-content: space-between; gap: 8px; color: var(--ink-2); }
+.lib-list div.sel { background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+.lib-list em { font-style: normal; color: var(--ink-3); font-size: 12px; }
+.lib-h { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-top: 6px; }
+
+.nowpane { display: grid; grid-template-rows: auto 1fr auto; min-height: 0; padding: 22px 28px 18px; gap: 16px; }
+.now-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.now-head h2 { margin: 0; font: 700 26px/1.1 var(--display); letter-spacing: -0.02em; }
+.now-head .meta { color: var(--ink-3); font-size: 13px; }
+.tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--sunken); color: var(--ink-2); }
+.tag.follow { background: var(--accent-soft); color: var(--ink); }
+.tag.follow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+.chips { display: flex; gap: 6px; margin-left: auto; }
+.vchip { min-width: 34px; height: 30px; padding: 0 9px; border-radius: 15px; border: 0; background: var(--sunken); color: var(--ink-2); font-weight: 700; font-size: 13px; }
+.vchip.read { color: var(--ink-3); background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.vchip.air { background: var(--air); color: #fff; }
+.vchip.next { box-shadow: inset 0 0 0 2px var(--next); color: var(--ink); }
+
+.reading { overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+.reading .ref { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.words { font: 400 52px/1.3 var(--word); letter-spacing: -0.01em; margin: 0; max-width: 30ch; text-wrap: pretty; }
+.app.wide .words { max-width: 36ch; }
+.words span { color: var(--ink-3); transition: color .25s; border-radius: 6px; }
+.words span.said { color: var(--ink); }
+.words span.at { color: var(--ink); background: var(--accent-soft); box-shadow: 0 0 0 4px var(--accent-soft); }
+.upnext { font: italic 400 20px/1.45 var(--word); color: var(--ink-3); max-width: 52ch; }
+.upnext b { font: 600 12px var(--ui); letter-spacing: .06em; text-transform: uppercase; color: var(--next); font-style: normal; margin-right: 8px; }
+.stanzas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.app.wide .stanzas { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stanza { border: 0; text-align: left; border-radius: 14px; padding: 14px 16px; background: var(--surface); font: 400 19px/1.4 var(--word); color: var(--ink-3); box-shadow: 0 0 0 1px var(--line); transition: box-shadow .3s, color .3s; }
+.stanza small { display: block; font: 700 11px var(--ui); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; }
+.stanza.air { color: var(--ink); box-shadow: 0 0 0 2px var(--air); }
+.stanza.air small { color: var(--air); }
+.stanza.next { box-shadow: 0 0 0 2px var(--next); }
+.stanza.next small { color: var(--next); }
+.stanza .line.at { color: var(--ink); background: var(--accent-soft); border-radius: 6px; }
+.countdown-big { font: 700 150px/1 var(--display); letter-spacing: -0.04em; }
+.loop { display: flex; gap: 10px; flex-wrap: wrap; }
+.loop div { padding: 10px 14px; border-radius: 12px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); font-size: 14px; }
+.loop div.air { box-shadow: 0 0 0 2px var(--air); }
+
+/* The assistant lane: what was heard, and what it might mean */
+.lane { display: grid; gap: 10px; }
+.heard { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 14px; border-radius: 12px; background: var(--sunken); font-size: 14px; color: var(--ink-2); overflow: hidden; white-space: nowrap; }
+.heard b { color: var(--ink-3); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.heard .feed { overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left; flex: 1; }
+.heard .feed bdi { direction: ltr; }
+.refchip { display: inline-block; padding: 1px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--ink); font-weight: 600; font-size: 13px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.card { border: 0; text-align: left; display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); transition: transform .15s, box-shadow .15s; }
+.card:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px var(--line), var(--shadow); }
+.card.picked { box-shadow: 0 0 0 2px var(--next); }
+.ring { width: 44px; height: 44px; position: relative; }
+.ring svg { width: 44px; height: 44px; transform: rotate(-90deg); }
+.ring span { position: absolute; inset: 0; display: grid; place-items: center; font: 700 12px var(--ui); }
+.card b { font-size: 14px; display: block; }
+.card p { margin: 1px 0 0; font: 400 13.5px/1.35 var(--word); color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---- The screens, like a switcher ---- */
+.screens { border-left: 1px solid var(--line); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.mon-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-3); }
+.badge { font: 800 10.5px var(--ui); letter-spacing: .08em; padding: 3px 7px; border-radius: 5px; color: #fff; }
+.badge.air { background: var(--air); } .badge.next { background: var(--next); color: #062b12; }
+.mon-head button { margin-left: auto; border: 0; background: var(--sunken); border-radius: 8px; height: 28px; padding: 0 10px; font-size: 12.5px; font-weight: 600; }
+.monitor { flex-shrink: 0; border-radius: 12px; padding: 3px; }
+.monitor.air { background: var(--air); box-shadow: 0 10px 34px -12px var(--air); }
+.monitor.next { background: var(--next); }
+.slide { container-type: inline-size; aspect-ratio: 16 / 9; border-radius: 9px; overflow: hidden; position: relative; display: grid; place-items: center; color: #fff; text-align: center; background: var(--bg, #000); }
+.app.wide .slide { aspect-ratio: 64 / 27; }
+.slide .txt { font: 400 4.6cqw/1.3 var(--word); padding: 0 8cqw; text-shadow: 0 2px 12px rgba(0,0,0,.5); transition: opacity .35s; }
+.slide .lbl { display: block; margin-top: 1.6cqw; font: 700 2.2cqw var(--ui); letter-spacing: .06em; color: var(--accent); text-transform: uppercase; }
+.slide .big { font: 700 15cqw/1 var(--display); letter-spacing: -0.03em; }
+.slide .logo { font: 600 4cqw var(--display); letter-spacing: .02em; opacity: .85; }
+.slide .progress { position: absolute; left: 0; bottom: 0; height: 1.2cqw; min-height: 3px; background: var(--air); transition: width .3s; }
+.take { flex-shrink: 0; height: 54px; border: 0; border-radius: 14px; background: var(--ink); color: var(--win); display: flex; align-items: center; justify-content: center; gap: 12px; font: 700 16px var(--display); letter-spacing: -0.01em; }
+.take:hover { filter: brightness(1.08); }
+.take kbd { background: rgba(255,255,255,.16); color: inherit; box-shadow: none; }
+.take svg { width: 18px; height: 18px; }
+.outputs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: auto; }
+.out { container-type: inline-size; }
+.out small { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-3); margin-bottom: 5px; }
+.out small i { width: 7px; height: 7px; border-radius: 50%; background: var(--air); }
+.mini { container-type: inline-size; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; position: relative; background: #000; color: #fff; }
+.mini.cam { background: radial-gradient(40% 70% at 50% 35%, #8a6a52, transparent 70%), radial-gradient(30% 30% at 20% 10%, #fde68a55, transparent), linear-gradient(#3b2f2a, #120e0c); }
+.mini .bar { position: absolute; left: 6cqw; right: 20cqw; bottom: 8cqw; padding: 2.5cqw 4cqw; border-left: 1.5cqw solid var(--accent); background: rgba(10,10,14,.82); font: 400 4.6cqw/1.3 var(--word); }
+.mini .bar b { display: block; font: 700 3.6cqw var(--ui); color: var(--accent); letter-spacing: .05em; }
+.mini.stage { padding: 5cqw; display: grid; grid-template-rows: auto 1fr auto; font: 400 5.4cqw/1.3 var(--ui); }
+.mini.stage .clock { display: flex; justify-content: space-between; font-weight: 700; color: #ffd60a; }
+.mini.stage .nx { color: #9ca3af; font-size: 4.4cqw; }
+.mini.lobby { display: grid; place-items: center; font: 600 7cqw var(--display); }
+
+/* ---- Command palette ---- */
+.palette { position: absolute; inset: 0; z-index: 5; display: none; place-items: start center; padding-top: 120px; background: rgba(0,0,0,.25); }
+.palette.open { display: grid; }
+.pal { width: 640px; border-radius: 16px; background: var(--glass); backdrop-filter: blur(30px) saturate(1.5); box-shadow: var(--shadow), 0 0 0 1px var(--line); overflow: hidden; }
+.pal input { width: 100%; height: 56px; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 0 20px; font: 500 18px var(--ui); color: var(--ink); outline: none; }
+.pal ul { list-style: none; margin: 0; padding: 8px; max-height: 360px; overflow: auto; }
+.pal li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14.5px; }
+.pal li.sel { background: var(--accent-soft); }
+.pal li span { color: var(--ink-3); font-size: 13px; margin-left: auto; }
+.pal li i { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-style: normal; font-size: 13px; font-weight: 700; color: #fff; }
+
+/* ---- Notes below ---- */
+.notes { max-width: 1240px; margin: 0 auto; padding: 40px 24px 64px; display: grid; gap: 36px; }
+.notes h2 { font: 700 24px/1.2 var(--display); letter-spacing: -0.015em; margin: 0 0 6px; text-wrap: balance; }
+.notes .lede { color: var(--ink-2); margin: 0 0 16px; max-width: 70ch; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.note { background: var(--surface); border-radius: 16px; padding: 18px 20px; box-shadow: 0 0 0 1px var(--line); }
+.note h3 { margin: 0 0 4px; font: 700 15px var(--display); }
+.note .src { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.note p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; }
+.note p b { color: var(--ink); }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.table-wrap { overflow-x: auto; background: var(--surface); border-radius: 16px; box-shadow: 0 0 0 1px var(--line); }
+th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+.sources { columns: 2 320px; font-size: 14px; padding-left: 18px; color: var(--ink-2); }
+.sources a { color: var(--ink); }
+
+@media (max-width: 700px) { .intro h1 { font-size: 27px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="intro">
+  <div>
+    <h1>Voice Verses, design 3</h1>
+    <p>One screen with no modes. The service runs across the top as a timeline. The words being followed fill the middle. On Air and Next sit on the right with one Take button. Try Space, ⌘K, the timeline, Auto or Ask, and the colour teams.</p>
+  </div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Moment">
+      <button id="sc-before" data-sc="before">Before service</button>
+      <button id="sc-worship" data-sc="worship">Worship</button>
+      <button id="sc-preaching" data-sc="preaching" aria-pressed="true">Preaching</button>
+    </div>
+    <div class="seg" role="group" aria-label="Colour team">
+      <button id="tm-gold" data-team="gold" aria-pressed="true"><span class="swatch" style="background:#f0b44a"></span>Gold</button>
+      <button id="tm-advent" data-team="advent"><span class="swatch" style="background:#a78bfa"></span>Advent</button>
+      <button id="tm-ocean" data-team="ocean"><span class="swatch" style="background:#38bdf8"></span>Ocean</button>
+      <button id="tm-pentecost" data-team="pentecost"><span class="swatch" style="background:#fb7185"></span>Pentecost</button>
+    </div>
+    <div class="seg" role="group" aria-label="Window">
+      <button id="win-std" data-wide="0" aria-pressed="true">Laptop</button>
+      <button id="win-wide" data-wide="1">45″ ultrawide</button>
+    </div>
+    <div class="seg" role="group" aria-label="Appearance">
+      <button id="th-dark" data-theme-set="dark">Dark</button>
+      <button id="th-light" data-theme-set="light">Light</button>
+    </div>
+  </div>
+</header>
+
+<div class="stage-wrap">
+  <div class="frame" id="frame">
+    <div class="app" id="app">
+      <div class="ambient"></div>
+
+      <div class="toolbar">
+        <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="service-name"><b>Sunday Service</b><span>2 November · Main hall</span></div>
+        <button class="cmd" id="open-cmd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Type a verse, a song or anything to do<kbd>⌘K</kbd></button>
+        <span class="pill"><span class="meter" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Pulpit mic</span>
+        <div class="mini-seg" role="group" aria-label="Sending">
+          <button id="mode-auto" aria-pressed="true" title="Verses go on screen by themselves when the app is sure">Auto</button>
+          <button id="mode-ask" aria-pressed="false" title="Verses wait in Next until you press Take">Ask</button>
+        </div>
+        <button class="pill" id="song-btn" title="Song mode: follow the singing; verses wait until a reference is said">♪ Song</button>
+        <span class="pill" title="Projector, stream lower third and stage monitor are connected"><span class="dots"><i></i><i></i><i></i></span>3 screens</span>
+      </div>
+
+      <div class="timeline">
+        <div class="tl-scroll" id="tl-scroll">
+          <div class="tl-track" id="tl-track">
+            <div class="ruler" id="ruler"></div>
+            <div class="segs" id="segs"></div>
+            <div class="playhead" id="playhead" data-time="10:41"></div>
+          </div>
+        </div>
+        <div class="tl-status"><b class="num" id="clock">10:41</b><span id="tl-note">Sermon · 7 of 40 min</span></div>
+      </div>
+
+      <div class="body">
+        <nav class="rail" aria-label="Library">
+          <button title="Bible"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M12 7v6M9 10h6"/></svg></button>
+          <button title="Songs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></button>
+          <button title="Pictures and videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 9"/></svg></button>
+          <button title="Looks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.3"/><circle cx="12" cy="7.5" r="1.3"/><circle cx="16" cy="10" r="1.3"/></svg></button>
+        </nav>
+        <aside class="library" aria-label="Library">
+          <div class="lib-search">Search the Bible, songs, media…</div>
+          <div class="lib-h">John 5 · KJV</div>
+          <div class="lib-list" id="lib-list"></div>
+          <div class="lib-h">Songs today</div>
+          <div class="lib-list"><div>Holy, Holy, Holy<em>Heber</em></div><div>Amazing Grace<em>Newton</em></div><div>Be Thou My Vision<em>trad.</em></div></div>
+        </aside>
+
+        <main class="nowpane" id="now"></main>
+
+        <section class="screens" aria-label="Screens">
+          <div class="mon-head"><span class="badge air">ON AIR</span><span id="air-label">John 5:9 · all screens</span><button id="clear-btn" title="Take everything off the screens and show the logo (Esc)">Clear <kbd>Esc</kbd></button></div>
+          <div class="monitor air"><div class="slide" id="air-slide"></div></div>
+          <button class="take" id="take"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Take next<kbd>Space</kbd></button>
+          <div class="mon-head"><span class="badge next">NEXT</span><span id="next-label">John 5:10 · when verse 9 ends</span></div>
+          <div class="monitor next"><div class="slide" id="next-slide"></div></div>
+          <div class="outputs">
+            <div class="out"><small><i></i>Stream lower third</small><div class="mini cam" id="mini-stream"></div></div>
+            <div class="out"><small><i></i>Stage monitor</small><div class="mini stage" id="mini-stage"></div></div>
+            <div class="out"><small><i style="background:var(--ink-3)"></i>Lobby TV</small><div class="mini lobby">Welcome home</div></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="palette" id="palette" role="dialog" aria-label="Command">
+        <div class="pal">
+          <input id="pal-input" placeholder="John 3:16, Amazing Grace, countdown 5, clear…" autocomplete="off">
+          <ul id="pal-list"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="notes">
+  <div>
+    <h2>What the best designs taught, and what design 3 takes from each</h2>
+    <p class="lede">I looked at the church presentation apps, the pro apps people admire most, and the broadcast switchers operators already trust under pressure. Each finding became one decision.</p>
+    <div class="grid3">
+      <div class="note"><span class="src">ProPresenter</span><h3>Power that volunteers find hard</h3><p>Its toolbar switches between Show, Edit, Reflow, Bible and a menu of five more editors. It has seven separate Clear buttons, one per layer. Reviewers describe a steep curve for volunteers, and one long-time user says they never touched more than a quarter of it.</p><p><b>Design 3:</b> one screen, no modes. One Clear (Esc), with the layers inside it for the rare time you need them.</p></div>
+      <div class="note"><span class="src">ATEM, vMix</span><h3>Red is on air, green is next</h3><p>Every switcher uses this, and operators already read it without thinking. vMix users report missing it when only a thin header carries the colour, so they ask for full borders.</p><p><b>Design 3:</b> a full red frame around On Air and a full green frame around Next, plus the words. One Take button sits between them, as on a switcher.</p></div>
+      <div class="note"><span class="src">Linear, 2026 refresh</span><h3>Navigation recedes, the work leads</h3><p>Fewer and softer borders ("structure should be felt, not seen"), warmer greys instead of cold blue ones, and a dimmed sidebar so the main area stands out.</p><p><b>Design 3:</b> almost no boxes. Space and light separate areas, the library is a quiet icon rail, and the greys are warm graphite.</p></div>
+      <div class="note"><span class="src">Final Cut Pro, Logic</span><h3>The viewer is the hero; regions stay put</h3><p>Apple's pro apps fit everything on one screen in fixed places, and you show or hide areas instead of dragging windows around.</p><p><b>Design 3:</b> fixed regions with the same thing in the same place every Sunday. On a 45″ screen the library opens as a column and the screens grow.</p></div>
+      <div class="note"><span class="src">Liquid Glass, macOS Tahoe</span><h3>Glass for what floats, solid for what you read</h3><p>Apple's new material puts content first. Reviewers found text gets lost when glass sits over busy backgrounds.</p><p><b>Design 3:</b> glass only on the toolbar and the ⌘K palette. Reading surfaces are solid, and the live slide's colours light the window softly from behind.</p></div>
+      <div class="note"><span class="src">FreeShow, EasyWorship</span><h3>Clean, but you have to know what to do next</h3><p>Reviewers like FreeShow's clean layout but find it less guided.</p><p><b>Design 3:</b> Next is always filled with the app's best guess, so the only decision is Take or not. The assistant lane shows what it heard and how sure it is.</p></div>
+    </div>
+  </div>
+
+  <div>
+    <h2>Design 2 → design 3</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Part</th><th>Design 2</th><th>Design 3</th></tr></thead>
+        <tbody>
+          <tr><td>Running order</td><td>Equal tiles with a thin colour stripe</td><td>A timeline: width is minutes, a red playhead shows the time now, and running over shows in orange. Each part of the service is a solid colour.</td></tr>
+          <tr><td>Colour</td><td>Grey panels with small coloured labels</td><td>Colour comes from content: the live slide lights the window, the parts of the service have colours, and the colour team is the accent everywhere.</td></tr>
+          <tr><td>Main action</td><td>A Send button next to the preview</td><td>One big Take button (Space) between On Air and Next, as on a video switcher</td></tr>
+          <tr><td>Structure</td><td>Boxes inside boxes</td><td>Almost no borders. Areas are separated by space and light.</td></tr>
+          <tr><td>Heard and suggestions</td><td>Two separate panels</td><td>One assistant lane: what was heard, then what it may mean, with a confidence ring</td></tr>
+          <tr><td>Songs</td><td>Same view as scripture</td><td>Verses and chorus as large tiles. On Air and Next are framed in red and green, and the line being sung is lit.</td></tr>
+          <tr><td>Wide screens</td><td>Stretched</td><td>The library opens as its own column, the screens grow, and the previews take the projector's shape.</td></tr>
+          <tr><td>Light mode</td><td>White</td><td>Warm paper; the screens stay dark because they are screens</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div>
+    <h2>Sources</h2>
+    <ul class="sources">
+      <li><a href="https://support.renewedvision.com/hc/en-us/articles/360041345954-Understanding-The-ProPresenter-User-Interface">ProPresenter user interface (Renewed Vision)</a></li>
+      <li><a href="https://capterra.com/p/170172/ProPresenter/reviews/">ProPresenter reviews (Capterra)</a></li>
+      <li><a href="https://www.capterra.com/p/251606/FreeShow/reviews/">FreeShow reviews (Capterra)</a></li>
+      <li><a href="https://learnofchrist.com/resources/freeshow">FreeShow resource review</a></li>
+      <li><a href="https://linear.app/now/behind-the-latest-design-refresh">Behind the latest design refresh (Linear)</a></li>
+      <li><a href="https://linear.app/changelog/2026-03-12-ui-refresh">Linear UI refresh, March 2026</a></li>
+      <li><a href="https://linear.app/blog/how-we-redesigned-the-linear-ui">How we redesigned the Linear UI</a></li>
+      <li><a href="https://eshop.macsales.com/blog/97650-blurry-or-beautiful-the-tweaks-and-tenets-of-apples-controversial-liquid-glass-design-in-macos-tahoe/">Liquid Glass in macOS Tahoe (OWC)</a></li>
+      <li><a href="https://bzamayo.com/tahoe-toolbars">Tahoe toolbars (Benjamin Mayo)</a></li>
+      <li><a href="https://support.apple.com/en-ca/guide/final-cut-pro/ver2a27194eb/mac">Final Cut Pro interface (Apple)</a></li>
+      <li><a href="https://forums.vmix.com/posts/t8582-GreenPreview-----RedProgram">Green preview, red program (vMix forums)</a></li>
+      <li><a href="https://streamgeeks.us/how-tally-lights-work/">How tally lights work (StreamGeeks)</a></li>
+      <li><a href="https://www.blackmagicdesign.com/fi/products/atemmini/software">ATEM Software Control (Blackmagic)</a></li>
+    </ul>
+  </div>
+</section>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const app = $('app');
+
+  // ---- Content (KJV and public-domain hymn text) ----
+  const VERSES = [
+    [8, 'Jesus saith unto him, Rise, take up thy bed, and walk.'],
+    [9, 'And immediately the man was made whole, and took up his bed, and walked: and on the same day was the sabbath.'],
+    [10, 'The Jews therefore said unto him that was cured, It is the sabbath day: it is not lawful for thee to carry thy bed.'],
+    [11, 'He answered them, He that made me whole, the same said unto me, Take up thy bed, and walk.'],
+    [12, 'Then asked they him, What man is that which said unto thee, Take up thy bed, and walk?'],
+    [13, 'And he that was healed wist not who it was: for Jesus had conveyed himself away, a multitude being in that place.'],
+  ];
+  const STANZAS = [
+    ['Verse 1', ['Amazing grace! how sweet the sound', 'That saved a wretch like me!', 'I once was lost, but now am found;', 'Was blind, but now I see.']],
+    ['Verse 2', ['’Twas grace that taught my heart to fear,', 'And grace my fears relieved;', 'How precious did that grace appear', 'The hour I first believed!']],
+    ['Verse 3', ['Through many dangers, toils, and snares,', 'I have already come;', '’Tis grace hath brought me safe thus far,', 'And grace will lead me home.']],
+    ['Verse 4', ['When we’ve been there ten thousand years,', 'Bright shining as the sun,', 'We’ve no less days to sing God’s praise', 'Than when we’d first begun.']],
+  ];
+  const ORDER = [
+    { t: 0, m: 5, kind: 'Before', title: 'Countdown & notices', c: ['#64748b', '#334155'], sc: 'before' },
+    { t: 5, m: 5, kind: 'Welcome', title: 'Welcome', c: ['#fb923c', '#ea580c'] },
+    { t: 10, m: 6, kind: 'Worship', title: 'Holy, Holy, Holy', c: ['#a78bfa', '#7c3aed'] },
+    { t: 16, m: 7, kind: 'Worship', title: 'Amazing Grace', c: ['#a78bfa', '#7c3aed'], sc: 'worship' },
+    { t: 23, m: 5, kind: 'Prayer', title: 'Prayer', c: ['#2dd4bf', '#0d9488'] },
+    { t: 28, m: 6, kind: 'Notices', title: 'Notices', c: ['#fbbf24', '#d97706'] },
+    { t: 34, m: 40, kind: 'Word', title: 'Sermon: Rise, take up thy bed', c: ['#60a5fa', '#2563eb'], sc: 'preaching' },
+    { t: 74, m: 8, kind: 'Response', title: 'Altar call', c: ['#fb7185', '#e11d48'] },
+    { t: 82, m: 6, kind: 'Giving', title: 'Offering', c: ['#4ade80', '#16a34a'] },
+    { t: 88, m: 7, kind: 'Worship', title: 'Be Thou My Vision', c: ['#a78bfa', '#7c3aed'] },
+    { t: 95, m: 5, kind: 'Close', title: 'Benediction', c: ['#818cf8', '#4f46e5'] },
+  ];
+  const PX = 26; // per minute
+  const TEAMS = {
+    gold: { a: '#e0a12f', d: '#f0b44a', soft: 'rgba(240,180,74,.18)', on: '#241a05' },
+    advent: { a: '#7c3aed', d: '#a78bfa', soft: 'rgba(167,139,250,.2)', on: '#ffffff' },
+    ocean: { a: '#0284c7', d: '#38bdf8', soft: 'rgba(56,189,248,.18)', on: '#ffffff' },
+    pentecost: { a: '#e11d48', d: '#fb7185', soft: 'rgba(251,113,133,.2)', on: '#ffffff' },
+  };
+  const SCENES = {
+    before: { now: -4, bg: 'radial-gradient(60% 80% at 30% 20%, #14b8a6aa, transparent 70%), linear-gradient(150deg, #0b2530, #0f172a 60%, #1e1b4b)', glow: ['#0d9488', '#4338ca'] },
+    worship: { now: 19, bg: 'radial-gradient(50% 70% at 70% 15%, #f59e0bcc, transparent 70%), linear-gradient(160deg, #2a0f1f, #6b1d3a 55%, #b4410f)', glow: ['#db2777', '#ea580c'] },
+    preaching: { now: 41, bg: 'radial-gradient(55% 60% at 75% 85%, #f97316aa, transparent 70%), linear-gradient(165deg, #141a46, #33195a 55%, #5b2333)', glow: ['#4f46e5', '#c2410c'] },
+  };
+
+  const S = { air: null, scene: 'preaching', mode: 'auto', team: 'gold', wide: false, song: false, verse: 1, word: 0, stanza: 2, line: 0, cleared: false, count: 272, picked: null };
+
+  const words = (t) => t.split(' ');
+  const clock = (min) => { const total = 10 * 60 + min; const h = Math.floor(total / 60), m = ((total % 60) + 60) % 60; return `${h}:${String(m).padStart(2, '0')}`; };
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  // ---- Timeline ----
+  function buildTimeline() {
+    const track = $('tl-track');
+    track.style.width = `${100 * PX + 40}px`;
+    $('ruler').innerHTML = Array.from({ length: 11 }, (_, i) => `<span style="left:${i * 10 * PX}px">${clock(i * 10)}</span>`).join('');
+    $('segs').innerHTML = ORDER.map((o, i) =>
+      `<button class="segment" data-i="${i}" style="left:${o.t * PX}px;width:${o.m * PX - 4}px;--c1:${o.c[0]};--c2:${o.c[1]}" title="${clock(o.t)} ${esc(o.title)}"><div class="done"></div><small>${o.kind} · ${clock(o.t)}</small><b>${esc(o.title)}</b></button>`).join('');
+    $('segs').querySelectorAll('.segment').forEach((b) => b.addEventListener('click', () => {
+      const o = ORDER[+b.dataset.i];
+      setScene(o.sc ?? (o.kind === 'Worship' ? 'worship' : o.t < 34 ? 'before' : 'preaching'));
+    }));
+  }
+  function paintTimeline() {
+    const now = SCENES[S.scene].now;
+    ORDER.forEach((o, i) => {
+      const el = $('segs').children[i];
+      el.classList.toggle('past', o.t + o.m <= now);
+      const on = now >= o.t && now < o.t + o.m;
+      el.classList.toggle('now', on);
+      el.querySelector('.done').style.width = on ? `${((now - o.t) / o.m) * 100}%` : '0';
+    });
+    const ph = $('playhead');
+    ph.style.left = `${Math.max(0, now) * PX + 16}px`;
+    ph.dataset.time = clock(now);
+    $('clock').textContent = clock(now);
+    const cur = ORDER.find((o) => now >= o.t && now < o.t + o.m);
+    $('tl-note').innerHTML = S.scene === 'before' ? 'Service starts at 10:00' : S.scene === 'worship' ? `${cur.title} · 2 min over` : `Sermon · ${now - cur.t} of ${cur.m} min · <span class="late">ends 11:41</span>`;
+    if (S.scene === 'worship') $('tl-note').innerHTML = `Amazing Grace · <span class="late">1 min over</span>`;
+    const sc = $('tl-scroll');
+    sc.scrollTo({ left: Math.max(0, now * PX - sc.clientWidth / 3), behavior: 'smooth' });
+  }
+
+  // ---- Slides ----
+  const slideHtml = (body, label) => `<div class="txt">${body}${label ? `<span class="lbl">${label}</span>` : ''}</div>`;
+  function verseSlide(i) { const [n, t] = VERSES[i]; return slideHtml(esc(t), `John 5:${n} KJV`); }
+  function stanzaSlide(i) { return slideHtml(STANZAS[i][1].map(esc).join('<br>'), ''); }
+
+  function render() {
+    const sc = SCENES[S.scene];
+    app.style.setProperty('--glow-a', sc.glow[0]);
+    app.style.setProperty('--glow-b', sc.glow[1]);
+    $('air-slide').style.setProperty('--bg', S.cleared ? '#000' : sc.bg);
+    $('next-slide').style.setProperty('--bg', sc.bg);
+    const now = $('now');
+
+    if (S.scene === 'preaching') {
+      const [n, t] = VERSES[S.verse];
+      const nx = VERSES[(S.verse + 1) % VERSES.length];
+      const w = words(t);
+      now.innerHTML = `
+        <div class="now-head">
+          <h2>John 5:8–13</h2><span class="tag">KJV</span>
+          <span class="tag follow">Following the reader</span>
+          <div class="chips">${VERSES.map(([v], i) => `<button class="vchip ${i < S.verse ? 'read' : i === S.verse ? 'air' : i === S.verse + 1 ? 'next' : ''}" data-v="${i}" title="Verse ${v}">${v}</button>`).join('')}</div>
+        </div>
+        <div class="reading">
+          <span class="ref">John 5:${n} · on air</span>
+          <p class="words">${w.map((x, i) => `<span class="${i < S.word ? 'said' : i === S.word ? 'at' : ''}">${esc(x)}</span>`).join(' ')}</p>
+          <div class="upnext"><b>Next · ${nx[0]}</b>${esc(nx[1])}</div>
+        </div>
+        <div class="lane">
+          <div class="heard"><b>Heard</b><span class="refchip">John chapter five, verse eight</span><span class="feed"><bdi>“…${esc(w.slice(Math.max(0, S.word - 12), S.word + 1).join(' '))}”</bdi></span></div>
+          <div class="cards">${suggestionCards([
+            ['Mark 2:11', 'I say unto thee, Arise, and take up thy bed, and go thy way into thine house.', 0.93],
+            ['Matthew 11:28', 'Come unto me, all ye that labour and are heavy laden, and I will give you rest.', 0.64],
+            ['Isaiah 40:31', 'But they that wait upon the LORD shall renew their strength…', 0.41],
+          ])}</div>
+        </div>`;
+      now.querySelectorAll('.vchip').forEach((b) => b.addEventListener('click', () => { S.verse = +b.dataset.v; S.word = 0; S.cleared = false; render(); }));
+      $('air-slide').innerHTML = S.cleared ? '<div class="logo">✝ Grace Church</div>' : S.air ? slideHtml(esc(S.air[1]), `${S.air[0]} KJV`) : verseSlide(S.verse) + `<div class="progress" style="width:${(S.word / w.length) * 100}%"></div>`;
+      $('next-slide').innerHTML = S.picked ? slideHtml(esc(S.picked[1]), `${S.picked[0]} KJV`) : S.air ? verseSlide(S.verse) : verseSlide((S.verse + 1) % VERSES.length);
+      $('air-label').textContent = S.cleared ? 'Logo · all screens' : S.air ? `${S.air[0]} · all screens` : `John 5:${n} · all screens`;
+      $('next-label').textContent = S.picked ? `${S.picked[0]} · waiting for Take` : S.air ? `Back to John 5:${n} · press Take` : S.mode === 'auto' ? `John 5:${nx[0]} · goes up when verse ${n} ends` : `John 5:${nx[0]} · waiting for Take`;
+      $('mini-stream').innerHTML = S.cleared ? '' : `<div class="bar"><b>John 5:${n}</b>${esc(w.slice(0, 9).join(' '))}…</div>`;
+      $('mini-stage').innerHTML = `<div class="clock"><span>${clock(SCENES.preaching.now)}</span><span>33:00 left</span></div><div>${esc(t.slice(0, 70))}…</div><div class="nx">Next: John 5:${nx[0]}</div>`;
+    }
+
+    if (S.scene === 'worship') {
+      const cur = STANZAS[S.stanza], nxt = STANZAS[(S.stanza + 1) % STANZAS.length];
+      now.innerHTML = `
+        <div class="now-head">
+          <h2>Amazing Grace</h2><span class="meta">John Newton · public domain</span>
+          <span class="tag follow">Following the singers</span>
+          <div class="chips"><span class="tag">Song mode on: verses wait until a reference is said</span></div>
+        </div>
+        <div class="reading" style="justify-content:start">
+          <div class="stanzas">${STANZAS.map(([name, lines], i) => `<button class="stanza ${i === S.stanza ? 'air' : i === (S.stanza + 1) % STANZAS.length ? 'next' : ''}" data-s="${i}"><small>${name}${i === S.stanza ? ' · on air' : i === (S.stanza + 1) % STANZAS.length ? ' · next' : ''}</small>${lines.map((l, j) => `<span class="line ${i === S.stanza && j === S.line ? 'at' : ''}">${esc(l)}</span>`).join('<br>')}</button>`).join('')}</div>
+        </div>
+        <div class="lane">
+          <div class="heard"><b>Heard</b><span class="feed"><bdi>“…${esc(cur[1][S.line])}”</bdi></span><span class="refchip">${cur[0]}, line ${S.line + 1}</span></div>
+          <div class="cards">${suggestionCards([
+            ['Amazing Grace', 'Matched in your library from the words being sung', 0.98],
+            ['Be Thou My Vision', 'Next in the order at 11:28', 0.3],
+            ['Holy, Holy, Holy', 'Sung at 10:10', 0.12],
+          ])}</div>
+        </div>`;
+      now.querySelectorAll('.stanza').forEach((b) => b.addEventListener('click', () => { S.stanza = +b.dataset.s; S.line = 0; S.cleared = false; render(); }));
+      $('air-slide').innerHTML = S.cleared ? '<div class="logo">✝ Grace Church</div>' : stanzaSlide(S.stanza);
+      $('next-slide').innerHTML = stanzaSlide((S.stanza + 1) % STANZAS.length);
+      $('air-label').textContent = S.cleared ? 'Logo · all screens' : `Amazing Grace · ${cur[0]}`;
+      $('next-label').textContent = `${nxt[0]} · ${S.mode === 'auto' ? 'goes up when the singers reach it' : 'waiting for Take'}`;
+      $('mini-stream').innerHTML = S.cleared ? '' : `<div class="bar"><b>Amazing Grace</b>${esc(cur[1][S.line])}</div>`;
+      $('mini-stage').innerHTML = `<div class="clock"><span>${clock(SCENES.worship.now)}</span><span>${cur[0]}</span></div><div>${esc(cur[1].join(' / ')).slice(0, 80)}…</div><div class="nx">Next: ${nxt[0]}</div>`;
+    }
+
+    if (S.scene === 'before') {
+      const mm = Math.floor(S.count / 60), ss = String(S.count % 60).padStart(2, '0');
+      now.innerHTML = `
+        <div class="now-head"><h2>Before the service</h2><span class="tag follow">Countdown running</span><span class="meta">Listening starts when the countdown ends</span></div>
+        <div class="reading" style="align-items:start">
+          <div class="countdown-big num">${mm}:${ss}</div>
+          <div class="loop">${['Welcome home', 'Youth night · Friday 7pm', 'Baptisms · 16 November', 'Give online · scan the code'].map((x, i) => `<div class="${i === Math.floor(S.count / 8) % 4 ? 'air' : ''}">${x}</div>`).join('')}</div>
+        </div>
+        <div class="lane">
+          <div class="heard"><b>Mic</b><span class="feed"><bdi>Pulpit mic is ready · speech engine on this computer, no internet needed</bdi></span></div>
+          <div class="cards">${suggestionCards([
+            ['Holy, Holy, Holy', 'First song at 10:10 · Verse 1 is ready', 1],
+            ['Sermon: Rise, take up thy bed', 'John 5:8–13 and Mark 2:11 are ready', 1],
+            ['Projector, stream, stage', 'All three screens are connected', 1],
+          ])}</div>
+        </div>`;
+      $('air-slide').innerHTML = S.cleared ? '<div class="logo">✝ Grace Church</div>' : `<div><div class="big num">${mm}:${ss}</div><span class="lbl">The service starts soon</span></div>`;
+      $('next-slide').innerHTML = slideHtml('Welcome home', 'Grace Church');
+      $('air-label').textContent = 'Countdown · projector and stream';
+      $('next-label').textContent = 'Welcome · when the countdown ends';
+      $('mini-stream').innerHTML = `<div class="bar"><b>Starting soon</b>${mm}:${ss}</div>`;
+      $('mini-stage').innerHTML = `<div class="clock"><span>${clock(SCENES.before.now)}</span><span>${mm}:${ss}</span></div><div>Service starts at 10:00</div><div class="nx">Next: Welcome</div>`;
+    }
+
+    $('lib-list').innerHTML = VERSES.map(([v, t], i) => `<div class="${S.scene === 'preaching' && i === S.verse ? 'sel' : ''}">${v} ${esc(t.slice(0, 26))}…</div>`).join('');
+    now.querySelectorAll('.card').forEach((b) => b.addEventListener('click', () => {
+      if (S.scene !== 'preaching') return;
+      const i = +b.dataset.k; const list = [['Mark 2:11', 'I say unto thee, Arise, and take up thy bed, and go thy way into thine house.'], ['Matthew 11:28', 'Come unto me, all ye that labour and are heavy laden, and I will give you rest.'], ['Isaiah 40:31', 'But they that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles.']];
+      S.picked = list[i]; render();
+    }));
+  }
+
+  function suggestionCards(items) {
+    return items.map(([title, text, p], i) => {
+      const r = 18, c = 2 * Math.PI * r, color = p >= 0.9 ? 'var(--next)' : p >= 0.6 ? 'var(--accent)' : 'var(--ink-3)';
+      const picked = S.picked && S.picked[0] === title;
+      return `<button class="card ${picked ? 'picked' : ''}" data-k="${i}" title="${S.scene === 'preaching' ? 'Put in Next' : ''}">
+        <div class="ring"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="${r}" fill="none" stroke="var(--line)" stroke-width="4"/><circle cx="22" cy="22" r="${r}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${c * p} ${c}"/></svg><span>${p === 1 ? '✓' : Math.round(p * 100)}</span></div>
+        <div><b>${esc(title)}</b><p>${esc(text)}</p></div></button>`;
+    }).join('');
+  }
+
+  // ---- Actions ----
+  function take() {
+    S.cleared = false;
+    if (S.scene === 'preaching') {
+      // A picked suggestion goes up; the next Take returns to the reading
+      if (S.picked) { S.air = S.picked; S.picked = null; }
+      else if (S.air) { S.air = null; }
+      else { S.verse = (S.verse + 1) % VERSES.length; S.word = 0; }
+    } else if (S.scene === 'worship') { S.stanza = (S.stanza + 1) % STANZAS.length; S.line = 0; }
+    else { S.count = 0; }
+    render();
+  }
+  function setScene(sc) {
+    S.scene = sc; S.cleared = false; S.picked = null; S.air = null;
+    S.song = sc === 'worship';
+    $('song-btn').classList.toggle('on', S.song);
+    document.querySelectorAll('[data-sc]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sc === sc)));
+    render(); paintTimeline();
+  }
+  function setTeam(t) {
+    S.team = t;
+    const dark = document.documentElement.dataset.theme === 'dark' || (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+    const team = TEAMS[t];
+    document.documentElement.style.setProperty('--accent', dark ? team.d : team.a);
+    document.documentElement.style.setProperty('--accent-soft', team.soft);
+    document.documentElement.style.setProperty('--on-accent', dark && t === 'gold' ? team.on : t === 'gold' ? '#241a05' : '#ffffff');
+    document.querySelectorAll('[data-team]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.team === t)));
+  }
+  function setMode(m) {
+    S.mode = m;
+    $('mode-auto').setAttribute('aria-pressed', String(m === 'auto'));
+    $('mode-ask').setAttribute('aria-pressed', String(m === 'ask'));
+    render();
+  }
+
+  // Follow the reading / singing / countdown
+  setInterval(() => {
+    if (S.scene === 'preaching' && !S.cleared && !S.air) {
+      const n = words(VERSES[S.verse][1]).length;
+      if (S.word < n - 1) { S.word++; render(); }
+      else if (S.mode === 'auto' && !S.picked) { setTimeout(() => { if (S.word >= n - 1 && S.scene === 'preaching') take(); }, 700); S.word = n; render(); }
+    }
+  }, 330);
+  setInterval(() => {
+    if (S.scene === 'worship' && !S.cleared) {
+      if (S.line < 3) { S.line++; render(); } else if (S.mode === 'auto') take();
+    }
+    if (S.scene === 'before' && S.count > 0) { S.count--; render(); }
+  }, 1600);
+
+  // ---- Command palette ----
+  const ITEMS = [
+    { k: 'Bible', c: '#2563eb', t: 'John 3:16', d: 'For God so loved the world…', run: () => { setScene('preaching'); S.picked = ['John 3:16', 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.']; render(); } },
+    { k: 'Bible', c: '#2563eb', t: 'Mark 2:11', d: 'Arise, and take up thy bed…', run: () => { setScene('preaching'); S.picked = ['Mark 2:11', 'I say unto thee, Arise, and take up thy bed, and go thy way into thine house.']; render(); } },
+    { k: 'Song', c: '#7c3aed', t: 'Amazing Grace', d: 'Library · 4 verses', run: () => setScene('worship') },
+    { k: 'Song', c: '#7c3aed', t: 'Be Thou My Vision', d: 'Library · 5 verses', run: () => setScene('worship') },
+    { k: 'Do', c: '#0d9488', t: 'Countdown 5 minutes', d: 'Projector and stream', run: () => { S.count = 300; setScene('before'); } },
+    { k: 'Do', c: '#0d9488', t: 'Clear to logo', d: 'Esc', run: () => { S.cleared = true; render(); } },
+    { k: 'Do', c: '#0d9488', t: 'Switch to Ask before showing', d: 'Verses wait in Next', run: () => setMode('ask') },
+    { k: 'Look', c: '#d97706', t: 'Advent purple', d: 'Colour team', run: () => setTeam('advent') },
+  ];
+  let sel = 0, shown = ITEMS;
+  function openPalette() { $('palette').classList.add('open'); $('pal-input').value = ''; filter(); $('pal-input').focus(); }
+  function closePalette() { $('palette').classList.remove('open'); }
+  function filter() {
+    const q = $('pal-input').value.toLowerCase().trim();
+    shown = ITEMS.filter((i) => !q || `${i.t} ${i.d} ${i.k}`.toLowerCase().includes(q));
+    sel = 0; paintList();
+  }
+  function paintList() {
+    $('pal-list').innerHTML = shown.map((i, n) => `<li class="${n === sel ? 'sel' : ''}" data-n="${n}"><i style="background:${i.c}">${i.k[0]}</i>${esc(i.t)}<span>${esc(i.d)}</span></li>`).join('') || '<li>Nothing found. Try a reference such as Psalm 23.</li>';
+    $('pal-list').querySelectorAll('li[data-n]').forEach((li) => li.addEventListener('click', () => { shown[+li.dataset.n].run(); closePalette(); }));
+  }
+  $('pal-input').addEventListener('input', filter);
+  $('pal-input').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { sel = Math.min(shown.length - 1, sel + 1); paintList(); e.preventDefault(); }
+    if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); paintList(); e.preventDefault(); }
+    if (e.key === 'Enter' && shown[sel]) { shown[sel].run(); closePalette(); }
+    if (e.key === 'Escape') closePalette();
+  });
+  $('palette').addEventListener('click', (e) => { if (e.target === $('palette')) closePalette(); });
+  $('open-cmd').addEventListener('click', openPalette);
+
+  // ---- Wiring ----
+  $('take').addEventListener('click', take);
+  $('clear-btn').addEventListener('click', () => { S.cleared = true; render(); });
+  $('mode-auto').addEventListener('click', () => setMode('auto'));
+  $('mode-ask').addEventListener('click', () => setMode('ask'));
+  $('song-btn').addEventListener('click', () => setScene(S.scene === 'worship' ? 'preaching' : 'worship'));
+  document.querySelectorAll('[data-sc]').forEach((b) => b.addEventListener('click', () => setScene(b.dataset.sc)));
+  document.querySelectorAll('[data-team]').forEach((b) => b.addEventListener('click', () => setTeam(b.dataset.team)));
+  document.querySelectorAll('[data-wide]').forEach((b) => b.addEventListener('click', () => {
+    S.wide = b.dataset.wide === '1'; app.classList.toggle('wide', S.wide);
+    document.querySelectorAll('[data-wide]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    fit(); paintTimeline();
+  }));
+  document.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    setTeam(S.team);
+  }));
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); return; }
+    if ($('palette').classList.contains('open') || e.target.tagName === 'INPUT') return;
+    if (e.code === 'Space') { e.preventDefault(); take(); }
+    if (e.key === 'Escape') { S.cleared = true; render(); }
+  });
+
+  // Scale the window to the page
+  const frame = $('frame');
+  function fit() {
+    const wrap = frame.parentElement, cs = getComputedStyle(wrap);
+    const w = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const appW = S.wide ? 2240 : 1600;
+    const scale = Math.min(1, w / appW);
+    app.style.transform = `scale(${scale})`;
+    frame.style.width = `${appW * scale}px`;
+    frame.style.height = `${1000 * scale}px`;
+  }
+  new ResizeObserver(fit).observe(frame.parentElement);
+
+  buildTimeline(); setTeam('gold'); render(); fit(); paintTimeline();
+})();
+</script>
+</body>
+</html>

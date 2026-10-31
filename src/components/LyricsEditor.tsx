@@ -26,11 +26,9 @@ const PLACEHOLDER = `Verse 1
 Amazing grace, how sweet the sound
 That saved a wretch like me
 
-Chorus
-My chains are gone, I've been set free
-
 Verse 2
-'Twas grace that taught my heart to fear`;
+'Twas grace that taught my heart to fear
+And grace my fears relieved`;
 
 /**
  * Adding a song to a service: from the song library or typed in, with its
