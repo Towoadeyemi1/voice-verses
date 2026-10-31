@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { BibleVerse } from '@/types/bible';
 import type { Passage } from '@/speech/VerseDetectionController';
 import { readingTokens } from '@/speech/readingTracker';
+import { usePacedWord } from '@/hooks/use-paced-word';
 
 /**
  * The verse being read, word by word: words already read are lit, so the
@@ -28,6 +29,8 @@ export const ReadingFollower = ({
   transcript?: string;
 }) => {
   const tokens = useMemo(() => (verse ? readingTokens(verse.text) : []), [verse]);
+  // Carried on at the reader's pace between the speech engine's results
+  const shown = usePacedWord(word, verse ? `${verse.book}${verse.chapter}:${verse.verse}` : undefined, tokens.length - 1);
   const inPassage = verse && passage && passage.book === verse.book && passage.chapter === verse.chapter;
   const done = tokens.length > 0 && word >= tokens.length - 1;
   const atEnd = inPassage && verse ? verse.verse >= passage.to : true;
@@ -74,7 +77,7 @@ export const ReadingFollower = ({
         {tokens.map((t, i) => (
           <span
             key={i}
-            className={`transition-colors duration-200 ${i <= word ? 'text-foreground' : 'text-muted-foreground/50'} ${i === word ? 'bg-primary/30 rounded px-0.5' : ''}`}
+            className={`transition-colors duration-200 ${i <= shown ? 'text-foreground' : 'text-muted-foreground/50'} ${i === shown ? 'bg-primary/30 rounded px-0.5' : ''}`}
           >
             {t.text}{' '}
           </span>
