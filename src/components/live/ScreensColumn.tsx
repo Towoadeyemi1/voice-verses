@@ -76,12 +76,13 @@ export const ScreensColumn = ({
         type="button"
         onClick={onTake}
         style={{ ['--ratio' as string]: projector.width / projector.height }}
-        className="monitor-fit h-14 flex-shrink-0 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center gap-2.5 text-[17px] font-semibold tracking-[-0.01em] shadow-[0_8px_24px_-10px_hsl(var(--primary))] active:scale-[0.985] transition-transform"
+        // A quiet raised graphite button: colour stays for meaning (red live, green next)
+        className="monitor-fit h-14 flex-shrink-0 rounded-2xl text-foreground flex items-center justify-center gap-2.5 text-[17px] font-semibold tracking-[-0.01em] bg-gradient-to-b from-[hsl(260_7%_21%)] to-[hsl(260_7%_16%)] hover:from-[hsl(260_7%_24%)] hover:to-[hsl(260_7%_19%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.09),0_0_0_1px_rgba(255,255,255,0.06),0_12px_28px_-14px_rgba(0,0,0,0.9)] active:scale-[0.985] transition"
         title="Put Next on the screens (Space)"
       >
-        <ArrowUp className="w-[18px] h-[18px]" strokeWidth={2.4} />
+        <ArrowUp className={`w-[18px] h-[18px] ${next ? 'text-[hsl(var(--next))]' : 'text-muted-foreground'}`} strokeWidth={2.4} />
         Take
-        <kbd className="font-sans text-xs font-semibold px-1.5 py-0.5 rounded-md bg-black/15">Space</kbd>
+        <kbd className="font-sans text-xs font-semibold px-1.5 py-0.5 rounded-md bg-white/[0.07] text-muted-foreground">Space</kbd>
       </button>
 
       <Label tone="next" title="Next" detail={nextLabel} />

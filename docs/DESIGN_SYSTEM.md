@@ -5,7 +5,7 @@
 - A tinted timeline, with only the current part solid.
 - A single status capsule in place of six toolbar buttons.
 - One suggestion at a time.
-- Take in the colour team's colour.
+- Take as a quiet raised graphite button, with a green arrow when Next is ready. The owner rejected it in the team colour (yellow).
 - The other screens shown as chips.
 - The layout follows the window size by itself, with no Laptop or 45″ switch.
 

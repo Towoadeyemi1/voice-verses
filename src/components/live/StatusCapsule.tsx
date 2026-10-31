@@ -65,7 +65,7 @@ export const StatusCapsule = ({
         type="button"
         onClick={onToggleSong}
         aria-pressed={songMode}
-        className={`h-8 px-3 rounded-full text-[13px] font-semibold flex items-center gap-1.5 ${songMode ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+        className={`h-8 px-3 rounded-full text-[13px] font-semibold flex items-center gap-1.5 ${songMode ? 'bg-primary/20 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
         title={songMode ? 'Singing: verses wait until a reference is said. Click to go back to scripture.' : 'Singing now: follow the song and keep verses off the screen'}
       >
         <Music className="w-3.5 h-3.5" />

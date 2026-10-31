@@ -188,7 +188,7 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
 - **Suggestion bar** (`live/SuggestionBar.tsx`): one suggestion at a time, with a confidence ring, "n more", Show now, Use (puts it in Next), and dismiss.
 - **Screens column** (`live/ScreensColumn.tsx`):
   - Live (red frame), with Logo and Clear.
-  - **Take** (Space), in the colour team's colour.
+  - **Take** (Space): a raised graphite button whose arrow turns green when Next is ready.
   - Next (green frame).
   - The stream and stage screens, as chips (below 1900px) or live pictures (1900px and up).
   - Monitors keep the projector's shape and fit the window's height (`.monitor-fit`).
