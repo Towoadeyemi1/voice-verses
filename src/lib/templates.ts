@@ -27,8 +27,12 @@ export interface Template {
   id: string;
   name: string;
   background: {
-    type: 'color' | 'image' | 'video';
+    type: 'color' | 'gradient' | 'image' | 'video';
     color: string;
+    /** Second colour and direction, for a gradient */
+    gradient?: { to: string; angle: number };
+    /** Blurs a picture or video background, in px */
+    blur?: number;
     /** Picture or video from the media library */
     mediaId?: string;
     /** Darkens the picture or video so text stays readable, 0–1 */
@@ -51,6 +55,13 @@ export interface Template {
     shadow: boolean;
     /** Outline width in px, 0 for none */
     outline: number;
+    italic?: boolean;
+    /** Extra space between letters, in px */
+    letterSpacing?: number;
+    /** Colour of ==highlighted== words */
+    highlight?: string;
+    /** Colour of the outline (black when not set) */
+    outlineColor?: string;
   };
   /** The reference ("John 3:16 KJV"), song title or announcement title */
   label: {
@@ -61,6 +72,43 @@ export interface Template {
     includeVersion: boolean;
   };
   logo: { show: boolean; position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'; size: number };
+  /** Extra things on the slide: text boxes, shapes, pictures */
+  layers?: DesignLayer[];
+}
+
+/** An extra element on a slide, placed in % of the screen. */
+export interface DesignLayer {
+  id: string;
+  kind: 'text' | 'shape' | 'image';
+  name?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  rotation?: number;
+  /** Drawn over the main text instead of under it */
+  above?: boolean;
+  // Text boxes (word formatting with **bold**, ==highlight== …)
+  text?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: 400 | 600 | 700 | 800;
+  color?: string;
+  align?: 'left' | 'center' | 'right';
+  italic?: boolean;
+  uppercase?: boolean;
+  shadow?: boolean;
+  // Shapes
+  fill?: string;
+  /** Second colour: the shape is filled with a gradient */
+  fillTo?: string;
+  radius?: number;
+  borderColor?: string;
+  borderWidth?: number;
+  // Pictures from the media library
+  mediaId?: string;
+  fit?: 'cover' | 'contain';
 }
 
 export type Assignments = Record<Output, Record<ContentKind, string>>;

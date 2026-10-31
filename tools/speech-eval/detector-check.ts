@@ -10,6 +10,7 @@ console.warn = () => {};
 import { VerseDetectionController } from '@/speech/VerseDetectionController';
 import { loadScriptureIndex } from '@/speech/scriptureIndex';
 import { plainVerseText } from '@/lib/verseText';
+import { parseRich, wrapSelection } from '@/lib/richText';
 import { BibleParser } from '@/lib/bibleParser';
 import { setApiBibleKey, setChosenApiBibles, versesFromApiBibleJson, versesFromBracketed, versesFromNltHtml } from '@/lib/onlineBibles';
 import { parseSongSelectFile } from '@/lib/songSelectImport';
@@ -334,6 +335,14 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('NKJV from API.Bible: verse, label, one request per chapter', `${verse?.text} | ${BibleParser.getVersionLabel()} | ${asked.length} ${asked[0]}`, 'For God so loved the world that He gave His only begotten Son. | NKJV | 1 https://rest.api.bible/v1/bibles/nkjv-id/chapters/JHN.3 key=church-key');
     globalThis.fetch = realFetch;
     BibleParser.setVersion('kjv');
+  }
+
+  // Word formatting in slide text
+  {
+    const show = (t: string) => parseRich(t).map((r) => `${r.text}${r.bold ? '[b]' : ''}${r.italic ? '[i]' : ''}${r.underline ? '[u]' : ''}${r.highlight ? '[h]' : ''}${r.color ? `[${r.color}]` : ''}`).join('|');
+    check('bold, italic, highlight, colour', show('Amazing **grace**, how *sweet* the ==sound== [#ff0000]Jesus[/]'), 'Amazing |grace[b]|, how |sweet[i]| the |sound[h]| |Jesus[#ff0000]');
+    check('a lone star or price stays as typed', show('Tickets 5*2 = £10'), 'Tickets 5*2 = £10');
+    check('wrapping selected words', wrapSelection('he is risen', 6, 11, '**').value, 'he is **risen**');
   }
 
   if (failures) {
