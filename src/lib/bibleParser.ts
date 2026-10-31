@@ -437,6 +437,13 @@ export class BibleParser {
     return books.map(b => b.name);
   }
 
+  /** How many verses a chapter has (from the KJV, which every translation here follows). */
+  static async getChapterLength(bookName: string, chapterNum: number): Promise<number> {
+    const books = await loadOfflineBible('kjv');
+    const book = books.find((b) => b.name.toLowerCase() === bookName.toLowerCase());
+    return book?.chapters[chapterNum - 1]?.length ?? 0;
+  }
+
   static async getBookChapterCount(bookName: string): Promise<number> {
     const books = await getBibleData();
     const book = books.find(b => b.name.toLowerCase() === bookName.toLowerCase());

@@ -195,6 +195,7 @@ export interface ExtractedReference {
   chapter: number;
   startVerse: number;
   endVerse?: number;     // For ranges
+  wholeChapter?: boolean; // "John 5": the whole chapter, from verse 1
   raw: string;           // Original matched text
   confidence: 'high' | 'medium' | 'low';
   index?: number;        // Position in the normalized text, for spoken order
@@ -364,10 +365,13 @@ export function extractReferences(text: string): ExtractedReference[] {
       );
       
       if (!isDuplicate) {
+        // "John 5 from verse 8": the chapter from that verse on
+        const from = /^\s*,?\s*(?:starting\s+)?(?:from|at)\s+(?:verses?\s+|:\s*)(\d+)\b/i.exec(normalized.slice(match.index + match[0].length));
         references.push({
           book,
           chapter: parseInt(match[2], 10),
-          startVerse: 1,  // Default to verse 1 for chapter references
+          startVerse: from ? parseInt(from[1], 10) : 1,  // Default to verse 1 for chapter references
+          wholeChapter: true,
           raw: match[0],
           confidence: 'low',
           index: match.index,

@@ -30,6 +30,14 @@ import { desktop } from '@/lib/desktop';
 import { verseAssistantOptions } from '@/ai/detectionOptions';
 import { appUrl } from '@/lib/appUrl';
 import { sendVerseToProPresenter } from '@/lib/proPresenter';
+import { BibleParser } from '@/lib/bibleParser';
+import { ServiceStorage } from '@/lib/serviceStorage';
+import { buildSongSlides, ccliLicence } from '@/lib/songs';
+import { LyricsSlide, MediaItem } from '@/types/service';
+import type { Passage } from '@/speech/VerseDetectionController';
+import { LiveSuggestions, Suggestion } from './LiveSuggestions';
+import { SongFollowPanel } from './SongFollowPanel';
+import { PassageBar } from './PassageBar';
 
 interface ControlPanelProps {
   showDisplayMonitor?: boolean;
@@ -56,6 +64,109 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
 
   const speechProvider = useRef<ISpeechProvider | null>(null);
   const verseController = useRef<VerseDetectionController | null>(null);
+  const [suggestions, setSuggestions] = useState<(Suggestion & { at: number })[]>([]);
+  const [songMode, setSongMode] = useState(false);
+  const [passage, setPassage] = useState<Passage | null>(null);
+  const [liveSong, setLiveSong] = useState<{ title: string; slides: LyricsSlide[]; index: number } | null>(null);
+  const [followSinging, setFollowSinging] = useState(true);
+  const songLibrary = useRef<MediaItem[]>([]);
+  // The controller's callbacks are made once per listening session: they read these
+  const liveSongRef = useRef(liveSong);
+  liveSongRef.current = liveSong;
+  const followSingingRef = useRef(followSinging);
+  followSingingRef.current = followSinging;
+
+  const addSuggestion = (suggestion: Suggestion) =>
+    setSuggestions((prev) => {
+      const now = Date.now();
+      const same = (s: Suggestion) =>
+        s.kind === suggestion.kind &&
+        (s.kind === 'song' ? s.songId === (suggestion as typeof s).songId : `${s.verse.book}${s.verse.chapter}:${s.verse.verse}` === `${(suggestion as typeof s).verse.book}${(suggestion as typeof s).verse.chapter}:${(suggestion as typeof s).verse.verse}`);
+      return [{ ...suggestion, at: now }, ...prev.filter((s) => !same(s) && now - s.at < 90_000)].slice(0, 3);
+    });
+  const dismissSuggestion = (suggestion: Suggestion) => setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
+
+  /** Puts slide `index` of the song on screen. */
+  const broadcastSongSlide = (slides: LyricsSlide[], index: number) => {
+    syncService.broadcast({
+      type: 'SLIDE_UPDATE',
+      data: { slide: slides[index], index, slideIndex: index, upcoming: slides.slice(index + 1, index + 4), timestamp: new Date() },
+    });
+  };
+
+  const showSongSlide = (index: number) => {
+    const song = liveSongRef.current;
+    if (!song || !song.slides[index]) return;
+    setLiveSong({ ...song, index });
+    broadcastSongSlide(song.slides, index);
+    verseController.current?.setLiveLyrics(song.slides.map((s) => s.content), index);
+  };
+
+  /** A library song on screen, from the slide with the words heard; singing then moves it on. */
+  const showSong = async (songId: string, heard: string) => {
+    const items = songLibrary.current.length ? songLibrary.current : await ServiceStorage.getMedia();
+    const item = items.find((m) => m.id === songId);
+    if (!item) return;
+    const slides = buildSongSlides(
+      { title: item.name, lyrics: item.lyrics ?? '', author: item.author, copyright: item.copyright, ccliNumber: item.ccliNumber, arrangement: item.arrangement },
+      { linesPerSlide: 2, licence: ccliLicence() },
+    );
+    if (!slides.length) return;
+    const index = Math.max(0, slides.findIndex((s) => heard && s.content.includes(heard)));
+    setLiveSong({ title: item.name, slides, index });
+    broadcastSongSlide(slides, index);
+    verseController.current?.setSongMode(true);
+    verseController.current?.setLiveLyrics(slides.map((s) => s.content), index);
+  };
+
+  const closeSong = () => {
+    setLiveSong(null);
+    verseController.current?.setLiveLyrics(null);
+    syncService.broadcast({ type: 'SLIDE_UPDATE', data: { slide: null, index: -1, slideIndex: -1, upcoming: [], timestamp: new Date() } });
+  };
+
+  const showSuggestion = (s: Suggestion) => {
+    dismissSuggestion(s);
+    if (s.kind === 'song') showSong(s.songId, s.heard);
+    else handleManualVerseSelect(s.verse);
+  };
+
+  const toggleSongMode = () => {
+    const next = !songMode;
+    if (verseController.current) verseController.current.setSongMode(next);
+    else setSongMode(next);
+  };
+
+  /** Previous / next verse (through the passage, or on through the chapter), or slide while a song is up. */
+  const step = async (direction: 1 | -1) => {
+    const song = liveSongRef.current;
+    if (song) {
+      showSongSlide(Math.min(song.slides.length - 1, Math.max(0, song.index + direction)));
+      return;
+    }
+    if (verseController.current) {
+      await verseController.current.step(direction);
+    } else if (currentVerse) {
+      const verse = await BibleParser.getVerse(currentVerse.book, currentVerse.chapter, currentVerse.verse + direction);
+      if (verse) handleVerseDetected(verse, { method: 'manual' });
+    }
+  };
+  const stepRef = useRef(step);
+  stepRef.current = step;
+
+  // ← → step through verses (or song slides) when not typing
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+      if (e.key === 'ArrowRight') stepRef.current(1);
+      else if (e.key === 'ArrowLeft') stepRef.current(-1);
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // Listen for API fallback events
   useEffect(() => {
@@ -125,8 +236,30 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
         onTranscriptUpdate: (text) => {
           setTranscript(text);
         },
-        ...verseAssistantOptions((verse) => verseController.current?.triggerManualVerse(verse)),
+        onPassageChange: setPassage,
+        onSongModeChange: setSongMode,
+        onSongSuggested: (match) => {
+          if (liveSongRef.current?.title === match.song.title) return;
+          addSuggestion({ id: `song-${match.song.id}-${Date.now()}`, kind: 'song', songId: match.song.id, title: match.song.title, heard: match.heard });
+        },
+        onLyricsMove: (index) => {
+          if (followSingingRef.current) showSongSlide(index);
+        },
+        ...verseAssistantOptions(
+          (verse) => verseController.current?.triggerManualVerse(verse),
+          (verse, info) =>
+            addSuggestion({ id: `verse-${Date.now()}`, kind: 'verse', verse, byAi: info.engine === 'ai', heard: info.description }),
+        ),
       });
+      verseController.current.setSongMode(songMode);
+
+      // The church's songs, so a song being sung can be recognised
+      ServiceStorage.getMedia()
+        .then((items) => {
+          songLibrary.current = items.filter((m) => m.type === 'song' && m.lyrics);
+          verseController.current?.setSongLibrary(songLibrary.current.map((m) => ({ id: m.id, title: m.name, lyrics: m.lyrics ?? '' })));
+        })
+        .catch(() => {});
 
       // Load speech settings and create provider
       const settings = loadSpeechSettings();
@@ -177,6 +310,12 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     };
 
     setCurrentVerse(displayedVerse);
+    // A verse replaces a song on screen
+    if (liveSongRef.current) {
+      setLiveSong(null);
+      verseController.current?.setLiveLyrics(null);
+    }
+    setSuggestions((prev) => prev.filter((s) => s.kind !== 'verse' || `${s.verse.book}${s.verse.chapter}:${s.verse.verse}` !== `${verse.book}${verse.chapter}:${verse.verse}`));
     // Shown again: moves to the top rather than appearing twice
     setRecentVerses(prev => [
       displayedVerse,
@@ -192,17 +331,7 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
       },
     });
     sendVerseToProPresenter(verse);
-
-    toast.success('Verse found!', {
-      description: `${verse.book} ${verse.chapter}:${verse.verse}`,
-    });
-
-    if (detectionInfo?.method === 'description') {
-      toast.info('Detected from description', {
-        description: `${detectionInfo.description} (${detectionInfo.confidence} confidence)`,
-        duration: 3000,
-      });
-    }
+    void detectionInfo;
   };
 
   const handleApiKeyDialogClose = (saved: boolean) => {
@@ -225,6 +354,8 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     
     setAudioStatus(prev => ({ ...prev, isListening: false, status: 'idle', volume: 0 }));
     setIsMicMuted(false);
+    setSuggestions([]);
+    setPassage(null);
     desktop?.setListening(false);
     toast.info('Listening stopped');
   };
@@ -249,7 +380,7 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
 
   return (
     <div className="min-h-screen bg-background p-2 sm:p-4 lg:p-6">
-      <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
+      <div className="max-w-[1800px] mx-auto space-y-3 sm:space-y-4 lg:space-y-6">
         <PageHeader
           title="Voice Verses"
           description="Scripture on screen as it is preached"
@@ -270,9 +401,9 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
         )}
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
           {/* Left Column */}
-          <div className="lg:col-span-2 space-y-3 sm:space-y-4 lg:space-y-6">
+          <div className="lg:col-span-2 2xl:col-span-3 min-w-0 space-y-3 sm:space-y-4 lg:space-y-6">
             <ManualSearch onVerseSelect={handleManualVerseSelect} />
 
             <AudioVisualizer
@@ -287,12 +418,34 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
               highlightedText={currentVerse ? `${currentVerse.book} ${currentVerse.chapter}` : undefined}
               isListening={audioStatus.isListening}
               onStop={handleStopListening}
-            />
+              songMode={songMode}
+              onToggleSongMode={toggleSongMode}
+            >
+              <LiveSuggestions suggestions={suggestions} onShow={showSuggestion} onDismiss={dismissSuggestion} />
+            </TranscriptWindow>
 
-            <VerseDisplay
-              verse={currentVerse}
-              timestamp={currentVerse?.timestamp}
-            />
+            {liveSong && (
+              <SongFollowPanel
+                title={liveSong.title}
+                slides={liveSong.slides}
+                index={liveSong.index}
+                follow={followSinging}
+                onFollowChange={setFollowSinging}
+                onSelect={showSongSlide}
+                onClose={closeSong}
+              />
+            )}
+
+            {!liveSong && currentVerse && (
+              <PassageBar verse={currentVerse} passage={passage} onStep={step} onEnd={() => verseController.current?.endPassage()} />
+            )}
+
+            {!liveSong && (
+              <VerseDisplay
+                verse={currentVerse}
+                timestamp={currentVerse?.timestamp}
+              />
+            )}
 
             {/* Control Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -321,7 +474,7 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="space-y-3 sm:space-y-4 lg:w-full xl:w-auto 2xl:min-w-[700px]">
+          <div className="2xl:col-span-2 min-w-0 space-y-3 sm:space-y-4">
             {/* Display Monitor Section */}
             {showDisplayMonitor && (
               <Card className="p-3 sm:p-4 lg:p-5 animate-fade-in">
