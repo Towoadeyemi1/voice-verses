@@ -19,6 +19,7 @@ import { loadSendMode, saveSendMode, SendMode } from '@/lib/sendMode';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { useLive } from '@/hooks/use-live';
 import { useCountdown } from '@/hooks/use-countdown';
+import { usePreviewStage } from '@/hooks/use-screen-shape';
 import { verseAssistantOptions } from '@/ai/detectionOptions';
 import {
   createSpeechProvider,
@@ -87,6 +88,7 @@ async function chapterVerses(book: string, chapter: number): Promise<BibleVerse[
 export const LiveWorkspace = () => {
   const navigate = useNavigate();
   const { live, logo } = useLive();
+  const streamStage = usePreviewStage('stream');
   const { countdown, remaining } = useCountdown();
 
   const [sendMode, setSendModeState] = useState<SendMode>(loadSendMode);
@@ -540,7 +542,7 @@ export const LiveWorkspace = () => {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Lower third</p>
-                <ScaledStage className="aspect-video rounded border border-border/50">
+                <ScaledStage stage={streamStage} fitShape className="rounded border border-border/50">
                   <OutputContent live={logo !== null ? null : live} output="stream" countdown={countdown} remaining={remaining} />
                 </ScaledStage>
               </div>

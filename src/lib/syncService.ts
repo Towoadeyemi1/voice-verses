@@ -4,6 +4,8 @@ import type { Countdown } from '@/lib/countdown';
 import { isNetworkViewer, NetworkSnapshot } from '@/lib/networkView';
 import { saveAssignments, saveTemplates } from '@/lib/templates';
 import { BibleParser } from '@/lib/bibleParser';
+import { loadTeams, saveTeams, setActiveTeam, setTeamsFollowMonths, teamsFollowMonths } from '@/lib/colorTeams';
+import { loadShapes, saveShapes } from '@/lib/screenShapes';
 
 export type SyncMessage = {
   type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE' | 'LOGO' | 'COUNTDOWN';
@@ -111,6 +113,13 @@ class SyncService {
         if (state.logo) localStorage.setItem('global-service-logo', state.logo);
         else localStorage.removeItem('global-service-logo');
         localStorage.setItem('cornerstone-bible-version', state.bibleVersion);
+        const team = state.colorTeam;
+        if (team && JSON.stringify(loadTeams()) !== JSON.stringify([team])) {
+          saveTeams([team]);
+          setActiveTeam(team.id);
+        }
+        if (team && teamsFollowMonths()) setTeamsFollowMonths(false);
+        if (state.shapes && JSON.stringify(loadShapes()) !== JSON.stringify(state.shapes)) saveShapes(state.shapes);
         window.dispatchEvent(new StorageEvent('storage'));
       } catch {
         // Storage full: keep showing with what is there

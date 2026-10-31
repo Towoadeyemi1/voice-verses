@@ -5,6 +5,8 @@ import { withTeamColors } from '@/lib/colorTeams';
 import { useColorTeam } from '@/hooks/use-color-team';
 import { useLogo, useMediaUrl } from '@/hooks/use-templates';
 import { FitText } from './FitText';
+import { useStageSize } from './ScaledStage';
+import { STANDARD_WIDTH } from '@/lib/screenShapes';
 
 export interface RenderContent {
   /** The main text (verse, lyrics lines, announcement) */
@@ -34,7 +36,10 @@ const hexToRgba = (hex: string, alpha: number) => {
 };
 
 /**
- * Draws content in a template on a 1920×1080 canvas (wrap it in ScaledStage).
+ * Draws content in a template on the stage canvas (wrap it in ScaledStage):
+ * 1920×1080, or wider for an ultrawide screen. On a wide screen the design
+ * spreads across it, or stays in the middle 16:9 with the background filling
+ * the rest, as set for that screen.
  * The projector, the lower third and every preview use this, so what the
  * operator sees is what the room sees.
  */
@@ -56,6 +61,8 @@ export const TemplateRenderer = ({
   const { background, area, panel, text, label, logo } = template;
   const mediaSrc = useMediaUrl(background.type === 'color' ? undefined : background.mediaId);
   const logoUrl = useLogo();
+  const stage = useStageSize();
+  const middle = stage.layout === 'middle' && stage.width > STANDARD_WIDTH;
 
   const backgroundUrl = transparent ? undefined : overrides?.backgroundUrl ?? mediaSrc;
   const blur = background.blur ? `blur(${background.blur}px)` : undefined;
@@ -111,7 +118,7 @@ export const TemplateRenderer = ({
   };
 
   return (
-    <div className="relative overflow-hidden" style={{ width: 1920, height: 1080, backgroundColor: transparent ? 'transparent' : background.color, backgroundImage: fill }}>
+    <div className="relative overflow-hidden" style={{ width: stage.width, height: stage.height, backgroundColor: transparent ? 'transparent' : background.color, backgroundImage: fill }}>
       {backgroundUrl &&
         (isVideo ? (
           <video src={backgroundUrl} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ filter: blur, transform: blur ? 'scale(1.06)' : undefined }} />
@@ -120,62 +127,66 @@ export const TemplateRenderer = ({
         ))}
       {backgroundUrl && dim > 0 && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${dim})` }} />}
 
-      {!transparent && (template.layers ?? []).filter((l) => !l.above).map((l) => <Layer key={l.id} layer={l} />)}
+      {/* Everything but the background: across the whole screen, or in its middle 16:9 */}
+      <div className="absolute top-0 bottom-0" style={middle ? { left: (stage.width - STANDARD_WIDTH) / 2, width: STANDARD_WIDTH } : { left: 0, right: 0 }}>
+        {!transparent && (template.layers ?? []).filter((l) => !l.above).map((l) => <Layer key={l.id} layer={l} />)}
 
-      {logo.show && logoUrl && (
-        <img
-          src={logoUrl}
-          alt=""
-          className="absolute object-contain"
-          style={{ ...logoCorner[logo.position], width: `${logo.size}%`, maxHeight: `${logo.size * 1.78}%` }}
-        />
-      )}
+        {logo.show && logoUrl && (
+          <img
+            src={logoUrl}
+            alt=""
+            className="absolute object-contain"
+            // Sized against the height, so a wide screen does not make it bigger
+            style={{ ...logoCorner[logo.position], width: (logo.size / 100) * STANDARD_WIDTH, maxHeight: `${logo.size * 1.78}%` }}
+          />
+        )}
 
-      {content?.footer && (
-        <div
-          className="absolute"
-          style={{ left: 48, right: 48, bottom: 24, fontFamily: text.fontFamily, fontSize: 22, color: text.color, opacity: 0.75, textAlign: 'center', textShadow: textStyle.textShadow }}
-        >
-          {content.footer}
-        </div>
-      )}
-
-      {content && (
-        <div
-          className="absolute flex flex-col"
-          style={{
-            left: `${area.x}%`,
-            top: `${area.y}%`,
-            width: `${area.width}%`,
-            height: `${area.height}%`,
-            justifyContent:
-              text.verticalAlign === 'top' ? 'flex-start' : text.verticalAlign === 'bottom' ? 'flex-end' : 'center',
-          }}
-        >
+        {content?.footer && (
           <div
-            key={content.key}
-            className="flex flex-col min-h-0 max-h-full animate-fade-in"
-            style={
-              panel.show
-                ? { backgroundColor: hexToRgba(panel.color, panel.opacity), borderRadius: panel.radius, padding: '28px 40px' }
-                : undefined
-            }
+            className="absolute"
+            style={{ left: 48, right: 48, bottom: 24, fontFamily: text.fontFamily, fontSize: 22, color: text.color, opacity: 0.75, textAlign: 'center', textShadow: textStyle.textShadow }}
           >
-            {label.position === 'above' && labelEl}
-            <FitText
-              maxFontSize={text.fontSize * (overrides?.scale ?? 1)}
-              minFontSize={16}
-              verticalAlign={text.verticalAlign}
-              style={textStyle}
-            >
-              {typeof content.body === 'string' ? <RichText text={content.body} highlight={text.highlight} /> : content.body}
-            </FitText>
-            {label.position === 'below' && labelEl}
+            {content.footer}
           </div>
-        </div>
-      )}
+        )}
 
-      {!transparent && (template.layers ?? []).filter((l) => l.above).map((l) => <Layer key={l.id} layer={l} />)}
+        {content && (
+          <div
+            className="absolute flex flex-col"
+            style={{
+              left: `${area.x}%`,
+              top: `${area.y}%`,
+              width: `${area.width}%`,
+              height: `${area.height}%`,
+              justifyContent:
+                text.verticalAlign === 'top' ? 'flex-start' : text.verticalAlign === 'bottom' ? 'flex-end' : 'center',
+            }}
+          >
+            <div
+              key={content.key}
+              className="flex flex-col min-h-0 max-h-full animate-fade-in"
+              style={
+                panel.show
+                  ? { backgroundColor: hexToRgba(panel.color, panel.opacity), borderRadius: panel.radius, padding: '28px 40px' }
+                  : undefined
+              }
+            >
+              {label.position === 'above' && labelEl}
+              <FitText
+                maxFontSize={text.fontSize * (overrides?.scale ?? 1)}
+                minFontSize={16}
+                verticalAlign={text.verticalAlign}
+                style={textStyle}
+              >
+                {typeof content.body === 'string' ? <RichText text={content.body} highlight={text.highlight} /> : content.body}
+              </FitText>
+              {label.position === 'below' && labelEl}
+            </div>
+          </div>
+        )}
+
+        {!transparent && (template.layers ?? []).filter((l) => l.above).map((l) => <Layer key={l.id} layer={l} />)}
+      </div>
     </div>
   );
 };

@@ -21,6 +21,8 @@ import { DesignLayer, FONTS, Template } from '@/lib/templates';
 import { wrapSelection } from '@/lib/richText';
 import { TEAM_COLORS, teamColor } from '@/lib/colorTeams';
 import { useColorTeam } from '@/hooks/use-color-team';
+import { usePreviewStage } from '@/hooks/use-screen-shape';
+import { describeShape, shapeOf, STANDARD_STAGE, StageSize } from '@/lib/screenShapes';
 
 type Selection = 'background' | 'text' | 'label' | 'logo' | string;
 type Box = { x: number; y: number; width: number; height: number };
@@ -246,6 +248,15 @@ export const SlideDesigner = ({
   const history = useRef<{ past: Template[]; future: Template[] }>({ past: [], future: [] });
   const canvas = useRef<HTMLDivElement>(null);
   const layers = template.layers ?? [];
+  // Wide screens set to spread the design: preview (and edit) the look in that shape too
+  const projectorStage = usePreviewStage('projection');
+  const streamStage = usePreviewStage('stream');
+  const wideShapes: { value: string; label: string; stage: StageSize }[] = [
+    { value: 'projection', label: `Projector ${describeShape(shapeOf('projection'), 'projection')}`, stage: projectorStage },
+    { value: 'stream', label: `Lower third ${describeShape(shapeOf('stream'), 'stream')}`, stage: streamStage },
+  ].filter((o) => o.stage.width !== STANDARD_STAGE.width && o.stage.layout === 'spread');
+  const [shapeChoice, setShapeChoice] = useState('16:9');
+  const stage = wideShapes.find((o) => o.value === shapeChoice)?.stage ?? STANDARD_STAGE;
 
   const commit = (next: Template, record = true) => {
     if (record) {
@@ -431,13 +442,16 @@ export const SlideDesigner = ({
       <div className="space-y-2.5 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <Segmented value={sample} onChange={onSample} options={samples.map((s) => ({ value: s.id, label: s.label }))} />
+          {wideShapes.length > 0 && (
+            <Segmented value={wideShapes.some((o) => o.value === shapeChoice) ? shapeChoice : '16:9'} onChange={(v) => setShapeChoice(String(v))} options={[{ value: '16:9', label: '16:9' }, ...wideShapes.map((o) => ({ value: o.value, label: o.label }))]} />
+          )}
           <div className="ml-auto flex gap-1">
             <Button type="button" size="sm" variant="outline" className="h-8 w-8 p-0" title="Undo (Ctrl+Z)" onClick={undo}><Undo2 className="w-4 h-4" /></Button>
             <Button type="button" size="sm" variant="outline" className="h-8 w-8 p-0" title="Redo (Ctrl+Shift+Z)" onClick={redo}><Redo2 className="w-4 h-4" /></Button>
           </div>
         </div>
-        <div ref={canvas} className="relative aspect-video rounded-xl overflow-hidden shadow-lg ring-1 ring-border select-none" onPointerDown={() => setSelected('background')}>
-          <ScaledStage className="absolute inset-0 bg-black">
+        <div ref={canvas} className="relative rounded-xl overflow-hidden shadow-lg ring-1 ring-border select-none" style={{ aspectRatio: `${stage.width} / ${stage.height}` }} onPointerDown={() => setSelected('background')}>
+          <ScaledStage stage={stage} className="absolute inset-0 bg-black">
             <TemplateRenderer template={template} content={content} />
           </ScaledStage>
           {/* What can be moved: the text box and anything added */}

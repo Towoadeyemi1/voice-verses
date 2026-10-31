@@ -2,8 +2,9 @@ import { ReactNode } from 'react';
 import { ScaledStage } from '../ScaledStage';
 import { OutputContent, Live } from '../OutputContent';
 import { Countdown } from '@/lib/countdown';
+import { usePreviewStage } from '@/hooks/use-screen-shape';
 
-/** A 16:9 screen drawn by the projector's own renderer, labelled Preview or Live. */
+/** The projector, drawn by its own renderer in its own shape, labelled Preview or Live. */
 export const ScreenView = ({
   label,
   tone,
@@ -27,6 +28,7 @@ export const ScreenView = ({
   /** 0–1: how far the reading of the verse on screen has got */
   progress?: number;
 }) => {
+  const stage = usePreviewStage('projection');
   const ring = tone === 'live' ? 'ring-red-500/80' : 'ring-emerald-500/80';
   const badge = tone === 'live' ? 'bg-red-600' : 'bg-emerald-600';
   return (
@@ -37,9 +39,9 @@ export const ScreenView = ({
         {actions}
       </div>
       <div className={`relative rounded-md ring-2 ${ring} overflow-hidden`}>
-        <ScaledStage className="aspect-video bg-black">
+        <ScaledStage stage={stage} fitShape className="bg-black">
           {logo !== undefined && logo !== null ? (
-            <div className="h-full flex items-center justify-center" style={{ width: 1920, height: 1080 }}>
+            <div className="h-full flex items-center justify-center" style={{ width: stage.width, height: stage.height }}>
               {logo && <img src={logo} alt="Logo" className="max-w-[80%] max-h-[80%] object-contain" />}
             </div>
           ) : (

@@ -9,6 +9,7 @@ import { SlideDisplay } from './SlideDisplay';
 import { VerseText } from './VerseText';
 import { VideoPlayer } from './VideoPlayer';
 import { Countdown, formatRemaining } from '@/lib/countdown';
+import { useStageSize } from './ScaledStage';
 
 const SIZE_SCALE = { small: 0.7, medium: 0.85, large: 1, xlarge: 1.15 } as const;
 
@@ -52,7 +53,7 @@ const countdownContent = (countdown: Countdown, remaining: number): RenderConten
 /**
  * The content of one output in the template assigned to it, with a running
  * countdown if it is shown there. Pictures and other slide types are drawn as
- * they are. Lays out at 1920×1080: wrap in ScaledStage.
+ * they are. Lays out on the stage canvas: wrap in ScaledStage.
  */
 export const OutputContent = ({
   live,
@@ -74,6 +75,7 @@ export const OutputContent = ({
   transparent?: boolean;
 }) => {
   const { templates, assignments } = useTemplates();
+  const { width, height } = useStageSize();
 
   // A countdown can take over the screen (before the service, or on the stream)
   const countdownTakesOver = countdown && (output === 'projection' ? countdown.projector === 'full' : countdown.stream);
@@ -97,7 +99,7 @@ export const OutputContent = ({
     // Video slides play full screen on the projector (with their sound there only)
     screen =
       output === 'projection' ? (
-        <div style={{ width: 1920, height: 1080 }} className="bg-black">
+        <div style={{ width, height }} className="bg-black">
           <VideoPlayer mediaId={live.slide.mediaId} loop={live.slide.loop} sound={live.slide.sound && !preview} className="w-full h-full" />
         </div>
       ) : (
@@ -107,7 +109,7 @@ export const OutputContent = ({
     // Picture slides fill the screen as they are
     screen =
       output === 'projection' ? (
-        <div style={{ width: 1920, height: 1080 }} className="bg-black">
+        <div style={{ width, height }} className="bg-black">
           <SlideDisplay slide={live.slide} className="h-full w-full" />
         </div>
       ) : (
@@ -119,7 +121,7 @@ export const OutputContent = ({
   }
 
   return corner ? (
-    <div className="relative" style={{ width: 1920, height: 1080 }}>
+    <div className="relative" style={{ width, height }}>
       {screen}
       {corner}
     </div>
