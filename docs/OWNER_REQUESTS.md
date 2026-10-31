@@ -97,6 +97,10 @@ All promised, none built yet. Do them in this order after design 4:
 
 No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): beautiful backgrounds and transitions first, then layers, messages, timers and stage layouts, then imports, then phones, captions and sermon recaps, then control and broadcast, then team features. ⏳
 
+## "Is that all the features? …come up with more ingenious features that other presentation apps have not even thought of, but it's a game changer."
+
+💬 Answered with 14 signature features that only an app that listens can do, in [`ROADMAP.md`](ROADMAP.md) → "Signature features". Recommended first, all offline: moment autopilot (prayer, offering, altar call recognised from speech), worship leader voice cues ("one more time", "go to the bridge") and sermon points on cue ("point number two…"). ⏳ waiting on the owner to choose the order
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

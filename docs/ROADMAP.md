@@ -45,6 +45,52 @@ These are what would make it the best, not just equal.
 8. **The preacher's outline, live**: sermon notes on the stage monitor that move along as they preach, and points shown on screen when they are reached.
 9. **Accessibility**: large print on phones, high-contrast stage layouts, and screen-reader support for operators.
 
+## Signature features: things no presentation app does yet
+
+The owner asked: "You cannot think deeply and come up with more ingenious features that other presentation apps have not even thought of, but it's a game changer?"
+
+Every other presentation app is a remote control: it does only what the operator presses. Voice Verses hears the room. That changes the question from "what can the operator do?" to "what can the app understand and get ready before anyone presses anything?" None of the presentation apps we know of (ProPresenter, EasyWorship, MediaShout, FreeShow, OpenLP, Proclaim) does any of the following, because none of them listens.
+
+The rule from `CLAUDE.md` still holds for all of them: **never act confidently on a guess.** Anything below 99% sure becomes a suggestion the operator takes with one key.
+
+### A. The service runs itself, and the operator stays in charge
+
+1. **Moment autopilot.** The app recognises moments from what is said: "let us pray", "would you please stand", "turn to your neighbour", "as the ushers come forward" (offering), "every head bowed, every eye closed" (altar call), "a few announcements". It moves the order of service to that part and switches to the right look, for example a calm, dim look for prayer, the giving details for the offering and a quiet background for the altar call. *Offline: a phrase list plus the timeline.* **Build first.**
+2. **Worship leader voice cues.** "One more time", "sing that again", "go to the bridge", "back to the chorus", "everybody sing", "last time": the slides jump or repeat by themselves, so the operator is never a line behind. *Offline: the song follower already knows the sections.* **Build first.**
+3. **Spontaneous worship, captured.** When the leader sings something that isn't in the library, the app writes the words as lyric slides on the fly and saves them as a draft song for next week. *Offline: on-device speech.*
+4. **Predictive Next.** The verse most likely to come next is already waiting in Next before it is said: from the pastor's outline, the passage being read, and cross-references (the public-domain Treasury of Scripture Knowledge). When the preacher says "and Paul says the same thing in Romans…", Romans 8:28 is already one key away. *Offline.*
+5. **Second service on autopilot.** The app remembers what was shown in the first service and when. In the second service it has every cue armed and follows the same preacher with much more confidence. *Offline.*
+6. **A safety net that never sleeps (Guardian).**
+   - It warns when the microphone goes silent or a screen is unplugged, and moves the output to another screen.
+   - If the operator is called away, it can take over the obvious moves (next verse, next line) until they are back.
+   - A readability guard catches text that is too small, too long or too low in contrast for the room, and fixes it before it goes out.
+   *Offline.*
+
+### B. The sermon comes alive on screen
+
+7. **Sermon points on cue.** "Point number two…", "write this down…", "say this with me…": the app makes a styled point or quote slide from the preacher's own words, in the current colour team, ready to take. *Offline, with optional AI for tidier wording.* **Build first.**
+8. **Bible atlas, people and word studies on cue.**
+   - A place is mentioned (the pool of Bethesda, Capernaum, the road to Emmaus): a map appears in Next.
+   - "The Greek word *agape*…": a word card with the original word, its meaning and where else it appears (Strong's, public domain).
+   - A person (Abraham, David, Ruth): a family tree or timeline card.
+   *Offline datasets that are free to bundle.*
+9. **The preacher's pace coach.** The stage monitor shows where the preacher is in their outline, worked out from what they have said, and the time they will probably finish ("Point 3 of 4 · on track to finish 12:14"). Nobody has to wave from the back. *Offline.*
+10. **Interpreted services.** For a preacher and an interpreter taking turns in two languages: the app follows both, shows the verse side by side in both languages, never shows it twice, and does the same for song words. *Offline for the languages the speech engine knows.*
+
+### C. Beyond the walls
+
+11. **Everyone's own Bible, on their phone.** Each person scans a QR code once and sees the verse in their own translation and language, in large print if they want it. They can highlight it and keep it in "My service notes", then get the recap afterwards. *Works on the church Wi-Fi with no internet.*
+12. **Overlays timed to the stream.** Online viewers see the verse arrive with the preacher's words, not 20 seconds early, because the overlay is delayed to match the stream. Several campuses can follow one preacher's verses live.
+13. **The black box.** A record of everything shown, when and why (said outright, followed, suggested and taken), which also feeds the CCLI report, the sermon recap and a "what went wrong at 11:42?" review.
+
+### D. Training and trust
+
+14. **A flight simulator for volunteers.** Play a recorded sermon or worship set and practise running it. The app scores how quickly and accurately each cue was taken and shows what it would have done. New volunteers can train at home on Tuesday instead of learning live on Sunday. *Offline.*
+
+### What to build first
+
+The three marked **Build first** (moment autopilot, worship voice cues and sermon points on cue) use the listening that already exists, work fully offline, and are what a volunteer would notice in the first five minutes of a service. They can ship together as one release, before or alongside Phase 1 below.
+
 ## Plan (each phase ships as releases; record each in OWNER_REQUESTS.md)
 
 **Phase 1: make it beautiful and smooth (1.5.x)**
