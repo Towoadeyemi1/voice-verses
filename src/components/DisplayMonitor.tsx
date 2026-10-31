@@ -2,10 +2,9 @@ import { ReactNode } from 'react';
 import { Monitor, MonitorPlay, TvMinimalPlay } from 'lucide-react';
 import { ScaledStage } from './ScaledStage';
 import { OutputContent } from './OutputContent';
-import { SlideDisplay } from './SlideDisplay';
+import { ConfidenceScreen, loadConfidenceSettings } from './ConfidenceScreen';
 import { useLive } from '@/hooks/use-live';
 import { useCountdown } from '@/hooks/use-countdown';
-import { verseReference } from '@/lib/verseText';
 
 const Preview = ({ icon, label, note, children }: { icon: ReactNode; label: string; note: string; children: ReactNode }) => (
   <div className="space-y-1.5">
@@ -44,16 +43,8 @@ export const DisplayMonitor = () => {
       </Preview>
 
       <Preview icon={<Monitor className="w-3.5 h-3.5 text-primary" />} label="Confidence" note="Stage">
-        <ScaledStage className="aspect-video bg-background rounded-md border border-border/50">
-          <div style={{ width: 1920, height: 1080 }} className="flex items-center justify-center">
-            {live && 'slide' in live ? (
-              <SlideDisplay slide={live.slide} className="h-full w-full" />
-            ) : live && 'verse' in live ? (
-              <p className="text-8xl font-bold text-primary">{verseReference(live.verse)}</p>
-            ) : (
-              <Monitor className="w-40 h-40 text-muted-foreground" />
-            )}
-          </div>
+        <ScaledStage className="aspect-video bg-black rounded-md border border-border/50">
+          <ConfidenceScreen settings={loadConfidenceSettings()} style={{ width: 1920, height: 1080 }} />
         </ScaledStage>
       </Preview>
     </div>

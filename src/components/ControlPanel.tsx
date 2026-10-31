@@ -177,7 +177,11 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
     };
 
     setCurrentVerse(displayedVerse);
-    setRecentVerses(prev => [displayedVerse, ...prev].slice(0, 5));
+    // Shown again: moves to the top rather than appearing twice
+    setRecentVerses(prev => [
+      displayedVerse,
+      ...prev.filter(v => !(v.book === verse.book && v.chapter === verse.chapter && v.verse === verse.verse)),
+    ].slice(0, 5));
     verseController.current?.setCurrentVerse(verse);
 
     syncService.broadcast({
@@ -368,6 +372,7 @@ export const ControlPanel = ({ showDisplayMonitor, onToggleDisplayMonitor }: Con
                     currentBook={currentVerse?.book}
                     currentChapter={currentVerse?.chapter}
                     recentVerses={recentVerses}
+                    onSelect={handleManualVerseSelect}
                   />
                 </CollapsibleContent>
               </Collapsible>
