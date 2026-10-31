@@ -40,12 +40,15 @@ export const TemplateRenderer = ({
   content,
   overrides,
   transparent = false,
+  still = false,
 }: {
   template: Template;
   content: RenderContent | null;
   overrides?: SlideOverrides;
   /** No background at all (for OBS/vMix browser sources, which show what is behind) */
   transparent?: boolean;
+  /** Show a video background's first frame instead of playing it (many thumbnails at once) */
+  still?: boolean;
 }) => {
   const { background, area, panel, text, label, logo } = template;
   const mediaSrc = useMediaUrl(background.type === 'color' ? undefined : background.mediaId);
@@ -99,7 +102,11 @@ export const TemplateRenderer = ({
     <div className="relative overflow-hidden" style={{ width: 1920, height: 1080, backgroundColor: transparent ? 'transparent' : background.color }}>
       {backgroundUrl &&
         (isVideo ? (
-          <video src={backgroundUrl} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" />
+          still ? (
+            <video src={`${backgroundUrl}#t=0.5`} muted playsInline preload="metadata" className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <video src={backgroundUrl} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" />
+          )
         ) : (
           <img src={backgroundUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ))}

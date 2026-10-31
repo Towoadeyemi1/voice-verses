@@ -8,7 +8,7 @@ interface BibleBook {
   chapters: string[][];
 }
 
-type OfflineVersion = 'kjv' | 'asv' | 'web';
+export type OfflineVersion = 'kjv' | 'asv' | 'web';
 
 // Each translation is ~5 MB, so load only the one in use, on first need
 const loaders: Record<OfflineVersion, () => Promise<BibleBook[]>> = {

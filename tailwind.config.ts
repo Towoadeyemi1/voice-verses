@@ -14,10 +14,13 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+        sans: ['Figtree', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'sans-serif'],
         serif: ['Crimson Text', 'Georgia', 'serif'],
+        scripture: ['"Instrument Serif"', '"Iowan Old Style"', 'Georgia', 'serif'],
       },
       colors: {
+        live: "hsl(var(--live))",
+        next: "hsl(var(--next))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
