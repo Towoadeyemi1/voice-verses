@@ -23,7 +23,7 @@ const KINDS: [RegExp, string][] = [
   [/close|closing|benediction|dismiss|blessing/i, '#6366f1'],
   [/countdown|pre-?service|before/i, '#64748b'],
 ];
-const colorFor = (name: string) => KINDS.find(([re]) => re.test(name))?.[1] ?? '#64748b';
+export const colorFor = (name: string) => KINDS.find(([re]) => re.test(name))?.[1] ?? '#64748b';
 
 // Planned length: a timer set on the item, otherwise a typical length for its kind
 function minutesFor(section: string, item: ServiceSubsection): number {

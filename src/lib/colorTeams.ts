@@ -128,9 +128,8 @@ export function applyTeamAccent(team = activeTeam()): void {
   const root = document.documentElement;
   const hsl = hexToHsl(team.colors.primary);
   const light = parseInt(hsl.split(' ')[2]) > 55;
-  for (const v of ['--primary', '--accent', '--ring']) root.style.setProperty(v, hsl);
+  for (const v of ['--primary', '--ring']) root.style.setProperty(v, hsl);
   // Text on the accent stays readable whatever the colour
   const on = light ? '220 30% 8%' : '0 0% 100%';
   root.style.setProperty('--primary-foreground', on);
-  root.style.setProperty('--accent-foreground', on);
 }

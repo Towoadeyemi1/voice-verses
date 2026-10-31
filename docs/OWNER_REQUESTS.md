@@ -72,7 +72,7 @@ Status: ✅ shipped (version) · 🟡 partly · ⏳ not yet · 💬 answered (ad
 | AI-generated slides | ✅ 1.3.2 |
 | Duplicate a previous service to edit it faster | ✅ 1.3.1 |
 | Header aligned with the body | ✅ 1.3.0 |
-| Restyle every other page to match | ⏳ after the live screen (1.4.x) |
+| Restyle every other page to match; "totally restyle and revamp the other tabs… the best design, structure, and aesthetics and arrangement" | ✅ 1.4.2: one shell for every page; Services, service editor, Presenter, Media, Looks, Screens and Settings rebuilt |
 | "Do you have some template to add under each feature and settings that needs many template options to start with?" | ✅ 1.4.1: 26 starter looks (scripture, songs, announcements, countdowns, lower thirds), 7 more colour teams, 7 ready-made themes, 7 orders of service, 5 stage layouts, 6 countdown quick starts |
 | "Why is the take button yellow like that… it doesn't look good at all." | ✅ 1.4.0: quiet graphite Take; the team colour is never used as a big block |
 

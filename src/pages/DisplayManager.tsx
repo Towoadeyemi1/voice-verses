@@ -1,69 +1,67 @@
+import { ExternalLink } from 'lucide-react';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
-import { Card } from '@/components/ui/card';
-import { Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { appUrl } from '@/lib/appUrl';
 import { isDesktop } from '@/lib/desktop';
 import { NetworkOutputSettings } from '@/components/NetworkOutputSettings';
 import { ScreenSettings } from '@/components/ScreenSettings';
+import { AppShell, Section } from '@/components/shell/AppShell';
 
 const OUTPUTS = [
-  { route: '/projection', label: 'Projection', size: 'width=1280,height=720' },
-  { route: '/confidence', label: 'Confidence monitor', size: 'width=1280,height=720' },
+  { route: '/projection', label: 'Projector', size: 'width=1280,height=720' },
+  { route: '/confidence', label: 'Stage monitor', size: 'width=1280,height=720' },
   { route: '/lower-third', label: 'Lower third', size: 'width=1280,height=720' },
 ];
 
-const DisplayManager = () => {
-  return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-foreground">Display Manager</h1>
-          <p className="text-muted-foreground">Monitor all outputs from one interface</p>
-        </div>
-
-        {/* Display Grid */}
+/** The screens: what each shows now, where each goes, and screens on the network. */
+const DisplayManager = () => (
+  <AppShell
+    title="Screens"
+    subtitle={
+      isDesktop
+        ? 'What each screen shows right now, and where it goes. Voice Verses opens each output on its display by itself.'
+        : 'What each screen shows right now. Open each output in its own window and drag it to its screen; the desktop app does this for you.'
+    }
+    actions={
+      !isDesktop &&
+      OUTPUTS.map(({ route, label, size }) => (
+        <Button key={route} variant="outline" onClick={() => window.open(appUrl(route), '_blank', size)}>
+          <ExternalLink className="w-4 h-4" />
+          {label}
+        </Button>
+      ))
+    }
+  >
+    <div className="space-y-6">
+      <Section title="Right now">
         <DisplayMonitor />
+      </Section>
 
-        {/* Instructions */}
-        <Card className="p-6 bg-muted/50">
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Monitor className="w-4 h-4" />
-            Setting up the screens
-          </h3>
-          <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-            {isDesktop ? (
-              <li>
-                Choose a display for each output under <strong>Screens</strong> below (also in Settings → Screens). The
-                app opens it there full screen by itself, every time it starts; no windows to drag.
-              </li>
-            ) : (
-              <li>
-                Open the output windows with the buttons below, drag each to its screen and <strong>double-click</strong>{' '}
-                it to fill the screen. (The desktop app does this for you.)
-              </li>
-            )}
-            <li>
-              For a livestream, capture the <strong>Lower third</strong> in OBS or vMix and key out the green, or use a
-              screen on the network (below) as a browser source with a see-through background. Using ProPresenter too?
-              Settings → ProPresenter sends the verses there as well.
-            </li>
-          </ol>
-          <div className="flex flex-wrap gap-2 mt-4 mb-2">
-            {OUTPUTS.map(({ route, label, size }) => (
-              <Button key={route} variant="outline" size="sm" onClick={() => window.open(appUrl(route), '_blank', size)}>
-                {label}
-              </Button>
-            ))}
+      {isDesktop && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          <ScreenSettings />
+          <NetworkOutputSettings />
+        </div>
+      )}
+
+      <Section title="Setting up" description="The usual ways churches connect Voice Verses to their screens.">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+          <div className="rounded-xl bg-muted/40 p-4">
+            <p className="m-0 font-semibold">Projector or TV</p>
+            <p className="m-0 mt-1 text-muted-foreground">Connect it like a second monitor (HDMI), then choose it for the Projector above.</p>
           </div>
-        </Card>
-
-        {isDesktop && <ScreenSettings />}
-        {isDesktop && <NetworkOutputSettings />}
-      </div>
+          <div className="rounded-xl bg-muted/40 p-4">
+            <p className="m-0 font-semibold">SDI to a switcher</p>
+            <p className="m-0 mt-1 text-muted-foreground">An HDMI-to-SDI converter on a spare video output shows up as a display: choose it, and route its SDI to a free switcher input.</p>
+          </div>
+          <div className="rounded-xl bg-muted/40 p-4">
+            <p className="m-0 font-semibold">Livestream</p>
+            <p className="m-0 mt-1 text-muted-foreground">Capture the Lower third in OBS or vMix and key out the green, or add its network address as a browser source with a see-through background.</p>
+          </div>
+        </div>
+      </Section>
     </div>
-  );
-};
+  </AppShell>
+);
 
 export default DisplayManager;

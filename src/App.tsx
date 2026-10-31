@@ -9,6 +9,7 @@ import Projection from "./pages/Projection";
 import LowerThird from "./pages/LowerThird";
 import Confidence from "./pages/Confidence";
 import DisplayManager from "./pages/DisplayManager";
+import Settings from "./pages/Settings";
 import Install from "./pages/Install";
 import ServicePlanner from "./pages/ServicePlanner";
 import ServiceBuilder from "./pages/ServiceBuilder";
@@ -60,6 +61,7 @@ const App = () => {
             <Route path="/presenter" element={<Presenter />} />
             <Route path="/media-library" element={<MediaLibrary />} />
             <Route path="/templates" element={<Templates />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

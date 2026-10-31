@@ -702,7 +702,7 @@ export const LiveWorkspace = () => {
       />
 
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="max-w-6xl p-0 overflow-hidden gap-0 [&>button.absolute]:hidden">
           <DialogTitle className="sr-only">Settings</DialogTitle>
           <SettingsPanel onClose={() => setShowSettings(false)} />
         </DialogContent>
