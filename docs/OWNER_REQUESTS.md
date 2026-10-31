@@ -73,6 +73,8 @@ Status: ✅ shipped (version) · 🟡 partly · ⏳ not yet · 💬 answered (ad
 | Duplicate a previous service to edit it faster | ✅ 1.3.1 |
 | Header aligned with the body | ✅ 1.3.0 |
 | Restyle every other page to match | ⏳ after the live screen (1.4.x) |
+| "Do you have some template to add under each feature and settings that needs many template options to start with?" | ✅ 1.4.1: 26 starter looks (scripture, songs, announcements, countdowns, lower thirds), 7 more colour teams, 7 ready-made themes, 7 orders of service, 5 stage layouts, 6 countdown quick starts |
+| "Why is the take button yellow like that… it doesn't look good at all." | ✅ 1.4.0: quiet graphite Take; the team colour is never used as a big block |
 
 ## Features the owner asked for ("do all these things… that will make it better than ProPresenter")
 

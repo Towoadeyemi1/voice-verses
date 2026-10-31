@@ -154,6 +154,17 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
   - "Change with the month" picks the team for the current month.
 - **Themes** (`src/lib/lookThemes.ts`): a saved set of assignments plus a team, applied in one click.
 
+## 6b. Starter templates (`src/lib/starters.ts`)
+
+Ready-made choices for everything that takes a design or a set-up. Each is added as the church's own copy, to change freely. They contain titles and layouts only, never copyrighted words.
+
+- **Looks** (Templates page → Starter looks): 6 scripture, 5 songs, 4 announcements, 3 countdowns and 6 lower thirds. They are previewed with public-domain words; lower thirds are shown over a stand-in camera picture. "Add" copies one in; "Use on projector" or "Use on stream" also assigns it.
+- **Colour teams:** "More colour teams" adds Christmas, Lent (March), Royal blue, Graphite, Spring (May), Youth and Thanksgiving.
+- **Themes:** Classic, Modern, Editorial, Christmas, Easter, Pentecost and Youth night. "Use this theme" adds its looks and colour team, then applies them.
+- **Orders of service** (Service Planner → Start from an order of service): Sunday, Midweek Bible Study, Prayer Meeting, Communion, Youth, Wedding and Thanksgiving (celebration of life). Each part has a typical length, stored as a switched-off timer so the live timeline works.
+- **Stage layouts** (the confidence monitor's settings): Classic, Large words, Preacher, Singers and High contrast.
+- **Countdowns** (Countdown → Quick start): before the service, until the service starts, a sermon timer (stage only), a 5-minute speaker timer (stage only), offering and break.
+
 ## 7. Services, songs, media
 
 - **Service Planner → Service Builder:**

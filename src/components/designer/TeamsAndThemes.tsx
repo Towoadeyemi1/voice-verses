@@ -10,6 +10,8 @@ import {
   activeTeam, BUILT_IN_TEAMS, ColorTeam, loadTeams, saveTeams, setActiveTeam, setTeamsFollowMonths, TEAM_CHANGED, TEAM_COLORS, teamsFollowMonths,
 } from '@/lib/colorTeams';
 import { applyLookTheme, deleteLookTheme, loadLookThemes, LookTheme, saveCurrentAsTheme, THEMES_CHANGED } from '@/lib/lookThemes';
+import { loadTemplates, saveTemplates } from '@/lib/templates';
+import { addStarterLook, looksForTheme, STARTER_TEAMS, STARTER_THEMES, StarterTheme } from '@/lib/starters';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -55,6 +57,17 @@ export const TeamsAndThemes = () => {
     setEditing(null);
   };
 
+  const moreTeams = STARTER_TEAMS.filter((t) => !teams.some((o) => o.id === t.id));
+
+  /** A ready-made theme: its looks and colour team are added if missing, then it is used. */
+  const applyStarterTheme = (t: StarterTheme) => {
+    saveTemplates(looksForTheme(t).reduce(addStarterLook, loadTemplates()));
+    const team = [...BUILT_IN_TEAMS, ...STARTER_TEAMS].find((x) => x.id === t.teamId);
+    if (team && !teams.some((x) => x.id === team.id)) saveTeams([...teams, team]);
+    applyLookTheme({ id: t.id, name: t.name, assignments: t.assignments, teamId: t.teamId });
+    toast.success(`Theme “${t.name}” in use`, { description: 'Its looks are in your list to change as you like.' });
+  };
+
   return (
     <Card className="p-4 space-y-4">
       <div className="flex items-center gap-2 flex-wrap">
@@ -89,6 +102,25 @@ export const TeamsAndThemes = () => {
           <Plus className="w-4 h-4" />New team
         </Button>
       </div>
+
+      {moreTeams.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground">More colour teams:</span>
+          {moreTeams.map((team) => (
+            <button
+              key={team.id}
+              type="button"
+              onClick={() => { saveTeams([...teams, team]); toast.success(`“${team.name}” added to your colour teams`); }}
+              className="flex items-center gap-2 rounded-xl bg-muted/60 hover:bg-muted pl-2.5 pr-3 py-1.5 text-sm"
+              title="Add this colour team"
+            >
+              <Dots team={team} />
+              {team.name}
+              <Plus className="w-3.5 h-3.5 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+      )}
 
       {editing && (
         <div className="rounded-xl border border-border p-3 space-y-3">
@@ -148,6 +180,23 @@ export const TeamsAndThemes = () => {
               <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Delete" onClick={() => deleteLookTheme(theme.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
             </div>
           ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 pt-1">
+          {STARTER_THEMES.map((t) => {
+            const team = [...teams, ...BUILT_IN_TEAMS, ...STARTER_TEAMS].find((x) => x.id === t.teamId);
+            return (
+              <div key={t.id} className="rounded-xl bg-muted/50 p-3 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  {team && <Dots team={team} />}
+                  <span className="text-sm font-semibold">{t.name}</span>
+                </div>
+                <p className="m-0 text-xs text-muted-foreground leading-snug flex-1">{t.description}</p>
+                <Button size="sm" variant="outline" className="h-8" onClick={() => applyStarterTheme(t)}>Use this theme</Button>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex gap-2 flex-wrap items-center">
           <div className="flex items-center gap-1.5">
             <Input value={themeName} onChange={(e) => setThemeName(e.target.value)} placeholder="e.g. Easter" className="h-8 w-40" />
             <Button

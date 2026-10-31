@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Countdown, endsAtFor, extendCountdown, formatRemaining, startCountdown, stopCountdown } from '@/lib/countdown';
 import { useCountdown } from '@/hooks/use-countdown';
+import { COUNTDOWN_PRESETS } from '@/lib/starters';
 
 const SETTINGS_KEY = 'voice-verses-countdown-setup';
 
@@ -106,6 +107,33 @@ export const CountdownControl = ({ className }: { className?: string }) => {
           )}
 
           <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Quick start</Label>
+              <div className="flex gap-1.5 flex-wrap">
+                {COUNTDOWN_PRESETS.map((p) => (
+                  <Button
+                    key={p.id}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    onClick={() =>
+                      change({
+                        mode: p.mode,
+                        ...(p.minutes ? { minutes: p.minutes } : {}),
+                        ...(p.until ? { until: p.until } : {}),
+                        message: p.message,
+                        projector: p.projector,
+                        confidence: p.confidence,
+                        stream: p.stream,
+                      })
+                    }
+                  >
+                    {p.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
             <Toggle
               value={setup.mode}
               onChange={(mode) => change({ mode })}

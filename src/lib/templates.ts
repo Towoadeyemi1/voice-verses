@@ -127,7 +127,7 @@ export const FONTS: { label: string; value: string }[] = [
   { label: 'Impact', value: "Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif" },
 ];
 
-const base: Omit<Template, 'id' | 'name'> = {
+export const TEMPLATE_BASE: Omit<Template, 'id' | 'name'> = {
   background: { type: 'color', color: '#000000', dim: 0.4 },
   area: { x: 6, y: 8, width: 88, height: 80 },
   panel: { show: false, color: '#000000', opacity: 0.7, radius: 12 },
@@ -147,6 +147,8 @@ const base: Omit<Template, 'id' | 'name'> = {
   label: { show: true, position: 'below', fontSize: 46, color: 'team:highlight', includeVersion: true },
   logo: { show: false, position: 'bottom-right', size: 8 },
 };
+
+const base = TEMPLATE_BASE;
 
 /** Templates every church starts with; they can be edited, and reset. */
 export const BUILT_IN_TEMPLATES: Template[] = [

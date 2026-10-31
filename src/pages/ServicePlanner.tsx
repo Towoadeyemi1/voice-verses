@@ -16,6 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 import { appUrl } from '@/lib/appUrl';
 import { duplicateService, nextSunday } from '@/lib/duplicateService';
+import { serviceFromStarter, STARTER_SERVICES, StarterService } from '@/lib/starters';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { SERVICE_EXPORT_EXTENSION, exportService, importService } from '@/lib/library/files';
 
@@ -59,6 +60,15 @@ const ServicePlanner = () => {
     await loadServices();
     toast.success('Service created');
     navigate(`/service-builder/${newService.id}`);
+  };
+
+  /** A new service from a ready-made order of service, on the chosen date, opened to fill in. */
+  const handleStarter = async (starter: StarterService) => {
+    const service = serviceFromStarter(starter, selectedDate);
+    await ServiceStorage.saveService(service);
+    await loadServices();
+    toast.success(`${starter.name} created`, { description: 'Add the songs, verses and slides to each part.' });
+    navigate(`/service-builder/${service.id}`);
   };
 
   const handleDeleteService = async (id: string) => {
@@ -318,6 +328,30 @@ const ServicePlanner = () => {
             )}
           </Card>
         </div>
+
+        {/* Ready-made orders of service */}
+        <Card className="p-6 mt-6">
+          <h2 className="text-xl font-semibold mb-1">Start from an order of service</h2>
+          <p className="text-sm text-muted-foreground mb-4">Each part has a typical length, so the live screen's timeline and timers are ready. Change anything after.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {STARTER_SERVICES.map((starter) => (
+              <button
+                key={starter.id}
+                type="button"
+                onClick={() => handleStarter(starter)}
+                className="text-left rounded-xl bg-muted/50 hover:bg-muted p-4 transition"
+              >
+                <div className="font-semibold">{starter.name}</div>
+                <div className="text-xs text-muted-foreground mt-1 leading-snug">{starter.description}</div>
+                <div className="flex gap-[2px] mt-3 h-1.5 rounded-full overflow-hidden">
+                  {starter.plan.flatMap(([, items]) => items).map(([name, minutes], i) => (
+                    <span key={i} title={`${name} · ${minutes} min`} className="bg-primary/60" style={{ flex: minutes }} />
+                  ))}
+                </div>
+              </button>
+            ))}
+          </div>
+        </Card>
 
         {/* Templates Section */}
         {templates.length > 0 && (
