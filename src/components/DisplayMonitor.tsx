@@ -32,7 +32,7 @@ export const DisplayMonitor = () => {
               {logo && <img src={logo} alt="Logo" className="max-w-[80%] max-h-[80%] object-contain" />}
             </div>
           ) : (
-            <OutputContent live={live} output="projection" countdown={countdown} remaining={remaining} />
+            <OutputContent live={live} output="projection" countdown={countdown} remaining={remaining} preview />
           )}
         </ScaledStage>
       </Preview>

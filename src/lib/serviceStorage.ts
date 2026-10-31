@@ -190,6 +190,8 @@ export class ServiceStorage {
       const items = await this.getMedia();
       const filtered = items.filter(m => m.id !== id);
       await indexedDBService.saveMedia(filtered);
+      // A video's file is stored separately
+      await indexedDBService.deleteFile(id).catch(() => {});
       if (!options?.fromSync) {
         setDeletion('media', id, new Date().toISOString());
         notifyLocalChange();

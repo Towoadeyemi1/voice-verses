@@ -7,6 +7,7 @@ import { useTemplates } from '@/hooks/use-templates';
 import { RenderContent, SlideOverrides, TemplateRenderer } from './TemplateRenderer';
 import { SlideDisplay } from './SlideDisplay';
 import { VerseText } from './VerseText';
+import { VideoPlayer } from './VideoPlayer';
 import { Countdown, formatRemaining } from '@/lib/countdown';
 
 const SIZE_SCALE = { small: 0.7, medium: 0.85, large: 1, xlarge: 1.15 } as const;
@@ -59,12 +60,15 @@ export const OutputContent = ({
   blank,
   countdown,
   remaining = 0,
+  preview = false,
 }: {
   live: Live;
   output: Output;
   blank?: boolean;
   countdown?: Countdown | null;
   remaining?: number;
+  /** Operator previews: videos play without sound */
+  preview?: boolean;
 }) => {
   const { templates, assignments } = useTemplates();
 
@@ -86,7 +90,17 @@ export const OutputContent = ({
     ) : null;
 
   let screen;
-  if (live && 'slide' in live && !described && live.slide.type !== 'blank') {
+  if (live && 'slide' in live && live.slide.type === 'video') {
+    // Video slides play full screen on the projector (with their sound there only)
+    screen =
+      output === 'projection' ? (
+        <div style={{ width: 1920, height: 1080 }} className="bg-black">
+          <VideoPlayer mediaId={live.slide.mediaId} loop={live.slide.loop} sound={live.slide.sound && !preview} className="w-full h-full" />
+        </div>
+      ) : (
+        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} />
+      );
+  } else if (live && 'slide' in live && !described && live.slide.type !== 'blank') {
     // Picture slides fill the screen as they are
     screen =
       output === 'projection' ? (

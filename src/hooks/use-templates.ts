@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
+import { mediaUrl } from '@/lib/mediaFiles';
 import { Assignments, loadAssignments, loadTemplates, Template, TEMPLATES_CHANGED } from '@/lib/templates';
 
 /** Templates and their assignments, kept current in every window. */
@@ -46,6 +47,21 @@ export function useMediaItem(mediaId?: string): MediaItem | undefined {
   }, [mediaId]);
 
   return item;
+}
+
+/** A URL to show or play a library item (picture or video), by id. */
+export function useMediaUrl(mediaId?: string): string | undefined {
+  const item = useMediaItem(mediaId);
+  const [url, setUrl] = useState<string | undefined>();
+  useEffect(() => {
+    let cancelled = false;
+    if (!item) setUrl(undefined);
+    else mediaUrl(item).then((u) => !cancelled && setUrl(u));
+    return () => {
+      cancelled = true;
+    };
+  }, [item]);
+  return url;
 }
 
 /** The church logo (Settings → Logo), kept current in every window. */

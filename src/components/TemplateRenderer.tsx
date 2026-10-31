@@ -1,6 +1,6 @@
 import { CSSProperties, ReactNode } from 'react';
 import { Template } from '@/lib/templates';
-import { useLogo, useMediaItem } from '@/hooks/use-templates';
+import { useLogo, useMediaUrl } from '@/hooks/use-templates';
 import { FitText } from './FitText';
 
 export interface RenderContent {
@@ -43,10 +43,10 @@ export const TemplateRenderer = ({
   overrides?: SlideOverrides;
 }) => {
   const { background, area, panel, text, label, logo } = template;
-  const media = useMediaItem(background.type === 'color' ? undefined : background.mediaId);
+  const mediaSrc = useMediaUrl(background.type === 'color' ? undefined : background.mediaId);
   const logoUrl = useLogo();
 
-  const backgroundUrl = overrides?.backgroundUrl ?? (background.type !== 'color' ? media?.url : undefined);
+  const backgroundUrl = overrides?.backgroundUrl ?? mediaSrc;
   const isVideo = !overrides?.backgroundUrl && background.type === 'video';
   const dim = overrides?.backgroundUrl ? 1 - (overrides.backgroundOpacity ?? 0.3) : background.dim;
   const align = overrides?.align ?? text.align;

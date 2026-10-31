@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
-import { Image, Music, Plus, Trash2, Search, Pencil } from 'lucide-react';
+import { Film, Image, Music, Plus, Trash2, Search, Pencil } from 'lucide-react';
+import { addPictureToLibrary, addVideoToLibrary } from '@/lib/mediaFiles';
+import { MediaThumbnail } from '@/components/MediaThumbnail';
 import { toast } from 'sonner';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
@@ -34,7 +36,7 @@ import { appUrl } from '@/lib/appUrl';
 const MediaLibrary = () => {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'image' | 'song' | 'presentation'>('all');
+  const [filter, setFilter] = useState<'all' | 'image' | 'video' | 'song' | 'presentation'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showUpload, setShowUpload] = useState(false);
   const [editingSong, setEditingSong] = useState<MediaItem | null>(null);
@@ -55,34 +57,27 @@ const MediaLibrary = () => {
     setMedia(await ServiceStorage.getMedia());
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
-      return;
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    let added = 0;
+    for (const file of files) {
+      try {
+        if (file.type.startsWith('video/')) await addVideoToLibrary(file);
+        else if (file.type.startsWith('image/')) await addPictureToLibrary(file);
+        else {
+          toast.error(`${file.name} is not a picture or video`);
+          continue;
+        }
+        added++;
+      } catch {
+        toast.error(`Could not add ${file.name}`);
+      }
     }
-
-    try {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const url = e.target?.result as string;
-        const newMedia: MediaItem = {
-          id: Date.now().toString(),
-          type: 'image',
-          name: file.name.replace(/\.[^/.]+$/, ''),
-          url,
-          createdAt: new Date(),
-        };
-        ServiceStorage.saveMediaItem(newMedia);
-        loadMedia();
-        toast.success('Image uploaded');
-        setShowUpload(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      toast.error('Upload failed');
+    e.target.value = '';
+    await loadMedia();
+    if (added) {
+      toast.success(`${added} item${added > 1 ? 's' : ''} added`);
+      setShowUpload(false);
     }
   };
 
@@ -246,6 +241,15 @@ const MediaLibrary = () => {
                   Images
                 </Button>
                 <Button
+                  variant={filter === 'video' ? 'default' : 'outline'}
+                  onClick={() => setFilter('video')}
+                  size="sm"
+                  aria-pressed={filter === 'video'}
+                >
+                  <Film className="w-4 h-4 mr-2" />
+                  Videos
+                </Button>
+                <Button
                   variant={filter === 'song' ? 'default' : 'outline'}
                   onClick={() => setFilter('song')}
                   size="sm"
@@ -281,17 +285,19 @@ const MediaLibrary = () => {
               <h2 className="text-xl font-semibold mb-4">Upload Media</h2>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="image-upload">Upload Image</Label>
+                  <Label htmlFor="image-upload">Add pictures or videos</Label>
                   <Input
                     id="image-upload"
                     type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
+                    accept="image/*,video/*"
+                    multiple
+                    onChange={handleUpload}
                     className="mt-2"
-                    aria-label="Select image file to upload"
+                    aria-label="Select pictures or videos to add"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Supported: JPG, PNG, WEBP (for backgrounds, announcements)
+                    Pictures (JPG, PNG, WEBP) and videos (MP4, MOV, WEBM) for backgrounds, announcements and video
+                    slides. Videos stay on this computer.
                   </p>
                 </div>
                 
@@ -310,7 +316,7 @@ const MediaLibrary = () => {
             <EmptyState
               icon={Image}
               title="No media found"
-              description="Upload images or import songs to get started with your media library."
+              description="Add pictures and videos, or import songs, to get started with your media library."
               action={{
                 label: 'Upload First Item',
                 onClick: () => setShowUpload(true),
@@ -334,6 +340,17 @@ const MediaLibrary = () => {
                           onClick={() => handleDeleteMedia(item.id)}
                           aria-label={`Delete ${item.name}`}
                         >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {item.type === 'video' && (
+                    <div className="aspect-video bg-black relative">
+                      <MediaThumbnail item={item} />
+                      <Film className="absolute top-2 left-2 w-4 h-4 text-white drop-shadow" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Button size="sm" variant="destructive" onClick={() => handleDeleteMedia(item.id)} aria-label={`Delete ${item.name}`}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

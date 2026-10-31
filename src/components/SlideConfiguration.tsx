@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { Slide, MediaItem } from '@/types/service';
 import { Settings2, Image as ImageIcon } from 'lucide-react';
 import { ServiceStorage } from '@/lib/serviceStorage';
@@ -35,6 +36,8 @@ export const SlideConfiguration = ({ slide, onUpdate }: SlideConfigurationProps)
   const [alignment, setAlignment] = useState(slide.textFormatting?.alignment || 'center');
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [templateId, setTemplateId] = useState(slide.templateId || 'assigned');
+  const [loop, setLoop] = useState(slide.type === 'video' ? slide.loop : false);
+  const [sound, setSound] = useState(slide.type === 'video' ? slide.sound : true);
   const templates = loadTemplates();
 
   useEffect(() => {
@@ -48,6 +51,7 @@ export const SlideConfiguration = ({ slide, onUpdate }: SlideConfigurationProps)
   const handleSave = () => {
     const updatedSlide: Slide = {
       ...slide,
+      ...(slide.type === 'video' ? { loop, sound } : {}),
       backgroundMedia: backgroundUrl && backgroundUrl !== 'none' ? {
         type: 'image',
         url: backgroundUrl,
@@ -77,6 +81,20 @@ export const SlideConfiguration = ({ slide, onUpdate }: SlideConfigurationProps)
           </DialogHeader>
 
           <div className="space-y-6">
+            {slide.type === 'video' && (
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Video</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="video-loop">Repeat (loop)</Label>
+                  <Switch id="video-loop" checked={loop} onCheckedChange={setLoop} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="video-sound">Play its sound</Label>
+                  <Switch id="video-sound" checked={sound} onCheckedChange={setSound} />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label className="text-base font-semibold">Template</Label>
               <Select value={templateId} onValueChange={setTemplateId}>

@@ -17,6 +17,8 @@ import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { useTemplates } from '@/hooks/use-templates';
+import { addPictureToLibrary, addVideoToLibrary } from '@/lib/mediaFiles';
+import { MediaThumbnail } from '@/components/MediaThumbnail';
 import {
   BUILT_IN_TEMPLATES,
   CONTENT_KINDS,
@@ -96,7 +98,7 @@ const Templates = () => {
   const [sample, setSample] = useState<keyof typeof SAMPLES>('short');
   const [pictures, setPictures] = useState<MediaItem[]>([]);
 
-  const loadPictures = () => ServiceStorage.getMedia().then((m) => setPictures(m.filter((i) => i.type === 'image' && i.url)));
+  const loadPictures = () => ServiceStorage.getMedia().then((m) => setPictures(m.filter((i) => (i.type === 'image' && i.url) || i.type === 'video')));
   useEffect(() => {
     loadPictures();
   }, []);
@@ -132,15 +134,10 @@ const Templates = () => {
   };
   const reset = () => builtIn && update(() => structuredClone(builtIn));
 
-  const uploadPicture = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const item: MediaItem = { id: Date.now().toString(), type: 'image', name: file.name.replace(/\.[^.]+$/, ''), url: String(reader.result), createdAt: new Date() };
-      await ServiceStorage.saveMediaItem(item);
-      await loadPictures();
-      set('background', { type: 'image', mediaId: item.id });
-    };
-    reader.readAsDataURL(file);
+  const upload = async (file: File) => {
+    const item = file.type.startsWith('video/') ? await addVideoToLibrary(file) : await addPictureToLibrary(file);
+    await loadPictures();
+    set('background', { type: item.type === 'video' ? 'video' : 'image', mediaId: item.id });
   };
 
   if (!template) return null;
@@ -261,33 +258,41 @@ const Templates = () => {
 
             <Section title="Background">
               <Choice
-                value={background.type === 'video' ? 'color' : background.type}
+                value={background.type}
                 onChange={(type) => set('background', { type })}
                 options={[
                   { value: 'color', label: 'Colour' },
                   { value: 'image', label: 'Picture' },
+                  { value: 'video', label: 'Video' },
                 ]}
               />
               <Field label="Colour">
                 <input type="color" value={background.color} onChange={(e) => set('background', { color: e.target.value })} className="h-8 w-16 rounded border bg-transparent" />
               </Field>
-              {background.type === 'image' && (
+              {background.type !== 'color' && (
                 <>
                   <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                    {pictures.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => set('background', { mediaId: p.id })}
-                        className={`aspect-video rounded overflow-hidden border-2 ${background.mediaId === p.id ? 'border-primary' : 'border-transparent'}`}
-                        title={p.name}
-                      >
-                        <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                    <label className="aspect-video rounded border border-dashed flex items-center justify-center cursor-pointer hover:bg-accent" title="Add a picture">
+                    {pictures
+                      .filter((p) => p.type === background.type)
+                      .map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => set('background', { mediaId: p.id })}
+                          className={`aspect-video rounded overflow-hidden border-2 bg-black ${background.mediaId === p.id ? 'border-primary' : 'border-transparent'}`}
+                          title={p.name}
+                        >
+                          {p.type === 'video' ? <MediaThumbnail item={p} /> : <img src={p.url} alt={p.name} className="w-full h-full object-cover" />}
+                        </button>
+                      ))}
+                    <label className="aspect-video rounded border border-dashed flex items-center justify-center cursor-pointer hover:bg-accent" title={background.type === 'video' ? 'Add a video' : 'Add a picture'}>
                       <ImagePlus className="w-5 h-5 text-muted-foreground" />
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPicture(e.target.files[0])} />
+                      <input
+                        type="file"
+                        accept={background.type === 'video' ? 'video/*' : 'image/*'}
+                        className="hidden"
+                        onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
+                      />
                     </label>
                   </div>
                   <Field label="Darken">

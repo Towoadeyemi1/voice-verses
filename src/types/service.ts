@@ -1,6 +1,6 @@
 import { BibleVerse } from './bible';
 
-export type SlideType = 'scripture' | 'lyrics' | 'image' | 'announcement' | 'blank';
+export type SlideType = 'scripture' | 'lyrics' | 'image' | 'video' | 'announcement' | 'blank';
 
 export interface CountdownConfig {
   enabled: boolean;
@@ -60,6 +60,15 @@ export interface ImageSlide extends BaseSlide {
   displayDuration?: number; // seconds
 }
 
+export interface VideoSlide extends BaseSlide {
+  type: 'video';
+  /** The video in the media library */
+  mediaId: string;
+  loop: boolean;
+  /** Play its sound through this computer */
+  sound: boolean;
+}
+
 export interface AnnouncementSlide extends BaseSlide {
   type: 'announcement';
   content: string;
@@ -71,7 +80,7 @@ export interface BlankSlide extends BaseSlide {
   placeholder?: string;
 }
 
-export type Slide = ScriptureSlide | LyricsSlide | ImageSlide | AnnouncementSlide | BlankSlide;
+export type Slide = ScriptureSlide | LyricsSlide | ImageSlide | VideoSlide | AnnouncementSlide | BlankSlide;
 
 export interface ServiceSubsection {
   id: string;
@@ -111,7 +120,7 @@ export interface Service {
 
 export interface MediaItem {
   id: string;
-  type: 'image' | 'song' | 'presentation';
+  type: 'image' | 'video' | 'song' | 'presentation';
   name: string;
   category?: string;
   tags?: string[];
@@ -119,6 +128,9 @@ export interface MediaItem {
   updatedAt?: string; // ISO time of the last local edit, used to sync the library folder
   // For images
   url?: string;
+  // For videos: the file is kept separately on this computer (IndexedDB 'files')
+  mimeType?: string;
+  sizeBytes?: number;
   // For songs
   lyrics?: string;
   slides?: LyricsSlide[];
