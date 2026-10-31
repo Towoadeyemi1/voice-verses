@@ -14,6 +14,9 @@ const WINDOW = 512; // Silero VAD frame size at 16 kHz
 const PRE_ROLL = Math.round(0.3 * SAMPLE_RATE); // VAD reacts late; keep the start of the first word
 const PARTIAL_INTERVAL = SAMPLE_RATE; // audio between partial results
 const HISTORY = 12 * SAMPLE_RATE; // longest utterance (8 s) + pre-roll, with margin
+// Partial results are skipped while the recogniser is this far behind the live audio,
+// so on a busy computer (e.g. running Logic too) it catches up instead of falling further behind
+const MAX_LAG = 0.4;
 
 let recognizer = null;
 let vadModel = null;
@@ -73,6 +76,18 @@ class Session {
     this.pending = new Float32Array(0);
     this.speechStart = null;
     this.lastPartialAt = 0;
+    this.partialInterval = PARTIAL_INTERVAL;
+    this.clock = null; // wall-clock time at which sample 0 would have arrived (live audio)
+  }
+
+  /** Seconds the recogniser is behind the live audio (0 for recordings). */
+  lag() {
+    if (this.mode !== 'live') return 0;
+    const audioTime = this.total / SAMPLE_RATE;
+    const now = Date.now() / 1000;
+    // Audio arrives in real time, so the earliest arrival seen sets the clock
+    if (this.clock === null || now - audioTime < this.clock) this.clock = now - audioTime;
+    return now - (this.clock + audioTime);
   }
 
   remember(samples) {
@@ -138,9 +153,14 @@ class Session {
       this.lastPartialAt = this.total;
       return;
     }
-    if (this.total - this.lastPartialAt < PARTIAL_INTERVAL) return;
+    if (this.total - this.lastPartialAt < this.partialInterval) return;
+    if (this.lag() > MAX_LAG) return; // behind: the final result will cover these words
     this.lastPartialAt = this.total;
+    const started = Date.now();
     const text = transcribe(this.recent(this.speechStart));
+    // Partials never take more than about a third of the computer's time
+    const took = ((Date.now() - started) / 1000) * SAMPLE_RATE;
+    this.partialInterval = Math.max(PARTIAL_INTERVAL / 2, Math.min(3 * PARTIAL_INTERVAL, 3 * took));
     if (text) post({ type: 'partial', session: this.id, text });
   }
 

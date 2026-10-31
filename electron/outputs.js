@@ -40,9 +40,10 @@ export function keepAwake(reason, on) {
   if (on) awakeReasons.add(reason);
   else awakeReasons.delete(reason);
   if (awakeReasons.size > 0 && blockerId === null) {
-    blockerId = powerSaveBlocker.start('prevent-display-sleep');
+    // The display stays on, and macOS App Nap does not slow the app down while it is in the background
+    blockerId = [powerSaveBlocker.start('prevent-display-sleep'), powerSaveBlocker.start('prevent-app-suspension')];
   } else if (awakeReasons.size === 0 && blockerId !== null) {
-    powerSaveBlocker.stop(blockerId);
+    blockerId.forEach((id) => powerSaveBlocker.stop(id));
     blockerId = null;
   }
 }

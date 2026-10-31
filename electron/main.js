@@ -26,7 +26,16 @@ const webPreferences = {
   contextIsolation: true,
   sandbox: true,
   webSecurity: true,
+  // Keep listening, detecting and drawing at full speed while another app (Logic,
+  // ProPresenter) is in front or covers this window; otherwise timers, audio
+  // processing and redraws are slowed right down
+  backgroundThrottling: false,
 };
+
+// The same for windows the system considers hidden or covered
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 
 /** True for pages that belong to this app (dev server or bundled files). */
 function isAppUrl(url) {

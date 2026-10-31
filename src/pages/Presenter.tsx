@@ -223,6 +223,29 @@ const Presenter = () => {
     }
   };
 
+  // While a song from the service is on screen, singing moves it to the part being sung
+  const jumpToRef = useRef<(index: number) => void>(() => {});
+  const songStartRef = useRef(0);
+  useEffect(() => {
+    const controller = verseController.current;
+    const slide = isPresenting ? allSlides[currentIndex] : undefined;
+    if (!controller) return;
+    if (slide?.type !== 'lyrics' || !slide.songTitle) {
+      controller.setLiveLyrics(null);
+      return;
+    }
+    const sameSong = (s: Slide | undefined) => s?.type === 'lyrics' && s.songTitle === slide.songTitle;
+    let start = currentIndex;
+    while (sameSong(allSlides[start - 1])) start--;
+    let end = currentIndex;
+    while (sameSong(allSlides[end + 1])) end++;
+    songStartRef.current = start;
+    controller.setLiveLyrics(
+      allSlides.slice(start, end + 1).map((s) => (s.type === 'lyrics' ? s.content : '')),
+      currentIndex - start,
+    );
+  }, [allSlides, currentIndex, isPresenting, isVoiceActive]);
+
   const handleJumpTo = (index: number) => {
     setCurrentIndex(index);
     broadcastSlide(allSlides[index], index);
@@ -231,6 +254,8 @@ const Presenter = () => {
       toast.success('Presentation started');
     }
   };
+
+  jumpToRef.current = handleJumpTo;
 
   const handleServiceChange = (serviceId: string) => {
     localStorage.setItem(LAST_SERVICE_KEY, serviceId);
@@ -310,6 +335,7 @@ const Presenter = () => {
         onTranscriptUpdate: (text) => {
           setTranscript(text);
         },
+        onLyricsMove: (index) => jumpToRef.current(songStartRef.current + index),
         ...verseAssistantOptions((verse) => verseController.current?.triggerManualVerse(verse)),
       });
 

@@ -1,16 +1,22 @@
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { FileText, Square } from 'lucide-react';
+import { ReactNode } from 'react';
+import { FileText, Music, Square } from 'lucide-react';
 
 interface TranscriptWindowProps {
   transcript: string;
   highlightedText?: string;
   isListening?: boolean;
   onStop?: () => void;
+  /** Singing: scripture detection paused until a reference is said */
+  songMode?: boolean;
+  onToggleSongMode?: () => void;
+  /** Shown under the transcript (suggestions) */
+  children?: ReactNode;
 }
 
-export const TranscriptWindow = ({ transcript, highlightedText, isListening, onStop }: TranscriptWindowProps) => {
+export const TranscriptWindow = ({ transcript, highlightedText, isListening, onStop, songMode, onToggleSongMode, children }: TranscriptWindowProps) => {
   const renderTranscript = () => {
     if (!highlightedText) return transcript;
 
@@ -36,9 +42,21 @@ export const TranscriptWindow = ({ transcript, highlightedText, isListening, onS
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm sm:text-base text-foreground">Live Transcript</h3>
             <p className="text-xs sm:text-sm text-muted-foreground truncate">
-              {isListening ? 'Real-time speech recognition' : 'Not listening'}
+              {!isListening ? 'Not listening' : songMode ? 'Song — scripture paused until a reference is said' : 'Real-time speech recognition'}
             </p>
           </div>
+          {isListening && onToggleSongMode && (
+            <Button
+              onClick={onToggleSongMode}
+              size="sm"
+              variant={songMode ? 'default' : 'outline'}
+              className="h-8 px-3"
+              title={songMode ? 'Back to scripture' : 'Singing: stop finding verses in the words until a Bible reference is said'}
+            >
+              <Music className="w-3.5 h-3.5 mr-1.5" />
+              <span className="text-xs">{songMode ? 'Song on' : 'Song'}</span>
+            </Button>
+          )}
           {isListening && onStop && (
             <Button 
               onClick={onStop}
@@ -57,6 +75,7 @@ export const TranscriptWindow = ({ transcript, highlightedText, isListening, onS
             {transcript ? renderTranscript() : 'Waiting for speech...'}
           </p>
         </ScrollArea>
+        {children}
       </div>
     </Card>
   );

@@ -126,6 +126,110 @@ const check = (label: string, got: string | null, want: string | null) => {
   check('sermon talk is not a quote', (await quote('Let us pray together this morning, church, the Lord is good all the time')).shown, null);
   check('a common phrase is not a quote', (await quote('And it came to pass that we went to the market')).shown, null);
 
+  // A called passage: shown from its first verse, followed through it even when the reading is misheard
+  {
+    const passages: string[] = [];
+    const shown: string[] = [];
+    const d = new VerseDetectionController({
+      onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`),
+      onPassageChange: (p) => passages.push(p ? `${p.book} ${p.chapter}:${p.from}-${p.to}` : 'none'),
+    });
+    await d.onTranscript('Let us read John chapter 5 verses 8 to 13', true);
+    await pause();
+    await d.onTranscript('Jesus saith unto him, Rise, take up thy bed, and walk.', true);
+    await pause();
+    // John 5:9, with words misheard all through it
+    await d.onTranscript('and immediate lee the man was made hold and took up his bad and walked and on the same day was this sabbath', true);
+    await pause();
+    await d.onTranscript('the jews therefore said unto him that was cured it is the sabbath day', true);
+    await pause();
+    check('passage John 5:8-13 called', passages[0] ?? null, 'John 5:8-13');
+    check('passage followed through misheard reading', shown.join(', '), 'John 5:8, John 5:9, John 5:10');
+  }
+  {
+    const shown: string[] = [];
+    let passage: string | null = null;
+    const d = new VerseDetectionController({
+      onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`),
+      onPassageChange: (p) => (passage = p ? `${p.book} ${p.chapter}:${p.from}-${p.to}` : null),
+    });
+    await d.onTranscript('Turn with me to Psalm 23', true);
+    await pause();
+    check('whole chapter called', passage, 'Psalms 23:1-6');
+    await d.onTranscript('he maketh me to lie down in green pastures he leadeth me beside the still waters', true);
+    await pause();
+    check('whole chapter followed', shown.join(', '), 'Psalms 23:1, Psalms 23:2');
+  }
+
+  // A reference in a partial transcript with words after it is complete: shown without waiting
+  {
+    const shown: string[] = [];
+    const d = new VerseDetectionController({ onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`) });
+    await d.onTranscript('Romans 8:28 tells us that all things', false);
+    check('complete reference shown from the first partial', shown.join(', ') || null, 'Romans 8:28');
+  }
+
+  // Singing
+  const songs = [
+    {
+      id: 'grace',
+      title: 'Amazing Grace',
+      lyrics:
+        "Verse 1\nAmazing grace how sweet the sound\nThat saved a wretch like me\nI once was lost but now am found\nWas blind but now I see\n\nVerse 2\n'Twas grace that taught my heart to fear\nAnd grace my fears relieved\nHow precious did that grace appear\nThe hour I first believed\n\nChorus\nMy chains are gone I've been set free\nMy God my Saviour has ransomed me",
+    },
+    {
+      id: 'shepherd',
+      title: 'The Lord Is My Shepherd',
+      lyrics: 'The Lord is my shepherd I shall not want\nHe makes me down to lie in pastures green\nHe leadeth me the quiet waters by',
+    },
+    { id: 'waymaker', title: 'Way Maker', lyrics: 'Way maker miracle worker promise keeper\nLight in the darkness my God that is who you are' },
+  ];
+  {
+    const suggested: string[] = [];
+    const d = new VerseDetectionController({ onVerseDetected: () => {}, onSongSuggested: (m) => suggested.push(m.song.title) });
+    d.setSongLibrary(songs);
+    await d.onTranscript('amazing grace how sweet this sound that saved a wretch like me', true);
+    check('song recognised from the singing', suggested.join(', ') || null, 'Amazing Grace');
+  }
+  {
+    const shown: string[] = [];
+    const suggested: string[] = [];
+    let songMode = true;
+    const d = new VerseDetectionController({
+      onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`),
+      onVerseSuggested: (v) => suggested.push(`${v.book} ${v.chapter}:${v.verse}`),
+      onSongModeChange: (on) => (songMode = on),
+    });
+    d.setSongMode(true);
+    await d.onTranscript('the Lord is my shepherd I shall not want, I can do all things through Christ', true);
+    await pause();
+    check('song mode: sung scripture is not shown', shown.join(', ') || suggested.join(', ') || null, null);
+    await d.onTranscript('Now turn with me to Romans 8:28', true);
+    check('song mode ends with a reference', `${shown.join(', ')} / ${songMode ? 'song' : 'scripture'}`, 'Romans 8:28 / scripture');
+  }
+  {
+    // Following a song on screen, chorus sung twice
+    const slides = ['Amazing grace how sweet the sound\nThat saved a wretch like me', 'I once was lost but now am found\nWas blind but now I see', "My chains are gone I've been set free\nMy God my Saviour has ransomed me", "'Twas grace that taught my heart to fear\nAnd grace my fears relieved", "My chains are gone I've been set free\nMy God my Saviour has ransomed me"];
+    const moves: number[] = [];
+    const d = new VerseDetectionController({ onVerseDetected: () => {}, onLyricsMove: (i) => moves.push(i) });
+    d.setSongLibrary(songs);
+    let at = 0;
+    const sing = async (text: string) => {
+      const before = moves.length;
+      await d.onTranscript(text, true);
+      if (moves.length > before) {
+        at = moves[moves.length - 1];
+        d.setLiveLyrics(slides, at);
+      }
+    };
+    d.setLiveLyrics(slides, 0);
+    await sing('i once was lost but now i found was blind but now i see');
+    await sing('my chains are gone i have been set free');
+    await sing('twas grace that taught my heart to fear and grace my fears relieved');
+    await sing('my chains are gone ive been set free my god my savior has ransomed me');
+    check('song followed, chorus the second time', moves.join(', '), '1, 2, 3, 4');
+  }
+
   // Verse text on screen: KJV supplied words kept (shown in italics), margin notes never shown
   const text: [string, string][] = [
     ['God {is} our refuge and strength, a very present help in trouble. {for: or, of}', 'God is our refuge and strength, a very present help in trouble.'],
