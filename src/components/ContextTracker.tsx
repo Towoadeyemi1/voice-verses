@@ -9,9 +9,11 @@ interface ContextTrackerProps {
   currentBook?: string;
   currentChapter?: number;
   recentVerses: DisplayedVerse[];
+  /** Clicking a recent verse shows it again */
+  onSelect?: (verse: DisplayedVerse) => void;
 }
 
-export const ContextTracker = ({ currentBook, currentChapter, recentVerses }: ContextTrackerProps) => {
+export const ContextTracker = ({ currentBook, currentChapter, recentVerses, onSelect }: ContextTrackerProps) => {
   return (
     <Card className="p-6 border-border bg-card">
       <div className="space-y-6">
@@ -53,7 +55,7 @@ export const ContextTracker = ({ currentBook, currentChapter, recentVerses }: Co
             </div>
             <div>
               <h3 className="font-semibold text-foreground">Recent Verses</h3>
-              <p className="text-sm text-muted-foreground">Last 5 displayed</p>
+              <p className="text-sm text-muted-foreground">Last 5 shown · click to show again</p>
             </div>
           </div>
 
@@ -61,9 +63,12 @@ export const ContextTracker = ({ currentBook, currentChapter, recentVerses }: Co
             {recentVerses.length > 0 ? (
               <div className="space-y-2">
                 {recentVerses.map((verse, index) => (
-                  <div
+                  <button
+                    type="button"
                     key={`${verse.book}-${verse.chapter}-${verse.verse}-${index}`}
-                    className="p-3 rounded-lg bg-muted/30 border border-border hover:border-primary/50 transition-smooth cursor-pointer"
+                    onClick={() => onSelect?.(verse)}
+                    title="Show this verse again"
+                    className="block w-full text-left p-3 rounded-lg bg-muted/30 border border-border hover:border-primary/50 transition-smooth cursor-pointer"
                   >
                     <div className="mb-1">
                       <span className="font-semibold text-foreground text-sm">
@@ -73,7 +78,7 @@ export const ContextTracker = ({ currentBook, currentChapter, recentVerses }: Co
                     <p className="text-xs text-muted-foreground line-clamp-2">
                       {plainVerseText(verse.text)}
                     </p>
-                  </div>
+                  </button>
                 ))}
               </div>
             ) : (
