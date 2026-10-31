@@ -51,6 +51,10 @@ export interface LyricsSlide extends BaseSlide {
   totalSlides: number;
   content: string;
   section?: 'verse' | 'chorus' | 'bridge' | 'outro';
+  /** The section's own name, e.g. "Verse 2" or "Pre-Chorus" */
+  sectionLabel?: string;
+  /** Song credits and CCLI licence, shown small on the song's first slide */
+  credits?: string;
 }
 
 export interface ImageSlide extends BaseSlide {
@@ -133,6 +137,12 @@ export interface MediaItem {
   sizeBytes?: number;
   // For songs
   lyrics?: string;
+  author?: string;
+  copyright?: string;
+  /** CCLI song number */
+  ccliNumber?: string;
+  /** Order of sections to sing, by name, e.g. ["Verse 1", "Chorus", "Verse 2", "Chorus"] */
+  arrangement?: string[];
   slides?: LyricsSlide[];
   // For presentations (PowerPoint imports)
   presentationSlides?: ImageSlide[];

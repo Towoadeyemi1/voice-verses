@@ -10,6 +10,8 @@ export interface RenderContent {
   label?: string;
   /** Bible translation, added to the reference if the template includes it */
   version?: string;
+  /** Small print along the bottom, e.g. song credits and CCLI licence */
+  footer?: string;
   /** Changes when the content changes, to fade the new text in */
   key: string;
 }
@@ -110,6 +112,15 @@ export const TemplateRenderer = ({
           className="absolute object-contain"
           style={{ ...logoCorner[logo.position], width: `${logo.size}%`, maxHeight: `${logo.size * 1.78}%` }}
         />
+      )}
+
+      {content?.footer && (
+        <div
+          className="absolute"
+          style={{ left: 48, right: 48, bottom: 24, fontFamily: text.fontFamily, fontSize: 22, color: text.color, opacity: 0.75, textAlign: 'center', textShadow: textStyle.textShadow }}
+        >
+          {content.footer}
+        </div>
       )}
 
       {content && (

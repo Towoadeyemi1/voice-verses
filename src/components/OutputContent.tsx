@@ -35,7 +35,7 @@ function describe(live: Live): { kind: ContentKind; content: RenderContent; over
       return { kind: 'scripture', overrides, templateId: slide.templateId, content: { key: slide.id, label: ref, version, body: <VerseText text={slide.verse.text} /> } };
     }
     case 'lyrics':
-      return { kind: 'lyrics', overrides, templateId: slide.templateId, content: { key: slide.id, label: slide.songTitle, body: slide.content } };
+      return { kind: 'lyrics', overrides, templateId: slide.templateId, content: { key: slide.id, label: slide.songTitle, body: slide.content, footer: slide.credits } };
     case 'announcement':
       return { kind: 'announcement', overrides, templateId: slide.templateId, content: { key: slide.id, label: slide.title, body: slide.content } };
     default:
