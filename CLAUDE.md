@@ -9,6 +9,7 @@ Read these before changing anything:
 | Read | When |
 | --- | --- |
 | [`docs/OWNER_REQUESTS.md`](docs/OWNER_REQUESTS.md) | **Everything the owner has asked for, and its status. Read it first; add new requests the moment they are made.** |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | What is still missing, and the order to build it in. |
 | [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md) | What the app does: every feature, number and saved setting. The source of truth for rebuilding it. |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Why it is built this way. Don't reverse a decision without a new reason. |
 | [`docs/LESSONS.md`](docs/LESSONS.md) | Mistakes already made and how they were fixed. Check before debugging. |
