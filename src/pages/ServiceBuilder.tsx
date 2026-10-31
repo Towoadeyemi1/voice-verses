@@ -11,12 +11,13 @@ import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, VideoSlide, An
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVerse } from '@/types/bible';
-import { Book, Music, Image as ImageIcon, Film, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings } from 'lucide-react';
+import { Book, Music, Image as ImageIcon, Film, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
 import { ManualSearch } from '@/components/ManualSearch';
 import { LyricsEditor } from '@/components/LyricsEditor';
+import { AiSlidesDialog } from '@/components/AiSlidesDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   DndContext,
@@ -78,6 +79,7 @@ const ServiceBuilder = () => {
   const [showScriptureDialog, setShowScriptureDialog] = useState(false);
   const [scriptureReference, setScriptureReference] = useState('');
   const [showLyricsEditor, setShowLyricsEditor] = useState(false);
+  const [showAiSlides, setShowAiSlides] = useState(false);
   const [editingLyricsContext, setEditingLyricsContext] = useState<{ sectionId: string; subsectionId: string; songTitle: string } | null>(null);
   const [media, setMedia] = useState<MediaItem[]>([]);
 
@@ -940,6 +942,10 @@ const ServiceBuilder = () => {
                         <MessageSquare className="w-4 h-4 mr-2" />
                         Announcement
                       </Button>
+                      <Button onClick={() => setShowAiSlides(true)} variant="outline" className="w-full justify-start" disabled={!selectedSubsection}>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Make slides with AI
+                      </Button>
                       <Button onClick={handleAddImageSlide} variant="outline" className="w-full justify-start">
                         <ImageIcon className="w-4 h-4 mr-2" />
                         Image
@@ -1384,6 +1390,14 @@ const ServiceBuilder = () => {
       </div>
 
       {/* New Comprehensive Lyrics Editor */}
+      <AiSlidesDialog
+        open={showAiSlides}
+        onClose={() => setShowAiSlides(false)}
+        onAdd={(slides) => {
+          slides.forEach((slide) => addSlideToSubsection(slide));
+          toast.success(`${slides.length} slide${slides.length === 1 ? '' : 's'} added`);
+        }}
+      />
       <LyricsEditor
         open={showLyricsEditor}
         onClose={() => {
