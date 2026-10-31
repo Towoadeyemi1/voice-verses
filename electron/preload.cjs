@@ -11,6 +11,7 @@ const invoke = (channel, ...args) =>
 contextBridge.exposeInMainWorld('voiceVerses', {
   platform: process.platform,
   getVersion: () => invoke('app:version'),
+  setListening: (listening) => invoke('power:listening', listening),
   onUpdateAvailable: (callback) => {
     const listener = (_event, info) => callback(info);
     ipcRenderer.on('app:update-available', listener);
@@ -33,6 +34,20 @@ contextBridge.exposeInMainWorld('voiceVerses', {
       ipcRenderer.on('speech:event', listener);
       return () => ipcRenderer.removeListener('speech:event', listener);
     },
+  },
+  proPresenter: {
+    status: (connection) => invoke('propresenter:status', connection),
+    themes: (connection) => invoke('propresenter:themes', connection),
+    createMessage: (connection, theme) => invoke('propresenter:create-message', connection, theme),
+    show: (connection, verse) => invoke('propresenter:show', connection, verse),
+    clear: (connection, options) => invoke('propresenter:clear', connection, options),
+  },
+  network: {
+    configure: (options) => invoke('network:configure', options),
+    status: () => invoke('network:status'),
+    hasMedia: (id) => invoke('network:has-media', id),
+    putMedia: (id, mime, bytes) => invoke('network:put-media', id, mime, bytes),
+    publish: (state) => ipcRenderer.send('network:publish', state),
   },
   library: {
     getFolder: () => invoke('library:get-folder'),

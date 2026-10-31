@@ -1,4 +1,6 @@
+import { Film } from 'lucide-react';
 import { Slide } from '@/types/service';
+import { VideoStill } from './MediaThumbnail';
 
 interface SlidePreviewProps {
   slide: Slide | null;
@@ -76,6 +78,14 @@ export const SlidePreview = ({ slide, className = '', hideReference = false }: S
               {slide.caption}
             </div>
           )}
+        </div>
+      );
+
+    case 'video':
+      return (
+        <div className={`relative h-full w-full overflow-hidden bg-black ${className}`}>
+          <VideoStill mediaId={slide.mediaId} />
+          <Film className="absolute top-1 left-1 w-3 h-3 text-white drop-shadow" />
         </div>
       );
 

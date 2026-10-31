@@ -53,7 +53,7 @@ export const CountdownConfiguration = ({ config, onUpdate }: CountdownConfigProp
       <DialogTrigger asChild>
         <Button size="sm" variant={config?.enabled ? 'default' : 'outline'}>
           <Clock className="w-4 h-4 mr-2" />
-          {config?.enabled ? `${config.durationMinutes}m` : 'Add Timer'}
+          {config?.enabled ? (config.mode === 'until' ? `to ${config.untilTime}` : `${config.durationMinutes}m`) : 'Add Timer'}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
@@ -80,36 +80,92 @@ export const CountdownConfiguration = ({ config, onUpdate }: CountdownConfigProp
 
           {localConfig.enabled && (
             <>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={localConfig.mode !== 'until' ? 'default' : 'outline'}
+                  onClick={() => setLocalConfig({ ...localConfig, mode: 'duration' })}
+                >
+                  Length of time
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={localConfig.mode === 'until' ? 'default' : 'outline'}
+                  onClick={() => setLocalConfig({ ...localConfig, mode: 'until', untilTime: localConfig.untilTime ?? '10:00' })}
+                >
+                  Until a time
+                </Button>
+              </div>
+
+              {localConfig.mode === 'until' ? (
+                <div>
+                  <Label htmlFor="until">Count down to</Label>
+                  <Input
+                    id="until"
+                    type="time"
+                    value={localConfig.untilTime ?? '10:00'}
+                    onChange={(e) => setLocalConfig({ ...localConfig, untilTime: e.target.value })}
+                    className="mt-2 w-40"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="duration">Duration (minutes)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    min="1"
+                    value={localConfig.durationMinutes}
+                    onChange={(e) =>
+                      setLocalConfig({
+                        ...localConfig,
+                        durationMinutes: parseInt(e.target.value) || 1,
+                      })
+                    }
+                    className="mt-2"
+                  />
+                </div>
+              )}
+
               <div>
-                <Label htmlFor="duration">Duration (minutes)</Label>
+                <Label htmlFor="countdown-message">Message</Label>
                 <Input
-                  id="duration"
-                  type="number"
-                  min="1"
-                  value={localConfig.durationMinutes}
-                  onChange={(e) =>
-                    setLocalConfig({
-                      ...localConfig,
-                      durationMinutes: parseInt(e.target.value) || 1,
-                    })
-                  }
+                  id="countdown-message"
+                  value={localConfig.message ?? ''}
+                  placeholder="The section name"
+                  onChange={(e) => setLocalConfig({ ...localConfig, message: e.target.value || undefined })}
                   className="mt-2"
                 />
               </div>
 
               <div>
-                <Label className="mb-3 block">Display On</Label>
+                <Label className="mb-2 block">On the projector</Label>
+                <Select
+                  value={localConfig.projector ?? (localConfig.displayTargets.includes('main') ? 'corner' : 'off')}
+                  onValueChange={(projector) =>
+                    setLocalConfig({
+                      ...localConfig,
+                      projector: projector as 'full' | 'corner' | 'off',
+                      displayTargets: localConfig.displayTargets.filter((t) => t !== 'main'),
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full">Full screen (e.g. before the service)</SelectItem>
+                    <SelectItem value="corner">Small, in the corner</SelectItem>
+                    <SelectItem value="off">Not shown</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="mb-3 block">Also show on</Label>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="target-main"
-                      checked={localConfig.displayTargets.includes('main')}
-                      onCheckedChange={() => toggleDisplayTarget('main')}
-                    />
-                    <Label htmlFor="target-main" className="cursor-pointer">
-                      Main Screen
-                    </Label>
-                  </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="target-confidence"

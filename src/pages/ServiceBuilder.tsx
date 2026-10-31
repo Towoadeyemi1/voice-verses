@@ -1,20 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { LAST_SERVICE_KEY } from '@/lib/serviceStorage';
+import { addVideoToLibrary } from '@/lib/mediaFiles';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, AnnouncementSlide, BlankSlide, ServiceSection, ServiceSubsection, MediaItem } from '@/types/service';
+import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, VideoSlide, AnnouncementSlide, BlankSlide, ServiceSection, ServiceSubsection, MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVerse } from '@/types/bible';
-import { Book, Music, Image as ImageIcon, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings } from 'lucide-react';
+import { Book, Music, Image as ImageIcon, Film, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
 import { ManualSearch } from '@/components/ManualSearch';
-import { PPTXImport } from '@/components/PPTXImport';
 import { LyricsEditor } from '@/components/LyricsEditor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -97,6 +98,8 @@ const ServiceBuilder = () => {
         const found = services.find(s => s.id === serviceId);
         if (found) {
           setService(found);
+          // The Presenter opens the service being worked on
+          localStorage.setItem(LAST_SERVICE_KEY, found.id);
           if (found.sections?.length > 0) {
             setSelectedSection(found.sections[0].id);
             if (found.sections[0].subsections?.length > 0) {
@@ -533,12 +536,29 @@ const ServiceBuilder = () => {
     input.click();
   };
 
-  const handlePPTXImport = (slides: ImageSlide[]) => {
+  const handleAddVideoSlide = () => {
     if (!selectedSubsection) {
       toast.error('Please select a subsection first');
       return;
     }
-    slides.forEach(slide => addSlideToSubsection(slide));
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*';
+    input.multiple = true;
+    input.onchange = async (e) => {
+      const files = Array.from((e.target as HTMLInputElement).files ?? []);
+      for (const [i, file] of files.entries()) {
+        if (!file.type.startsWith('video/')) {
+          toast.error(`${file.name} is not a video`);
+          continue;
+        }
+        const item = await addVideoToLibrary(file);
+        const slide: VideoSlide = { id: `slide-${Date.now()}-${i}`, type: 'video', title: item.name, mediaId: item.id, loop: false, sound: true };
+        addSlideToSubsection(slide);
+      }
+      if (files.length) toast.success(`${files.length} video${files.length > 1 ? 's' : ''} added`);
+    };
+    input.click();
   };
 
   const handleDownloadTemplate = () => {
@@ -924,7 +944,10 @@ const ServiceBuilder = () => {
                         <ImageIcon className="w-4 h-4 mr-2" />
                         Image
                       </Button>
-                      <PPTXImport onImport={handlePPTXImport} />
+                      <Button onClick={handleAddVideoSlide} variant="outline" className="w-full justify-start">
+                        <Film className="w-4 h-4 mr-2" />
+                        Video
+                      </Button>
                       <Label htmlFor="file-upload" className="cursor-pointer">
                         <div className="flex items-center justify-start w-full px-4 py-2 text-sm font-medium border rounded-md hover:bg-accent">
                           <Upload className="w-4 h-4 mr-2" />
@@ -1116,6 +1139,10 @@ const ServiceBuilder = () => {
                                                   <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddImageSlide(); }}>
                                                     <ImageIcon className="w-3 h-3 mr-1" />
                                                     Image
+                                                  </Button>
+                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddVideoSlide(); }}>
+                                                    <Film className="w-3 h-3 mr-1" />
+                                                    Video
                                                   </Button>
                                                   <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddAnnouncementSlide(); }}>
                                                     <MessageSquare className="w-3 h-3 mr-1" />
@@ -1321,6 +1348,10 @@ const ServiceBuilder = () => {
                                                 <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddImageSlide(); }} className="flex-1">
                                                   <ImageIcon className="w-3 h-3 mr-1" />
                                                   Add Image
+                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddVideoSlide(); }} className="flex-1">
+                                                  <Film className="w-3 h-3 mr-1" />
+                                                  Add Video
                                                 </Button>
                                               </div>
                                             )}

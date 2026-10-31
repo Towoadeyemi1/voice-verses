@@ -23,8 +23,8 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Cornerstone Bible - Voice Scripture Projection',
-        short_name: 'Cornerstone Bible',
+        name: 'Voice Verses',
+        short_name: 'Voice Verses',
         description: 'Voice-activated Bible verse projection system for church services',
         theme_color: '#1a365d',
         background_color: '#ffffff',

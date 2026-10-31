@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { BibleVerse } from '@/types/bible';
 import { Slide } from '@/types/service';
-import { syncService } from '@/lib/syncService';
+import { SyncMessage, syncService } from '@/lib/syncService';
+import { plainVerseText } from '@/lib/verseText';
+import { VerseText } from '@/components/VerseText';
+import { FitText } from '@/components/FitText';
 import { BibleParser } from '@/lib/bibleParser';
 import { SlideDisplay } from '@/components/SlideDisplay';
 import { Button } from '@/components/ui/button';
@@ -10,6 +13,9 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Settings } from 'lucide-react';
+import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-active';
+import { useCountdown } from '@/hooks/use-countdown';
+import { formatRemaining } from '@/lib/countdown';
 
 export interface ConfidenceSettings {
   currentVerseFontSize: number;
@@ -37,11 +43,12 @@ const Confidence = () => {
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [currentVerse, setCurrentVerse] = useState<BibleVerse | null>(null);
   const [nextItems, setNextItems] = useState<{ ref: string; snippet: string }[]>([]);
-  const [allSlides, setAllSlides] = useState<Slide[]>([]);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(-1);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<ConfidenceSettings>(defaultSettings);
+  const pointerActive = usePointerActive();
+  const { countdown, remaining } = useCountdown();
+  useDoubleClickFullscreen();
 
   useEffect(() => {
     // Load settings from localStorage
@@ -50,104 +57,54 @@ const Confidence = () => {
       setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
     }
 
-    // Request current slide from presenter on load
-    const requestChannel = new BroadcastChannel('cornerstone-display-request');
-    requestChannel.postMessage({ type: 'request-current-slide' });
-    requestChannel.close();
+    const snippetOf = (slide: Slide) => {
+      if (slide.type === 'scripture' && slide.verse) return plainVerseText(slide.verse.text).split(' ').slice(0, 7).join(' ') + '...';
+      if (slide.type === 'lyrics' || slide.type === 'announcement') return (slide.content?.split('\n')[0] ?? '').slice(0, 50) + '...';
+      return 'Media slide';
+    };
 
-    // Subscribe to slide updates
-    const unsubscribe = syncService.subscribe(async (message) => {
-      console.log('Confidence received message:', message);
-      
-      let verse = null;
-      let slide = null;
-      
-      // Handle slide updates from Presenter
+    // Opened mid-service, or reloaded: catch up first, then follow changes
+    let latest = 0;
+    const handle = async (message: SyncMessage) => {
+      const call = ++latest;
+      let verse: BibleVerse | null = null;
+      let nextItemsList: { ref: string; snippet: string }[] = [];
+
       if (message.type === 'SLIDE_UPDATE') {
-        console.log('Confidence handling SLIDE_UPDATE:', message.data);
-        
-        if (message.data.slide) {
-          slide = message.data.slide;
-          setCurrentSlide(slide);
-          
-          // Store all slides and current index if provided
-          if (message.data.allSlides) {
-            setAllSlides(message.data.allSlides);
-          }
-          if (message.data.slideIndex !== undefined) {
-            setCurrentSlideIndex(message.data.slideIndex);
-          }
-          
-          // Extract verse for scripture slides
-          if (slide.type === 'scripture' && slide.verse) {
-            verse = slide.verse;
-          }
-          
-          console.log('Confidence updated to show slide:', slide.title);
-        } else {
-          setCurrentSlide(null);
-          setAllSlides([]);
-          setCurrentSlideIndex(-1);
-          console.log('Confidence cleared (no slide)');
-        }
-      }
-      // Handle voice-controlled scripture (VERSE_UPDATE from Scripture page)
-      else if (message.type === 'VERSE_UPDATE' && message.data.verse !== undefined) {
-        console.log('Confidence handling VERSE_UPDATE (voice-controlled):', message.data.verse);
-        verse = message.data.verse;
+        const slide = message.data.slide ?? null;
+        setCurrentSlide(slide);
+        if (slide?.type === 'scripture' && slide.verse) verse = slide.verse;
+        // In a service, "next" is the next slide in the service, not the next verse in the Bible
+        const index = message.data.slideIndex ?? message.data.index ?? -1;
+        const upcoming = message.data.upcoming ?? message.data.allSlides?.slice(index + 1) ?? [];
+        nextItemsList = upcoming.slice(0, settings.nextVerseCount).map((next) => ({ ref: next.title, snippet: snippetOf(next) }));
+      } else if (message.type === 'VERSE_UPDATE' && message.data.verse !== undefined) {
+        verse = message.data.verse ?? null;
         setCurrentSlide(null);
-        setAllSlides([]);
-        setCurrentSlideIndex(-1);
-        console.log('Confidence showing voice-controlled verse:', verse ? `${verse.book} ${verse.chapter}:${verse.verse}` : 'null');
-      }
-      
-      setCurrentVerse(verse);
-      
-      // Build next items list
-      const nextItemsList: { ref: string; snippet: string }[] = [];
-      
-      if (verse) {
-        // Get next verses for scripture
-        for (let i = 1; i <= settings.nextVerseCount; i++) {
-          const nextVerse = await BibleParser.getVerse(
-            verse.book,
-            verse.chapter,
-            verse.verse + i
-          );
-          
-          if (nextVerse) {
-            const words = nextVerse.text.split(' ').slice(0, 7).join(' ');
+        if (verse) {
+          for (let i = 1; i <= settings.nextVerseCount; i++) {
+            const nextVerse = await BibleParser.getVerse(verse.book, verse.chapter, verse.verse + i);
+            if (!nextVerse) break;
             nextItemsList.push({
               ref: `${nextVerse.book} ${nextVerse.chapter}:${nextVerse.verse}`,
-              snippet: words + '...'
+              snippet: plainVerseText(nextVerse.text).split(' ').slice(0, 7).join(' ') + '...',
             });
           }
         }
-      } else if (currentSlideIndex >= 0 && allSlides.length > 0) {
-        // Get next slides from the service
-        for (let i = 1; i <= settings.nextVerseCount && currentSlideIndex + i < allSlides.length; i++) {
-          const nextSlide = allSlides[currentSlideIndex + i];
-          let snippet = '';
-          
-          if (nextSlide.type === 'scripture' && nextSlide.verse) {
-            snippet = nextSlide.verse.text.split(' ').slice(0, 7).join(' ') + '...';
-          } else if (nextSlide.type === 'lyrics') {
-            snippet = nextSlide.content.split('\n')[0].slice(0, 50) + '...';
-          } else if (nextSlide.type === 'announcement') {
-            snippet = nextSlide.content?.split('\n')[0].slice(0, 50) + '...';
-          } else {
-            snippet = 'Media slide';
-          }
-          
-          nextItemsList.push({
-            ref: nextSlide.title,
-            snippet: snippet
-          });
-        }
+      } else if (message.type === 'LOGO') {
+        setCurrentSlide(null);
+      } else {
+        return;
       }
-      
+
+      if (call !== latest) return; // a newer message arrived while looking up verses
+      setCurrentVerse(verse);
       setNextItems(nextItemsList);
-    });
+    };
+
+    const live = syncService.current();
+    if (live) handle(live);
+    const unsubscribe = syncService.subscribe(handle);
 
     // Update clock every second
     const timer = setInterval(() => {
@@ -178,7 +135,7 @@ const Confidence = () => {
   return (
     <>
       <div 
-        className="min-h-screen flex"
+        className="h-screen flex overflow-hidden"
         style={{ backgroundColor: settings.backgroundColor, color: settings.textColor }}
       >
         {/* Main content area */}
@@ -198,11 +155,26 @@ const Confidence = () => {
                 <span style={{ color: `${settings.textColor}70` }}>No content selected</span>
               )}
             </div>
-            <div 
-              className="font-bold tabular-nums"
-              style={{ fontSize: `${settings.clockFontSize}px`, color: settings.textColor }}
-            >
-              {formatTime(currentTime)}
+            <div className="flex items-center gap-8">
+              {countdown?.confidence && (
+                <div
+                  className="font-bold tabular-nums rounded-lg px-4"
+                  title={countdown.message}
+                  style={{
+                    fontSize: `${settings.clockFontSize * 1.6}px`,
+                    color: remaining < 0 ? '#ffffff' : remaining <= (countdown.warnSeconds ?? 60) * 1000 ? '#fbbf24' : settings.textColor,
+                    backgroundColor: remaining < 0 ? '#dc2626' : 'transparent',
+                  }}
+                >
+                  {formatRemaining(remaining, { overrun: true })}
+                </div>
+              )}
+              <div
+                className="font-bold tabular-nums"
+                style={{ fontSize: `${settings.clockFontSize}px`, color: settings.textColor }}
+              >
+                {formatTime(currentTime)}
+              </div>
             </div>
           </div>
 
@@ -221,19 +193,20 @@ const Confidence = () => {
                 </div>
               </div>
             ) : currentVerse ? (
-              <div className="space-y-4">
+              <div className="h-full flex flex-col">
                 <div 
                   className="font-bold mb-4"
                   style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: settings.accentColor }}
                 >
                   {currentVerse.book} {currentVerse.chapter}:{currentVerse.verse}
                 </div>
-                <div 
+                <FitText
+                  maxFontSize={settings.currentVerseFontSize}
                   className="leading-relaxed break-words"
-                  style={{ fontSize: `${settings.currentVerseFontSize}px`, color: settings.textColor }}
+                  style={{ color: settings.textColor }}
                 >
-                  {currentVerse.text}
-                </div>
+                  <VerseText text={currentVerse.text} />
+                </FitText>
               </div>
             ) : (
               <div 
@@ -249,7 +222,7 @@ const Confidence = () => {
         {/* Next items sidebar - Yellow/Gold colored */}
         {nextItems.length > 0 && (
           <div 
-            className="w-96 border-l p-6 flex flex-col"
+            className="w-[26%] min-w-48 max-w-md border-l p-6 flex flex-col"
             style={{ 
               backgroundColor: '#fbbf24',
               borderColor: '#f59e0b',
@@ -285,19 +258,21 @@ const Confidence = () => {
         )}
       </div>
 
-      {/* Settings Toggle Button */}
-      <Button
-        onClick={() => setShowSettings(!showSettings)}
-        className="fixed top-4 right-4 z-50"
-        variant="outline"
-        size="icon"
-      >
-        <Settings className="w-4 h-4" />
-      </Button>
+      {/* Settings button, only while the mouse is moving */}
+      {(pointerActive || showSettings) && (
+        <Button
+          onClick={() => setShowSettings(!showSettings)}
+          className="fixed top-4 right-4 z-50"
+          variant="outline"
+          size="icon"
+        >
+          <Settings className="w-4 h-4" />
+        </Button>
+      )}
 
       {/* Settings Panel */}
       {showSettings && (
-        <Card className="fixed top-16 right-4 z-50 w-96 p-6 max-h-[calc(100vh-5rem)] overflow-y-auto bg-background/95 backdrop-blur">
+        <Card className="settings-panel fixed top-16 right-4 z-50 w-96 p-6 max-h-[calc(100vh-5rem)] overflow-y-auto bg-background/95 backdrop-blur">
           <h3 className="text-lg font-semibold mb-4">Confidence Monitor Settings</h3>
           
           <div className="space-y-6">

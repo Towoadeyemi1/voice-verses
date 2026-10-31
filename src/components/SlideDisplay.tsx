@@ -1,5 +1,9 @@
 import { Slide } from '@/types/service';
 import { useEffect, useRef, useState } from 'react';
+import { FitText } from './FitText';
+import { VerseText } from './VerseText';
+import { Film } from 'lucide-react';
+import { VideoStill } from './MediaThumbnail';
 
 interface SlideDisplayProps {
   slide: Slide | null;
@@ -81,15 +85,9 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
                 {slide.verse.book} {slide.verse.chapter}:{slide.verse.verse}
               </div>
             )}
-            <div 
-              className="leading-relaxed text-center break-words"
-              style={{ 
-                fontSize: `${scaledFontSize}px`,
-                lineHeight: '1.6'
-              }}
-            >
-              {slide.verse.text}
-            </div>
+            <FitText maxFontSize={scaledFontSize} className="text-center break-words" style={{ lineHeight: '1.6' }}>
+              <VerseText text={slide.verse.text} />
+            </FitText>
           </div>
         </div>
       );
@@ -115,15 +113,9 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
                 {slide.section}
               </div>
             )}
-            <div 
-              className="leading-relaxed text-center whitespace-pre-line break-words"
-              style={{ 
-                fontSize: `${scaledFontSize}px`,
-                lineHeight: '1.6'
-              }}
-            >
+            <FitText maxFontSize={scaledFontSize} className="text-center whitespace-pre-line break-words" style={{ lineHeight: '1.6' }}>
               {slide.content}
-            </div>
+            </FitText>
             <div 
               className="text-muted-foreground text-center"
               style={{ fontSize: `${Math.max(12, 24 * scale)}px`, marginTop: `${Math.max(16, 32 * scale)}px` }}
@@ -147,6 +139,18 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
               <p className="text-center" style={{ fontSize: `${Math.max(18, 48 * scale)}px` }}>{slide.caption}</p>
             </div>
           )}
+        </div>
+      );
+
+    case 'video':
+      // A still here (lists, previews, confidence monitor); the projector plays it
+      return (
+        <div ref={containerRef} className={`relative h-full w-full bg-black ${className}`}>
+          <VideoStill mediaId={slide.mediaId} />
+          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white flex items-center gap-2" style={{ padding: `${Math.max(6, 24 * scale)}px` }}>
+            <Film style={{ width: Math.max(12, 40 * scale), height: Math.max(12, 40 * scale) }} />
+            <span style={{ fontSize: `${Math.max(12, 40 * scale)}px` }}>{slide.title}</span>
+          </div>
         </div>
       );
 

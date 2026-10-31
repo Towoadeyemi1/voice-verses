@@ -1,298 +1,41 @@
-import { useState, useEffect } from 'react';
-import { LowerThirdDisplay, LowerThirdSettings } from '@/components/LowerThirdDisplay';
-import { BibleVerse } from '@/types/bible';
-import { Slide } from '@/types/service';
-import { syncService } from '@/lib/syncService';
-import { Button } from '@/components/ui/button';
-import { Settings, X } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { ScaledStage } from '@/components/ScaledStage';
+import { OutputContent } from '@/components/OutputContent';
+import { useLive } from '@/hooks/use-live';
+import { useCountdown } from '@/hooks/use-countdown';
+import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-active';
+import { loadAssignments, loadTemplates, templateFor } from '@/lib/templates';
 
+/**
+ * The lower third for a livestream or recording: the stream template (green
+ * by default, for keying over the camera in OBS, vMix or a video switcher).
+ * Nothing but the key colour shows when nothing is live or the logo is up.
+ */
 const LowerThird = () => {
-  const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
-  const [verse, setVerse] = useState<BibleVerse | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState<LowerThirdSettings>({
-    template: 'classic',
-    position: 'bottom-center',
-    fontSize: 32,
-    showBackground: true,
-    backgroundOpacity: 0.8,
-    textColor: '#FFFFFF',
-    accentColor: '#3B82F6',
-  });
-
+  const { live, logo } = useLive();
+  const { countdown, remaining } = useCountdown();
+  const pointerActive = usePointerActive();
+  useDoubleClickFullscreen();
+  // "?transparent=1": no key colour, for OBS/vMix browser sources (Settings → Network)
+  const transparent = new URLSearchParams(useLocation().search).has('transparent');
+  const keyColor = transparent ? 'transparent' : templateFor(loadTemplates(), loadAssignments(), 'stream', 'scripture').background.color;
   useEffect(() => {
-    // Load saved settings
-    const savedSettings = localStorage.getItem('cornerstone-lower-third-settings');
-    if (savedSettings) {
-      setSettings((prev) => ({ ...prev, ...JSON.parse(savedSettings) }));
-    }
-
-    // Subscribe to slide updates
-    const unsubscribe = syncService.subscribe((message) => {
-      console.log('LowerThird received message:', message);
-      
-      // Handle slide updates from Presenter
-      if (message.type === 'SLIDE_UPDATE') {
-        console.log('LowerThird handling SLIDE_UPDATE:', message.data);
-        
-        if (message.data.slide) {
-          const slide = message.data.slide;
-          setCurrentSlide(slide);
-          
-          // Extract verse for scripture slides
-          if (slide.type === 'scripture' && slide.verse) {
-            setVerse(slide.verse);
-          } else {
-            setVerse(null);
-          }
-          
-          console.log('LowerThird updated to show slide:', slide.title);
-        } else {
-          setCurrentSlide(null);
-          setVerse(null);
-          console.log('LowerThird cleared (no slide)');
-        }
-      }
-      // Handle voice-controlled scripture (VERSE_UPDATE from Scripture page)
-      else if (message.type === 'VERSE_UPDATE' && message.data.verse) {
-        console.log('LowerThird handling VERSE_UPDATE (voice-controlled):', message.data.verse);
-        setVerse(message.data.verse);
-        setCurrentSlide(null);
-        console.log('LowerThird showing voice-controlled verse:', `${message.data.verse.book} ${message.data.verse.chapter}:${message.data.verse.verse}`);
-      }
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  const updateSettings = (newSettings: Partial<LowerThirdSettings>) => {
-    const updated = { ...settings, ...newSettings };
-    setSettings(updated);
-    localStorage.setItem('cornerstone-lower-third-settings', JSON.stringify(updated));
-    
-    // Dispatch event for display component
-    window.dispatchEvent(
-      new CustomEvent('lower-third-settings-updated', { detail: updated })
-    );
-  };
+    if (!transparent) return;
+    document.documentElement.style.background = 'transparent';
+    document.body.style.background = 'transparent';
+  }, [transparent]);
 
   return (
-    <div className="relative min-h-screen bg-[#00FF00]">
-      {/* Always render LowerThirdDisplay as overlay */}
-      <LowerThirdDisplay verse={verse} slide={currentSlide} />
-      
-      {/* Waiting state when no verse */}
-      {!verse && !currentSlide && (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center space-y-4 px-8 bg-black/50 rounded-lg p-8">
-            <div className="w-16 h-16 mx-auto rounded-full border-4 border-white/30 flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                strokeWidth="2"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <p className="text-xl text-white/80 font-light">
-              Waiting for Scripture...
-            </p>
-            <p className="text-sm text-white/60">
-              Chroma Key Ready (Green Screen)
-            </p>
-          </div>
-        </div>
-      )}
-      
-      {/* Display slide title/info for non-scripture slides */}
-      {currentSlide && currentSlide.type !== 'scripture' && (
-        <div 
-          className="absolute"
-          style={{
-            bottom: settings.position.includes('bottom') ? '5%' : settings.position.includes('top') ? 'auto' : '50%',
-            top: settings.position.includes('top') ? '5%' : 'auto',
-            left: settings.position.includes('left') ? '5%' : settings.position.includes('center') ? '50%' : 'auto',
-            right: settings.position.includes('right') ? '5%' : 'auto',
-            transform: settings.position.includes('center') ? 'translateX(-50%)' : 'none',
-          }}
-        >
-          <div
-            className="rounded-lg px-8 py-4"
-            style={{
-              backgroundColor: settings.showBackground 
-                ? `#000000${Math.round((settings.backgroundOpacity || 0.8) * 255).toString(16).padStart(2, '0')}`
-                : 'transparent',
-            }}
-          >
-            <p
-              className="font-bold text-center"
-              style={{
-                fontSize: `${settings.fontSize}px`,
-                color: settings.textColor,
-                textShadow: !settings.showBackground ? '2px 2px 4px rgba(0,0,0,0.8)' : 'none',
-              }}
-            >
-              {currentSlide.title}
-            </p>
-          </div>
-        </div>
-      )}
-      
-      {/* Settings Toggle Button */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="fixed top-4 right-4 z-50 bg-background/95 backdrop-blur"
-        onClick={() => setShowSettings(!showSettings)}
-      >
-        {showSettings ? <X className="h-4 w-4" /> : <Settings className="h-4 w-4" />}
-      </Button>
-
-      {/* Settings Panel */}
-      {showSettings && (
-        <div className="fixed top-16 right-4 z-50 w-80 bg-background/95 backdrop-blur border rounded-lg shadow-lg p-6 space-y-6 max-h-[calc(100vh-5rem)] overflow-y-auto">
-          <div>
-            <h2 className="text-lg font-semibold mb-4">Lower Third Settings</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Customize your broadcast overlay appearance
-            </p>
-          </div>
-
-          {/* Template Selection */}
-          <div className="space-y-2">
-            <Label>Template</Label>
-            <Select 
-              value={settings.template} 
-              onValueChange={(value) => updateSettings({ template: value as any })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="classic">Classic</SelectItem>
-                <SelectItem value="modern">Modern</SelectItem>
-                <SelectItem value="minimal">Minimal</SelectItem>
-                <SelectItem value="elegant">Elegant</SelectItem>
-                <SelectItem value="bold">Bold</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Position Selection */}
-          <div className="space-y-2">
-            <Label>Position</Label>
-            <Select 
-              value={settings.position} 
-              onValueChange={(value) => updateSettings({ position: value as any })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-[300px]">
-                <SelectItem value="top-left">Top Left</SelectItem>
-                <SelectItem value="top-center">Top Center</SelectItem>
-                <SelectItem value="top-right">Top Right</SelectItem>
-                <SelectItem value="middle-left">Middle Left</SelectItem>
-                <SelectItem value="middle-center">Middle Center</SelectItem>
-                <SelectItem value="middle-right">Middle Right</SelectItem>
-                <SelectItem value="bottom-left">Bottom Left</SelectItem>
-                <SelectItem value="bottom-center">Bottom Center</SelectItem>
-                <SelectItem value="bottom-right">Bottom Right</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Font Size */}
-          <div className="space-y-2">
-            <Label>Font Size: {settings.fontSize}px</Label>
-            <Slider
-              value={[settings.fontSize]}
-              onValueChange={([value]) => updateSettings({ fontSize: value })}
-              min={20}
-              max={64}
-              step={2}
-            />
-          </div>
-
-          {/* Show Background */}
-          <div className="flex items-center justify-between">
-            <Label>Show Background</Label>
-            <Switch
-              checked={settings.showBackground}
-              onCheckedChange={(checked) => updateSettings({ showBackground: checked })}
-            />
-          </div>
-
-          {/* Background Opacity */}
-          {settings.showBackground && (
-            <div className="space-y-2">
-              <Label>Background Opacity: {Math.round(settings.backgroundOpacity * 100)}%</Label>
-              <Slider
-                value={[settings.backgroundOpacity * 100]}
-                onValueChange={([value]) => updateSettings({ backgroundOpacity: value / 100 })}
-                min={0}
-                max={100}
-                step={5}
-              />
-            </div>
-          )}
-
-          {/* Text Color */}
-          <div className="space-y-2">
-            <Label>Text Color</Label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={settings.textColor}
-                onChange={(e) => updateSettings({ textColor: e.target.value })}
-                className="w-12 h-10 rounded border cursor-pointer"
-              />
-              <input
-                type="text"
-                value={settings.textColor}
-                onChange={(e) => updateSettings({ textColor: e.target.value })}
-                className="flex-1 px-3 py-2 rounded border bg-background"
-              />
-            </div>
-          </div>
-
-          {/* Accent Color */}
-          <div className="space-y-2">
-            <Label>Accent Color</Label>
-            <div className="flex gap-2">
-              <input
-                type="color"
-                value={settings.accentColor}
-                onChange={(e) => updateSettings({ accentColor: e.target.value })}
-                className="w-12 h-10 rounded border cursor-pointer"
-              />
-              <input
-                type="text"
-                value={settings.accentColor}
-                onChange={(e) => updateSettings({ accentColor: e.target.value })}
-                className="flex-1 px-3 py-2 rounded border bg-background"
-              />
-            </div>
-          </div>
-
-          {/* Instructions */}
-          <div className="pt-4 border-t space-y-2 text-sm text-muted-foreground">
-            <p className="font-medium">Chroma Key Setup:</p>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Use #00FF00 green for keying</li>
-              <li>Apply chroma key in your broadcast software</li>
-              <li>Adjust tolerance as needed</li>
-              <li>Position this window in your capture</li>
-            </ol>
-          </div>
+    <div className="fixed inset-0" style={{ backgroundColor: keyColor, cursor: pointerActive ? 'auto' : 'none' }}>
+      <ScaledStage className="absolute inset-0">
+        <OutputContent live={logo !== null ? null : live} output="stream" countdown={countdown} remaining={remaining} transparent={transparent} />
+      </ScaledStage>
+      {pointerActive && !live && !countdown?.stream && !transparent && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <p className="bg-black/60 text-white/80 rounded-lg px-6 py-4 text-sm">
+            Lower third: key out the background colour in your streaming software
+          </p>
         </div>
       )}
     </div>

@@ -1,18 +1,16 @@
 import { useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff } from 'lucide-react';
 
 interface AudioVisualizerProps {
   isListening: boolean;
   volume: number;
-  latency?: number;
   isMuted?: boolean;
   onToggleMute?: () => void;
 }
 
-export const AudioVisualizer = ({ isListening, volume, latency, isMuted, onToggleMute }: AudioVisualizerProps) => {
+export const AudioVisualizer = ({ isListening, volume, isMuted, onToggleMute }: AudioVisualizerProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -97,11 +95,6 @@ export const AudioVisualizer = ({ isListening, volume, latency, isMuted, onToggl
                 {isMuted ? <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <MicOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                 <span>{isMuted ? 'Unmute' : 'Mute'}</span>
               </Button>
-            )}
-            {latency !== undefined && (
-              <Badge variant="outline" className="text-primary border-primary text-[10px] sm:text-xs whitespace-nowrap">
-                {latency}ms
-              </Badge>
             )}
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Mic, Calendar, Music } from 'lucide-react';
+import { Mic, Calendar, Music, Palette } from 'lucide-react';
 
 export const ModeNav = () => {
   const navigate = useNavigate();
@@ -25,6 +25,12 @@ export const ModeNav = () => {
       icon: Music,
       label: 'Media',
       description: 'Manage media',
+    },
+    {
+      path: '/templates',
+      icon: Palette,
+      label: 'Templates',
+      description: 'Fonts & backgrounds',
     },
   ];
   

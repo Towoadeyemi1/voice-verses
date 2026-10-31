@@ -1,16 +1,16 @@
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { BibleVerse } from '@/types/bible';
 import { BookOpen, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { BibleParser } from '@/lib/bibleParser';
+import { VerseText } from './VerseText';
 
 interface VerseDisplayProps {
   verse: BibleVerse | null;
   timestamp?: Date;
-  latency?: number;
 }
 
-export const VerseDisplay = ({ verse, timestamp, latency }: VerseDisplayProps) => {
+export const VerseDisplay = ({ verse, timestamp }: VerseDisplayProps) => {
   if (!verse) {
     return (
       <Card className="p-4 sm:p-6 lg:p-8 border-border bg-card">
@@ -45,24 +45,19 @@ export const VerseDisplay = ({ verse, timestamp, latency }: VerseDisplayProps) =
                   <span className="text-xs sm:text-sm">{formatDistanceToNow(timestamp, { addSuffix: true })}</span>
                 </div>
               )}
-              {latency !== undefined && (
-                <Badge variant="outline" className="text-success border-success text-xs">
-                  {latency}ms response
-                </Badge>
-              )}
             </div>
           </div>
         </div>
 
         <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none">
-          <p className="text-foreground leading-relaxed text-sm sm:text-base lg:text-lg italic">
-            "{verse.text}"
+          <p className="text-foreground leading-relaxed text-sm sm:text-base lg:text-lg">
+            <VerseText text={verse.text} />
           </p>
         </div>
 
         <div className="pt-3 sm:pt-4 border-t border-border">
           <p className="text-right text-xs sm:text-sm font-semibold text-muted-foreground">
-            — {verse.book} {verse.chapter}:{verse.verse} (KJV)
+            — {verse.book} {verse.chapter}:{verse.verse} ({BibleParser.getVersion().toUpperCase()})
           </p>
         </div>
       </div>

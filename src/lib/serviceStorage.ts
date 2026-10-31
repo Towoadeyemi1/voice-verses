@@ -5,6 +5,9 @@ import { notifyLocalChange, setDeletion } from './library/localChanges';
 const SERVICES_KEY = 'cornerstone-services';
 const MEDIA_KEY = 'cornerstone-media';
 
+/** The service last opened in the Service Builder or Presenter */
+export const LAST_SERVICE_KEY = 'voice-verses-last-service';
+
 export interface SaveOptions {
   /** The change came from the library folder: keep its timestamp and don't sync it back */
   fromSync?: boolean;
@@ -187,6 +190,8 @@ export class ServiceStorage {
       const items = await this.getMedia();
       const filtered = items.filter(m => m.id !== id);
       await indexedDBService.saveMedia(filtered);
+      // A video's file is stored separately
+      await indexedDBService.deleteFile(id).catch(() => {});
       if (!options?.fromSync) {
         setDeletion('media', id, new Date().toISOString());
         notifyLocalChange();

@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Service, Slide } from '@/types/service';
-import { ServiceStorage } from '@/lib/serviceStorage';
+import { LAST_SERVICE_KEY, ServiceStorage } from '@/lib/serviceStorage';
+import { desktop } from '@/lib/desktop';
 import { syncService } from '@/lib/syncService';
 import { SlideDisplay } from '@/components/SlideDisplay';
 import { SlidePreview } from '@/components/SlidePreview';
@@ -14,6 +15,8 @@ import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { Play, Square, ChevronLeft, ChevronRight, Monitor, Edit2, ExternalLink, Mic, MicOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ShowLogoButton } from '@/components/ShowLogoButton';
+import { CountdownControl } from '@/components/CountdownControl';
+import { countdownFromConfig, startCountdown, stopCountdown } from '@/lib/countdown';
 import { cn } from '@/lib/utils';
 import { BibleVerse } from '@/types/bible';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
@@ -54,6 +57,14 @@ const Presenter = () => {
   }, []);
   useLibraryUpdated(() => loadServices());
 
+  // Without a service in the address, open the one last worked on
+  useEffect(() => {
+    if (searchParams.get('service') || services.length === 0) return;
+    const lastId = localStorage.getItem(LAST_SERVICE_KEY);
+    const service = services.find((s) => s.id === lastId);
+    if (service) setSearchParams({ service: service.id }, { replace: true });
+  }, [services, searchParams, setSearchParams]);
+
   useEffect(() => {
     const serviceId = searchParams.get('service');
     if (serviceId && services.length > 0) {
@@ -63,22 +74,7 @@ const Presenter = () => {
         
         // Show service logo by default when not presenting
         if (service.serviceLogo && !isPresenting) {
-          syncService.broadcast({
-            type: 'SLIDE_UPDATE',
-            data: { slide: null }
-          });
-          
-          // Broadcast logo display
-          const channel = new BroadcastChannel('cornerstone-display');
-          channel.postMessage({
-            type: 'show-logo',
-            logoUrl: service.serviceLogo
-          });
-          localStorage.setItem('cornerstone-current-display', JSON.stringify({
-            type: 'show-logo',
-            logoUrl: service.serviceLogo
-          }));
-          channel.close();
+          syncService.showLogo(service.serviceLogo);
         }
       }
     }
@@ -157,10 +153,24 @@ const Presenter = () => {
         slide,
         index,
         slideIndex: index,
-        allSlides: allSlides,
+        upcoming: slide ? allSlides.slice(index + 1, index + 4) : [],
         timestamp: new Date(),
       },
-    });
+    });    startSectionTimer(slide);
+  };
+
+  // A section with a timer (Service Builder → Add Timer) starts it when its first
+  // slide goes live, and stops it when the service moves to another section
+  const timedSection = useRef<string | null>(null);
+  const startSectionTimer = (slide: Slide | null) => {
+    const subsection = slide && currentService?.sections.flatMap((s) => s.subsections).find((sub) => sub.slides.some((x) => x.id === slide.id));
+    const id = subsection?.countdown?.enabled ? subsection.id : null;
+    if (id === timedSection.current) return;
+    if (timedSection.current) stopCountdown();
+    timedSection.current = id;
+    if (subsection?.countdown?.enabled && subsection.autoStartCountdown !== false) {
+      startCountdown(countdownFromConfig(subsection.countdown, subsection.name));
+    }
   };
 
   const handleStart = () => {
@@ -191,16 +201,7 @@ const Presenter = () => {
     
     // Show service logo when stopping presentation
     if (currentService?.serviceLogo) {
-      const channel = new BroadcastChannel('cornerstone-display');
-      channel.postMessage({
-        type: 'show-logo',
-        logoUrl: currentService.serviceLogo
-      });
-      localStorage.setItem('cornerstone-current-display', JSON.stringify({
-        type: 'show-logo',
-        logoUrl: currentService.serviceLogo
-      }));
-      channel.close();
+      syncService.showLogo(currentService.serviceLogo);
     }
     
     toast.info('Presentation stopped');
@@ -231,34 +232,8 @@ const Presenter = () => {
     }
   };
 
-  // Listen for display requests from projection windows
-  useEffect(() => {
-    const requestChannel = new BroadcastChannel('cornerstone-display-request');
-    requestChannel.onmessage = (event) => {
-      if (event.data?.type === 'request-current-slide') {
-        // Always respond if there's a current slide, even if not presenting
-        if (currentSlide) {
-          console.log('Re-broadcasting current slide for new window:', currentSlide.title);
-          broadcastSlide(currentSlide, currentIndex);
-        } else if (currentService?.serviceLogo) {
-          // If no slide but service has logo, show logo
-          console.log('Sending logo to new window');
-          const channel = new BroadcastChannel('cornerstone-display');
-          channel.postMessage({
-            type: 'show-logo',
-            logoUrl: currentService.serviceLogo
-          });
-          channel.close();
-        }
-      }
-    };
-
-    return () => {
-      requestChannel.close();
-    };
-  }, [currentSlide, currentIndex, currentService]);
-
   const handleServiceChange = (serviceId: string) => {
+    localStorage.setItem(LAST_SERVICE_KEY, serviceId);
     setSearchParams({ service: serviceId });
     setCurrentIndex(0);
     setIsPresenting(false);
@@ -310,6 +285,7 @@ const Presenter = () => {
     try {
       setIsConnecting(true);
       setIsVoiceActive(true);
+      desktop?.setListening(true);
       
       // Create verse detection controller (centralized detection with dedupe)
       verseController.current = new VerseDetectionController({
@@ -372,6 +348,7 @@ const Presenter = () => {
       console.error('Error starting voice:', error);
       setIsConnecting(false);
       setIsVoiceActive(false);
+      desktop?.setListening(false);
       toast.error('Failed to start voice recognition', {
         description: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -388,6 +365,7 @@ const Presenter = () => {
       verseController.current = null;
     }
     setIsVoiceActive(false);
+    desktop?.setListening(false);
     setAudioVolume(0);
     setTranscript('');
     toast.info('Voice deactivated');
@@ -463,6 +441,7 @@ const Presenter = () => {
                 </Button>
               )}
               
+              <CountdownControl />
               <ShowLogoButton serviceId={currentService?.id} variant="outline" size="sm" />
               
               <Button

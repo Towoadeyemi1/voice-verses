@@ -14,6 +14,10 @@ import ServicePlanner from "./pages/ServicePlanner";
 import ServiceBuilder from "./pages/ServiceBuilder";
 import Presenter from "./pages/Presenter";
 import MediaLibrary from "./pages/MediaLibrary";
+import Templates from "./pages/Templates";
+import NetworkHome from "./pages/NetworkHome";
+import { isNetworkViewer } from "./lib/networkView";
+import { startNetworkPublisher } from "./lib/networkPublisher";
 import NotFound from "./pages/NotFound";
 import { librarySync } from "./lib/library/librarySync";
 import { desktop } from "./lib/desktop";
@@ -25,9 +29,10 @@ const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    // Display windows (projection etc.) only show slides; the operator window does the rest
-    if (isDisplayWindow()) return;
+    // Display windows (projection etc.) and network viewers only show slides; the operator window does the rest
+    if (isDisplayWindow() || isNetworkViewer) return;
     librarySync.start();
+    startNetworkPublisher();
     return desktop?.onUpdateAvailable(({ version, url }) => {
       toast(`Voice Verses ${version} is available`, {
         description: 'Download it and replace the app in Applications when convenient.',
@@ -45,7 +50,7 @@ const App = () => {
         {/* Hash routing works on GitHub Pages sub-paths and file:// in the desktop app */}
         <HashRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={isNetworkViewer ? <NetworkHome /> : <Index />} />
             <Route path="/projection" element={<Projection />} />
             <Route path="/lower-third" element={<LowerThird />} />
             <Route path="/confidence" element={<Confidence />} />
@@ -54,10 +59,11 @@ const App = () => {
             <Route path="/service-builder/:serviceId" element={<ServiceBuilder />} />
             <Route path="/presenter" element={<Presenter />} />
             <Route path="/media-library" element={<MediaLibrary />} />
+            <Route path="/templates" element={<Templates />} />
             <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <HelpAssistant />
+          {!isNetworkViewer && <HelpAssistant />}
         </HashRouter>
       </TooltipProvider>
     </QueryClientProvider>

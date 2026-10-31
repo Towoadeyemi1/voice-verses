@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DisplayedVerse } from '@/types/bible';
 import { BookMarked, History } from 'lucide-react';
+import { plainVerseText } from '@/lib/verseText';
 
 interface ContextTrackerProps {
   currentBook?: string;
@@ -32,14 +33,14 @@ export const ContextTracker = ({ currentBook, currentChapter, recentVerses }: Co
                   {currentBook} {currentChapter}
                 </Badge>
                 <span className="text-sm text-muted-foreground">
-                  Context active - verse numbers only needed
+                  Last verse shown
                 </span>
               </div>
             </div>
           ) : (
             <div className="p-4 rounded-lg bg-muted/30 border border-dashed border-border">
               <p className="text-sm text-muted-foreground text-center">
-                No context set - speak full reference
+                No verse shown yet
               </p>
             </div>
           )}
@@ -64,16 +65,13 @@ export const ContextTracker = ({ currentBook, currentChapter, recentVerses }: Co
                     key={`${verse.book}-${verse.chapter}-${verse.verse}-${index}`}
                     className="p-3 rounded-lg bg-muted/30 border border-border hover:border-primary/50 transition-smooth cursor-pointer"
                   >
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="mb-1">
                       <span className="font-semibold text-foreground text-sm">
                         {verse.book} {verse.chapter}:{verse.verse}
                       </span>
-                      <Badge variant="outline" className="text-xs">
-                        {verse.latency}ms
-                      </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2">
-                      {verse.text}
+                      {plainVerseText(verse.text)}
                     </p>
                   </div>
                 ))}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Settings, LayoutGrid, MonitorPlay, Presentation } from 'lucide-react';
 import { ShowLogoButton } from './ShowLogoButton';
+import { CountdownControl } from './CountdownControl';
 
 interface PageHeaderProps {
   title: string;
@@ -31,7 +32,7 @@ export const PageHeader = ({
       <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 w-full sm:w-auto">
         <img 
           src={`${import.meta.env.BASE_URL}cornerstone-logo.png`} 
-          alt="Cornerstone Bible Logo" 
+          alt="Voice Verses logo" 
           className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 object-contain flex-shrink-0"
         />
         <div className="flex-1 min-w-0">
@@ -45,6 +46,7 @@ export const PageHeader = ({
       <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
         {actions}
         
+        <CountdownControl className="hidden sm:flex" />
         <ShowLogoButton variant="outline" size="default" className="hidden sm:flex" />
         
         {onToggleSettings && (

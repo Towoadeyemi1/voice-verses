@@ -2,6 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { ServiceStorage } from '@/lib/serviceStorage';
+import { syncService } from '@/lib/syncService';
+import { clearProPresenter } from '@/lib/proPresenter';
+import { stopCountdown } from '@/lib/countdown';
 
 interface ShowLogoButtonProps {
   serviceId?: string;
@@ -26,29 +29,16 @@ export const ShowLogoButton = ({ serviceId, variant = 'outline', size = 'default
       logoUrl = localStorage.getItem('global-service-logo') || '';
     }
     
-    if (!logoUrl) {
-      toast.error('No service logo configured', {
-        description: 'Please upload a logo in Settings first',
-      });
-      return;
-    }
+    // Without a logo the screens still clear: that is what the operator needs in a hurry
+    syncService.showLogo(logoUrl);
+    stopCountdown();
+    clearProPresenter();
 
-    // Broadcast logo display to all screens
-    const logoData = {
-      type: 'show-logo',
-      logoUrl,
-      timestamp: Date.now(),
-    };
-    
-    // Broadcast via BroadcastChannel for same-domain windows
-    const channel = new BroadcastChannel('cornerstone-display');
-    channel.postMessage(logoData);
-    channel.close();
-    
-    // Store in localStorage for persistence
-    localStorage.setItem('cornerstone-current-display', JSON.stringify(logoData));
-    
-    toast.success('Service logo displayed on all screens');
+    if (logoUrl) {
+      toast.success('Service logo displayed on all screens');
+    } else {
+      toast.info('Screens cleared', { description: 'Add a logo in Settings → Logo to show it here.' });
+    }
   };
 
   return (

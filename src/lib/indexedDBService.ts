@@ -2,7 +2,7 @@ import { Service, MediaItem } from '@/types/service';
 import { BibleVerse } from '@/types/bible';
 
 const DB_NAME = 'cornerstone-bible-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export interface AppState {
   services: Service[];
@@ -41,6 +41,10 @@ class IndexedDBService {
         }
         if (!db.objectStoreNames.contains('state')) {
           db.createObjectStore('state');
+        }
+        // Large media (videos) as Blobs, keyed by media item id; too big to keep inside media items
+        if (!db.objectStoreNames.contains('files')) {
+          db.createObjectStore('files');
         }
       };
     });
@@ -112,6 +116,35 @@ class IndexedDBService {
         resolve(items);
       };
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  async saveFile(id: string, file: Blob): Promise<void> {
+    if (!this.db) await this.init();
+    const tx = this.db!.transaction('files', 'readwrite');
+    tx.objectStore('files').put(file, id);
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async getFile(id: string): Promise<Blob | undefined> {
+    if (!this.db) await this.init();
+    const request = this.db!.transaction('files', 'readonly').objectStore('files').get(id);
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result ?? undefined);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async deleteFile(id: string): Promise<void> {
+    if (!this.db) await this.init();
+    const tx = this.db!.transaction('files', 'readwrite');
+    tx.objectStore('files').delete(id);
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
     });
   }
 

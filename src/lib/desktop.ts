@@ -25,9 +25,37 @@ export type SpeechWorkerEvent =
   | { type: 'done'; session: number }
   | { type: 'error'; session?: number; message: string };
 
+export interface ProPresenterConnection {
+  host: string;
+  port: number;
+}
+
+export interface ProPresenterStatus {
+  name: string;
+  version: string;
+  hasMessage: boolean;
+  /** The message exists and has {Verse} and {Reference} tokens */
+  messageReady: boolean;
+}
+
+export interface ProPresenterThemeSlide {
+  id: { uuid: string; name: string; index: number };
+  label: string;
+}
+
+export interface NetworkStatus {
+  running: boolean;
+  port: number;
+  viewers: number;
+  /** Addresses other devices can open, e.g. http://192.168.1.20:47100/ */
+  urls: string[];
+}
+
 export interface DesktopBridge {
   platform: string;
   getVersion(): Promise<string>;
+  /** Keeps the computer and screens awake while listening */
+  setListening(listening: boolean): Promise<void>;
   /** A newer version exists but this build can't install it itself (unsigned macOS build) */
   onUpdateAvailable(callback: (info: { version: string; url: string }) => void): () => void;
   secrets: {
@@ -48,6 +76,21 @@ export interface DesktopBridge {
     finish(session: number): void;
     stop(session: number): void;
     onEvent(callback: (event: SpeechWorkerEvent) => void): () => void;
+  };
+  proPresenter: {
+    status(connection: ProPresenterConnection): Promise<ProPresenterStatus>;
+    themes(connection: ProPresenterConnection): Promise<ProPresenterThemeSlide[]>;
+    /** Creates the "Voice Verses" message using the given theme slide */
+    createMessage(connection: ProPresenterConnection, theme: ProPresenterThemeSlide['id']): Promise<ProPresenterStatus>;
+    show(connection: ProPresenterConnection, verse: { reference: string; text: string; stage: boolean }): Promise<void>;
+    clear(connection: ProPresenterConnection, options: { stage: boolean }): Promise<void>;
+  };
+  network: {
+    configure(options: { enabled: boolean; port?: number }): Promise<NetworkStatus>;
+    status(): Promise<NetworkStatus>;
+    hasMedia(id: string): Promise<boolean>;
+    putMedia(id: string, mime: string, bytes: ArrayBuffer): Promise<void>;
+    publish(state: unknown): void;
   };
   library: {
     getFolder(): Promise<string | null>;

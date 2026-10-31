@@ -91,6 +91,9 @@ jobs:
           npx esbuild tools/speech-eval/detector-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/detector-check.cjs --log-level=error
           node /tmp/detector-check.cjs
 
+      - name: "CHECK 9: ProPresenter client"
+        run: node tools/propresenter-check.mjs
+
       - name: QA Summary
         if: success()
         run: |

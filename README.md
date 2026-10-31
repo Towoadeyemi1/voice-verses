@@ -90,6 +90,38 @@ server (LM Studio, Jan, llama.cpp). Answers are checked against the Bible text, 
 default appear as a suggestion the operator confirms. The in-app help assistant uses the
 same provider.
 
+### Showing it: outputs and ProPresenter
+
+Voice Verses has its own projection, confidence monitor and green-screen lower third
+windows. They all follow one shared "what is live" record (`src/lib/syncService.ts`), so a
+window opened or reloaded mid-service shows what is on screen at once. Text shrinks to
+fit, and the KJV's supplied words show in italics. The desktop app (`electron/outputs.js`)
+remembers which screen each window goes on and keeps the computer awake during a service.
+
+Voice Verses runs the screens itself. Churches that also have **ProPresenter** (7.9 or
+later) can send each verse there too, Settings → ProPresenter, or open an optional
+companion screen (`src/pages/ProPresenterLive.tsx`) for an operator who only sends verses
+to ProPresenter. The microphone can be one channel of a multichannel desk feed
+(`src/speech/audioInput.ts`).
+
+The ProPresenter connection lives in `electron/propresenter.js`. ProPresenter's API has no Bible
+endpoint, so verses go through a ProPresenter message named "Voice Verses" with `{Verse}`
+and `{Reference}` tokens; ProPresenter's own theme and Looks decide how and where it shows.
+`node tools/propresenter-check.mjs` tests the client against a stand-in ProPresenter.
+
+### Templates, countdowns, media and songs
+
+- **Templates** (`src/lib/templates.ts`, Templates page): the look of scripture, songs,
+  announcements and countdowns per output; drawn by `TemplateRenderer`, which every output
+  and preview uses.
+- **Countdowns** (`src/lib/countdown.ts`): minutes or until a time of day; outputs compute
+  the time from the end time, so all screens agree.
+- **Videos** (`src/lib/mediaFiles.ts`): stored as files in IndexedDB on this computer;
+  template backgrounds and video slides.
+- **Songs** (`src/lib/songs.ts`): sections written once, arrangements, CCLI credits.
+- **Network outputs** (`electron/network.js`, `src/lib/networkPublisher.ts`): the desktop
+  app serves the outputs to browsers on the LAN, with live updates over Server-Sent Events.
+
 ### Storage
 
 Services and media are saved on the computer (IndexedDB). Optionally, Settings → Storage

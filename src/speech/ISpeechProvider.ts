@@ -14,6 +14,8 @@ export interface SpeechSettings {
   speechEngine: SpeechEngineType;
   language?: string;
   audioDevice?: string | null;
+  /** 0-based channel of a multichannel input device; null for its normal input */
+  audioChannel?: number | null;
 }
 
 export interface TranscriptCallback {
