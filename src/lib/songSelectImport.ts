@@ -58,7 +58,7 @@ const SECTION = /^(verse|chorus|pre-?chorus|bridge|tag|intro|outro|ending|refrai
  * writers, "© 2016 ...", the terms of use and "CCLI License # ...").
  */
 function parseTxt(text: string): ImportedSong | null {
-  const lines = text.replace(/\r/g, '').replace(/ /g, ' ').split('\n').map((l) => l.trimEnd());
+  const lines = text.replace(/\r/g, '').replace(/\u00a0/g, ' ').split('\n').map((l) => l.trimEnd());
   const first = lines.findIndex((l) => l.trim());
   if (first < 0) return null;
   const name = tidy(lines[first]);
