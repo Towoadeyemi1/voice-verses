@@ -11,7 +11,7 @@ import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, VideoSlide, An
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVerse } from '@/types/bible';
-import { Book, Music, Image as ImageIcon, Film, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings, Sparkles, Palette } from 'lucide-react';
+import { Book, Music, Image as ImageIcon, Film, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings, Sparkles, Palette, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
@@ -58,8 +58,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PageHeader } from '@/components/PageHeader';
-import { ModeNav } from '@/components/ModeNav';
+import { AppShell, Section } from '@/components/shell/AppShell';
+import { colorFor } from '@/components/live/ServiceTimeline';
+import { ScaledStage } from '@/components/ScaledStage';
+import { OutputContent } from '@/components/OutputContent';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { SortableSection, SortableSubsection, SortableSlide } from '@/components/service-builder/SortableItems';
@@ -850,166 +852,130 @@ const ServiceBuilder = () => {
 
   if (!service) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
 
+  const selectedPart = service.sections?.flatMap((sec) => sec.subsections).find((sub) => sub.id === selectedSubsection);
+  const when = new Date(service.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto">
-        <PageHeader
-          title="Service Builder"
-          description={service.name}
-          actions={
-            <>
-              <Button onClick={handleCreateNewService} variant="outline" size="default">
-                <Plus className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">New Service</span>
-              </Button>
-              <Button onClick={handleSaveAsTemplate} variant="outline" size="default" className="hidden sm:flex">
-                <Copy className="w-4 h-4 sm:mr-2" />
-                <span className="hidden lg:inline">Save as Template</span>
-              </Button>
-              <Button onClick={handleSave} size="default">
-                <Save className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Save</span>
-              </Button>
-            </>
-          }
-        />
+    <AppShell
+      wide
+      title={service.name || 'Untitled service'}
+      subtitle={`${when} · starts ${service.startTime}`}
+      actions={
+        <>
+          <Button onClick={handleSaveAsTemplate} variant="ghost" className="hidden sm:flex" title="Keep this order of service to start other services from">
+            <Copy className="w-4 h-4" />
+            Save as an order
+          </Button>
+          <Button variant="secondary" onClick={async () => { await handleSave(); navigate(`/presenter?service=${service.id}`); }}>
+            <Monitor className="w-4 h-4" />
+            Present
+          </Button>
+          <Button onClick={handleSave}>
+            <Save className="w-4 h-4" />
+            Save
+          </Button>
+        </>
+      }
+    >
+        <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)] gap-6 items-start">
+          <div className="space-y-6 lg:sticky lg:top-24">
+            <Section title="Service">
+              <div className="space-y-3">
+                <Input value={service.name} onChange={(e) => setService({ ...service, name: e.target.value })} placeholder="Service name" aria-label="Service name" />
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <Input
+                    type="date"
+                    aria-label="Date"
+                    value={service.date instanceof Date ? service.date.toISOString().split('T')[0] : new Date(service.date).toISOString().split('T')[0]}
+                    onChange={(e) => setService({ ...service, date: new Date(e.target.value) })}
+                  />
+                  <Input type="time" aria-label="Start time" value={service.startTime} onChange={(e) => setService({ ...service, startTime: e.target.value })} className="w-32" />
+                </div>
+              </div>
+            </Section>
 
-        <div className="space-y-4 sm:space-y-6">
-          <ModeNav />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Add Content</h2>
-            <div className="space-y-4">
-              <div>
-                <Label className="mb-2 block">Sections</Label>
-                <Button onClick={handleAddSection} variant="outline" className="w-full justify-start">
-                  <FolderPlus className="w-4 h-4 mr-2" />
-                  Add Main Section
+            <Section
+              title={selectedPart ? `Add to “${selectedPart.name}”` : 'Add to a part'}
+              description={selectedPart ? undefined : 'Click a part of the service on the right, then add verses, songs and more to it.'}
+            >
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  ['Scripture', Book, handleAddScriptureSlide],
+                  ['Song', Music, handleAddLyricsSlide],
+                  ['Announcement', MessageSquare, handleAddAnnouncementSlide],
+                  ['Picture', ImageIcon, handleAddImageSlide],
+                  ['Video', Film, handleAddVideoSlide],
+                  ['Blank', FileQuestion, handleAddBlankSlide],
+                ] as const).map(([label, Icon, add]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    disabled={!selectedSubsection}
+                    onClick={add}
+                    className="h-[72px] rounded-xl bg-muted/50 hover:bg-muted flex flex-col items-center justify-center gap-1.5 text-sm font-medium transition disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    <Icon className="w-5 h-5" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Button variant="secondary" disabled={!selectedSubsection} onClick={() => setShowAiSlides(true)}>
+                  <Sparkles className="w-4 h-4" />
+                  Make with AI
+                </Button>
+                <Button variant="secondary" disabled={!selectedSubsection} asChild={!!selectedSubsection}>
+                  <label className="cursor-pointer">
+                    <Upload className="w-4 h-4" />
+                    Pictures
+                    <Input id="file-upload" type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} />
+                  </label>
                 </Button>
               </div>
-
-              <div className="border-t pt-4">
-                <Label className="mb-2 block">Worship Team Import</Label>
-                <div className="space-y-2">
-                  <Button onClick={handleDownloadTemplate} variant="outline" className="w-full justify-start" size="sm">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Download Template
-                  </Button>
-                  <Label htmlFor="worship-import" className="cursor-pointer">
-                    <div className="flex items-center justify-start w-full px-4 py-2 text-sm font-medium border rounded-md hover:bg-accent">
-                      <Music className="w-4 h-4 mr-2" />
-                      Import Worship Songs
-                    </div>
-                  </Label>
-                  <Input
-                    id="worship-import"
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={handleImportWorshipSongs}
-                  />
-                </div>
-              </div>
-
-              {selectedSection && (
-                <div>
-                  <Label className="mb-2 block">Subsections</Label>
-                  <Button onClick={() => handleAddSubsection(selectedSection)} variant="outline" className="w-full justify-start">
-                    <FilePlus className="w-4 h-4 mr-2" />
-                    Add Subsection
-                  </Button>
-                </div>
-              )}
-
               {selectedSubsection && (
-                <>
-                  <div className="border-t pt-4">
-                    <Label className="mb-3 block">Add Slides</Label>
-                    <div className="space-y-2">
-                      <Button onClick={handleAddBlankSlide} variant="outline" className="w-full justify-start">
-                        <FileQuestion className="w-4 h-4 mr-2" />
-                        Blank Slide
-                      </Button>
-                      <Button onClick={handleAddScriptureSlide} variant="outline" className="w-full justify-start">
-                        <Book className="w-4 h-4 mr-2" />
-                        Scripture
-                      </Button>
-                      <Button onClick={handleAddLyricsSlide} variant="outline" className="w-full justify-start">
-                        <Music className="w-4 h-4 mr-2" />
-                        Song Lyrics
-                      </Button>
-                      <Button onClick={handleAddAnnouncementSlide} variant="outline" className="w-full justify-start">
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Announcement
-                      </Button>
-                      <Button onClick={() => setShowAiSlides(true)} variant="outline" className="w-full justify-start" disabled={!selectedSubsection}>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Make slides with AI
-                      </Button>
-                      <Button onClick={handleAddImageSlide} variant="outline" className="w-full justify-start">
-                        <ImageIcon className="w-4 h-4 mr-2" />
-                        Image
-                      </Button>
-                      <Button onClick={handleAddVideoSlide} variant="outline" className="w-full justify-start">
-                        <Film className="w-4 h-4 mr-2" />
-                        Video
-                      </Button>
-                      <Label htmlFor="file-upload" className="cursor-pointer">
-                        <div className="flex items-center justify-start w-full px-4 py-2 text-sm font-medium border rounded-md hover:bg-accent">
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload from Device
-                        </div>
-                      </Label>
-                      <Input
-                        id="file-upload"
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        onChange={handleFileUpload}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="border-t pt-4">
-                    <Label className="mb-2 block">Quick Scripture Search</Label>
-                    <ManualSearch onVerseSelect={handleVerseSelect} />
-                  </div>
-                </>
+                <div className="mt-5">
+                  <p className="m-0 mb-2 text-sm font-semibold">Find a verse</p>
+                  <ManualSearch onVerseSelect={handleVerseSelect} />
+                </div>
               )}
+            </Section>
 
-              <div className="border-t pt-4">
-                <Label>Service Info</Label>
-                <Input
-                  value={service.name}
-                  onChange={(e) => setService({...service, name: e.target.value})}
-                  className="mt-2 mb-2"
-                  placeholder="Service name"
-                />
-                <Input
-                  type="date"
-                  value={service.date instanceof Date ? service.date.toISOString().split('T')[0] : new Date(service.date).toISOString().split('T')[0]}
-                  onChange={(e) => setService({...service, date: new Date(e.target.value)})}
-                  className="mt-2 mb-2"
-                />
-                <Input
-                  type="time"
-                  value={service.startTime}
-                  onChange={(e) => setService({...service, startTime: e.target.value})}
-                  className="mt-2"
-                />
+            <Section title="Order of service">
+              <div className="space-y-2">
+                <Button onClick={handleAddSection} variant="secondary" className="w-full justify-start">
+                  <FolderPlus className="w-4 h-4" />
+                  Add a section
+                </Button>
+                {selectedSection && (
+                  <Button onClick={() => handleAddSubsection(selectedSection)} variant="secondary" className="w-full justify-start">
+                    <FilePlus className="w-4 h-4" />
+                    Add a part to this section
+                  </Button>
+                )}
               </div>
-            </div>
-          </Card>
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="m-0 text-sm font-semibold">Songs from the worship team</p>
+                <p className="m-0 mt-1 mb-2.5 text-xs text-muted-foreground">Fill in the spreadsheet and import it to add all the songs at once.</p>
+                <div className="flex gap-2">
+                  <Button onClick={handleDownloadTemplate} variant="ghost" size="sm">Get the spreadsheet</Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <label htmlFor="worship-import" className="cursor-pointer">
+                      <Music className="w-4 h-4" />
+                      Import
+                    </label>
+                  </Button>
+                  <Input id="worship-import" type="file" accept=".csv" className="hidden" onChange={handleImportWorshipSongs} />
+                </div>
+              </div>
+            </Section>
+          </div>
 
-          <Card className="p-6 lg:col-span-2">
+          <div className="min-w-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Service Structure</h2>
-              <Button onClick={handleAddSection} size="sm" className="gap-2">
+              <h2 className="m-0 text-[17px] font-semibold">Order of service</h2>
+              <Button onClick={handleAddSection} size="sm" variant="secondary">
                 <FolderPlus className="w-4 h-4" />
-                Add Section
+                Add a section
               </Button>
             </div>
             {(!service.sections || service.sections.length === 0) ? (
@@ -1036,8 +1002,8 @@ const ServiceBuilder = () => {
                     {service.sections.map((section) => (
                       <SortableSection key={section.id} id={section.id}>
                         <Collapsible open={!section.collapsed} onOpenChange={() => toggleSectionCollapse(section.id)}>
-                          <Card className={`${selectedSection === section.id ? 'border-primary' : ''} ${activeId === section.id ? 'ring-2 ring-primary' : ''}`}>
-                            <div className="p-4">
+                          <Card className={`overflow-hidden ${selectedSection === section.id ? 'ring-1 ring-foreground/30' : ''} ${activeId === section.id ? 'ring-2 ring-foreground/50' : ''}`}>
+                            <div className="p-4 border-l-4" style={{ borderLeftColor: colorFor(section.name) }}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 flex-1">
                                   <CollapsibleTrigger asChild>
@@ -1056,17 +1022,17 @@ const ServiceBuilder = () => {
                                       } : null);
                                     }}
                                     onFocus={() => setSelectedSection(section.id)}
-                                    className="flex-1 font-semibold text-lg h-auto py-1 border-transparent hover:border-input focus:border-primary"
+                                    className="flex-1 font-semibold text-[17px] h-auto py-1 bg-transparent border-transparent hover:border-input focus:border-input"
                                   />
                                 </div>
                                 <div className="flex gap-1">
-                                  <Button size="sm" variant="outline" onClick={() => openNotesDialog('section', section.id)} title="Operator Notes">
+                                  <Button size="sm" variant="ghost" onClick={() => openNotesDialog('section', section.id)} title="Notes for the operator">
                                     <StickyNote className="w-4 h-4" />
                                   </Button>
-                                  <Button size="sm" variant="outline" onClick={() => handleDuplicateSection(section)} title="Duplicate Section">
+                                  <Button size="sm" variant="ghost" onClick={() => handleDuplicateSection(section)} title="Duplicate this section">
                                     <Copy className="w-4 h-4" />
                                   </Button>
-                                  <Button size="sm" variant="destructive" onClick={() => handleDeleteSection(section.id)} title="Delete Section">
+                                  <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => handleDeleteSection(section.id)} title="Delete this section">
                                     <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </div>
@@ -1074,11 +1040,11 @@ const ServiceBuilder = () => {
 
                               <CollapsibleContent className="mt-4">
                                 {section.subsections.length === 0 ? (
-                                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                                    <p className="text-muted-foreground mb-3">No subsections yet</p>
-                                    <Button onClick={() => handleAddSubsection(section.id)} variant="outline">
-                                      <FilePlus className="w-4 h-4 mr-2" />
-                                      Add Subsection
+                                  <div className="text-center py-7 rounded-xl bg-muted/40">
+                                    <p className="m-0 text-sm text-muted-foreground mb-3">No parts in this section yet</p>
+                                    <Button onClick={() => handleAddSubsection(section.id)} variant="secondary" size="sm">
+                                      <FilePlus className="w-4 h-4" />
+                                      Add a part
                                     </Button>
                                   </div>
                                 ) : (
@@ -1093,7 +1059,7 @@ const ServiceBuilder = () => {
                                     <div className="space-y-2 ml-8">
                                       {section.subsections.map((subsection) => (
                                         <SortableSubsection key={subsection.id} id={subsection.id}>
-                                          <Card className={`p-3 ${selectedSubsection === subsection.id ? 'border-primary bg-primary/5' : ''} ${activeId === subsection.id ? 'ring-2 ring-primary' : ''}`}>
+                                          <Card onClick={() => setSelectedSubsection(subsection.id)} className={`p-3 shadow-none transition ${selectedSubsection === subsection.id ? 'bg-muted/70 ring-1 ring-foreground/35' : 'bg-muted/35 hover:bg-muted/50'} ${activeId === subsection.id ? 'ring-2 ring-foreground/50' : ''}`}>
                                              <div className="flex items-center justify-between mb-2">
                                               <Input 
                                                 value={subsection.name}
@@ -1113,7 +1079,7 @@ const ServiceBuilder = () => {
                                                   } : null);
                                                 }}
                                                 onFocus={() => setSelectedSubsection(subsection.id)}
-                                                className="flex-1 font-medium h-auto py-1 border-transparent hover:border-input focus:border-primary"
+                                                className="flex-1 font-medium h-auto py-1 bg-transparent border-transparent hover:border-input focus:border-input"
                                               />
                                               <div className="flex gap-1">
                                                 <Button size="sm" variant="ghost" onClick={() => openNotesDialog('subsection', subsection.id, section.id)} title="Presenter Notes">
@@ -1133,26 +1099,26 @@ const ServiceBuilder = () => {
                                             </div>
 
                                             {subsection.slides.length === 0 ? (
-                                              <div className="text-center py-6 border-2 border-dashed rounded-lg mt-2">
+                                              <div className="text-center py-5 rounded-xl bg-background/40 mt-2">
                                                 <p className="text-xs text-muted-foreground mb-3">No slides yet. Add content:</p>
                                                 <div className="flex flex-wrap gap-2 justify-center">
-                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddScriptureSlide(); }}>
+                                                  <Button size="sm" variant="ghost" onClick={() => { setSelectedSubsection(subsection.id); handleAddScriptureSlide(); }}>
                                                     <Book className="w-3 h-3 mr-1" />
                                                     Scripture
                                                   </Button>
-                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddLyricsSlide(); }}>
+                                                  <Button size="sm" variant="ghost" onClick={() => { setSelectedSubsection(subsection.id); handleAddLyricsSlide(); }}>
                                                     <Music className="w-3 h-3 mr-1" />
                                                     Lyrics
                                                   </Button>
-                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddImageSlide(); }}>
+                                                  <Button size="sm" variant="ghost" onClick={() => { setSelectedSubsection(subsection.id); handleAddImageSlide(); }}>
                                                     <ImageIcon className="w-3 h-3 mr-1" />
                                                     Image
                                                   </Button>
-                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddVideoSlide(); }}>
+                                                  <Button size="sm" variant="ghost" onClick={() => { setSelectedSubsection(subsection.id); handleAddVideoSlide(); }}>
                                                     <Film className="w-3 h-3 mr-1" />
                                                     Video
                                                   </Button>
-                                                  <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddAnnouncementSlide(); }}>
+                                                  <Button size="sm" variant="ghost" onClick={() => { setSelectedSubsection(subsection.id); handleAddAnnouncementSlide(); }}>
                                                     <MessageSquare className="w-3 h-3 mr-1" />
                                                     Announcement
                                                   </Button>
@@ -1169,129 +1135,13 @@ const ServiceBuilder = () => {
                                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-3 auto-rows-fr">
                                                       {subsection.slides.map((slide) => (
                                                          <SortableSlide key={slide.id} id={slide.id}>
-                                                           <Card className={`group relative overflow-hidden hover-scale cursor-pointer flex flex-col min-h-0 h-full ${activeId === slide.id ? 'ring-2 ring-primary' : ''}`}>
+                                                           <Card className={`group relative overflow-hidden cursor-pointer flex flex-col min-h-0 h-full shadow-none bg-background/40 ${activeId === slide.id ? 'ring-2 ring-foreground/50' : ''}`}>
                                                              {/* Slide Preview with WYSIWYG */}
                                                              <div className="aspect-video bg-black relative overflow-hidden flex-shrink-0">
-                                                              {(() => {
-                                                                const fontSize = slide.textFormatting?.fontSize || 'large';
-                                                                const alignment = slide.textFormatting?.alignment || 'center';
-                                                                const fontSizeClasses = {
-                                                                  small: 'text-[8px]',
-                                                                  medium: 'text-[9px]',
-                                                                  large: 'text-[10px]',
-                                                                  xlarge: 'text-[11px]',
-                                                                };
-                                                                const alignmentClasses = {
-                                                                  left: 'text-left items-start',
-                                                                  center: 'text-center items-center',
-                                                                  right: 'text-right items-end',
-                                                                };
-                                                                 const backgroundStyle = slide.backgroundMedia ? {
-                                                                  backgroundImage: `url(${slide.backgroundMedia.url})`,
-                                                                  backgroundSize: 'cover',
-                                                                  backgroundPosition: 'center',
-                                                                 } : subsection.backgroundMedia ? {
-                                                                  backgroundImage: `url(${subsection.backgroundMedia.url})`,
-                                                                  backgroundSize: 'cover',
-                                                                  backgroundPosition: 'center',
-                                                                 } : {};
-                                                                const backgroundOpacity = slide.backgroundMedia?.opacity ?? subsection.backgroundMedia?.opacity ?? 0.3;
-
-                                                                if (slide.type === 'image') {
-                                                                  return (
-                                                                    <>
-                                                                      <img 
-                                                                        src={(slide as ImageSlide).imageUrl} 
-                                                                        alt={slide.title}
-                                                                        className="w-full h-full object-cover"
-                                                                      />
-                                                                      {(slide as ImageSlide).caption && (
-                                                                        <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white px-2 py-1">
-                                                                          <p className="text-[8px] text-center line-clamp-1">{(slide as ImageSlide).caption}</p>
-                                                                        </div>
-                                                                      )}
-                                                                    </>
-                                                                  );
-                                                                }
-
-                                                                if (slide.type === 'scripture') {
-                                                                  return (
-                                                                    <div className="relative w-full h-full" style={backgroundStyle}>
-                                                                      {(slide.backgroundMedia || subsection.backgroundMedia) && (
-                                                                        <div className="absolute inset-0 bg-black" style={{ opacity: 1 - backgroundOpacity }} />
-                                                                      )}
-                                                                      <div className={`relative z-10 w-full h-full flex flex-col justify-center p-2 ${alignmentClasses[alignment]}`}>
-                                                                        <div className={`text-[9px] font-bold text-primary mb-1 ${alignmentClasses[alignment].split(' ')[0]}`}>
-                                                                          {(slide as ScriptureSlide).verse.book} {(slide as ScriptureSlide).verse.chapter}:{(slide as ScriptureSlide).verse.verse}
-                                                                        </div>
-                                                                        <div className={`${fontSizeClasses[fontSize]} leading-tight line-clamp-4 text-white ${alignmentClasses[alignment].split(' ')[0]}`}>
-                                                                          {(slide as ScriptureSlide).verse.text}
-                                                                        </div>
-                                                                      </div>
-                                                                    </div>
-                                                                  );
-                                                                }
-
-                                                                if (slide.type === 'lyrics') {
-                                                                   const lyricsSlide = slide as LyricsSlide;
-                                                                   const isTitleCard = lyricsSlide.content === lyricsSlide.songTitle;
-                                                                   
-                                                                   return (
-                                                                     <div className="relative w-full h-full" style={backgroundStyle}>
-                                                                       {(slide.backgroundMedia || subsection.backgroundMedia) && (
-                                                                         <div className="absolute inset-0 bg-black" style={{ opacity: 1 - backgroundOpacity }} />
-                                                                       )}
-                                                                       <div className={`relative z-10 w-full h-full flex flex-col justify-center p-2 ${alignmentClasses[alignment]}`}>
-                                                                         {!isTitleCard && (
-                                                                           <>
-                                                                             {lyricsSlide.section && (
-                                                                               <div className={`text-[7px] text-primary/80 mb-0.5 uppercase font-semibold ${alignmentClasses[alignment].split(' ')[0]}`}>
-                                                                                 {lyricsSlide.section}
-                                                                               </div>
-                                                                             )}
-                                                                           </>
-                                                                         )}
-                                                                         <div className={`${isTitleCard ? 'text-[12px] font-bold' : fontSizeClasses[fontSize]} leading-tight ${isTitleCard ? 'line-clamp-2' : 'line-clamp-4'} whitespace-pre-line text-white ${alignmentClasses[alignment].split(' ')[0]}`}>
-                                                                           {lyricsSlide.content}
-                                                                         </div>
-                                                                       </div>
-                                                                     </div>
-                                                                   );
-                                                                 }
-
-                                                                if (slide.type === 'announcement') {
-                                                                  return (
-                                                                    <div className="w-full h-full flex flex-col items-center justify-center p-2 bg-background text-foreground">
-                                                                      {(slide as AnnouncementSlide).imageUrl && (
-                                                                        <img
-                                                                          src={(slide as AnnouncementSlide).imageUrl}
-                                                                          alt={slide.title}
-                                                                          className="max-h-12 mb-1 rounded"
-                                                                        />
-                                                                      )}
-                                                                      <div className="text-[10px] font-bold text-primary mb-1 line-clamp-1">
-                                                                        {(slide as AnnouncementSlide).title}
-                                                                      </div>
-                                                                      <div className="text-[8px] leading-tight text-center line-clamp-3 whitespace-pre-line">
-                                                                        {(slide as AnnouncementSlide).content}
-                                                                      </div>
-                                                                    </div>
-                                                                  );
-                                                                }
-
-                                                                if (slide.type === 'blank') {
-                                                                  return (
-                                                                    <div className="w-full h-full flex items-center justify-center bg-black">
-                                                                      <div className="text-[8px] font-medium text-muted-foreground">
-                                                                        {slide.title || 'Blank Slide'}
-                                                                      </div>
-                                                                    </div>
-                                                                  );
-                                                                }
-
-                                                                return null;
-                                                              })()}
-                                                             
+                                                              {/* Drawn by the projector's own renderer: what you see is what the room sees */}
+                                                              <ScaledStage className="absolute inset-0">
+                                                                <OutputContent live={{ slide }} output="projection" preview />
+                                                              </ScaledStage>
                                                              {/* Drag Handle Overlay */}
                                                              <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                <div className="bg-background/80 backdrop-blur-sm rounded p-1">
@@ -1351,19 +1201,19 @@ const ServiceBuilder = () => {
 
                                             {subsection.slides.length > 0 && (
                                               <div className="mt-3 flex flex-wrap gap-2">
-                                                <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddScriptureSlide(); }} className="flex-1">
+                                                <Button size="sm" variant="ghost" onClick={() => { setSelectedSubsection(subsection.id); handleAddScriptureSlide(); }} className="flex-1">
                                                   <Book className="w-3 h-3 mr-1" />
                                                   Add Scripture
                                                 </Button>
-                                                <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddLyricsSlide(); }} className="flex-1">
+                                                <Button size="sm" variant="ghost" onClick={() => { setSelectedSubsection(subsection.id); handleAddLyricsSlide(); }} className="flex-1">
                                                   <Music className="w-3 h-3 mr-1" />
                                                   Add Lyrics
                                                 </Button>
-                                                <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddImageSlide(); }} className="flex-1">
+                                                <Button size="sm" variant="ghost" onClick={() => { setSelectedSubsection(subsection.id); handleAddImageSlide(); }} className="flex-1">
                                                   <ImageIcon className="w-3 h-3 mr-1" />
                                                   Add Image
                                                 </Button>
-                                                <Button size="sm" variant="outline" onClick={() => { setSelectedSubsection(subsection.id); handleAddVideoSlide(); }} className="flex-1">
+                                                <Button size="sm" variant="ghost" onClick={() => { setSelectedSubsection(subsection.id); handleAddVideoSlide(); }} className="flex-1">
                                                   <Film className="w-3 h-3 mr-1" />
                                                   Add Video
                                                 </Button>
@@ -1376,9 +1226,9 @@ const ServiceBuilder = () => {
                                   </SortableContext>
                                 </DndContext>
                                 <div className="mt-3 ml-8">
-                                  <Button onClick={() => handleAddSubsection(section.id)} variant="outline" size="sm" className="w-full">
-                                    <FilePlus className="w-4 h-4 mr-2" />
-                                    Add Subsection
+                                  <Button onClick={() => handleAddSubsection(section.id)} variant="ghost" size="sm" className="w-full text-muted-foreground">
+                                    <FilePlus className="w-4 h-4" />
+                                    Add a part
                                   </Button>
                                 </div>
                                 </>
@@ -1393,9 +1243,8 @@ const ServiceBuilder = () => {
                 </SortableContext>
               </DndContext>
             )}
-          </Card>
+          </div>
         </div>
-      </div>
 
       {/* New Comprehensive Lyrics Editor */}
       {designing && (() => {
@@ -1822,7 +1671,7 @@ const ServiceBuilder = () => {
           setShowScriptureDialog(false);
         }}
       />
-    </div>
+    </AppShell>
   );
 };
 

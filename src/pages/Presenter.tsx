@@ -1,17 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Service, Slide } from '@/types/service';
 import { LAST_SERVICE_KEY, ServiceStorage } from '@/lib/serviceStorage';
 import { desktop } from '@/lib/desktop';
 import { syncService } from '@/lib/syncService';
-import { SlideDisplay } from '@/components/SlideDisplay';
-import { SlidePreview } from '@/components/SlidePreview';
+import { ScaledStage } from '@/components/ScaledStage';
+import { OutputContent } from '@/components/OutputContent';
+import { colorFor } from '@/components/live/ServiceTimeline';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { DisplayMonitor } from '@/components/DisplayMonitor';
-import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { Play, Square, ChevronLeft, ChevronRight, Monitor, Edit2, ExternalLink, Mic, MicOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ShowLogoButton } from '@/components/ShowLogoButton';
@@ -19,7 +18,6 @@ import { CountdownControl } from '@/components/CountdownControl';
 import { countdownFromConfig, startCountdown, stopCountdown } from '@/lib/countdown';
 import { cn } from '@/lib/utils';
 import { BibleVerse } from '@/types/bible';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { 
   ISpeechProvider, 
   createSpeechProvider, 
@@ -42,7 +40,7 @@ const Presenter = () => {
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [isPresenting, setIsPresenting] = useState(false);
   const [editingSlideIndex, setEditingSlideIndex] = useState<number | null>(null);
-  const [showDisplayMonitor, setShowDisplayMonitor] = useState(true);
+  const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
   
   // Voice activation
   const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -395,282 +393,198 @@ const Presenter = () => {
     toast.info('Voice deactivated');
   };
 
+  const upNext = isPresenting ? allSlides[currentIndex + 1] : allSlides[currentIndex];
+  const describeSlide = (sl?: Slide | null) =>
+    !sl ? '' : sl.type === 'lyrics' ? `${sl.songTitle}${sl.sectionLabel ? ` · ${sl.sectionLabel}` : ''}` : sl.title || sl.type;
+
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
-      {/* Top Control Bar */}
-      <div className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 flex-shrink-0">
-        <div className="max-w-screen-2xl mx-auto px-6 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/service-planner')}
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Back
-              </Button>
-              
-              <div className="h-8 w-px bg-border" />
-              
-              <Select value={currentService?.id} onValueChange={handleServiceChange}>
-                <SelectTrigger className="w-[300px]">
-                  <SelectValue placeholder="Select a service..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map(service => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.name} - {service.date.toLocaleDateString()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {currentService && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(`/service-builder/${currentService.id}`)}
-                >
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit Service
-                </Button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              {/* Voice Activation Button */}
-              {!isVoiceActive ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleStartVoice}
-                  disabled={isConnecting}
-                >
-                  {isConnecting ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Mic className="w-4 h-4 mr-2" />
-                  )}
-                  Voice Mode
-                </Button>
-              ) : (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleStopVoice}
-                >
-                  <MicOff className="w-4 h-4 mr-2" />
-                  Stop Voice
-                </Button>
-              )}
-              
-              <CountdownControl />
-              <ShowLogoButton serviceId={currentService?.id} variant="outline" size="sm" />
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDisplayMonitor(!showDisplayMonitor)}
-              >
-                <Monitor className="w-4 h-4 mr-2" />
-                {showDisplayMonitor ? 'Hide' : 'Show'} Displays
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenWindows}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open Windows
-              </Button>
-            </div>
-          </div>
+    <div className="h-screen bg-background text-foreground grid grid-rows-[64px_minmax(0,1fr)] overflow-hidden">
+      {/* Top bar, like the live screen */}
+      <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 shadow-[0_1px_0_hsl(var(--border))]">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/service-planner')} title="Back to Services" aria-label="Back to Services">
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <Select value={currentService?.id} onValueChange={handleServiceChange}>
+            <SelectTrigger className="w-[300px] h-10 border-0 bg-transparent hover:bg-muted text-[15px] font-semibold" aria-label="Service">
+              <SelectValue placeholder="Choose a service…" />
+            </SelectTrigger>
+            <SelectContent>
+              {services.map((service) => (
+                <SelectItem key={service.id} value={service.id}>
+                  {service.name} · {service.date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {currentService && (
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/service-builder/${currentService.id}`)}>
+              <Edit2 className="w-4 h-4" />
+              Edit
+            </Button>
+          )}
         </div>
-      </div>
+
+        <div className="flex items-center gap-2 h-11 pl-2 pr-1.5 rounded-full bg-card/80 shadow-[0_0_0_1px_hsl(var(--border))]">
+          {!isVoiceActive ? (
+            <button type="button" onClick={handleStartVoice} disabled={isConnecting} className="h-8 px-3.5 rounded-full bg-primary/15 hover:bg-primary/25 text-sm font-semibold flex items-center gap-2 disabled:opacity-60">
+              {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+              {isConnecting ? 'Starting…' : 'Follow the singing and scripture'}
+            </button>
+          ) : (
+            <>
+              <span className="flex items-center gap-[3px] h-4 pl-1.5" aria-hidden="true">
+                {[0.5, 0.8, 1, 0.75, 0.45].map((k, i) => (
+                  <i key={i} className="w-[3px] rounded-full bg-emerald-500 transition-[height] duration-100" style={{ height: `${Math.max(18, Math.min(1, audioVolume / 60) * k * 100)}%` }} />
+                ))}
+              </span>
+              <span className="text-sm font-medium max-w-[38ch] truncate">
+                Listening{transcript && <span className="text-muted-foreground"> · …{transcript.split(' ').slice(-8).join(' ')}</span>}
+              </span>
+              <button type="button" onClick={handleStopVoice} className="h-8 px-3 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1.5">
+                <MicOff className="w-4 h-4" />
+                Stop
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-1.5">
+          <CountdownControl className="h-9 hidden lg:flex" />
+          <Button variant="ghost" size="sm" onClick={() => setShowDisplayMonitor(!showDisplayMonitor)} aria-pressed={showDisplayMonitor}>
+            <Monitor className="w-4 h-4" />
+            Other screens
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleOpenWindows} title="Open the output windows" aria-label="Open the output windows">
+            <ExternalLink className="w-4 h-4" />
+          </Button>
+        </div>
+      </header>
 
       {!currentService ? (
-        <div className="flex-1 flex items-center justify-center px-6 py-16">
-          <Card className="p-12 text-center max-w-2xl">
-            <Monitor className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-2xl font-semibold mb-2">No Service Selected</h2>
-            <p className="text-muted-foreground mb-6">
-              Select a service from the dropdown above to start presenting
-            </p>
-            <Button onClick={() => navigate('/service-planner')}>
-              Go to Service Planner
-            </Button>
-          </Card>
+        <div className="grid place-items-center px-6">
+          <div className="text-center max-w-md">
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-muted grid place-items-center mb-4">
+              <Monitor className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <h2 className="m-0 text-xl font-semibold">Choose a service to present</h2>
+            <p className="m-0 mt-1.5 text-muted-foreground">Pick one at the top, or plan one in Services.</p>
+            <Button className="mt-5" onClick={() => navigate('/service-planner')}>Go to Services</Button>
+          </div>
         </div>
       ) : (
-        <div className="flex-1 flex justify-center overflow-hidden">
-          <div className="w-full max-w-screen-2xl flex flex-col h-full">
-            {/* Voice Visualizer */}
-            {isVoiceActive && (
-              <div className="px-6 pt-4 flex-shrink-0">
-              <Card className="p-4">
-                <div className="space-y-3">
-                  <AudioVisualizer isListening={isVoiceActive} volume={audioVolume} />
-                  {transcript && (
-                    <div className="p-3 bg-muted rounded-lg">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Last detected:</p>
-                      <p className="text-sm">{transcript}</p>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </div>
-          )}
-          
-          {/* Main Content with Resizable Panels */}
-          <div className="flex-1 px-6 py-4 overflow-hidden">
-            <ResizablePanelGroup direction="horizontal" className="h-full">
-              {/* Left Panel - Playlist */}
-              <ResizablePanel defaultSize={60} minSize={40}>
-                <div className="h-full flex flex-col gap-4 pr-3 overflow-hidden">
-                {/* Presentation Controls */}
-                <Card className="p-4 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium">
-                      Slide {currentIndex + 1} of {allSlides.length}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!isPresenting ? (
-                        <Button onClick={handleStart} size="sm">
-                          <Play className="w-4 h-4 mr-2" />
-                          Start
-                        </Button>
-                      ) : (
-                        <Button onClick={handleStop} variant="destructive" size="sm">
-                          <Square className="w-4 h-4 mr-2" />
-                          Stop
-                        </Button>
-                      )}
-                      <Button
-                        onClick={handlePrevious}
-                        disabled={currentIndex === 0}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={handleNext}
-                        disabled={currentIndex >= allSlides.length - 1}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Playlist organized by sections */}
-                <Card className="flex-1 p-4 flex flex-col min-h-0">
-                  <h3 className="font-semibold mb-3 flex-shrink-0">Playlist</h3>
-                  <div className="flex-1 space-y-4 overflow-y-auto pr-2 min-h-0">
-                    {currentService?.sections.map((section) => (
-                      <div key={section.id} className="space-y-2">
-                        <h4 className="text-sm font-semibold text-muted-foreground sticky top-0 bg-card z-10 py-1">
-                          {section.name}
-                        </h4>
-                        {section.subsections.map((subsection) => {
-                          const subsectionStartIndex = getAllSlides(currentService)
-                            .findIndex(s => subsection.slides.some(subSlide => subSlide.id === s.id));
-                          
-                          return (
-                            <div key={subsection.id} className="space-y-2">
-                              <div className="text-xs font-medium text-muted-foreground/80 px-1">
-                                {subsection.name}
-                              </div>
-                              <div className="grid grid-cols-4 gap-2">
-                                {subsection.slides.map((slide, slideIndex) => {
-                                  const globalIndex = subsectionStartIndex + slideIndex;
-                                  return (
-                                    <button
-                                      key={slide.id}
-                                      onClick={() => handleJumpTo(globalIndex)}
-                                      className={cn(
-                                        "text-left p-2 rounded-lg border transition-all",
-                                        "hover:bg-accent hover:border-primary/50",
-                                        currentIndex === globalIndex
-                                          ? "bg-primary/10 border-primary shadow-sm ring-2 ring-primary/20"
-                                          : "bg-card border-border"
-                                      )}
-                                    >
-                                      <div className="flex items-start justify-between gap-1 mb-1">
-                                        <div className="text-xs font-medium truncate flex-1">
-                                          {slide.title}
-                                        </div>
-                                        <div className={cn(
-                                          "text-xs px-1 py-0.5 rounded flex-shrink-0",
-                                          currentIndex === globalIndex
-                                            ? "bg-primary text-primary-foreground"
-                                            : "bg-muted text-muted-foreground"
-                                        )}>
-                                          {globalIndex + 1}
-                                        </div>
-                                      </div>
-                                      
-                                      {/* Mini preview */}
-                                      <div className="aspect-video bg-black/50 rounded overflow-hidden border border-border/50">
-                                        <SlidePreview slide={slide} className="w-full h-full" />
-                                      </div>
-                                      
-                                      <div className="text-xs text-muted-foreground capitalize mt-1 truncate">
-                                        {slide.type}
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })}
+        <div className="min-h-0 grid grid-cols-[minmax(0,1fr)_clamp(380px,32vw,680px)]">
+          {/* The service, slide by slide */}
+          <main className="min-h-0 overflow-y-auto px-6 xl:px-10 py-6 space-y-8">
+            {currentService.sections.map((section) => (
+              <section key={section.id}>
+                <h3 className="m-0 mb-3 flex items-center gap-2 text-[15px] font-semibold">
+                  <span className="w-2 h-2 rounded-full" style={{ background: colorFor(section.name) }} />
+                  {section.name}
+                </h3>
+                <div className="space-y-5">
+                  {section.subsections.map((subsection) => {
+                    const startIndex = allSlides.findIndex((sl) => subsection.slides.some((x) => x.id === sl.id));
+                    return (
+                      <div key={subsection.id}>
+                        <p className="m-0 mb-2 text-sm text-muted-foreground">{subsection.name}{subsection.slides.length === 0 && ' · no slides'}</p>
+                        {subsection.slides.length > 0 && (
+                          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                            {subsection.slides.map((slide, i) => {
+                              const index = startIndex + i;
+                              const live = isPresenting && currentIndex === index;
+                              const next = upNext?.id === slide.id;
+                              return (
+                                <button key={slide.id} type="button" onClick={() => handleJumpTo(index)} className="text-left group">
+                                  <div
+                                    className={cn(
+                                      'relative rounded-xl overflow-hidden transition',
+                                      live ? 'ring-2 ring-[hsl(var(--live))]' : next ? 'ring-2 ring-[hsl(var(--next))]' : 'ring-1 ring-border group-hover:ring-foreground/40',
+                                    )}
+                                  >
+                                    <ScaledStage className="aspect-video bg-black">
+                                      <OutputContent live={{ slide }} output="projection" preview />
+                                    </ScaledStage>
+                                    <span className={cn('absolute left-1.5 top-1.5 min-w-6 h-6 px-1.5 rounded-md text-[11px] font-bold grid place-items-center', live ? 'bg-[hsl(var(--live))] text-white' : 'bg-black/60 text-white')}>
+                                      {index + 1}
+                                    </span>
+                                  </div>
+                                  <p className="m-0 mt-1.5 text-[13px] font-medium truncate">{describeSlide(slide)}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                </Card>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </main>
+
+          {/* The screens: Live, Take, Next */}
+          <aside className="min-h-0 overflow-y-auto pr-6 pl-2 py-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-sm font-semibold min-h-[30px]">
+              <span className="w-2 h-2 rounded-full bg-[hsl(var(--live))]" />
+              Live
+              <span className="font-medium text-muted-foreground truncate">{isPresenting ? `${currentIndex + 1} of ${allSlides.length} · ${describeSlide(currentSlide)}` : 'not presenting yet'}</span>
+              <span className="ml-auto flex items-center gap-1">
+                {currentSlide && <SlideConfiguration slide={currentSlide} onUpdate={handleUpdateSlide} />}
+                <ShowLogoButton serviceId={currentService.id} variant="ghost" size="sm" />
+              </span>
+            </div>
+            <div className="relative rounded-[14px] overflow-hidden shadow-[0_0_0_2px_hsl(var(--live)),0_18px_50px_-22px_hsl(var(--live))]">
+              <ScaledStage className="aspect-video bg-black">
+                <OutputContent live={isPresenting && currentSlide ? { slide: currentSlide } : null} output="projection" preview />
+              </ScaledStage>
+            </div>
+
+            {isPresenting ? (
+              <div className="grid grid-cols-[auto_1fr_auto] gap-2">
+                <Button variant="secondary" className="h-14 w-14 rounded-2xl" onClick={handlePrevious} disabled={currentIndex === 0} aria-label="Previous slide">
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={currentIndex >= allSlides.length - 1}
+                  className="h-14 rounded-2xl text-foreground flex items-center justify-center gap-2.5 text-[17px] font-semibold bg-gradient-to-b from-[hsl(260_7%_21%)] to-[hsl(260_7%_16%)] hover:from-[hsl(260_7%_24%)] hover:to-[hsl(260_7%_19%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.09),0_0_0_1px_rgba(255,255,255,0.06)] disabled:opacity-40"
+                >
+                  <ChevronRight className="w-5 h-5 text-[hsl(var(--next))]" />
+                  Next slide
+                  <kbd className="font-sans text-xs font-semibold px-1.5 py-0.5 rounded-md bg-white/[0.07] text-muted-foreground">→</kbd>
+                </button>
+                <Button variant="secondary" className="h-14 rounded-2xl" onClick={handleStop} title="Stop presenting and show the logo">
+                  <Square className="w-4 h-4" />
+                  Stop
+                </Button>
               </div>
-            </ResizablePanel>
+            ) : (
+              <Button className="h-14 rounded-2xl text-[17px]" onClick={handleStart} disabled={allSlides.length === 0}>
+                <Play className="w-5 h-5" />
+                Start presenting
+              </Button>
+            )}
 
-            <ResizableHandle />
+            <div className="flex items-center gap-2 text-sm font-semibold min-h-[30px]">
+              <span className="w-2 h-2 rounded-full bg-[hsl(var(--next))]" />
+              Next
+              <span className="font-medium text-muted-foreground truncate">{upNext ? describeSlide(upNext) : 'the end of the service'}</span>
+            </div>
+            <div className="rounded-[14px] overflow-hidden shadow-[0_0_0_2px_hsl(var(--next))]">
+              <ScaledStage className="aspect-video bg-black">
+                <OutputContent live={upNext ? { slide: upNext } : null} output="projection" preview />
+              </ScaledStage>
+            </div>
 
-            {/* Right Panel - Display Monitor and Current Slide */}
-            <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
-              <div className="h-full flex flex-col pl-3 gap-4 overflow-hidden">
-                {/* Display Monitor at top */}
-                {showDisplayMonitor && (
-                  <Card className="p-3 flex-shrink-0">
-                    <h3 className="font-semibold text-sm mb-2">Display Preview</h3>
-                    <DisplayMonitor />
-                  </Card>
-                )}
-
-                {/* Current Slide Preview */}
-                <Card className="p-4 flex-shrink-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold">Current Slide</h3>
-                    {currentSlide && <SlideConfiguration slide={currentSlide} onUpdate={handleUpdateSlide} />}
-                  </div>
-                  <div className="aspect-video bg-black rounded-lg overflow-hidden border-2 border-primary/20">
-                    <SlideDisplay slide={currentSlide} className="h-full w-full" />
-                  </div>
-                  {currentSlide && (
-                    <div className="mt-3 text-sm text-muted-foreground">
-                      <span className="font-medium">{currentSlide.title}</span>
-                      <span className="mx-2">•</span>
-                      <span className="capitalize">{currentSlide.type}</span>
-                    </div>
-                  )}
-                </Card>
+            {showDisplayMonitor && (
+              <div className="pt-2">
+                <p className="m-0 mb-2 text-sm font-semibold">Other screens</p>
+                <DisplayMonitor />
               </div>
-            </ResizablePanel>
-            </ResizablePanelGroup>
-          </div>
-          </div>
+            )}
+          </aside>
         </div>
       )}
 

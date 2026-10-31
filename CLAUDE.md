@@ -96,8 +96,7 @@ Settings live in `localStorage`, which every window shares, so outputs update th
 
 ## Open work (keep this list current)
 
-- Design 4 is in the live screen (1.4.0). Next, restyle the Service, Media, Templates and Settings pages to match (`docs/DESIGN_SYSTEM.md`). The redesign PR #8 (1.4.0) is on hold and stale.
-- Restyle the other pages (Service, Media, Templates, Settings) to the design system.
+- Design 4 is in the live screen (1.4.0), and every other page uses `AppShell` with the same design (1.4.2). The old redesign PR #8 is obsolete and can be closed.
 - Native DeckLink SDI output. It needs the Blackmagic Desktop Video SDK and testing on the owner's ProPresenter computer through Remote Control.
 - Transitions, props/messages layers, multiple timers, a stage layout editor, live captions and translation, verses on phones (QR), PowerPoint and Planning Center import, Stream Deck/remote control, NDI, CCLI reporting.
 - Signed and notarised installers, which need the owner's Apple Developer account and a Windows certificate.

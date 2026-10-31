@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
@@ -11,13 +9,8 @@ import { addPictureToLibrary, addVideoToLibrary } from '@/lib/mediaFiles';
 import { MediaThumbnail } from '@/components/MediaThumbnail';
 import { toast } from 'sonner';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
-import { DisplayMonitor } from '@/components/DisplayMonitor';
-import { SettingsPanel } from '@/components/SettingsPanel';
-import { PageHeader } from '@/components/PageHeader';
-import { ModeNav } from '@/components/ModeNav';
-import { EmptyState } from '@/components/EmptyState';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
+import { AppShell, Section } from '@/components/shell/AppShell';
+import { parseSongSections } from '@/lib/songs';
 import {
   Dialog,
   DialogContent,
@@ -31,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { appUrl } from '@/lib/appUrl';
 import { isSongFile, parseSongSelectFile } from '@/lib/songSelectImport';
 
 const MediaLibrary = () => {
@@ -39,12 +31,9 @@ const MediaLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'image' | 'video' | 'song' | 'presentation'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [showUpload, setShowUpload] = useState(false);
   const [editingSong, setEditingSong] = useState<MediaItem | null>(null);
   const [editLyrics, setEditLyrics] = useState('');
   const [newCategory, setNewCategory] = useState('');
-  const [showDisplayMonitor, setShowDisplayMonitor] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
 
   const categories = ['all', ...new Set(media.map(m => m.category).filter(Boolean))] as string[];
 
@@ -60,6 +49,12 @@ const MediaLibrary = () => {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    await addFiles(files);
+  };
+
+  /** Pictures, videos and SongSelect song files, chosen or dropped on the page. */
+  const addFiles = async (files: File[]) => {
     let added = 0;
     const existing = await ServiceStorage.getMedia();
     for (const file of files) {
@@ -97,12 +92,8 @@ const MediaLibrary = () => {
         toast.error(`Could not add ${file.name}`);
       }
     }
-    e.target.value = '';
     await loadMedia();
-    if (added) {
-      toast.success(`${added} item${added > 1 ? 's' : ''} added`);
-      setShowUpload(false);
-    }
+    if (added) toast.success(`${added} item${added > 1 ? 's' : ''} added`);
   };
 
   const handleDeleteMedia = (id: string) => {
@@ -172,283 +163,185 @@ const MediaLibrary = () => {
     return matchesSearch && matchesFilter && matchesCategory;
   });
 
-  const handleOpenLowerThird = () => {
-    window.open(appUrl('/lower-third'), '_blank', 'width=1280,height=720');
-  };
+  const counts = { all: media.length, image: media.filter((m) => m.type === 'image').length, video: media.filter((m) => m.type === 'video').length, song: media.filter((m) => m.type === 'song').length };
+  const songs = filteredMedia.filter((m) => m.type === 'song');
+  const visuals = filteredMedia.filter((m) => m.type === 'image' || m.type === 'video');
+  const [dragging, setDragging] = useState(false);
+
+  const addButton = (
+    <Button asChild>
+      <label className="cursor-pointer">
+        <Plus className="w-4 h-4" />
+        Add files
+        <input type="file" accept="image/*,video/*,.usr,.txt" multiple onChange={handleUpload} className="hidden" aria-label="Add pictures, videos or SongSelect songs" />
+      </label>
+    </Button>
+  );
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-8">
-      <div className="max-w-7xl mx-auto">
-        <PageHeader
-          title="Media Library"
-          description="Manage images and song lyrics for your services"
-          showSettings={showSettings}
-          onToggleSettings={() => setShowSettings(!showSettings)}
-          showDisplayMonitor={showDisplayMonitor}
-          onToggleDisplayMonitor={() => setShowDisplayMonitor(!showDisplayMonitor)}
-          onOpenLowerThird={handleOpenLowerThird}
-        />
+    <AppShell
+      title="Media"
+      subtitle="Pictures, videos and songs for your services. Songs here are recognised when the church sings them."
+      actions={addButton}
+    >
+      <div
+        className="relative"
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false); }}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); addFiles(Array.from(e.dataTransfer.files)); }}
+      >
+        {dragging && (
+          <div className="absolute inset-0 z-20 rounded-2xl border-2 border-dashed border-foreground/40 bg-background/80 backdrop-blur grid place-items-center text-lg font-semibold pointer-events-none">
+            Drop pictures, videos or SongSelect songs to add them
+          </div>
+        )}
 
-        <div className="space-y-4 sm:space-y-6">
-          <ModeNav />
-
-          {/* Settings Panel */}
-          {showSettings && (
-            <div className="animate-fade-in">
-              <SettingsPanel onClose={() => setShowSettings(false)} />
-            </div>
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <div className="flex p-1 rounded-full bg-muted/70" role="group" aria-label="Show">
+            {([
+              ['all', 'Everything', null],
+              ['image', 'Pictures', Image],
+              ['video', 'Videos', Film],
+              ['song', 'Songs', Music],
+            ] as const).map(([value, label, Icon]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={filter === value}
+                onClick={() => setFilter(value)}
+                className={`h-9 px-3.5 rounded-full flex items-center gap-2 text-sm font-semibold transition ${filter === value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                {Icon && <Icon className="w-4 h-4" />}
+                {label}
+                <span className="text-xs font-medium text-muted-foreground">{counts[value]}</span>
+              </button>
+            ))}
+          </div>
+          {categories.length > 2 && (
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[180px] h-11 rounded-full" aria-label="Filter by category">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat === 'all' ? 'All categories' : cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
-
-          {/* Display Monitor Section */}
-          {showDisplayMonitor && (
-            <Card className="p-5 animate-fade-in">
-              <Collapsible defaultOpen>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Monitor className="w-4 h-4 text-primary" />
-                    <h3 className="font-semibold text-sm">Display Monitor</h3>
-                    <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-primary/10 rounded">Live</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => window.open(appUrl('/display-manager'), '_blank', 'width=1400,height=900')}
-                      className="h-7 px-2 hover:bg-primary/10"
-                      title="Open in window"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Button>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10">
-                        <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
-                      </Button>
-                    </CollapsibleTrigger>
-                  </div>
-                </div>
-                <CollapsibleContent>
-                  <DisplayMonitor />
-                </CollapsibleContent>
-              </Collapsible>
-            </Card>
-          )}
-
-          {/* Search and Filter */}
-          <Card className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search media..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                  aria-label="Search media items"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2 items-center">
-                <Button
-                  variant={filter === 'all' ? 'default' : 'outline'}
-                  onClick={() => setFilter('all')}
-                  size="sm"
-                  aria-pressed={filter === 'all'}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={filter === 'image' ? 'default' : 'outline'}
-                  onClick={() => setFilter('image')}
-                  size="sm"
-                  aria-pressed={filter === 'image'}
-                >
-                  <Image className="w-4 h-4 mr-2" />
-                  Images
-                </Button>
-                <Button
-                  variant={filter === 'video' ? 'default' : 'outline'}
-                  onClick={() => setFilter('video')}
-                  size="sm"
-                  aria-pressed={filter === 'video'}
-                >
-                  <Film className="w-4 h-4 mr-2" />
-                  Videos
-                </Button>
-                <Button
-                  variant={filter === 'song' ? 'default' : 'outline'}
-                  onClick={() => setFilter('song')}
-                  size="sm"
-                  aria-pressed={filter === 'song'}
-                >
-                  <Music className="w-4 h-4 mr-2" />
-                  Songs
-                </Button>
-                
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-[180px]" aria-label="Filter by category">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background z-50">
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat === 'all' ? 'All Categories' : cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={() => setShowUpload(!showUpload)} className="shrink-0">
-                <Plus className="w-4 h-4 mr-2" />
-                Upload
-              </Button>
-            </div>
-          </Card>
-
-          {/* Upload Section */}
-          {showUpload && (
-            <Card className="p-6 animate-fade-in">
-              <h2 className="text-xl font-semibold mb-4">Upload Media</h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="image-upload">Add pictures, videos or songs</Label>
-                  <Input
-                    id="image-upload"
-                    type="file"
-                    accept="image/*,video/*,.usr,.txt"
-                    multiple
-                    onChange={handleUpload}
-                    className="mt-2"
-                    aria-label="Select pictures or videos to add"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Pictures (JPG, PNG, WEBP) and videos (MP4, MOV, WEBM) for backgrounds, announcements and video
-                    slides. Videos stay on this computer. Songs: the lyrics file (.txt) or import file (.usr) downloaded
-                    from CCLI SongSelect, with their sections, writers, copyright and CCLI number.
-                  </p>
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Songs from SongSelect:</strong> on songselect.ccli.com open a song, choose Download →
-                    Lyrics (or the import file), and add the file here. Several at once is fine. Songs in the library
-                    are recognised when sung and can be added to any service.
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* Media Grid */}
-          {filteredMedia.length === 0 ? (
-            <EmptyState
-              icon={Image}
-              title="No media found"
-              description="Add pictures and videos, or import songs, to get started with your media library."
-              action={{
-                label: 'Upload First Item',
-                onClick: () => setShowUpload(true),
-              }}
-            />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {filteredMedia.map((item) => (
-                <Card key={item.id} className="overflow-hidden group hover-lift">
-                  {item.type === 'image' && item.url && (
-                    <div className="aspect-video bg-muted relative">
-                      <img
-                        src={item.url}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteMedia(item.id)}
-                          aria-label={`Delete ${item.name}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {item.type === 'video' && (
-                    <div className="aspect-video bg-black relative">
-                      <MediaThumbnail item={item} />
-                      <Film className="absolute top-2 left-2 w-4 h-4 text-white drop-shadow" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button size="sm" variant="destructive" onClick={() => handleDeleteMedia(item.id)} aria-label={`Delete ${item.name}`}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {item.type === 'song' && (
-                    <div className="aspect-video bg-primary/10 flex items-center justify-center relative">
-                      <Music className="w-12 h-12 text-primary" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => handleEditSong(item)}
-                          aria-label={`Edit ${item.name}`}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteMedia(item.id)}
-                          aria-label={`Delete ${item.name}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  <div className="p-3">
-                    <div className="font-medium truncate">{item.name}</div>
-                    <div className="text-xs text-muted-foreground capitalize">
-                      {item.type}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-
-        {/* Edit Lyrics Dialog */}
-        <Dialog open={!!editingSong} onOpenChange={() => setEditingSong(null)}>
-          <DialogContent className="max-w-2xl max-h-[80vh]">
-            <DialogHeader>
-              <DialogTitle>Edit Lyrics - {editingSong?.name}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Lyrics</Label>
-                <Textarea
-                  value={editLyrics}
-                  onChange={(e) => setEditLyrics(e.target.value)}
-                  placeholder="Paste lyrics here... Separate sections with blank lines"
-                  className="min-h-[400px] font-mono"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Tip: Separate sections with blank lines. Include labels like "Verse 1", "Chorus", etc.
-                </p>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setEditingSong(null)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSaveLyrics}>
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+          <div className="relative ml-auto w-full sm:w-80">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search by name" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-11 rounded-full" aria-label="Search media" />
+          </div>
         </div>
+
+        {filteredMedia.length === 0 ? (
+          <Section>
+            <div className="py-12 text-center">
+              <div className="mx-auto w-14 h-14 rounded-2xl bg-muted grid place-items-center mb-4">
+                <Image className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <p className="m-0 text-lg font-semibold">{media.length ? 'Nothing matches' : 'Your library is empty'}</p>
+              <p className="m-0 mt-1.5 text-sm text-muted-foreground max-w-[56ch] mx-auto">
+                Drop pictures (JPG, PNG, WEBP) and videos (MP4, MOV, WEBM) here for backgrounds and slides. For songs, open a song on
+                songselect.ccli.com, choose Download → Lyrics (or the import file), and drop the file here: its sections, writers, copyright
+                and CCLI number come with it.
+              </p>
+              <div className="mt-5">{addButton}</div>
+            </div>
+          </Section>
+        ) : (
+          <div className="space-y-8">
+            {songs.length > 0 && (
+              <Section title={`Songs · ${songs.length}`} padded={false}>
+                <div className="divide-y divide-border">
+                  {songs.map((item) => {
+                    const sections = parseSongSections(item.lyrics ?? '');
+                    return (
+                      <div key={item.id} className="group flex items-center gap-4 px-5 md:px-6 py-3 hover:bg-muted/40">
+                        <span className="w-10 h-10 rounded-xl bg-primary/15 grid place-items-center flex-shrink-0">
+                          <Music className="w-[18px] h-[18px] text-foreground" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="m-0 text-[15px] font-semibold truncate">{item.name}</p>
+                          <p className="m-0 text-[13px] text-muted-foreground truncate">
+                            {[item.author, `${sections.length} section${sections.length === 1 ? '' : 's'}`, item.ccliNumber && `CCLI ${item.ccliNumber}`].filter(Boolean).join(' · ')}
+                          </p>
+                        </div>
+                        <Button size="sm" variant="ghost" onClick={() => handleEditSong(item)}>
+                          <Pencil className="w-4 h-4" />
+                          Lyrics
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive opacity-60 group-hover:opacity-100" onClick={() => handleDeleteMedia(item.id)} aria-label={`Delete ${item.name}`}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Section>
+            )}
+
+            {visuals.length > 0 && (
+              <div>
+                <h2 className="m-0 mb-4 text-[17px] font-semibold">Pictures and videos · {visuals.length}</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+                  {visuals.map((item) => (
+                    <figure key={item.id} className="group m-0">
+                      <div className="relative aspect-video rounded-xl overflow-hidden bg-black shadow-[0_0_0_1px_hsl(var(--border))]">
+                        {item.type === 'image' && item.url ? (
+                          <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <MediaThumbnail item={item} />
+                        )}
+                        {item.type === 'video' && (
+                          <span className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                            <Film className="w-3 h-3" />Video
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMedia(item.id)}
+                          className="absolute right-2 top-2 w-8 h-8 rounded-lg bg-black/60 text-white grid place-items-center opacity-0 group-hover:opacity-100 hover:bg-black/80 transition"
+                          aria-label={`Delete ${item.name}`}
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <figcaption className="mt-2 text-sm font-medium truncate">{item.name}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+
+      <Dialog open={!!editingSong} onOpenChange={() => setEditingSong(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle>Lyrics · {editingSong?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              value={editLyrics}
+              onChange={(e) => setEditLyrics(e.target.value)}
+              placeholder="Paste lyrics here. Separate sections with a blank line and start each with its name: Verse 1, Chorus…"
+              className="min-h-[420px] font-scripture text-base leading-relaxed"
+              aria-label="Lyrics"
+            />
+            <p className="m-0 text-xs text-muted-foreground">Separate sections with a blank line, and start each with its name (Verse 1, Chorus, Bridge).</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditingSong(null)}>Cancel</Button>
+              <Button onClick={handleSaveLyrics}>Save lyrics</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </AppShell>
   );
 };
 

@@ -425,7 +425,7 @@ export const SlideDesigner = ({
             key={el.id}
             type="button"
             onClick={() => setSelected(el.id)}
-            className={`w-full flex items-center gap-2 text-left text-sm rounded-md px-2 py-1.5 ${selected === el.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+            className={`w-full flex items-center gap-2 text-left text-sm rounded-md px-2 py-1.5 ${selected === el.id ? 'bg-muted text-foreground font-semibold' : 'hover:bg-muted/60 text-muted-foreground'}`}
           >
             {el.icon}
             <span className="truncate">{el.label}</span>

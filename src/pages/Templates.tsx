@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Copy, Plus, RotateCcw, Trash2 } from 'lucide-react';
-import { PageHeader } from '@/components/PageHeader';
-import { ModeNav } from '@/components/ModeNav';
+import { AppShell, Section } from '@/components/shell/AppShell';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -53,6 +52,7 @@ const Templates = () => {
   const { templates, assignments } = useTemplates();
   const [selectedId, setSelectedId] = useState(templates[0]?.id);
   const [sample, setSample] = useState<keyof typeof SAMPLES>('short');
+  const [tab, setTab] = useState<'design' | 'screens' | 'teams'>('design');
   const template = templates.find((t) => t.id === selectedId) ?? templates[0];
   const builtIn = BUILT_IN_TEMPLATES.find((b) => b.id === template?.id);
 
@@ -83,101 +83,125 @@ const Templates = () => {
 
   if (!template) return null;
 
+  const kindOf = (t: Template) => (t.id.includes('lyrics') ? 'song' : t.id.includes('announce') ? 'announcement' : 'short');
+
   return (
-    <div className="min-h-screen bg-background p-2 sm:p-4 lg:p-6">
-      <div className="max-w-7xl mx-auto space-y-4">
-        <PageHeader title="Templates" description="How scripture, songs and announcements look on each screen" />
-        <ModeNav />
+    <AppShell
+      wide
+      title="Looks"
+      subtitle="How scripture, songs, announcements and countdowns look on each screen. Changes show on the screens straight away."
+      actions={
+        <>
+          <StarterLooks onPick={(id) => { setSelectedId(id); setTab('design'); }} />
+          <Button onClick={createNew}><Plus className="w-4 h-4" />New look</Button>
+        </>
+      }
+    >
+      <div className="flex p-1 rounded-full bg-muted/70 w-fit mb-6" role="tablist">
+        {([
+          ['design', 'Design a look'],
+          ['screens', 'Which screen uses what'],
+          ['teams', 'Colour teams and themes'],
+        ] as const).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={`h-9 px-4 rounded-full text-sm font-semibold transition ${tab === id ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-        <TeamsAndThemes />
+      {tab === 'design' && (
+        <div className="space-y-6">
+          {/* Every look, as it appears */}
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 [scrollbar-width:thin]">
+            {templates.map((t) => {
+              const used = OUTPUTS.flatMap((o) => CONTENT_KINDS.filter((k) => assignments[o.id][k.id] === t.id).map((k) => `${o.id === 'projection' ? 'Projector' : 'Stream'} ${k.label.toLowerCase()}`));
+              return (
+                <button key={t.id} type="button" onClick={() => setSelectedId(t.id)} className="flex-shrink-0 w-56 text-left group">
+                  <div className={`rounded-xl overflow-hidden transition ${t.id === template.id ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background' : 'ring-1 ring-border group-hover:ring-foreground/40'}`}>
+                    <ScaledStage className="aspect-video bg-black">
+                      <TemplateRenderer template={t} content={SAMPLES[kindOf(t)]} />
+                    </ScaledStage>
+                  </div>
+                  <p className={`m-0 mt-2 text-sm truncate ${t.id === template.id ? 'font-semibold' : 'font-medium'}`}>{t.name}</p>
+                  <p className="m-0 text-xs text-muted-foreground truncate">{used.length ? `In use: ${used.join(', ')}` : 'Not in use'}</p>
+                </button>
+              );
+            })}
+          </div>
 
-        {/* Where each template is used */}
-        <Card className="p-4 space-y-3">
-          <h2 className="font-semibold">Which template each screen uses</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="font-normal pb-2 pr-4">Screen</th>
-                  {CONTENT_KINDS.map((k) => (
-                    <th key={k.id} className="font-normal pb-2 pr-4">
-                      {k.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {OUTPUTS.map((o) => (
-                  <tr key={o.id}>
-                    <td className="pr-4 py-1.5">
-                      <div className="font-medium">{o.label}</div>
-                      <div className="text-xs text-muted-foreground">{o.description}</div>
-                    </td>
-                    {CONTENT_KINDS.map((k) => (
-                      <td key={k.id} className="pr-4 py-1.5 min-w-44">
-                        <Select
-                          value={assignments[o.id][k.id]}
-                          onValueChange={(id) => saveAssignments({ ...assignments, [o.id]: { ...assignments[o.id], [k.id]: id } })}
-                        >
-                          <SelectTrigger className="h-8">
+          <Section
+            title={template.name}
+            description="Drag the text and anything you add on the slide; use the panel on the right for fonts, colours and backgrounds."
+            actions={
+              <>
+                <Button size="sm" variant="ghost" onClick={duplicate}><Copy className="w-4 h-4" />Duplicate</Button>
+                {builtIn ? (
+                  <Button size="sm" variant="ghost" onClick={reset}><RotateCcw className="w-4 h-4" />Reset</Button>
+                ) : (
+                  <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={remove}><Trash2 className="w-4 h-4" />Delete</Button>
+                )}
+              </>
+            }
+          >
+            <SlideDesigner
+              key={template.id}
+              template={template}
+              onChange={(t) => saveTemplates(templates.map((x) => (x.id === t.id ? t : x)))}
+              samples={DESIGN_SAMPLES}
+              sample={sample}
+              onSample={(id) => setSample(id as keyof typeof SAMPLES)}
+            />
+          </Section>
+        </div>
+      )}
+
+      {tab === 'screens' && (
+        <Section title="Which look each screen uses" description="A slide in a service can still choose its own look.">
+          <div className="grid gap-4">
+            {OUTPUTS.map((o) => (
+              <div key={o.id} className="rounded-xl bg-muted/40 p-4">
+                <p className="m-0 font-semibold">{o.label}</p>
+                <p className="m-0 mb-3 text-sm text-muted-foreground">{o.description}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  {CONTENT_KINDS.map((k) => {
+                    const chosen = templates.find((t) => t.id === assignments[o.id][k.id]);
+                    return (
+                      <div key={k.id} className="space-y-2">
+                        <p className="m-0 text-xs font-semibold text-muted-foreground">{k.label}</p>
+                        {chosen && (
+                          <ScaledStage className="aspect-video bg-black rounded-lg">
+                            <TemplateRenderer template={chosen} content={SAMPLES[k.id === 'lyrics' ? 'song' : k.id === 'announcement' ? 'announcement' : 'short']} />
+                          </ScaledStage>
+                        )}
+                        <Select value={assignments[o.id][k.id]} onValueChange={(id) => saveAssignments({ ...assignments, [o.id]: { ...assignments[o.id], [k.id]: id } })}>
+                          <SelectTrigger className="h-9" aria-label={`${o.label}: ${k.label}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             {templates.map((t) => (
-                              <SelectItem key={t.id} value={t.id}>
-                                {t.name}
-                              </SelectItem>
+                              <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            A slide in the Service Builder can also use its own template. Changes show on the screens straight away.
-          </p>
-        </Card>
-
-        {/* The looks, as they appear */}
-        <Card className="p-3">
-          <div className="flex gap-3 overflow-x-auto pb-1">
-            {templates.map((t) => (
-              <button key={t.id} type="button" onClick={() => setSelectedId(t.id)} className="flex-shrink-0 w-44 text-left group">
-                <div className={`rounded-lg overflow-hidden ring-2 transition ${t.id === template.id ? 'ring-primary' : 'ring-transparent group-hover:ring-primary/40'}`}>
-                  <ScaledStage className="aspect-video bg-black">
-                    <TemplateRenderer template={t} content={SAMPLES[t.id.includes('lyrics') ? 'song' : t.id.includes('announcement') ? 'announcement' : 'short']} />
-                  </ScaledStage>
+                      </div>
+                    );
+                  })}
                 </div>
-                <p className={`mt-1.5 text-xs truncate ${t.id === template.id ? 'font-semibold' : 'text-muted-foreground'}`}>{t.name}</p>
-              </button>
+              </div>
             ))}
-            <div className="flex flex-col gap-1.5 flex-shrink-0 justify-center pl-1">
-              <StarterLooks onPick={setSelectedId} />
-              <Button size="sm" variant="outline" onClick={createNew} className="gap-1.5 justify-start"><Plus className="w-4 h-4" />New</Button>
-              <Button size="sm" variant="outline" onClick={duplicate} className="gap-1.5 justify-start"><Copy className="w-4 h-4" />Duplicate</Button>
-              {builtIn ? (
-                <Button size="sm" variant="outline" onClick={reset} className="gap-1.5 justify-start"><RotateCcw className="w-4 h-4" />Reset</Button>
-              ) : (
-                <Button size="sm" variant="outline" onClick={remove} className="gap-1.5 justify-start text-destructive"><Trash2 className="w-4 h-4" />Delete</Button>
-              )}
-            </div>
           </div>
-        </Card>
+        </Section>
+      )}
 
-        <SlideDesigner
-          key={template.id}
-          template={template}
-          onChange={(t) => saveTemplates(templates.map((x) => (x.id === t.id ? t : x)))}
-          samples={DESIGN_SAMPLES}
-          sample={sample}
-          onSample={(id) => setSample(id as keyof typeof SAMPLES)}
-        />
-      </div>
-    </div>
+      {tab === 'teams' && <TeamsAndThemes />}
+    </AppShell>
   );
 };
 

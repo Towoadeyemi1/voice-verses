@@ -230,9 +230,33 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
 - `electron-updater` installs updates silently on quit. An unsigned Mac build can't self-update, so it shows a notice with a link instead.
 - Signing secrets are optional in CI and need the owner's Apple Developer account and a Windows certificate.
 
-## 11. Settings tabs
+## 11. Pages and settings (1.4.2)
 
-General, Speech (engine, microphone and channel, test with a recording, AI assistant), Screens (display and shape for each output), Network, ProPresenter, Templates, CCLI, Logo, Storage (library folder, export and import), Download.
+Every page except the live screen and the output windows uses `components/shell/AppShell.tsx`:
+- The same quiet top bar, with the pages as one pill: Live · Services · Media · Looks · Screens · Settings. Countdown and Logo sit on the right.
+- Then the page's title, what it is for, and its actions (the main one is white on graphite).
+- Content sits in soft `Section` surfaces.
+
+The pages:
+- **Services** (`/service-planner`):
+  - A month calendar (dots on days with services) and a "Coming up" list.
+  - The chosen day's services, each with its order as a coloured bar, and Edit and Present.
+  - Starter orders of service, and the church's saved orders.
+- **Service editor** (`/service-builder/:id`):
+  - A sticky side panel: name, date and time; "Add to …" tiles for the selected part; Find a verse; Order of service tools.
+  - Sections with a colour edge by kind. Parts are soft rows; slides are drawn by the real renderer.
+- **Presenter** (`/presenter`):
+  - The service as sections with slide thumbnails (real renderer), with the live slide in red and the next in green.
+  - A Live/Next column, with a graphite Next slide button and Start/Stop.
+- **Media**:
+  - Filter pills with counts, search, and drag-and-drop to add.
+  - Songs as a list (writers, sections, CCLI number, Lyrics).
+  - Pictures and videos as a thumbnail grid.
+- **Looks:** three tabs: Design a look (every look as a picture, with where it is used, and the designer), Which screen uses what (with previews), and Colour teams and themes.
+- **Screens:** what each screen shows now; Screens and Network settings side by side; setting-up notes.
+- **Settings** (`/settings`, also a panel over the live screen): a sidebar like System Settings, with Bible, Listening (microphone, channel, language, speech engine, AI), Screens, Network, Songs and CCLI, Logo, Library and backup, ProPresenter, and Desktop app. Everything saves as it is changed.
+
+Base components: buttons default to white on graphite, with neutral hovers; delete is soft red. Cards are soft rounded surfaces. shadcn's `--accent` is a neutral hover colour, and only `--primary` follows the colour team.
 
 ## 12. Saved settings (localStorage keys)
 

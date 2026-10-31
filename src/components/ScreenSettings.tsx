@@ -69,7 +69,7 @@ export function ScreenSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
+        <CardTitle className="flex items-center gap-2">
           <MonitorPlay className="w-5 h-5 text-primary" />
           Screens
         </CardTitle>
