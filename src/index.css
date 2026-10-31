@@ -7,55 +7,91 @@ All colors MUST be HSL.
 */
 
 @layer base {
+  /* The booth console: deep ink with one candle-gold accent. Red only ever means Live,
+     green only ever means Next/Preview. A light look for bright rooms (html.light). */
   :root {
-    --background: 210 30% 8%;
-    --foreground: 210 20% 98%;
+    --background: 216 29% 7%;
+    --foreground: 216 29% 93%;
 
-    --card: 215 25% 12%;
-    --card-foreground: 210 20% 98%;
+    --card: 215 28% 10%;
+    --card-foreground: 216 29% 93%;
 
-    --popover: 215 25% 12%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 215 28% 11%;
+    --popover-foreground: 216 29% 93%;
 
-    --primary: 43 100% 65%;
-    --primary-foreground: 215 30% 10%;
+    --primary: 38 85% 62%;
+    --primary-foreground: 38 70% 8%;
 
-    --secondary: 217 30% 18%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 215 27% 14%;
+    --secondary-foreground: 216 29% 93%;
 
-    --muted: 217 25% 20%;
-    --muted-foreground: 210 15% 60%;
+    --muted: 215 27% 14%;
+    --muted-foreground: 214 15% 60%;
 
-    --accent: 43 100% 65%;
-    --accent-foreground: 215 30% 10%;
+    --accent: 38 85% 62%;
+    --accent-foreground: 38 70% 8%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: 0 84% 63%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 20% 25%;
-    --input: 217 20% 25%;
-    --ring: 43 100% 65%;
+    --border: 216 24% 20%;
+    --input: 216 24% 20%;
+    --ring: 38 85% 62%;
 
     --radius: 0.75rem;
 
-    --success: 142 71% 45%;
+    --success: 144 59% 49%;
     --warning: 38 92% 50%;
     --info: 199 89% 48%;
+    --live: 0 84% 63%;
+    --next: 144 59% 49%;
 
     --projection-bg: 0 0% 0%;
     --projection-text: 0 0% 100%;
     --projection-accent: 43 100% 65%;
 
-    --gradient-divine: linear-gradient(135deg, hsl(43 100% 65%) 0%, hsl(33 100% 55%) 100%);
-    --gradient-dark: linear-gradient(180deg, hsl(215 25% 12%) 0%, hsl(210 30% 8%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(215 25% 14%) 0%, hsl(215 25% 12%) 100%);
+    --gradient-divine: linear-gradient(135deg, hsl(38 90% 66%) 0%, hsl(33 90% 56%) 100%);
+    --gradient-dark: linear-gradient(180deg, hsl(215 28% 10%) 0%, hsl(216 29% 7%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(215 27% 12%) 0%, hsl(215 28% 10%) 100%);
 
     --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
-    --shadow-glow: 0 0 30px hsl(43 100% 65% / 0.2);
-    --shadow-elevated: 0 10px 40px -10px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 30px hsl(38 85% 62% / 0.18);
+    --shadow-elevated: 0 10px 40px -10px hsl(0 0% 0% / 0.45);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    color-scheme: dark;
+  }
+
+  html.light {
+    --background: 216 22% 96%;
+    --foreground: 216 29% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 216 29% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 216 29% 10%;
+    --primary: 39 88% 39%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 24% 93%;
+    --secondary-foreground: 216 29% 10%;
+    --muted: 214 24% 93%;
+    --muted-foreground: 215 15% 42%;
+    --accent: 39 88% 39%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --border: 214 23% 87%;
+    --input: 214 23% 87%;
+    --ring: 39 88% 39%;
+    --success: 142 72% 29%;
+    --live: 0 72% 51%;
+    --next: 142 72% 29%;
+    --gradient-divine: linear-gradient(135deg, hsl(39 88% 45%) 0%, hsl(33 88% 40%) 100%);
+    --gradient-dark: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(216 22% 96%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(214 24% 97%) 0%, hsl(0 0% 100%) 100%);
+    --shadow-soft: 0 4px 20px -8px hsl(216 30% 20% / 0.18);
+    --shadow-glow: 0 0 24px hsl(39 88% 39% / 0.15);
+    --shadow-elevated: 0 10px 40px -14px hsl(216 30% 20% / 0.25);
+    color-scheme: light;
   }
 }
 

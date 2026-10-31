@@ -8,6 +8,7 @@ import { RenderContent, SlideOverrides, TemplateRenderer } from './TemplateRende
 import { SlideDisplay } from './SlideDisplay';
 import { VerseText } from './VerseText';
 import { VideoPlayer } from './VideoPlayer';
+import { VideoStill } from './MediaThumbnail';
 import { Countdown, formatRemaining } from '@/lib/countdown';
 
 const SIZE_SCALE = { small: 0.7, medium: 0.85, large: 1, xlarge: 1.15 } as const;
@@ -62,6 +63,7 @@ export const OutputContent = ({
   remaining = 0,
   preview = false,
   transparent = false,
+  still = false,
 }: {
   live: Live;
   output: Output;
@@ -72,13 +74,15 @@ export const OutputContent = ({
   preview?: boolean;
   /** Draw no background (see-through lower third) */
   transparent?: boolean;
+  /** Thumbnails: video backgrounds and slides show a still frame instead of playing */
+  still?: boolean;
 }) => {
   const { templates, assignments } = useTemplates();
 
   // A countdown can take over the screen (before the service, or on the stream)
   const countdownTakesOver = countdown && (output === 'projection' ? countdown.projector === 'full' : countdown.stream);
   if (countdownTakesOver) {
-    return <TemplateRenderer template={templateFor(templates, assignments, output, 'countdown')} content={countdownContent(countdown, remaining)} transparent={transparent} />;
+    return <TemplateRenderer template={templateFor(templates, assignments, output, 'countdown')} content={countdownContent(countdown, remaining)} transparent={transparent} still={still} />;
   }
 
   const described = describe(live);
@@ -98,10 +102,14 @@ export const OutputContent = ({
     screen =
       output === 'projection' ? (
         <div style={{ width: 1920, height: 1080 }} className="bg-black">
-          <VideoPlayer mediaId={live.slide.mediaId} loop={live.slide.loop} sound={live.slide.sound && !preview} className="w-full h-full" />
+          {still ? (
+            <VideoStill mediaId={live.slide.mediaId} />
+          ) : (
+            <VideoPlayer mediaId={live.slide.mediaId} loop={live.slide.loop} sound={live.slide.sound && !preview} className="w-full h-full" />
+          )}
         </div>
       ) : (
-        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} transparent={transparent} />
+        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} transparent={transparent} still={still} />
       );
   } else if (live && 'slide' in live && !described && live.slide.type !== 'blank') {
     // Picture slides fill the screen as they are
@@ -111,11 +119,11 @@ export const OutputContent = ({
           <SlideDisplay slide={live.slide} className="h-full w-full" />
         </div>
       ) : (
-        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} transparent={transparent} />
+        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} transparent={transparent} still={still} />
       );
   } else {
     const template = templateFor(templates, assignments, output, described?.kind ?? 'scripture', described?.templateId);
-    screen = <TemplateRenderer template={template} content={blank ? null : described?.content ?? null} overrides={described?.overrides} transparent={transparent} />;
+    screen = <TemplateRenderer template={template} content={blank ? null : described?.content ?? null} overrides={described?.overrides} transparent={transparent} still={still} />;
   }
 
   return corner ? (
