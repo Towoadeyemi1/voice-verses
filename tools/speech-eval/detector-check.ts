@@ -10,6 +10,8 @@ console.warn = () => {};
 import { VerseDetectionController } from '@/speech/VerseDetectionController';
 import { loadScriptureIndex } from '@/speech/scriptureIndex';
 import { plainVerseText } from '@/lib/verseText';
+import { readingPosition, readingTokens, wordsAhead } from '@/speech/readingTracker';
+import { words as stems } from '@/speech/scriptureMatcher';
 import { BibleParser } from '@/lib/bibleParser';
 import { setApiBibleKey, setChosenApiBibles, versesFromApiBibleJson, versesFromBracketed, versesFromNltHtml } from '@/lib/onlineBibles';
 import { parseSongSelectFile } from '@/lib/songSelectImport';
@@ -334,6 +336,21 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('NKJV from API.Bible: verse, label, one request per chapter', `${verse?.text} | ${BibleParser.getVersionLabel()} | ${asked.length} ${asked[0]}`, 'For God so loved the world that He gave His only begotten Son. | NKJV | 1 https://rest.api.bible/v1/bibles/nkjv-id/chapters/JHN.3 key=church-key');
     globalThis.fetch = realFetch;
     BibleParser.setVersion('kjv');
+  }
+
+  // The word follower with a fast reader
+  {
+    const verse = 'And immediately the man was made whole, and took up his bed, and walked: and on the same day was the sabbath.';
+    const tokens = readingTokens(verse);
+    const at = (said: string) => { const i = readingPosition(tokens, stems(said)); return i < 0 ? '-' : tokens[i].text; };
+    check('fast reader: a long jump between results is followed', at('and immediately the man was made whole and took up his bed and walked and on the same'), 'same');
+    check('misheard words are skipped', at('and immediately the man was maid hole and took up his bad and walked'), 'walked:');
+    check('the last word heard is not held back', at('and immediately the man'), 'man');
+    check('a common word alone does not jump ahead', at('and the'), 'And');
+    check('preaching about it does not move it', at('you see church the man had waited for thirty eight years'), 'man');
+    const t0 = 1_000_000;
+    const history = [{ word: 2, at: t0 }, { word: 8, at: t0 + 2000 }]; // 3 words a second
+    check('pace carries the light on between results (capped)', `${wordsAhead(history, t0 + 2400)} ${wordsAhead(history, t0 + 3500)} ${wordsAhead(history, t0 + 6000)}`, '1 3 0');
   }
 
   if (failures) {
