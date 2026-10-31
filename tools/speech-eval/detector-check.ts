@@ -10,6 +10,8 @@ console.warn = () => {};
 import { VerseDetectionController } from '@/speech/VerseDetectionController';
 import { loadScriptureIndex } from '@/speech/scriptureIndex';
 import { plainVerseText } from '@/lib/verseText';
+import { BibleParser } from '@/lib/bibleParser';
+import { setApiBibleKey, setChosenApiBibles, versesFromApiBibleJson, versesFromBracketed, versesFromNltHtml } from '@/lib/onlineBibles';
 import { parseSongSelectFile } from '@/lib/songSelectImport';
 import { parseSongSections } from '@/lib/songs';
 import { duplicateService, nextSunday } from '@/lib/duplicateService';
@@ -306,6 +308,32 @@ const check = (label: string, got: string | null, want: string | null) => {
     const copy = duplicateService(original, new Date(2026, 10, 8));
     const ids = [copy.id, copy.sections[0].id, copy.sections[0].subsections[0].id, copy.sections[0].subsections[0].slides[0].id];
     check('duplicate has new ids everywhere and keeps the content', `${ids.every((id) => !['s', 'a', 'b', 'c'].includes(id))} ${copy.name} ${copy.sections[0].subsections[0].name} ${original.id}`, 'true Sunday Service Song s');
+  }
+
+  // Online translations: each service's chapter text becomes verses
+  {
+    const esv = versesFromBracketed('[16] For God so loved the world, that he gave his only Son. [17] For God did not send his Son into the world to condemn the world. (ESV)');
+    check('ESV chapter text → verses', `${esv.get(16)} | ${esv.get(17)}`, 'For God so loved the world, that he gave his only Son. | For God did not send his Son into the world to condemn the world.');
+    const nlt = versesFromNltHtml('<h2 class="bk_ch_name">John 3</h2><h3 class="subhead">Nicodemus Visits Jesus</h3><verse_export orig="john_3_16" bk="John" ch="3" vn="16"><span class="vn">16</span>For this is how God loved the world: He gave<a class="a-tn">*</a><span \nclass="tn"><span class="tn-ref">3:16</span> Or <em>For God loved the world so much</em>.</span> his one and only Son.</verse_export><verse_export orig="john_3_17" bk="John" ch="3" vn="17"><span class="vn">17</span>God sent his Son into the world not to judge the world, but to save the world through him.</verse_export>');
+    check('NLT HTML → verses (no headings, footnotes or numbers)', `${nlt.get(16)} | ${nlt.get(17)}`, 'For this is how God loved the world: He gave his one and only Son. | God sent his Son into the world not to judge the world, but to save the world through him.');
+    const api = versesFromApiBibleJson([{ type: 'tag', items: [{ type: 'text', text: 'For God so loved the world, ', attrs: { verseId: 'JHN.3.16' } }, { type: 'tag', items: [{ type: 'text', text: 'that he gave his only begotten Son.', attrs: { verseId: 'JHN.3.16' } }] }, { type: 'text', text: 'For God did not send His Son.', attrs: { verseId: 'JHN.3.17' } }] }]);
+    check('API.Bible JSON → verses', `${api.get(16)} | ${api.get(17)}`, 'For God so loved the world, that he gave his only begotten Son. | For God did not send His Son.');
+
+    // A licensed API.Bible translation end to end (the service stood in for)
+    const realFetch = globalThis.fetch;
+    const asked: string[] = [];
+    globalThis.fetch = (async (url: string, init?: { headers?: Record<string, string> }) => {
+      asked.push(`${url.replace(/\?.*$/, '')} key=${init?.headers?.['api-key']}`);
+      return new Response(JSON.stringify({ data: { content: [{ type: 'text', text: 'For God so loved the world that He gave His only begotten Son.', attrs: { verseId: 'JHN.3.16' } }], copyright: 'NKJV © Thomas Nelson' }, meta: { fumsToken: 'tok' } }), { status: 200 });
+    }) as typeof fetch;
+    setApiBibleKey('church-key');
+    setChosenApiBibles([{ id: 'nkjv-id', abbreviation: 'NKJV', name: 'New King James Version' }]);
+    BibleParser.setVersion('api:nkjv-id');
+    const verse = await BibleParser.getVerse('John', 3, 16);
+    await BibleParser.getVerse('John', 3, 17);
+    check('NKJV from API.Bible: verse, label, one request per chapter', `${verse?.text} | ${BibleParser.getVersionLabel()} | ${asked.length} ${asked[0]}`, 'For God so loved the world that He gave His only begotten Son. | NKJV | 1 https://rest.api.bible/v1/bibles/nkjv-id/chapters/JHN.3 key=church-key');
+    globalThis.fetch = realFetch;
+    BibleParser.setVersion('kjv');
   }
 
   if (failures) {

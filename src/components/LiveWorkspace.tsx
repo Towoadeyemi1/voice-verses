@@ -69,14 +69,10 @@ function slideText(slide: Slide): string {
 }
 
 /** Translations read from the internet: the grid shows the KJV's words, and the verse is fetched when used. */
-const isOnlineVersion = () => ['esv', 'nlt'].includes(BibleParser.getVersion());
+const isOnlineVersion = () => BibleParser.isOnline(BibleParser.getVersion());
 
+/** A chapter's verses in the translation in use (an online one is fetched once for the whole chapter). */
 async function chapterVerses(book: string, chapter: number): Promise<BibleVerse[]> {
-  if (isOnlineVersion()) {
-    const books = await BibleParser.getOfflineBooks('kjv');
-    const b = books.find((x) => x.name.toLowerCase() === book.toLowerCase());
-    return (b?.chapters[chapter - 1] ?? []).map((text, i) => ({ book: b!.name, chapter, verse: i + 1, text }));
-  }
   const count = await BibleParser.getChapterLength(book, chapter);
   const verses = await Promise.all(Array.from({ length: count }, (_, i) => BibleParser.getVerse(book, chapter, i + 1)));
   return verses.filter((v): v is BibleVerse => !!v);
@@ -430,7 +426,7 @@ export const LiveWorkspace = () => {
   const gridTitle = !collection
     ? 'Nothing loaded'
     : collection.kind === 'chapter'
-      ? `${collection.book} ${collection.chapter} · ${BibleParser.getVersion().toUpperCase()}`
+      ? `${collection.book} ${collection.chapter} · ${BibleParser.getVersionLabel()}`
       : collection.title;
 
   return (

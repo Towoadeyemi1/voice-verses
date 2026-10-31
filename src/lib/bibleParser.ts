@@ -1,6 +1,7 @@
 import { BibleVerse, BibleContext } from '@/types/bible';
 import { BibleVersionType } from '@/types/bibleVersion';
 import { convertBibleSuperSearchToStandard } from './bibleConverter';
+import { apiBibleFor, isApiBibleVersion, onlineChapter, reportScriptureShown } from './onlineBibles';
 
 interface BibleBook {
   abbrev: string;
@@ -32,8 +33,6 @@ const loadOfflineBible = (version: OfflineVersion): Promise<BibleBook[]> => {
 
 let currentVersion: BibleVersionType = 'kjv';
 let customBibleData: BibleBook[] | null = null;
-let esvApiKey: string | null = null;
-let nltApiKey: string | null = null;
 
 const getBibleData = async (version: BibleVersionType = currentVersion): Promise<BibleBook[]> => {
   if (version === 'custom' && customBibleData) {
@@ -113,12 +112,9 @@ export class BibleParser {
   }
 
   static async getVerse(bookName: string, chapterNum: number, verseNum: number): Promise<BibleVerse | null> {
-    // Handle API versions
-    if (currentVersion === 'esv') {
-      return await this.getVerseFromESV(bookName, chapterNum, verseNum);
-    }
-    if (currentVersion === 'nlt') {
-      return await this.getVerseFromNLT(bookName, chapterNum, verseNum);
+    // Translations read from the internet (ESV, NLT, API.Bible: NKJV and others)
+    if (BibleParser.isOnline(currentVersion)) {
+      return this.getOnlineVerse(bookName, chapterNum, verseNum);
     }
 
     // Handle offline versions
@@ -153,82 +149,45 @@ export class BibleParser {
     };
   }
 
-  private static async getVerseFromESV(bookName: string, chapterNum: number, verseNum: number): Promise<BibleVerse | null> {
-    if (!esvApiKey) {
-      console.error('ESV API key not configured');
-      return this.fallbackToOffline(bookName, chapterNum, verseNum, 'ESV API key not configured');
-    }
+  /** ESV, NLT and API.Bible translations are read from the internet. */
+  static isOnline(version: string = currentVersion): boolean {
+    return version === 'esv' || version === 'nlt' || isApiBibleVersion(version);
+  }
 
+  /** The book's place among the 66 (0-based) and its usual name, from the KJV's list. */
+  private static async bookIndex(bookName: string): Promise<{ index: number; name: string } | null> {
+    const books = await loadOfflineBible('kjv');
+    const index = books.findIndex((b) => b.name.toLowerCase() === bookName.toLowerCase() || b.abbrev.toLowerCase() === bookName.toLowerCase());
+    return index < 0 ? null : { index, name: books[index].name };
+  }
+
+  private static async getOnlineVerse(bookName: string, chapterNum: number, verseNum: number): Promise<BibleVerse | null> {
+    const book = await this.bookIndex(bookName);
+    if (!book) return null;
     try {
-      const reference = `${bookName} ${chapterNum}:${verseNum}`;
-      const response = await fetch(
-        `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(reference)}&include-headings=false&include-footnotes=false&include-verse-numbers=false&include-short-copyright=false&include-passage-references=false`,
-        {
-          headers: {
-            'Authorization': `Token ${esvApiKey}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        console.error('ESV API error:', response.status);
-        return this.fallbackToOffline(bookName, chapterNum, verseNum, `ESV API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const text = data.passages?.[0]?.trim();
-      
-      if (!text) {
-        console.error('No text returned from ESV API');
-        return this.fallbackToOffline(bookName, chapterNum, verseNum, 'No text from ESV API');
-      }
-
-      return {
-        book: bookName,
-        chapter: chapterNum,
-        verse: verseNum,
-        text: text,
-      };
+      const chapter = await onlineChapter(currentVersion, book.name, book.index, chapterNum);
+      const text = chapter.verses.get(verseNum);
+      if (text) return { book: book.name, chapter: chapterNum, verse: verseNum, text };
+      // Verse numbering differs between translations (or it is not in this one)
+      if (chapter.verses.size) return null;
+      return this.fallbackToOffline(book.name, chapterNum, verseNum, `${this.getVersionLabel()} has no text for this chapter`);
     } catch (error) {
-      console.error('Error fetching from ESV API:', error);
-      return this.fallbackToOffline(bookName, chapterNum, verseNum, 'Network error');
+      return this.fallbackToOffline(book.name, chapterNum, verseNum, error instanceof Error ? error.message : 'Network error');
     }
   }
 
-  private static async getVerseFromNLT(bookName: string, chapterNum: number, verseNum: number): Promise<BibleVerse | null> {
-    if (!nltApiKey) {
-      console.error('NLT API key not configured');
-      return this.fallbackToOffline(bookName, chapterNum, verseNum, 'NLT API key not configured');
-    }
+  /** A verse went on screen (licensed online text is reported to its publisher's fair-use tracking). */
+  static async reportShown(verse: { book: string; chapter: number }): Promise<void> {
+    if (!isApiBibleVersion(currentVersion)) return;
+    const book = await this.bookIndex(verse.book);
+    if (book) reportScriptureShown(currentVersion, book.index, verse.chapter);
+  }
 
-    try {
-      const reference = `${bookName} ${chapterNum}:${verseNum}`;
-      const response = await fetch(
-        `https://api.nlt.to/api/passages?ref=${encodeURIComponent(reference)}&key=${nltApiKey}&version=NLT`
-      );
-
-      if (!response.ok) {
-        console.error('NLT API error:', response.status);
-        return this.fallbackToOffline(bookName, chapterNum, verseNum, `NLT API error: ${response.status}`);
-      }
-
-      const text = await response.text();
-      
-      if (!text) {
-        console.error('No text returned from NLT API');
-        return this.fallbackToOffline(bookName, chapterNum, verseNum, 'No text from NLT API');
-      }
-
-      return {
-        book: bookName,
-        chapter: chapterNum,
-        verse: verseNum,
-        text: text.trim(),
-      };
-    } catch (error) {
-      console.error('Error fetching from NLT API:', error);
-      return this.fallbackToOffline(bookName, chapterNum, verseNum, 'Network error');
-    }
+  /** The translation's short name for screens: KJV, NKJV, NLT… */
+  static getVersionLabel(version: string = this.getVersion()): string {
+    if (isApiBibleVersion(version)) return apiBibleFor(version)?.abbreviation ?? 'Bible';
+    if (version === 'custom') return 'Custom';
+    return version.toUpperCase();
   }
 
   private static async fallbackToOffline(bookName: string, chapterNum: number, verseNum: number, reason: string): Promise<BibleVerse | null> {
@@ -492,25 +451,15 @@ export class BibleParser {
   }
 
   static setApiKey(version: 'esv' | 'nlt', apiKey: string): void {
-    if (version === 'esv') {
-      esvApiKey = apiKey;
-      localStorage.setItem('cornerstone-esv-api-key', apiKey);
-    } else if (version === 'nlt') {
-      nltApiKey = apiKey;
-      localStorage.setItem('cornerstone-nlt-api-key', apiKey);
-    }
+    localStorage.setItem(version === 'esv' ? 'cornerstone-esv-api-key' : 'cornerstone-nlt-api-key', apiKey);
   }
 
   static getApiKey(version: 'esv' | 'nlt'): string | null {
-    return version === 'esv' ? esvApiKey : nltApiKey;
+    return localStorage.getItem(version === 'esv' ? 'cornerstone-esv-api-key' : 'cornerstone-nlt-api-key');
   }
 
-  static loadApiKeys(): void {
-    const esvKey = localStorage.getItem('cornerstone-esv-api-key');
-    const nltKey = localStorage.getItem('cornerstone-nlt-api-key');
-    if (esvKey) esvApiKey = esvKey;
-    if (nltKey) nltApiKey = nltKey;
-  }
+  /** Keys are read from storage when needed (kept for callers from before). */
+  static loadApiKeys(): void {}
 
   // Get multiple verses from a range or full chapter
   static async getVerses(bookName: string, chapterNum: number, startVerse?: number, endVerse?: number): Promise<BibleVerse[]> {
