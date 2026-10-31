@@ -12,6 +12,7 @@ import { VerseText } from '@/components/VerseText';
 import { useTemplates } from '@/hooks/use-templates';
 import { SlideDesigner } from '@/components/designer/SlideDesigner';
 import { TeamsAndThemes } from '@/components/designer/TeamsAndThemes';
+import { StarterLooks } from '@/components/designer/StarterLooks';
 import {
   BUILT_IN_TEMPLATES,
   CONTENT_KINDS,
@@ -155,6 +156,7 @@ const Templates = () => {
               </button>
             ))}
             <div className="flex flex-col gap-1.5 flex-shrink-0 justify-center pl-1">
+              <StarterLooks onPick={setSelectedId} />
               <Button size="sm" variant="outline" onClick={createNew} className="gap-1.5 justify-start"><Plus className="w-4 h-4" />New</Button>
               <Button size="sm" variant="outline" onClick={duplicate} className="gap-1.5 justify-start"><Copy className="w-4 h-4" />Duplicate</Button>
               {builtIn ? (

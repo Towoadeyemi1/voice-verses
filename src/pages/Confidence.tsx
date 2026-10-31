@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Settings } from 'lucide-react';
 import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-active';
 import { ConfidenceScreen, ConfidenceSettings, loadConfidenceSettings, saveConfidenceSettings } from '@/components/ConfidenceScreen';
+import { STAGE_PRESETS } from '@/lib/starters';
 
 /** The confidence monitor window, with its settings (shown while the mouse moves). */
 const Confidence = () => {
@@ -41,7 +42,19 @@ const Confidence = () => {
       {showSettings && (
         <Card className="settings-panel fixed top-16 right-4 z-50 w-96 p-6 max-h-[calc(100vh-5rem)] overflow-y-auto bg-background/95 backdrop-blur">
           <h3 className="text-lg font-semibold mb-4">Confidence Monitor Settings</h3>
-          
+
+          <div className="space-y-2 mb-6">
+            <Label>Start from a layout</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {STAGE_PRESETS.map((p) => (
+                <button key={p.id} type="button" onClick={() => updateSettings(p.settings)} className="text-left rounded-lg border border-border hover:bg-muted p-2.5" title={p.description}>
+                  <span className="block text-sm font-semibold">{p.name}</span>
+                  <span className="block text-xs text-muted-foreground leading-snug">{p.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-6">
             {/* Background Color */}
             <div className="space-y-2">
