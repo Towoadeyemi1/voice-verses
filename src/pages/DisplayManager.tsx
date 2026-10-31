@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { appUrl } from '@/lib/appUrl';
 import { isDesktop } from '@/lib/desktop';
 import { NetworkOutputSettings } from '@/components/NetworkOutputSettings';
+import { ScreenSettings } from '@/components/ScreenSettings';
 
 const OUTPUTS = [
   { route: '/projection', label: 'Projection', size: 'width=1280,height=720' },
@@ -32,25 +33,21 @@ const DisplayManager = () => {
             Setting up the screens
           </h3>
           <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-            <li>
-              Open the output windows: <strong>Open Windows</strong> in the Presenter, or the buttons below.
-            </li>
-            <li>
-              Drag each window to its screen (projector, stage monitor) and <strong>double-click</strong> it to fill the
-              screen. Double-click again to make it a window again.
-            </li>
             {isDesktop ? (
               <li>
-                The desktop app remembers where each window goes. With a projector connected, the projection opens on
-                it, full screen, by itself.
+                Choose a display for each output under <strong>Screens</strong> below (also in Settings → Screens). The
+                app opens it there full screen by itself, every time it starts; no windows to drag.
               </li>
             ) : (
-              <li>The desktop app remembers where each window goes; in a browser, place them again each time.</li>
+              <li>
+                Open the output windows with the buttons below, drag each to its screen and <strong>double-click</strong>{' '}
+                it to fill the screen. (The desktop app does this for you.)
+              </li>
             )}
             <li>
-              For a livestream, capture the <strong>Lower third</strong> window in OBS or vMix (window capture) and key
-              out the green, or use a screen on the network (below) as a browser source with a see-through background.
-              Using ProPresenter too? Settings → ProPresenter sends the verses there as well.
+              For a livestream, capture the <strong>Lower third</strong> in OBS or vMix and key out the green, or use a
+              screen on the network (below) as a browser source with a see-through background. Using ProPresenter too?
+              Settings → ProPresenter sends the verses there as well.
             </li>
           </ol>
           <div className="flex flex-wrap gap-2 mt-4 mb-2">
@@ -62,6 +59,7 @@ const DisplayManager = () => {
           </div>
         </Card>
 
+        {isDesktop && <ScreenSettings />}
         {isDesktop && <NetworkOutputSettings />}
       </div>
     </div>

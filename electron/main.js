@@ -6,6 +6,7 @@ import * as library from './library.js';
 import * as proPresenter from './propresenter.js';
 import { keepAwake, outputWindowOptions, trackOutputWindow } from './outputs.js';
 import * as network from './network.js';
+import * as screens from './screens.js';
 import * as speech from './speech/index.js';
 import { initUpdates } from './updates.js';
 
@@ -82,6 +83,8 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    // The outputs go with the window that controls them (they come back when it reopens)
+    screens.suspendScreens();
   });
 }
 
@@ -128,6 +131,10 @@ handle('network:has-media', (id) => network.hasMedia(id));
 handle('network:put-media', (id, mime, bytes) => network.putMedia(id, mime, bytes));
 listen('network:publish', (state) => network.publish(state));
 
+handle('screens:displays', () => screens.listDisplays());
+handle('screens:get', () => screens.getConfig());
+handle('screens:set', (config) => screens.setConfig(config));
+
 handle('app:version', () => app.getVersion());
 // While listening, the computer must not sleep (it would stop hearing the preacher)
 handle('power:listening', (listening, event) => {
@@ -141,6 +148,15 @@ listen('speech:audio', (session, samples) => speech.sendAudio(session, samples))
 listen('speech:finish', (session) => speech.finish(session));
 listen('speech:stop', (session) => speech.stop(session));
 
+/** An app window showing one route (used for the outputs chosen in Settings → Screens). */
+function createAppWindow(route, options) {
+  const win = new BrowserWindow({ ...options, webPreferences });
+  hardenWindow(win);
+  if (isDev) win.loadURL(`${DEV_URL}/#${route}`);
+  else win.loadFile(join(__dirname, '../dist/index.html'), { hash: route });
+  return win;
+}
+
 app.whenReady().then(async () => {
   await library.initLibrary();
   if (process.platform === 'darwin') {
@@ -148,6 +164,7 @@ app.whenReady().then(async () => {
     await systemPreferences.askForMediaAccess('microphone').catch(() => false);
   }
   createWindow();
+  screens.initScreens(createAppWindow);
   initUpdates();
 });
 
@@ -158,7 +175,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
+  if (!mainWindow) {
     createWindow();
+    screens.resumeScreens();
   }
 });

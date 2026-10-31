@@ -31,7 +31,7 @@ import { hasSecret } from '@/lib/secrets';
 import { verseAssistantOptions } from '@/ai/detectionOptions';
 import { ApiKeyDialog } from '@/components/ApiKeyDialog';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
-import { appUrl } from '@/lib/appUrl';
+import { openOutputWindows } from '@/lib/outputWindows';
 
 const Presenter = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -268,11 +268,9 @@ const Presenter = () => {
     toast.success('Slide updated');
   };
 
-  const handleOpenWindows = () => {
-    window.open(appUrl('/projection'), '_blank', 'width=1920,height=1080');
-    window.open(appUrl('/confidence'), '_blank', 'width=1280,height=720');
-    window.open(appUrl('/lower-third'), '_blank', 'width=1280,height=720');
-    toast.success('Display windows opened');
+  const handleOpenWindows = async () => {
+    const opened = await openOutputWindows();
+    toast.success(opened ? 'Display windows opened' : 'The outputs are already on their screens (Settings → Screens)');
   };
 
   const handleStartVoice = async () => {

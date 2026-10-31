@@ -51,6 +51,19 @@ export interface NetworkStatus {
   urls: string[];
 }
 
+export interface DisplayInfo {
+  id: number;
+  label: string;
+  width: number;
+  height: number;
+  /** The display with the menu bar / taskbar (the operator's screen) */
+  primary: boolean;
+}
+
+export type ScreenOutput = 'projection' | 'confidence' | 'lowerThird';
+/** Which display each output is shown on; null for off */
+export type ScreenConfig = Record<ScreenOutput, number | null>;
+
 export interface DesktopBridge {
   platform: string;
   getVersion(): Promise<string>;
@@ -84,6 +97,11 @@ export interface DesktopBridge {
     createMessage(connection: ProPresenterConnection, theme: ProPresenterThemeSlide['id']): Promise<ProPresenterStatus>;
     show(connection: ProPresenterConnection, verse: { reference: string; text: string; stage: boolean }): Promise<void>;
     clear(connection: ProPresenterConnection, options: { stage: boolean }): Promise<void>;
+  };
+  screens: {
+    displays(): Promise<DisplayInfo[]>;
+    get(): Promise<ScreenConfig>;
+    set(config: ScreenConfig): Promise<ScreenConfig>;
   };
   network: {
     configure(options: { enabled: boolean; port?: number }): Promise<NetworkStatus>;
