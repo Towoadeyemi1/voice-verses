@@ -42,6 +42,11 @@ contextBridge.exposeInMainWorld('voiceVerses', {
     show: (connection, verse) => invoke('propresenter:show', connection, verse),
     clear: (connection, options) => invoke('propresenter:clear', connection, options),
   },
+  screens: {
+    displays: () => invoke('screens:displays'),
+    get: () => invoke('screens:get'),
+    set: (config) => invoke('screens:set', config),
+  },
   network: {
     configure: (options) => invoke('network:configure', options),
     status: () => invoke('network:status'),
