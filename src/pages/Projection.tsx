@@ -1,6 +1,7 @@
 import { ScaledStage } from '@/components/ScaledStage';
 import { OutputContent } from '@/components/OutputContent';
 import { useLive } from '@/hooks/use-live';
+import { useCountdown } from '@/hooks/use-countdown';
 import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-active';
 
 /**
@@ -9,12 +10,13 @@ import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-
  */
 const Projection = () => {
   const { live, logo } = useLive();
+  const { countdown, remaining } = useCountdown();
   const pointerActive = usePointerActive();
   useDoubleClickFullscreen();
 
   return (
     <div className="fixed inset-0 bg-black" style={{ cursor: pointerActive ? 'auto' : 'none' }}>
-      {logo !== null ? (
+      {logo !== null && countdown?.projector !== 'full' ? (
         logo && (
           <div className="absolute inset-0 flex items-center justify-center">
             <img src={logo} alt="" className="max-w-[80%] max-h-[80%] object-contain" />
@@ -22,7 +24,7 @@ const Projection = () => {
         )
       ) : (
         <ScaledStage className="absolute inset-0">
-          <OutputContent live={live} output="projection" />
+          <OutputContent live={live} output="projection" countdown={countdown} remaining={remaining} />
         </ScaledStage>
       )}
     </div>

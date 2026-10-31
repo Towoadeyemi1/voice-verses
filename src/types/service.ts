@@ -4,7 +4,15 @@ export type SlideType = 'scripture' | 'lyrics' | 'image' | 'announcement' | 'bla
 
 export interface CountdownConfig {
   enabled: boolean;
+  /** Count down a length of time, or to a time of day */
+  mode?: 'duration' | 'until';
   durationMinutes: number;
+  /** "HH:MM" for mode 'until' */
+  untilTime?: string;
+  /** Shown with the time, e.g. "Service begins in" */
+  message?: string;
+  /** How the projector shows it; replaces the 'main' display target */
+  projector?: 'full' | 'corner' | 'off';
   displayTargets: ('main' | 'confidence' | 'stream')[];
   alertEnabled: boolean;
   alertType?: 'yellow' | 'red';

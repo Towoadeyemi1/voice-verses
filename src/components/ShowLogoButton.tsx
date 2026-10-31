@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { syncService } from '@/lib/syncService';
 import { clearProPresenter } from '@/lib/proPresenter';
+import { stopCountdown } from '@/lib/countdown';
 
 interface ShowLogoButtonProps {
   serviceId?: string;
@@ -30,6 +31,7 @@ export const ShowLogoButton = ({ serviceId, variant = 'outline', size = 'default
     
     // Without a logo the screens still clear: that is what the operator needs in a hurry
     syncService.showLogo(logoUrl);
+    stopCountdown();
     clearProPresenter();
 
     if (logoUrl) {

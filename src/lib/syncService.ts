@@ -1,8 +1,9 @@
 import { BibleVerse } from '@/types/bible';
 import { Slide } from '@/types/service';
+import type { Countdown } from '@/lib/countdown';
 
 export type SyncMessage = {
-  type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE' | 'LOGO';
+  type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE' | 'LOGO' | 'COUNTDOWN';
   data: {
     verse?: BibleVerse | null;
     timestamp?: Date;
@@ -15,12 +16,16 @@ export type SyncMessage = {
     /** The next few slides of the service, for the confidence monitor */
     upcoming?: Slide[];
     logoUrl?: string;
+    /** The running countdown, or null when stopped */
+    countdown?: Countdown | null;
   };
 };
 
 /** Message types that change what is on screen; the latest one is kept so windows can catch up. */
 const LIVE_TYPES = new Set<SyncMessage['type']>(['VERSE_UPDATE', 'SLIDE_UPDATE', 'LOGO']);
 const LIVE_KEY = 'voice-verses-live';
+// A countdown runs alongside what is on screen, so it is kept separately
+const COUNTDOWN_KEY = 'voice-verses-countdown';
 
 /**
  * Keeps the operator window and the output windows (projection, confidence,
@@ -43,6 +48,14 @@ class SyncService {
 
   broadcast(message: SyncMessage) {
     if (LIVE_TYPES.has(message.type)) this.remember(message);
+    if (message.type === 'COUNTDOWN') {
+      try {
+        if (message.data.countdown) localStorage.setItem(COUNTDOWN_KEY, JSON.stringify(message.data.countdown));
+        else localStorage.removeItem(COUNTDOWN_KEY);
+      } catch {
+        // Storage full: reopened windows miss the countdown until it changes
+      }
+    }
 
     // Same-window listeners first, then other windows
     this.listeners.forEach(listener => listener(message));
@@ -53,6 +66,16 @@ class SyncService {
   current(): SyncMessage | null {
     try {
       const saved = localStorage.getItem(LIVE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** The running countdown, if any. */
+  currentCountdown(): Countdown | null {
+    try {
+      const saved = localStorage.getItem(COUNTDOWN_KEY);
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;

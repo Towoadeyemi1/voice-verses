@@ -14,6 +14,8 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Settings } from 'lucide-react';
 import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-active';
+import { useCountdown } from '@/hooks/use-countdown';
+import { formatRemaining } from '@/lib/countdown';
 
 export interface ConfidenceSettings {
   currentVerseFontSize: number;
@@ -45,6 +47,7 @@ const Confidence = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<ConfidenceSettings>(defaultSettings);
   const pointerActive = usePointerActive();
+  const { countdown, remaining } = useCountdown();
   useDoubleClickFullscreen();
 
   useEffect(() => {
@@ -152,11 +155,26 @@ const Confidence = () => {
                 <span style={{ color: `${settings.textColor}70` }}>No content selected</span>
               )}
             </div>
-            <div 
-              className="font-bold tabular-nums"
-              style={{ fontSize: `${settings.clockFontSize}px`, color: settings.textColor }}
-            >
-              {formatTime(currentTime)}
+            <div className="flex items-center gap-8">
+              {countdown?.confidence && (
+                <div
+                  className="font-bold tabular-nums rounded-lg px-4"
+                  title={countdown.message}
+                  style={{
+                    fontSize: `${settings.clockFontSize * 1.6}px`,
+                    color: remaining < 0 ? '#ffffff' : remaining <= (countdown.warnSeconds ?? 60) * 1000 ? '#fbbf24' : settings.textColor,
+                    backgroundColor: remaining < 0 ? '#dc2626' : 'transparent',
+                  }}
+                >
+                  {formatRemaining(remaining, { overrun: true })}
+                </div>
+              )}
+              <div
+                className="font-bold tabular-nums"
+                style={{ fontSize: `${settings.clockFontSize}px`, color: settings.textColor }}
+              >
+                {formatTime(currentTime)}
+              </div>
             </div>
           </div>
 

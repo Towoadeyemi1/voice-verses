@@ -27,7 +27,8 @@ export const FitText = ({ maxFontSize, minFontSize = 12, className, style, verti
       if (!b || !t || b.clientHeight === 0) return;
       const fits = (size: number) => {
         t.style.fontSize = `${size}px`;
-        return t.scrollHeight <= b.clientHeight && t.scrollWidth <= b.clientWidth;
+        // Layout height, not scrollHeight: tall glyphs with tight line spacing overhang their lines slightly
+        return t.offsetHeight <= b.clientHeight + 1 && t.scrollWidth <= b.clientWidth + 1;
       };
       if (fits(maxFontSize)) return;
       let lo = minFontSize;

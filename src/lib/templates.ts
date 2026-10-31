@@ -8,13 +8,14 @@
  * moment a template changes.
  */
 
-export type ContentKind = 'scripture' | 'lyrics' | 'announcement';
+export type ContentKind = 'scripture' | 'lyrics' | 'announcement' | 'countdown';
 export type Output = 'projection' | 'stream';
 
 export const CONTENT_KINDS: { id: ContentKind; label: string }[] = [
   { id: 'scripture', label: 'Scripture' },
   { id: 'lyrics', label: 'Songs' },
   { id: 'announcement', label: 'Announcements' },
+  { id: 'countdown', label: 'Countdowns' },
 ];
 
 export const OUTPUTS: { id: Output; label: string; description: string }[] = [
@@ -126,6 +127,14 @@ export const BUILT_IN_TEMPLATES: Template[] = [
   },
   {
     ...base,
+    id: 'countdown',
+    name: 'Countdown',
+    area: { x: 10, y: 20, width: 80, height: 60 },
+    text: { ...base.text, fontFamily: FONTS[4].value, fontSize: 260, fontWeight: 700, lineHeight: 1.1 },
+    label: { ...base.label, position: 'above', fontSize: 64, color: '#ffffff', includeVersion: false },
+  },
+  {
+    ...base,
     id: 'stream-lower-third',
     name: 'Stream – lower third (green)',
     background: { type: 'color', color: '#00ff00', dim: 0 },
@@ -137,8 +146,8 @@ export const BUILT_IN_TEMPLATES: Template[] = [
 ];
 
 export const DEFAULT_ASSIGNMENTS: Assignments = {
-  projection: { scripture: 'scripture-full', lyrics: 'lyrics-center', announcement: 'announcement' },
-  stream: { scripture: 'stream-lower-third', lyrics: 'stream-lower-third', announcement: 'stream-lower-third' },
+  projection: { scripture: 'scripture-full', lyrics: 'lyrics-center', announcement: 'announcement', countdown: 'countdown' },
+  stream: { scripture: 'stream-lower-third', lyrics: 'stream-lower-third', announcement: 'stream-lower-third', countdown: 'stream-lower-third' },
 };
 
 const TEMPLATES_KEY = 'voice-verses-templates';
@@ -194,7 +203,10 @@ function fromEarlierSettings(): Template[] {
 
 export function loadTemplates(): Template[] {
   const saved = read<Template[]>(TEMPLATES_KEY);
-  return saved?.length ? saved.map(complete) : fromEarlierSettings();
+  if (!saved?.length) return fromEarlierSettings();
+  // Built-in templates added in later versions (built-in templates can't be deleted)
+  const missing = BUILT_IN_TEMPLATES.filter((b) => !saved.some((t) => t.id === b.id));
+  return [...saved.map(complete), ...missing];
 }
 
 export function loadAssignments(): Assignments {

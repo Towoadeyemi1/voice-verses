@@ -7,6 +7,7 @@ import { useTemplates } from '@/hooks/use-templates';
 import { RenderContent, SlideOverrides, TemplateRenderer } from './TemplateRenderer';
 import { SlideDisplay } from './SlideDisplay';
 import { VerseText } from './VerseText';
+import { Countdown, formatRemaining } from '@/lib/countdown';
 
 const SIZE_SCALE = { small: 0.7, medium: 0.85, large: 1, xlarge: 1.15 } as const;
 
@@ -41,23 +42,71 @@ function describe(live: Live): { kind: ContentKind; content: RenderContent; over
   }
 }
 
-/**
- * The content of one output in the template assigned to it. Pictures and
- * other slide types are drawn as they are. Lays out at 1920×1080: wrap in ScaledStage.
- */
-export const OutputContent = ({ live, output, blank }: { live: Live; output: Output; blank?: boolean }) => {
-  const { templates, assignments } = useTemplates();
-  const described = describe(live);
+const countdownContent = (countdown: Countdown, remaining: number): RenderContent => ({
+  key: countdown.id,
+  label: countdown.message,
+  body: <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatRemaining(remaining)}</span>,
+});
 
-  if (live && 'slide' in live && !described && live.slide.type !== 'blank') {
-    // Picture slides fill the screen as they are
-    return output === 'projection' ? (
-      <div style={{ width: 1920, height: 1080 }} className="bg-black">
-        <SlideDisplay slide={live.slide} className="h-full w-full" />
-      </div>
-    ) : null;
+/**
+ * The content of one output in the template assigned to it, with a running
+ * countdown if it is shown there. Pictures and other slide types are drawn as
+ * they are. Lays out at 1920×1080: wrap in ScaledStage.
+ */
+export const OutputContent = ({
+  live,
+  output,
+  blank,
+  countdown,
+  remaining = 0,
+}: {
+  live: Live;
+  output: Output;
+  blank?: boolean;
+  countdown?: Countdown | null;
+  remaining?: number;
+}) => {
+  const { templates, assignments } = useTemplates();
+
+  // A countdown can take over the screen (before the service, or on the stream)
+  const countdownTakesOver = countdown && (output === 'projection' ? countdown.projector === 'full' : countdown.stream);
+  if (countdownTakesOver) {
+    return <TemplateRenderer template={templateFor(templates, assignments, output, 'countdown')} content={countdownContent(countdown, remaining)} />;
   }
 
-  const template = templateFor(templates, assignments, output, described?.kind ?? 'scripture', described?.templateId);
-  return <TemplateRenderer template={template} content={blank ? null : described?.content ?? null} overrides={described?.overrides} />;
+  const described = describe(live);
+  const corner =
+    countdown && output === 'projection' && countdown.projector === 'corner' ? (
+      <div
+        className="absolute rounded-xl text-white font-semibold"
+        style={{ right: 48, bottom: 40, padding: '12px 28px', fontSize: 72, background: 'rgba(0,0,0,0.65)', fontVariantNumeric: 'tabular-nums' }}
+      >
+        {formatRemaining(remaining)}
+      </div>
+    ) : null;
+
+  let screen;
+  if (live && 'slide' in live && !described && live.slide.type !== 'blank') {
+    // Picture slides fill the screen as they are
+    screen =
+      output === 'projection' ? (
+        <div style={{ width: 1920, height: 1080 }} className="bg-black">
+          <SlideDisplay slide={live.slide} className="h-full w-full" />
+        </div>
+      ) : (
+        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} />
+      );
+  } else {
+    const template = templateFor(templates, assignments, output, described?.kind ?? 'scripture', described?.templateId);
+    screen = <TemplateRenderer template={template} content={blank ? null : described?.content ?? null} overrides={described?.overrides} />;
+  }
+
+  return corner ? (
+    <div className="relative" style={{ width: 1920, height: 1080 }}>
+      {screen}
+      {corner}
+    </div>
+  ) : (
+    screen
+  );
 };

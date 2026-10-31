@@ -15,6 +15,8 @@ import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { Play, Square, ChevronLeft, ChevronRight, Monitor, Edit2, ExternalLink, Mic, MicOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ShowLogoButton } from '@/components/ShowLogoButton';
+import { CountdownControl } from '@/components/CountdownControl';
+import { countdownFromConfig, startCountdown, stopCountdown } from '@/lib/countdown';
 import { cn } from '@/lib/utils';
 import { BibleVerse } from '@/types/bible';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
@@ -154,7 +156,21 @@ const Presenter = () => {
         upcoming: slide ? allSlides.slice(index + 1, index + 4) : [],
         timestamp: new Date(),
       },
-    });
+    });    startSectionTimer(slide);
+  };
+
+  // A section with a timer (Service Builder → Add Timer) starts it when its first
+  // slide goes live, and stops it when the service moves to another section
+  const timedSection = useRef<string | null>(null);
+  const startSectionTimer = (slide: Slide | null) => {
+    const subsection = slide && currentService?.sections.flatMap((s) => s.subsections).find((sub) => sub.slides.some((x) => x.id === slide.id));
+    const id = subsection?.countdown?.enabled ? subsection.id : null;
+    if (id === timedSection.current) return;
+    if (timedSection.current) stopCountdown();
+    timedSection.current = id;
+    if (subsection?.countdown?.enabled && subsection.autoStartCountdown !== false) {
+      startCountdown(countdownFromConfig(subsection.countdown, subsection.name));
+    }
   };
 
   const handleStart = () => {
@@ -425,6 +441,7 @@ const Presenter = () => {
                 </Button>
               )}
               
+              <CountdownControl />
               <ShowLogoButton serviceId={currentService?.id} variant="outline" size="sm" />
               
               <Button
