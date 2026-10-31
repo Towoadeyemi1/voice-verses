@@ -11,13 +11,14 @@ import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, VideoSlide, An
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVerse } from '@/types/bible';
-import { Book, Music, Image as ImageIcon, Film, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings, Sparkles } from 'lucide-react';
+import { Book, Music, Image as ImageIcon, Film, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings, Sparkles, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
 import { ManualSearch } from '@/components/ManualSearch';
 import { LyricsEditor } from '@/components/LyricsEditor';
 import { AiSlidesDialog } from '@/components/AiSlidesDialog';
+import { DesignSlideDialog } from '@/components/designer/DesignSlideDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   DndContext,
@@ -80,6 +81,7 @@ const ServiceBuilder = () => {
   const [scriptureReference, setScriptureReference] = useState('');
   const [showLyricsEditor, setShowLyricsEditor] = useState(false);
   const [showAiSlides, setShowAiSlides] = useState(false);
+  const [designing, setDesigning] = useState<{ slide: Slide; sectionId: string; subsectionId: string } | null>(null);
   const [editingLyricsContext, setEditingLyricsContext] = useState<{ sectionId: string; subsectionId: string; songTitle: string } | null>(null);
   const [media, setMedia] = useState<MediaItem[]>([]);
 
@@ -1321,6 +1323,12 @@ const ServiceBuilder = () => {
                                                                       <Pencil className="w-4 h-4 mr-2" />
                                                                       Edit
                                                                     </DropdownMenuItem>
+                                                                    {(slide.type === 'scripture' || slide.type === 'lyrics' || slide.type === 'announcement') && (
+                                                                      <DropdownMenuItem onClick={() => setDesigning({ slide, sectionId: section.id, subsectionId: subsection.id })}>
+                                                                        <Palette className="w-4 h-4 mr-2" />
+                                                                        Design…
+                                                                      </DropdownMenuItem>
+                                                                    )}
                                                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                                                       <Settings className="w-4 h-4 mr-2" />
                                                                       <SlideConfiguration slide={slide} onUpdate={(updated) => handleUpdateSlide(section.id, subsection.id, updated)} />
@@ -1390,6 +1398,22 @@ const ServiceBuilder = () => {
       </div>
 
       {/* New Comprehensive Lyrics Editor */}
+      {designing && (() => {
+        const item = service?.sections?.find((s) => s.id === designing.sectionId)?.subsections.find((s) => s.id === designing.subsectionId);
+        return (
+          <DesignSlideDialog
+            open
+            slide={designing.slide}
+            itemName={item?.name ?? 'this item'}
+            itemSlides={item?.slides ?? [designing.slide]}
+            onClose={() => setDesigning(null)}
+            onApply={(changed) => {
+              changed.forEach((s) => handleUpdateSlide(designing.sectionId, designing.subsectionId, s));
+              toast.success('Design applied');
+            }}
+          />
+        );
+      })()}
       <AiSlidesDialog
         open={showAiSlides}
         onClose={() => setShowAiSlides(false)}
