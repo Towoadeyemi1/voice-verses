@@ -3,6 +3,7 @@ import { Slide } from '@/types/service';
 import type { Countdown } from '@/lib/countdown';
 import { isNetworkViewer, NetworkSnapshot } from '@/lib/networkView';
 import { saveAssignments, saveTemplates } from '@/lib/templates';
+import { BibleParser } from '@/lib/bibleParser';
 
 export type SyncMessage = {
   type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE' | 'LOGO' | 'COUNTDOWN';
@@ -54,6 +55,8 @@ class SyncService {
 
   broadcast(message: SyncMessage) {
     if (LIVE_TYPES.has(message.type)) this.remember(message);
+    // Licensed online text that goes on screen is reported to its publisher
+    if (message.type === 'VERSE_UPDATE' && message.data.verse) void BibleParser.reportShown(message.data.verse);
     if (message.type === 'COUNTDOWN') this.rememberCountdown(message.data.countdown);
 
     // Same-window listeners first, then other windows

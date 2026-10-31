@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { BIBLE_VERSIONS, BibleVersionType } from '@/types/bibleVersion';
 import { BibleParser } from '@/lib/bibleParser';
 import { toast } from 'sonner';
+import { ApiBibleSettings } from './ApiBibleSettings';
+import { chosenApiBibles } from '@/lib/onlineBibles';
 import { Book, Upload, Key } from 'lucide-react';
 
 interface BibleVersionSettingsProps {
@@ -21,6 +23,7 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
   const [isTestingEsv, setIsTestingEsv] = useState(false);
   const [isTestingNlt, setIsTestingNlt] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [apiBibles, setApiBibles] = useState(chosenApiBibles);
 
   const handleVersionChange = (version: BibleVersionType) => {
     setSelectedVersion(version);
@@ -28,8 +31,9 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
     BibleParser.setVersion(version);
     
     const versionInfo = BIBLE_VERSIONS.find(v => v.id === version);
+    const apiBible = apiBibles.find((b) => `api:${b.id}` === version);
     toast.success('Bible version changed', {
-      description: `Now using ${versionInfo?.fullName}`,
+      description: `Now using ${versionInfo?.fullName ?? apiBible?.name ?? version}`,
     });
   };
 
@@ -159,7 +163,7 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
   };
 
   const handleExportVersion = async () => {
-    if (selectedVersion === 'esv' || selectedVersion === 'nlt') {
+    if (BibleParser.isOnline(selectedVersion)) {
       toast.error('Cannot export API-based versions', {
         description: 'Only offline versions (KJV, ASV, WEB) can be exported',
       });
@@ -229,6 +233,14 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
                   </div>
                 </SelectItem>
               ))}
+              {apiBibles.map((b) => (
+                <SelectItem key={b.id} value={`api:${b.id}`}>
+                  <div className="flex items-center justify-between w-full">
+                    <span>{b.abbreviation} - {b.name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">API.Bible</span>
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
@@ -249,6 +261,8 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
             </Button>
           )}
         </div>
+
+        <ApiBibleSettings onChange={() => setApiBibles(chosenApiBibles())} />
 
         {/* ESV API Key Section */}
         {selectedVersion === 'esv' && (

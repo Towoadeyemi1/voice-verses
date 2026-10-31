@@ -1,4 +1,5 @@
-export type BibleVersionType = 'kjv' | 'asv' | 'web' | 'esv' | 'nlt' | 'custom';
+/** Built in, or `api:<id>` for a translation from API.Bible (NKJV, NIV, CSB…) */
+export type BibleVersionType = 'kjv' | 'asv' | 'web' | 'esv' | 'nlt' | 'custom' | `api:${string}`;
 
 export interface BibleVersionInfo {
   id: BibleVersionType;

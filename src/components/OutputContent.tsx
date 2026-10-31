@@ -17,7 +17,7 @@ export type Live = { verse: BibleVerse } | { slide: Slide } | null;
 
 function describe(live: Live): { kind: ContentKind; content: RenderContent; overrides?: SlideOverrides; templateId?: string } | null {
   if (!live) return null;
-  const version = BibleParser.getVersion().toUpperCase();
+  const version = BibleParser.getVersionLabel();
   if ('verse' in live) {
     const ref = verseReference(live.verse);
     return { kind: 'scripture', content: { key: ref, label: ref, version, body: <VerseText text={live.verse.text} /> } };
