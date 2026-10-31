@@ -13,7 +13,8 @@
  */
 
 import { BibleVerse } from '@/types/bible';
-import { isReadingNextVerse } from './readAlong';
+import { words } from './scriptureMatcher';
+import { loadScriptureIndex, scriptureIndex } from './scriptureIndex';
 import { BibleParser } from '@/lib/bibleParser';
 import { normalizeTranscript, mightContainVerseReference } from './transcriptNormalization';
 import { 
@@ -60,6 +61,11 @@ export class VerseDetectionController {
   private currentVerse: BibleVerse | null = null;
   private currentEngine: SpeechEngineType = 'builtin';
   private recentFinals: string[] = [];
+  /** Words heard since the last verse change (finished sentences), in their common form */
+  private heardWords: string[] = [];
+  /** The sentence being spoken now; `usedWords` of it already moved the screen on */
+  private partialWords: string[] = [];
+  private usedWords = 0;
   private assistantRequest: AbortController | null = null;
   private lastSuggestedKey: string | null = null;
   private lastSuggestedAt = 0;
@@ -72,6 +78,8 @@ export class VerseDetectionController {
     this.dedupeWindowMs = options.dedupeWindowMs ?? 10000;
     this.debounceMs = options.debounceMs ?? 500;
     this.requireStablePartials = options.requireStablePartials ?? true;
+    // Build the Bible word index in the background so quotes and read-along work once it is ready
+    loadScriptureIndex().catch((error) => console.warn('Bible word index unavailable:', error));
   }
 
   /**
@@ -128,9 +136,11 @@ export class VerseDetectionController {
     }
 
     if (!reference) {
-      // No reference found: a navigation command, the next verse being read aloud, or a described passage
+      // No reference: a navigation command, the passage being read on, a quoted verse, or a described one
       if (await this.handleNavigationCommands(cleanText)) return;
-      if (isFinal && !(await this.followReading(cleanText))) {
+      const recent = this.hear(cleanText, isFinal);
+      if (await this.followReading(recent)) return;
+      if (isFinal && !(await this.findQuote(recent, cleanText))) {
         this.askAssistant(cleanText);
       }
       return;
@@ -222,12 +232,60 @@ export class VerseDetectionController {
     return true;
   }
 
-  /** Moves to the next verse when the preacher reads it aloud. Returns true if it did. */
-  private async followReading(text: string): Promise<boolean> {
-    if (!this.currentVerse) return false;
-    const next = await BibleParser.getVerse(this.currentVerse.book, this.currentVerse.chapter, this.currentVerse.verse + 1);
-    if (!next || !isReadingNextVerse(text, this.currentVerse.text, next.text)) return false;
-    this.triggerVerseDetected(next, { method: 'explicit', confidence: 'medium', engine: this.currentEngine });
+  /** Keeps track of the words heard since the screen last changed; returns them, latest last. */
+  private hear(text: string, isFinal: boolean): string[] {
+    const sentence = words(text);
+    if (isFinal) {
+      this.heardWords = [...this.heardWords, ...sentence.slice(this.usedWords)].slice(-40);
+      this.partialWords = [];
+      this.usedWords = 0;
+      return this.heardWords;
+    }
+    this.partialWords = sentence;
+    return [...this.heardWords, ...sentence.slice(this.usedWords)].slice(-40);
+  }
+
+  /** After the screen changes, only words spoken from now on count. */
+  private forgetHeardWords(): void {
+    this.heardWords = [];
+    this.usedWords = this.partialWords.length;
+  }
+
+  /** While a passage is read aloud, moves on to the verse being read (a few ahead at most). */
+  private async followReading(recent: string[]): Promise<boolean> {
+    const index = scriptureIndex();
+    if (!index || !this.currentVerse) return false;
+    const next = index.followReading(this.currentVerse, recent.slice(-14));
+    if (!next) return false;
+    const verse = await BibleParser.getVerse(next.book, next.chapter, next.verse);
+    if (!verse) return false;
+    this.triggerVerseDetected(verse, { method: 'explicit', confidence: 'medium', engine: this.currentEngine });
+    return true;
+  }
+
+  /** A verse quoted without its reference: shown if clearly matched, otherwise offered to the operator. */
+  private async findQuote(recent: string[], heard: string): Promise<boolean> {
+    const index = scriptureIndex();
+    if (!index) return false;
+    // The last sentence or two: enough for a quote, without older words competing with it
+    const spoken = recent.slice(-18);
+    // Still reading the verse on screen: not a new quote (and not a question for the AI)
+    if (this.currentVerse && index.wordsFrom(this.currentVerse, spoken) >= 2) return true;
+    const match = index.findQuote(spoken, this.currentVerse);
+    if (!match) return false;
+    const verse = await BibleParser.getVerse(match.ref.book, match.ref.chapter, match.ref.verse);
+    if (!verse) return false;
+    const key = `${verse.book}:${verse.chapter}:${verse.verse}`;
+    if (key === this.lastDisplayedKey) return true;
+    const info: DetectionInfo = { method: 'description', description: heard, confidence: match.strong ? 'high' : 'medium', engine: this.currentEngine };
+    if (match.strong) {
+      this.triggerVerseDetected(verse, info);
+    } else if (this.lastSuggestedKey !== key || Date.now() - this.lastSuggestedAt > this.dedupeWindowMs) {
+      this.lastSuggestedKey = key;
+      this.lastSuggestedAt = Date.now();
+      // The words stay: if the rest of the quote follows, the verse is then shown
+      this.options.onVerseSuggested?.(verse, info);
+    }
     return true;
   }
 
@@ -374,6 +432,7 @@ export class VerseDetectionController {
     this.currentVerse = verse;
     this.lastPartialReference = null;
     this.partialMatchCount = 0;
+    this.forgetHeardWords();
 
     // Emit the event
     this.options.onVerseDetected(verse, info);
@@ -396,6 +455,9 @@ export class VerseDetectionController {
     this.assistantRequest?.abort();
     this.assistantRequest = null;
     this.recentFinals = [];
+    this.heardWords = [];
+    this.partialWords = [];
+    this.usedWords = 0;
     this.lastSuggestedKey = null;
     this.lastDisplayedKey = null;
     this.lastDisplayedAt = 0;

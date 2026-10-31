@@ -8,6 +8,7 @@ const print = console.log.bind(console);
 console.log = () => {};
 console.warn = () => {};
 import { VerseDetectionController } from '@/speech/VerseDetectionController';
+import { loadScriptureIndex } from '@/speech/scriptureIndex';
 import { plainVerseText } from '@/lib/verseText';
 
 const single: [string, string | null][] = [
@@ -39,6 +40,8 @@ const check = (label: string, got: string | null, want: string | null) => {
 };
 
 (async () => {
+  // The Bible word index (read-along and quotes) is built in the background; wait for it here
+  await loadScriptureIndex();
   for (const [text, want] of single) {
     let got: string | null = null;
     const detector = new VerseDetectionController({ onVerseDetected: (v) => (got = `${v.book} ${v.chapter}:${v.verse}`) });
@@ -62,19 +65,66 @@ const check = (label: string, got: string | null, want: string | null) => {
   await detector.onTranscript('next verse', true);
   check('"next verse" after 2 Timothy 3:16', got, '2 Timothy 3:17');
 
-  // Reading a passage aloud: the screen follows to the next verse, and only then
-  const reading = async (heard: string) => {
-    let shown: string | null = null;
-    const d = new VerseDetectionController({ onVerseDetected: (v) => (shown = `${v.book} ${v.chapter}:${v.verse}`) });
-    await d.onTranscript('John 3:16', true);
-    shown = null;
-    await pause();
-    await d.onTranscript(heard, true);
-    return shown;
+  // Reading a passage aloud: the screen follows the reading, mid-sentence, and only then
+  const session = (start: string) => {
+    const shown: string[] = [];
+    const suggested: string[] = [];
+    const d = new VerseDetectionController({
+      onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`),
+      onVerseSuggested: (v) => suggested.push(`${v.book} ${v.chapter}:${v.verse}`),
+    });
+    const say = async (text: string, isFinal = true) => {
+      await d.onTranscript(text, isFinal);
+      await pause();
+    };
+    return { shown, suggested, say, ready: start ? say(start).then(() => shown.splice(0)) : Promise.resolve() };
   };
-  check('reading John 3:17 aloud after John 3:16', await reading('For God sent not his Son into the world to condemn the world, but that the world through him might be saved'), 'John 3:17');
-  check('reading John 3:16 again', await reading('For God so loved the world that he gave his only begotten Son'), null);
-  check('preaching about John 3:16', await reading('Do you understand how much God loved the world? He gave everything.'), null);
+  {
+    const s = session('Turn with me to John 3:16');
+    await s.ready;
+    await s.say('For God so loved the world, that he gave his only begotten Son');
+    await s.say('that whosoever believeth in him should not perish, but have everlasting life.');
+    // The engine sends the sentence in progress before it is finished
+    await s.say('For God sent not his Son into the world', false);
+    await s.say('For God sent not his Son into the world to condemn the world, but that the world through him might be saved.');
+    await s.say('He that believeth on him is not condemned', false);
+    check('reading John 3:16 on through 3:18 (in pieces)', s.shown.join(', '), 'John 3:17, John 3:18');
+  }
+  {
+    const s = session('Psalm 23 verse 1');
+    await s.ready;
+    await s.say('Yea, though I walk through the valley of the shadow of death, I will fear no evil');
+    check('reading ahead from Psalm 23:1 to verse 4', s.shown.join(', '), 'Psalms 23:4');
+  }
+  {
+    const s = session('John 3:16');
+    await s.ready;
+    await s.say('Do you understand how much God loved the world? He gave everything.');
+    check('preaching about John 3:16 stays on it', s.shown.join(', ') || null, null);
+  }
+
+  {
+    // A quote right after reading a passage, split by the speech engine into two sentences
+    const s = session('John 3:18');
+    await s.ready;
+    await s.say('He that believeth on him is not condemned: but he that believeth not is condemned already.');
+    await s.say('Now listen to me, you know what David said, the Lord is my shepherd.');
+    await s.say('I shall not want.');
+    check('quote after a reading, in two sentences', s.shown.join(', '), 'Psalms 23:1');
+  }
+
+  // Quoted without the reference
+  const quote = async (text: string) => {
+    const s = session('');
+    await s.say(text);
+    return { shown: s.shown.join(', ') || null, suggested: s.suggested.join(', ') || null };
+  };
+  check('quote: the Lord is my shepherd', (await quote('As David said, the Lord is my shepherd, I shall not want.')).shown, 'Psalms 23:1');
+  check('quote: I can do all things', (await quote('I can do all things through Christ which strengtheneth me')).shown, 'Philippians 4:13');
+  check('quote: trust in the Lord (modern wording)', (await quote('Trust in the Lord with all your heart and lean not on your own understanding')).shown, 'Proverbs 3:5');
+  check('quote in two gospels is offered, not shown', (await quote('Ask and it shall be given you, seek and ye shall find, knock and it shall be opened unto you')).suggested, 'Matthew 7:7');
+  check('sermon talk is not a quote', (await quote('Let us pray together this morning, church, the Lord is good all the time')).shown, null);
+  check('a common phrase is not a quote', (await quote('And it came to pass that we went to the market')).shown, null);
 
   // Verse text on screen: KJV supplied words kept (shown in italics), margin notes never shown
   const text: [string, string][] = [
