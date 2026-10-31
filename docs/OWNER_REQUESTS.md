@@ -93,6 +93,10 @@ All promised, none built yet. Do them in this order after design 4:
 11. ⏳ NDI output
 12. ⏳ Native DeckLink SDI output (see Screens)
 
+## "Is this the best you can do… Is that all a presentation app can have?"
+
+No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): beautiful backgrounds and transitions first, then layers, messages, timers and stage layouts, then imports, then phones, captions and sermon recaps, then control and broadcast, then team features. ⏳
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
