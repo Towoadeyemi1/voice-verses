@@ -15,7 +15,7 @@ const SIZE_SCALE = { small: 0.7, medium: 0.85, large: 1, xlarge: 1.15 } as const
 /** What an output shows: a verse from the Scripture page, or a slide from the Presenter. */
 export type Live = { verse: BibleVerse } | { slide: Slide } | null;
 
-function describe(live: Live): { kind: ContentKind; content: RenderContent; overrides?: SlideOverrides; templateId?: string } | null {
+export function describe(live: Live): { kind: ContentKind; content: RenderContent; overrides?: SlideOverrides; templateId?: string } | null {
   if (!live) return null;
   const version = BibleParser.getVersionLabel();
   if ('verse' in live) {

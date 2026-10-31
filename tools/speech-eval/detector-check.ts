@@ -12,6 +12,7 @@ import { loadScriptureIndex } from '@/speech/scriptureIndex';
 import { plainVerseText } from '@/lib/verseText';
 import { readingPosition, readingTokens, wordsAhead } from '@/speech/readingTracker';
 import { words as stems } from '@/speech/scriptureMatcher';
+import { parseRich, wrapSelection } from '@/lib/richText';
 import { BibleParser } from '@/lib/bibleParser';
 import { setApiBibleKey, setChosenApiBibles, versesFromApiBibleJson, versesFromBracketed, versesFromNltHtml } from '@/lib/onlineBibles';
 import { parseSongSelectFile } from '@/lib/songSelectImport';
@@ -351,6 +352,14 @@ const check = (label: string, got: string | null, want: string | null) => {
     const t0 = 1_000_000;
     const history = [{ word: 2, at: t0 }, { word: 8, at: t0 + 2000 }]; // 3 words a second
     check('pace carries the light on between results (capped)', `${wordsAhead(history, t0 + 2400)} ${wordsAhead(history, t0 + 3500)} ${wordsAhead(history, t0 + 6000)}`, '1 3 0');
+  }
+
+  // Word formatting in slide text
+  {
+    const show = (t: string) => parseRich(t).map((r) => `${r.text}${r.bold ? '[b]' : ''}${r.italic ? '[i]' : ''}${r.underline ? '[u]' : ''}${r.highlight ? '[h]' : ''}${r.color ? `[${r.color}]` : ''}`).join('|');
+    check('bold, italic, highlight, colour', show('Amazing **grace**, how *sweet* the ==sound== [#ff0000]Jesus[/]'), 'Amazing |grace[b]|, how |sweet[i]| the |sound[h]| |Jesus[#ff0000]');
+    check('a lone star or price stays as typed', show('Tickets 5*2 = £10'), 'Tickets 5*2 = £10');
+    check('wrapping selected words', wrapSelection('he is risen', 6, 11, '**').value, 'he is **risen**');
   }
 
   if (failures) {

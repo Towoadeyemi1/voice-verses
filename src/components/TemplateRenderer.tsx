@@ -1,5 +1,6 @@
 import { CSSProperties, ReactNode } from 'react';
-import { Template } from '@/lib/templates';
+import { DesignLayer, Template } from '@/lib/templates';
+import { RichText } from '@/lib/richText';
 import { useLogo, useMediaUrl } from '@/hooks/use-templates';
 import { FitText } from './FitText';
 
@@ -52,6 +53,13 @@ export const TemplateRenderer = ({
   const logoUrl = useLogo();
 
   const backgroundUrl = transparent ? undefined : overrides?.backgroundUrl ?? mediaSrc;
+  const blur = background.blur ? `blur(${background.blur}px)` : undefined;
+  const fill =
+    transparent || backgroundUrl
+      ? undefined
+      : background.type === 'gradient' && background.gradient
+        ? `linear-gradient(${background.gradient.angle}deg, ${background.color}, ${background.gradient.to})`
+        : undefined;
   const isVideo = !overrides?.backgroundUrl && background.type === 'video';
   const dim = overrides?.backgroundUrl ? 1 - (overrides.backgroundOpacity ?? 0.3) : background.dim;
   const align = overrides?.align ?? text.align;
@@ -59,12 +67,14 @@ export const TemplateRenderer = ({
   const textStyle: CSSProperties = {
     fontFamily: text.fontFamily,
     fontWeight: text.fontWeight,
+    fontStyle: text.italic ? 'italic' : undefined,
+    letterSpacing: text.letterSpacing ? `${text.letterSpacing}px` : undefined,
     color: text.color,
     lineHeight: text.lineHeight,
     textAlign: align,
     textTransform: text.uppercase ? 'uppercase' : undefined,
     textShadow: text.shadow ? '0 3px 12px rgba(0,0,0,0.85), 0 1px 3px rgba(0,0,0,0.9)' : undefined,
-    WebkitTextStroke: text.outline ? `${text.outline}px rgba(0,0,0,0.9)` : undefined,
+    WebkitTextStroke: text.outline ? `${text.outline}px ${text.outlineColor ?? 'rgba(0,0,0,0.9)'}` : undefined,
     paintOrder: 'stroke fill',
     overflowWrap: 'break-word',
     whiteSpace: 'pre-line',
@@ -96,14 +106,16 @@ export const TemplateRenderer = ({
   };
 
   return (
-    <div className="relative overflow-hidden" style={{ width: 1920, height: 1080, backgroundColor: transparent ? 'transparent' : background.color }}>
+    <div className="relative overflow-hidden" style={{ width: 1920, height: 1080, backgroundColor: transparent ? 'transparent' : background.color, backgroundImage: fill }}>
       {backgroundUrl &&
         (isVideo ? (
-          <video src={backgroundUrl} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" />
+          <video src={backgroundUrl} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ filter: blur, transform: blur ? 'scale(1.06)' : undefined }} />
         ) : (
-          <img src={backgroundUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={backgroundUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: blur, transform: blur ? 'scale(1.06)' : undefined }} />
         ))}
       {backgroundUrl && dim > 0 && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${dim})` }} />}
+
+      {!transparent && (template.layers ?? []).filter((l) => !l.above).map((l) => <Layer key={l.id} layer={l} />)}
 
       {logo.show && logoUrl && (
         <img
@@ -151,12 +163,68 @@ export const TemplateRenderer = ({
               verticalAlign={text.verticalAlign}
               style={textStyle}
             >
-              {content.body}
+              {typeof content.body === 'string' ? <RichText text={content.body} highlight={text.highlight} /> : content.body}
             </FitText>
             {label.position === 'below' && labelEl}
           </div>
         </div>
       )}
+
+      {!transparent && (template.layers ?? []).filter((l) => l.above).map((l) => <Layer key={l.id} layer={l} />)}
+    </div>
+  );
+};
+
+/** A text box, shape or picture added to the template. */
+const Layer = ({ layer }: { layer: DesignLayer }) => {
+  const src = useMediaUrl(layer.kind === 'image' ? layer.mediaId : undefined);
+  const box: CSSProperties = {
+    position: 'absolute',
+    left: `${layer.x}%`,
+    top: `${layer.y}%`,
+    width: `${layer.width}%`,
+    height: `${layer.height}%`,
+    opacity: layer.opacity,
+    transform: layer.rotation ? `rotate(${layer.rotation}deg)` : undefined,
+  };
+  if (layer.kind === 'shape') {
+    return (
+      <div
+        style={{
+          ...box,
+          background: layer.fillTo ? `linear-gradient(135deg, ${layer.fill ?? '#000'}, ${layer.fillTo})` : layer.fill ?? '#000000',
+          borderRadius: layer.radius ?? 0,
+          border: layer.borderWidth ? `${layer.borderWidth}px solid ${layer.borderColor ?? '#ffffff'}` : undefined,
+        }}
+      />
+    );
+  }
+  if (layer.kind === 'image') {
+    return src ? <img src={src} alt="" style={{ ...box, objectFit: layer.fit ?? 'contain' }} /> : null;
+  }
+  return (
+    <div
+      style={{
+        ...box,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: layer.align === 'left' ? 'flex-start' : layer.align === 'right' ? 'flex-end' : 'center',
+        fontFamily: layer.fontFamily,
+        fontSize: layer.fontSize ?? 48,
+        fontWeight: layer.fontWeight ?? 600,
+        fontStyle: layer.italic ? 'italic' : undefined,
+        color: layer.color ?? '#ffffff',
+        textAlign: layer.align ?? 'center',
+        textTransform: layer.uppercase ? 'uppercase' : undefined,
+        textShadow: layer.shadow ? '0 3px 12px rgba(0,0,0,0.85)' : undefined,
+        whiteSpace: 'pre-line',
+        lineHeight: 1.2,
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ width: '100%' }}>
+        <RichText text={layer.text ?? ''} />
+      </div>
     </div>
   );
 };
