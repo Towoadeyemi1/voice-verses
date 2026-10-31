@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { MediaItem } from '@/types/service';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { mediaUrl } from '@/lib/mediaFiles';
+import { isNetworkViewer, networkMediaUrl } from '@/lib/networkView';
 import { Assignments, loadAssignments, loadTemplates, Template, TEMPLATES_CHANGED } from '@/lib/templates';
 
 /** Templates and their assignments, kept current in every window. */
@@ -51,7 +52,7 @@ export function useMediaItem(mediaId?: string): MediaItem | undefined {
 
 /** A URL to show or play a library item (picture or video), by id. */
 export function useMediaUrl(mediaId?: string): string | undefined {
-  const item = useMediaItem(mediaId);
+  const item = useMediaItem(isNetworkViewer ? undefined : mediaId);
   const [url, setUrl] = useState<string | undefined>();
   useEffect(() => {
     let cancelled = false;
@@ -61,6 +62,8 @@ export function useMediaUrl(mediaId?: string): string | undefined {
       cancelled = true;
     };
   }, [item]);
+  // Network viewers get pictures and videos from the operator's computer
+  if (isNetworkViewer) return mediaId ? networkMediaUrl(mediaId) : undefined;
   return url;
 }
 

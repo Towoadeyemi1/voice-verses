@@ -5,6 +5,7 @@ import * as secrets from './secrets.js';
 import * as library from './library.js';
 import * as proPresenter from './propresenter.js';
 import { keepAwake, outputWindowOptions, trackOutputWindow } from './outputs.js';
+import * as network from './network.js';
 import * as speech from './speech/index.js';
 import { initUpdates } from './updates.js';
 
@@ -120,6 +121,12 @@ handle('propresenter:themes', (connection) => proPresenter.themeSlides(connectio
 handle('propresenter:create-message', (connection, theme) => proPresenter.createMessage(connection, theme));
 handle('propresenter:show', (connection, verse) => proPresenter.showVerse(connection, verse));
 handle('propresenter:clear', (connection, options) => proPresenter.clear(connection, options));
+
+handle('network:configure', (options) => network.configure(options ?? {}));
+handle('network:status', () => network.status());
+handle('network:has-media', (id) => network.hasMedia(id));
+handle('network:put-media', (id, mime, bytes) => network.putMedia(id, mime, bytes));
+listen('network:publish', (state) => network.publish(state));
 
 handle('app:version', () => app.getVersion());
 // While listening, the computer must not sleep (it would stop hearing the preacher)

@@ -43,6 +43,14 @@ export interface ProPresenterThemeSlide {
   label: string;
 }
 
+export interface NetworkStatus {
+  running: boolean;
+  port: number;
+  viewers: number;
+  /** Addresses other devices can open, e.g. http://192.168.1.20:47100/ */
+  urls: string[];
+}
+
 export interface DesktopBridge {
   platform: string;
   getVersion(): Promise<string>;
@@ -76,6 +84,13 @@ export interface DesktopBridge {
     createMessage(connection: ProPresenterConnection, theme: ProPresenterThemeSlide['id']): Promise<ProPresenterStatus>;
     show(connection: ProPresenterConnection, verse: { reference: string; text: string; stage: boolean }): Promise<void>;
     clear(connection: ProPresenterConnection, options: { stage: boolean }): Promise<void>;
+  };
+  network: {
+    configure(options: { enabled: boolean; port?: number }): Promise<NetworkStatus>;
+    status(): Promise<NetworkStatus>;
+    hasMedia(id: string): Promise<boolean>;
+    putMedia(id: string, mime: string, bytes: ArrayBuffer): Promise<void>;
+    publish(state: unknown): void;
   };
   library: {
     getFolder(): Promise<string | null>;

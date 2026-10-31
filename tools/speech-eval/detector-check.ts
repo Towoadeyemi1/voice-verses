@@ -8,6 +8,7 @@ const print = console.log.bind(console);
 console.log = () => {};
 console.warn = () => {};
 import { VerseDetectionController } from '@/speech/VerseDetectionController';
+import { plainVerseText } from '@/lib/verseText';
 
 const single: [string, string | null][] = [
   ['Please turn with me to John chapter 3, verse 16.', 'John 3:16'],
@@ -74,6 +75,16 @@ const check = (label: string, got: string | null, want: string | null) => {
   check('reading John 3:17 aloud after John 3:16', await reading('For God sent not his Son into the world to condemn the world, but that the world through him might be saved'), 'John 3:17');
   check('reading John 3:16 again', await reading('For God so loved the world that he gave his only begotten Son'), null);
   check('preaching about John 3:16', await reading('Do you understand how much God loved the world? He gave everything.'), null);
+
+  // Verse text on screen: KJV supplied words kept (shown in italics), margin notes never shown
+  const text: [string, string][] = [
+    ['God {is} our refuge and strength, a very present help in trouble. {for: or, of}', 'God is our refuge and strength, a very present help in trouble.'],
+    ['to them who are the called according to {his} purpose.', 'to them who are the called according to his purpose.'],
+    ['the day he heard {them; then} whatsoever proceeded', 'the day he heard them; then whatsoever proceeded'],
+    ['under Ashdothpisgah eastward. {Ashdothpisgah; or, the springs of Pisgah, or, the hill}', 'under Ashdothpisgah eastward.'],
+    ['by the hand of Moses. {by: Heb. by the hand of}', 'by the hand of Moses.'],
+  ];
+  for (const [input, want] of text) check(`verse text ${JSON.stringify(input.slice(0, 30))}…`, plainVerseText(input), want);
 
   if (failures) {
     print(`\n${failures} detector check(s) failed`);

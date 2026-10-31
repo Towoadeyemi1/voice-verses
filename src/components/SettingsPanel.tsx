@@ -27,6 +27,7 @@ import { DesktopDownloads } from './DesktopDownloads';
 import { AiAssistantSettings } from './AiAssistantSettings';
 import { ProPresenterSettings } from './ProPresenterSettings';
 import { MicrophoneSettings } from './MicrophoneSettings';
+import { NetworkOutputSettings } from './NetworkOutputSettings';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -101,9 +102,10 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 h-auto">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-9 h-auto">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="speech">Speech</TabsTrigger>
+          <TabsTrigger value="network">Network</TabsTrigger>
           <TabsTrigger value="propresenter">ProPresenter</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="ccli">CCLI</TabsTrigger>
@@ -230,6 +232,10 @@ export const SettingsPanel = ({ onClose }: SettingsPanelProps) => {
               Save Settings
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="network" className="mt-6">
+          <NetworkOutputSettings />
         </TabsContent>
 
         <TabsContent value="propresenter" className="mt-6">

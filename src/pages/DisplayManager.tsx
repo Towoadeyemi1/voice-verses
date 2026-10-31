@@ -4,6 +4,7 @@ import { Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { appUrl } from '@/lib/appUrl';
 import { isDesktop } from '@/lib/desktop';
+import { NetworkOutputSettings } from '@/components/NetworkOutputSettings';
 
 const OUTPUTS = [
   { route: '/projection', label: 'Projection', size: 'width=1280,height=720' },
@@ -48,11 +49,11 @@ const DisplayManager = () => {
             )}
             <li>
               For a livestream, capture the <strong>Lower third</strong> window in OBS or vMix (window capture) and key
-              out the green. Using ProPresenter? Turn on Settings → ProPresenter and the verses go to your ProPresenter
-              screens and stream instead.
+              out the green, or use a screen on the network (below) as a browser source with a see-through background.
+              Using ProPresenter too? Settings → ProPresenter sends the verses there as well.
             </li>
           </ol>
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4 mb-2">
             {OUTPUTS.map(({ route, label, size }) => (
               <Button key={route} variant="outline" size="sm" onClick={() => window.open(appUrl(route), '_blank', size)}>
                 {label}
@@ -60,6 +61,8 @@ const DisplayManager = () => {
             ))}
           </div>
         </Card>
+
+        {isDesktop && <NetworkOutputSettings />}
       </div>
     </div>
   );

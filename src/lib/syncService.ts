@@ -1,6 +1,8 @@
 import { BibleVerse } from '@/types/bible';
 import { Slide } from '@/types/service';
 import type { Countdown } from '@/lib/countdown';
+import { isNetworkViewer, NetworkSnapshot } from '@/lib/networkView';
+import { saveAssignments, saveTemplates } from '@/lib/templates';
 
 export type SyncMessage = {
   type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE' | 'LOGO' | 'COUNTDOWN';
@@ -38,6 +40,10 @@ class SyncService {
   private listeners: Set<(message: SyncMessage) => void> = new Set();
 
   constructor() {
+    if (isNetworkViewer) {
+      this.followNetwork();
+      return;
+    }
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       this.channel = new BroadcastChannel('cornerstone-bible-sync');
       this.channel.onmessage = (event) => {
@@ -48,14 +54,7 @@ class SyncService {
 
   broadcast(message: SyncMessage) {
     if (LIVE_TYPES.has(message.type)) this.remember(message);
-    if (message.type === 'COUNTDOWN') {
-      try {
-        if (message.data.countdown) localStorage.setItem(COUNTDOWN_KEY, JSON.stringify(message.data.countdown));
-        else localStorage.removeItem(COUNTDOWN_KEY);
-      } catch {
-        // Storage full: reopened windows miss the countdown until it changes
-      }
-    }
+    if (message.type === 'COUNTDOWN') this.rememberCountdown(message.data.countdown);
 
     // Same-window listeners first, then other windows
     this.listeners.forEach(listener => listener(message));
@@ -91,6 +90,51 @@ class SyncService {
     return () => {
       this.listeners.delete(callback);
     };
+  }
+
+  /**
+   * On another device (network outputs): follow the operator's computer. Its
+   * templates, logo and translation are stored here so the screens draw the same.
+   */
+  private followNetwork() {
+    let lastLive = '';
+    let lastCountdown = '';
+    const source = new EventSource('/live');
+    source.onmessage = (event) => {
+      const state = JSON.parse(event.data) as NetworkSnapshot;
+      try {
+        saveTemplates(state.templates);
+        saveAssignments(state.assignments);
+        if (state.logo) localStorage.setItem('global-service-logo', state.logo);
+        else localStorage.removeItem('global-service-logo');
+        localStorage.setItem('cornerstone-bible-version', state.bibleVersion);
+        window.dispatchEvent(new StorageEvent('storage'));
+      } catch {
+        // Storage full: keep showing with what is there
+      }
+      const live = JSON.stringify(state.live);
+      if (state.live && live !== lastLive) {
+        this.remember(state.live);
+        this.listeners.forEach((listener) => listener(state.live!));
+      }
+      lastLive = live;
+      const countdown = JSON.stringify(state.countdown);
+      if (countdown !== lastCountdown) {
+        const message: SyncMessage = { type: 'COUNTDOWN', data: { countdown: state.countdown } };
+        this.rememberCountdown(state.countdown);
+        this.listeners.forEach((listener) => listener(message));
+      }
+      lastCountdown = countdown;
+    };
+  }
+
+  private rememberCountdown(countdown: Countdown | null | undefined) {
+    try {
+      if (countdown) localStorage.setItem(COUNTDOWN_KEY, JSON.stringify(countdown));
+      else localStorage.removeItem(COUNTDOWN_KEY);
+    } catch {
+      // Storage full: reopened windows miss the countdown until it changes
+    }
   }
 
   private remember(message: SyncMessage) {

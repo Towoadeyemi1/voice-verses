@@ -42,6 +42,13 @@ contextBridge.exposeInMainWorld('voiceVerses', {
     show: (connection, verse) => invoke('propresenter:show', connection, verse),
     clear: (connection, options) => invoke('propresenter:clear', connection, options),
   },
+  network: {
+    configure: (options) => invoke('network:configure', options),
+    status: () => invoke('network:status'),
+    hasMedia: (id) => invoke('network:has-media', id),
+    putMedia: (id, mime, bytes) => invoke('network:put-media', id, mime, bytes),
+    publish: (state) => ipcRenderer.send('network:publish', state),
+  },
   library: {
     getFolder: () => invoke('library:get-folder'),
     chooseFolder: () => invoke('library:choose-folder'),

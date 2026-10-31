@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ScaledStage } from '@/components/ScaledStage';
 import { OutputContent } from '@/components/OutputContent';
 import { useLive } from '@/hooks/use-live';
@@ -15,14 +17,21 @@ const LowerThird = () => {
   const { countdown, remaining } = useCountdown();
   const pointerActive = usePointerActive();
   useDoubleClickFullscreen();
-  const keyColor = templateFor(loadTemplates(), loadAssignments(), 'stream', 'scripture').background.color;
+  // "?transparent=1": no key colour, for OBS/vMix browser sources (Settings → Network)
+  const transparent = new URLSearchParams(useLocation().search).has('transparent');
+  const keyColor = transparent ? 'transparent' : templateFor(loadTemplates(), loadAssignments(), 'stream', 'scripture').background.color;
+  useEffect(() => {
+    if (!transparent) return;
+    document.documentElement.style.background = 'transparent';
+    document.body.style.background = 'transparent';
+  }, [transparent]);
 
   return (
     <div className="fixed inset-0" style={{ backgroundColor: keyColor, cursor: pointerActive ? 'auto' : 'none' }}>
       <ScaledStage className="absolute inset-0">
-        <OutputContent live={logo !== null ? null : live} output="stream" countdown={countdown} remaining={remaining} />
+        <OutputContent live={logo !== null ? null : live} output="stream" countdown={countdown} remaining={remaining} transparent={transparent} />
       </ScaledStage>
-      {pointerActive && !live && !countdown?.stream && (
+      {pointerActive && !live && !countdown?.stream && !transparent && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <p className="bg-black/60 text-white/80 rounded-lg px-6 py-4 text-sm">
             Lower third: key out the background colour in your streaming software

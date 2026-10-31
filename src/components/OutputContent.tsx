@@ -61,6 +61,7 @@ export const OutputContent = ({
   countdown,
   remaining = 0,
   preview = false,
+  transparent = false,
 }: {
   live: Live;
   output: Output;
@@ -69,13 +70,15 @@ export const OutputContent = ({
   remaining?: number;
   /** Operator previews: videos play without sound */
   preview?: boolean;
+  /** Draw no background (see-through lower third) */
+  transparent?: boolean;
 }) => {
   const { templates, assignments } = useTemplates();
 
   // A countdown can take over the screen (before the service, or on the stream)
   const countdownTakesOver = countdown && (output === 'projection' ? countdown.projector === 'full' : countdown.stream);
   if (countdownTakesOver) {
-    return <TemplateRenderer template={templateFor(templates, assignments, output, 'countdown')} content={countdownContent(countdown, remaining)} />;
+    return <TemplateRenderer template={templateFor(templates, assignments, output, 'countdown')} content={countdownContent(countdown, remaining)} transparent={transparent} />;
   }
 
   const described = describe(live);
@@ -98,7 +101,7 @@ export const OutputContent = ({
           <VideoPlayer mediaId={live.slide.mediaId} loop={live.slide.loop} sound={live.slide.sound && !preview} className="w-full h-full" />
         </div>
       ) : (
-        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} />
+        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} transparent={transparent} />
       );
   } else if (live && 'slide' in live && !described && live.slide.type !== 'blank') {
     // Picture slides fill the screen as they are
@@ -108,11 +111,11 @@ export const OutputContent = ({
           <SlideDisplay slide={live.slide} className="h-full w-full" />
         </div>
       ) : (
-        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} />
+        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} transparent={transparent} />
       );
   } else {
     const template = templateFor(templates, assignments, output, described?.kind ?? 'scripture', described?.templateId);
-    screen = <TemplateRenderer template={template} content={blank ? null : described?.content ?? null} overrides={described?.overrides} />;
+    screen = <TemplateRenderer template={template} content={blank ? null : described?.content ?? null} overrides={described?.overrides} transparent={transparent} />;
   }
 
   return corner ? (
