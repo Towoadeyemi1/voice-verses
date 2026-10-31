@@ -8,6 +8,8 @@ export type DetectionInfo = {
   confidence?: 'high' | 'medium' | 'low';
   /** Which speech engine heard it, or 'ai' for the AI verse assistant */
   engine?: SpeechEngineType | 'ai';
+  /** How sure, 0 to 1 (a reference said aloud is 1; a quote is how much of the verse was said and how clearly) */
+  score?: number;
 };
 
 export interface SpeechSettings {

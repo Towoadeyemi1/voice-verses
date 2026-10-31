@@ -15,6 +15,7 @@
 import { BibleVerse } from '@/types/bible';
 import { words } from './scriptureMatcher';
 import { LibrarySong, LyricsMatcher, SongMatch } from './lyricsMatcher';
+import { lastWordIndex, readingPosition, readingTokens, ReadingToken } from './readingTracker';
 import { loadScriptureIndex, scriptureIndex } from './scriptureIndex';
 import { BibleParser } from '@/lib/bibleParser';
 import { normalizeTranscript, mightContainVerseReference } from './transcriptNormalization';
@@ -48,12 +49,25 @@ export interface VerseDetectionOptions {
   onSongSuggested?: (match: SongMatch) => void;
   /** While a song's lyrics are on screen: the slide (index into setLiveLyrics' slides) being sung now */
   onLyricsMove?: (index: number) => void;
+  /** How far the verse being read has got: the last word read (index into readingTokens(verse.text)), -1 for none yet */
+  onReadingProgress?: (progress: ReadingProgress) => void;
   
   // Dedupe settings
   dedupeWindowMs?: number;      // Ignore same verse within this window (default: 10000ms)
   debounceMs?: number;          // Minimum time between any verse triggers (default: 500ms)
   requireStablePartials?: boolean; // Require reference in 2 consecutive partials (default: true)
 }
+
+export interface ReadingProgress {
+  verse: BibleVerse;
+  /** Index of the last word read, in readingTokens(verse.text); -1 before the first */
+  word: number;
+  /** The last word has been read */
+  done: boolean;
+}
+
+/** Quotes shown without asking only when at least this sure (the whole verse, word for word, and nothing else like it) */
+export const AUTO_SHOW_CONFIDENCE = 0.99;
 
 /** A called passage: a range of verses, or a whole chapter */
 export interface Passage {
@@ -98,6 +112,10 @@ export class VerseDetectionController {
   private lyricWords: string[] = [];
   private lyricPartial: string[] = [];
   private lastSongSuggestion: { title: string; at: number } | null = null;
+  /** Every word heard since the verse went up, for following it word by word */
+  private readWords: string[] = [];
+  private reading: { verse: BibleVerse; tokens: ReadingToken[]; word: number; done: boolean } | null = null;
+  private suggested = new Map<string, number>();
   
   private dedupeWindowMs: number;
   private debounceMs: number;
@@ -176,6 +194,21 @@ export class VerseDetectionController {
   }
 
   /**
+   * The operator put this verse on screen themselves: follow it (reading, next
+   * verse, passage) without announcing it as detected.
+   */
+  follow(verse: BibleVerse | null): void {
+    if (!verse) {
+      this.currentVerse = null;
+      this.reading = null;
+      return;
+    }
+    this.lastDisplayedKey = `${verse.book}:${verse.chapter}:${verse.verse}`;
+    this.lastDisplayedAt = Date.now();
+    this.markShown(verse);
+  }
+
+  /**
    * Main entry point - process incoming transcript
    */
   async onTranscript(text: string, isFinal: boolean): Promise<void> {
@@ -212,9 +245,10 @@ export class VerseDetectionController {
 
     if (!reference) {
       // No reference: a navigation command, a song being sung, the passage being read on, a quoted verse, or a described one
-      if (await this.handleNavigationCommands(cleanText)) return;
+      if (await this.handleNavigationCommands(cleanText, isFinal)) return;
       if (this.handleSinging(cleanText, isFinal)) return;
       const recent = this.hear(cleanText, isFinal);
+      if (await this.trackReading()) return;
       if (await this.followReading(recent)) return;
       if (isFinal && !(await this.findQuote(recent, cleanText))) {
         this.askAssistant(cleanText);
@@ -263,6 +297,7 @@ export class VerseDetectionController {
         method: 'explicit',
         confidence: reference.confidence,
         engine: this.currentEngine,
+        score: 1,
       });
       await this.passageFor(reference);
     }
@@ -350,12 +385,23 @@ export class VerseDetectionController {
    * Handle navigation commands ("next verse", "previous verse").
    * Returns true when the text was a navigation command.
    */
-  private async handleNavigationCommands(text: string): Promise<boolean> {
+  private async handleNavigationCommands(text: string, isFinal = true): Promise<boolean> {
+    // "Next" said on its own (a whole short sentence): the next verse, or the next slide of a song
+    const saidNext = isFinal && /^\W*(?:(?:ok(?:ay)?|and|right|alright|yes|so)\W+)?next(?:\W+(?:one|please|verse|slide|line))?\W*$/i.test(text);
+    if (saidNext && this.liveLyrics) {
+      const next = Math.min(this.liveLyrics.slides.length - 1, this.liveLyrics.index + 1);
+      if (next !== this.liveLyrics.index) {
+        this.liveLyrics = { ...this.liveLyrics, index: next };
+        this.forgetLyricWords();
+        this.options.onLyricsMove?.(next);
+      }
+      return true;
+    }
     if (!this.currentVerse) {
       return false;
     }
 
-    if (isNextVerseCommand(text)) {
+    if (isNextVerseCommand(text) || saidNext) {
       console.log('Next verse command detected');
       const nextVerse = await BibleParser.getVerse(
         this.currentVerse.book,
@@ -395,19 +441,67 @@ export class VerseDetectionController {
   private hear(text: string, isFinal: boolean): string[] {
     const sentence = words(text);
     if (isFinal) {
-      this.heardWords = [...this.heardWords, ...sentence.slice(this.usedWords)].slice(-40);
+      const fresh = sentence.slice(this.usedWords);
+      this.heardWords = [...this.heardWords, ...fresh].slice(-40);
+      this.readWords = [...this.readWords, ...fresh].slice(-300);
       this.partialWords = [];
       this.usedWords = 0;
+      this.readingNow = this.readWords;
       return this.heardWords;
     }
     this.partialWords = sentence;
+    this.readingNow = [...this.readWords, ...sentence.slice(this.usedWords)];
     return [...this.heardWords, ...sentence.slice(this.usedWords)].slice(-40);
+  }
+
+  /** Words heard since the verse went up, including the sentence in progress */
+  private readingNow: string[] = [];
+
+  /**
+   * Follows the verse on screen word by word. When the reader gets to the end
+   * of a verse inside a called passage, the next verse comes up. Returns true
+   * when it moved on.
+   */
+  private async trackReading(): Promise<boolean> {
+    const reading = this.reading;
+    if (!reading || reading.done) return false;
+    const word = readingPosition(reading.tokens, this.readingNow);
+    if (word <= reading.word) return false;
+    reading.word = word;
+    reading.done = word >= lastWordIndex(reading.tokens);
+    this.options.onReadingProgress?.({ verse: reading.verse, word, done: reading.done });
+    const p = this.passage;
+    const v = reading.verse;
+    if (reading.done && p && v.book === p.book && v.chapter === p.chapter && v.verse < p.to) {
+      const next = await BibleParser.getVerse(v.book, v.chapter, v.verse + 1);
+      if (next && this.reading === reading) {
+        this.triggerVerseDetected(next, { method: 'explicit', confidence: 'high', engine: this.currentEngine, score: 1 });
+        return true;
+      }
+    }
+    return false;
   }
 
   /** After the screen changes, only words spoken from now on count. */
   private forgetHeardWords(): void {
     this.heardWords = [];
+    this.readWords = [];
+    this.readingNow = [];
     this.usedWords = this.partialWords.length;
+  }
+
+  /** A verse is now the one on screen: following starts again from its first word. */
+  private markShown(verse: BibleVerse): void {
+    this.currentVerse = verse;
+    this.lastPartialReference = null;
+    this.partialMatchCount = 0;
+    this.forgetHeardWords();
+    this.reading = { verse, tokens: readingTokens(verse.text), word: -1, done: false };
+    this.options.onReadingProgress?.({ verse, word: -1, done: false });
+    const p = this.passage;
+    if (p && (verse.book !== p.book || verse.chapter !== p.chapter || verse.verse < p.from || verse.verse > p.to)) {
+      this.setPassage(null);
+    }
   }
 
   /** While a passage is read aloud, moves on to the verse being read (a few ahead at most). */
@@ -419,7 +513,7 @@ export class VerseDetectionController {
     if (!next) return false;
     const verse = await BibleParser.getVerse(next.book, next.chapter, next.verse);
     if (!verse) return false;
-    this.triggerVerseDetected(verse, { method: 'explicit', confidence: 'medium', engine: this.currentEngine });
+    this.triggerVerseDetected(verse, { method: 'explicit', confidence: 'medium', engine: this.currentEngine, score: 1 });
     return true;
   }
 
@@ -456,11 +550,15 @@ export class VerseDetectionController {
     if (!best || bestHits < 3 || bestHits <= stay) return false;
     const verse = await BibleParser.getVerse(passage.book, passage.chapter, best);
     if (!verse) return false;
-    this.triggerVerseDetected(verse, { method: 'explicit', confidence: 'medium', engine: this.currentEngine });
+    this.triggerVerseDetected(verse, { method: 'explicit', confidence: 'medium', engine: this.currentEngine, score: 1 });
     return true;
   }
 
-  /** A verse quoted without its reference: shown if clearly matched, otherwise offered to the operator. */
+  /**
+   * A verse quoted without its reference. Shown only when it is the whole verse
+   * word for word and nothing else matches (99%+); otherwise the likely verses
+   * are offered with how sure each is, for the operator to check and choose.
+   */
   private async findQuote(recent: string[], heard: string): Promise<boolean> {
     const index = scriptureIndex();
     if (!index) return false;
@@ -468,20 +566,36 @@ export class VerseDetectionController {
     const spoken = recent.slice(-18);
     // Still reading the verse on screen: not a new quote (and not a question for the AI)
     if (this.currentVerse && index.wordsFrom(this.currentVerse, spoken) >= 2) return true;
-    const match = index.findQuote(spoken, this.currentVerse);
-    if (!match) return false;
-    const verse = await BibleParser.getVerse(match.ref.book, match.ref.chapter, match.ref.verse);
-    if (!verse) return false;
-    const key = `${verse.book}:${verse.chapter}:${verse.verse}`;
-    if (key === this.lastDisplayedKey) return true;
-    const info: DetectionInfo = { method: 'description', description: heard, confidence: match.strong ? 'high' : 'medium', engine: this.currentEngine };
-    if (match.strong) {
-      this.triggerVerseDetected(verse, info);
-    } else if (this.lastSuggestedKey !== key || Date.now() - this.lastSuggestedAt > this.dedupeWindowMs) {
+    const candidates = index.findQuotes(spoken, this.currentVerse, 3, recent);
+    if (!candidates.length) return false;
+    const [best] = candidates;
+    if (best.confidence >= AUTO_SHOW_CONFIDENCE) {
+      const verse = await BibleParser.getVerse(best.ref.book, best.ref.chapter, best.ref.verse);
+      if (verse && `${verse.book}:${verse.chapter}:${verse.verse}` !== this.lastDisplayedKey) {
+        this.triggerVerseDetected(verse, { method: 'description', description: heard, confidence: 'high', engine: this.currentEngine, score: best.confidence });
+      }
+      return true;
+    }
+    const now = Date.now();
+    for (const candidate of candidates) {
+      const verse = await BibleParser.getVerse(candidate.ref.book, candidate.ref.chapter, candidate.ref.verse);
+      if (!verse) continue;
+      const key = `${verse.book}:${verse.chapter}:${verse.verse}`;
+      if (key === this.lastDisplayedKey) continue;
+      // The same verse again only if it is now more certain, or a while later
+      const previous = this.suggested.get(key);
+      if (previous !== undefined && previous >= candidate.confidence && now - this.lastSuggestedAt < this.dedupeWindowMs) continue;
+      this.suggested.set(key, candidate.confidence);
       this.lastSuggestedKey = key;
-      this.lastSuggestedAt = Date.now();
-      // The words stay: if the rest of the quote follows, the verse is then shown
-      this.options.onVerseSuggested?.(verse, info);
+      this.lastSuggestedAt = now;
+      // The words stay: if the rest of the quote follows, it becomes more certain
+      this.options.onVerseSuggested?.(verse, {
+        method: 'description',
+        description: heard,
+        confidence: candidate.confidence >= 0.75 ? 'high' : candidate.confidence >= 0.45 ? 'medium' : 'low',
+        engine: this.currentEngine,
+        score: candidate.confidence,
+      });
     }
     return true;
   }
@@ -537,7 +651,7 @@ export class VerseDetectionController {
     const verse = await this.lookupVerse(reference);
     if (!verse) return;
 
-    const info: DetectionInfo = { method: 'description', description: heard, confidence, engine: 'ai' };
+    const info: DetectionInfo = { method: 'description', description: heard, confidence, engine: 'ai', score: confidence === 'high' ? 0.85 : 0.6 };
 
     if (this.options.autoDisplayAiMatches && confidence === 'high') {
       if (this.passesDedupeCheck(reference)) this.triggerVerseDetected(verse, info);
@@ -626,14 +740,7 @@ export class VerseDetectionController {
     this.lastDisplayedKey = key;
     this.lastDisplayedAt = now;
     this.lastTriggerAt = now;
-    this.currentVerse = verse;
-    this.lastPartialReference = null;
-    this.partialMatchCount = 0;
-    this.forgetHeardWords();
-    const p = this.passage;
-    if (p && (verse.book !== p.book || verse.chapter !== p.chapter || verse.verse < p.from || verse.verse > p.to)) {
-      this.setPassage(null);
-    }
+    this.markShown(verse);
 
     // Emit the event
     this.options.onVerseDetected(verse, info);
@@ -667,6 +774,10 @@ export class VerseDetectionController {
     this.partialMatchCount = 0;
     this.currentVerse = null;
     this.passage = null;
+    this.reading = null;
+    this.readWords = [];
+    this.readingNow = [];
+    this.suggested.clear();
     this.songMode = false;
     this.liveLyrics = null;
     this.forgetLyricWords();
