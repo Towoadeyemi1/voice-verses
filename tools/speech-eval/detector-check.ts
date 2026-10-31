@@ -121,8 +121,19 @@ const check = (label: string, got: string | null, want: string | null) => {
   };
   check('quote: the Lord is my shepherd', (await quote('As David said, the Lord is my shepherd, I shall not want.')).shown, 'Psalms 23:1');
   check('quote: I can do all things', (await quote('I can do all things through Christ which strengtheneth me')).shown, 'Philippians 4:13');
-  check('quote: trust in the Lord (modern wording)', (await quote('Trust in the Lord with all your heart and lean not on your own understanding')).shown, 'Proverbs 3:5');
-  check('quote in two gospels is offered, not shown', (await quote('Ask and it shall be given you, seek and ye shall find, knock and it shall be opened unto you')).suggested, 'Matthew 7:7');
+  // Not word for word (modern wording): offered, at the top of the list, rather than shown
+  check('quote: trust in the Lord (modern wording)', (await quote('Trust in the Lord with all your heart and lean not on your own understanding')).suggested?.split(', ')[0] ?? null, 'Proverbs 3:5');
+  {
+    const q = await quote('Ask and it shall be given you, seek and ye shall find, knock and it shall be opened unto you');
+    check('quote in two gospels is offered, not shown', `${q.shown ?? 'not shown'} / ${q.suggested}`, 'not shown / Matthew 7:7, Luke 11:9');
+  }
+  {
+    // Part of a verse: offered with how sure it is
+    const scores: string[] = [];
+    const d = new VerseDetectionController({ onVerseDetected: () => {}, onVerseSuggested: (v, info) => scores.push(`${v.book} ${v.chapter}:${v.verse} ${Math.round((info.score ?? 0) * 100)}%`) });
+    await d.onTranscript('for God so loved the world that he gave his only begotten son', true);
+    check('part of a verse is offered with a confidence below 99%', scores[0]?.replace(/\d+%$/, (m) => (parseInt(m) < 99 && parseInt(m) > 30 ? 'ok' : m)) ?? null, 'John 3:16 ok');
+  }
   check('sermon talk is not a quote', (await quote('Let us pray together this morning, church, the Lord is good all the time')).shown, null);
   check('a common phrase is not a quote', (await quote('And it came to pass that we went to the market')).shown, null);
 
@@ -159,6 +170,38 @@ const check = (label: string, got: string | null, want: string | null) => {
     await d.onTranscript('he maketh me to lie down in green pastures he leadeth me beside the still waters', true);
     await pause();
     check('whole chapter followed', shown.join(', '), 'Psalms 23:1, Psalms 23:2');
+  }
+
+  // Reading a called passage word by word: at the end of each verse the next comes up
+  {
+    const shown: string[] = [];
+    const progress: number[] = [];
+    const d = new VerseDetectionController({
+      onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`),
+      onReadingProgress: (p) => p.verse.verse === 1 && progress.push(p.word),
+    });
+    await d.onTranscript('Romans 12 verses 1 and 2', true);
+    await pause();
+    await d.onTranscript('I beseech you therefore brethren by the mercies of God', false);
+    await d.onTranscript('I beseech you therefore brethren by the mercies of God that ye present your bodies a living sacrifice', false);
+    await d.onTranscript('I beseech you therefore, brethren, by the mercies of God, that ye present your bodies a living sacrifice, holy, acceptable unto God, which is your reasonable service.', true);
+    await pause();
+    check('word follower moves through the verse', progress.length >= 3 && progress.every((w, i) => i === 0 || w > progress[i - 1]) ? 'forward' : progress.join(','), 'forward');
+    check('end of verse 1 brings up verse 2 (passage 1-2)', shown.join(', '), 'Romans 12:1, Romans 12:2');
+  }
+  {
+    // A single verse read to the end waits; "next" on its own moves on
+    const shown: string[] = [];
+    const d = new VerseDetectionController({ onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`) });
+    await d.onTranscript('Philippians 4:13', true);
+    await pause();
+    await d.onTranscript('I can do all things through Christ which strengtheneth me.', true);
+    await pause();
+    check('single verse read to the end waits', shown.join(', '), 'Philippians 4:13');
+    await d.onTranscript('Next.', true);
+    await pause();
+    await d.onTranscript('We will meet again next week.', true);
+    check('"next" on its own moves on (not "next week")', shown.join(', '), 'Philippians 4:13, Philippians 4:14');
   }
 
   // A reference in a partial transcript with words after it is complete: shown without waiting

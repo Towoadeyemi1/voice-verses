@@ -72,6 +72,8 @@ export class ScriptureIndex {
   private refIds = new Map<string, number>();
   /** Per verse: its trigrams in each translation (for read-along comparisons) */
   private verseTrigrams: Set<number>[] = [];
+  /** Per verse: how many runs of three words it has (in the translation with the most) */
+  private verseSize: number[] = [];
   // Inverted index in sorted arrays: keys[i] occurs in postings[offsets[i]..offsets[i+1])
   private keys = new Uint32Array(0);
   private offsets = new Uint32Array(0);
@@ -88,7 +90,9 @@ export class ScriptureIndex {
           verses.forEach((text, v) => {
             if (!text) return;
             const id = index.refId({ book: names[b], chapter: c + 1, verse: v + 1 });
-            for (const hash of trigrams(words(text))) {
+            const verseHashes = trigrams(words(text));
+            index.verseSize[id] = Math.max(index.verseSize[id] ?? 0, verseHashes.length);
+            for (const hash of verseHashes) {
               index.verseTrigrams[id].add(hash);
               pairs.push(hash * 65536 + id); // hash and verse in one sortable number
             }
@@ -148,10 +152,39 @@ export class ScriptureIndex {
   }
 
   /**
-   * The verse being quoted, if the words clearly match one. `strong` means
-   * enough of it was quoted, word for word, to show it without asking.
+   * The verses these words may be quoting, best first, each with a confidence
+   * from 0 to 1: how much of the verse was said word for word, and how far
+   * ahead of any other verse it is. 0.99 and above means the whole verse was
+   * quoted and nothing else matches (safe to show without asking).
    */
-  findQuote(spoken: string[], onScreen?: VerseRef | null): { ref: VerseRef; strong: boolean } | null {
+  findQuotes(
+    spoken: string[],
+    onScreen?: VerseRef | null,
+    limit = 3,
+    /** A longer stretch of what was said, to measure how much of a long verse was quoted */
+    context: string[] = spoken,
+  ): { ref: VerseRef; confidence: number }[] {
+    const ranked = this.rankQuotes(spoken, onScreen);
+    const [best] = ranked;
+    if (!best || best.hits < 3 || best.score < 18) return [];
+    const said = trigrams(context);
+    return ranked
+      .slice(0, limit)
+      .filter((c, i) => i === 0 || (c.hits >= 3 && c.score >= best.score * 0.5))
+      .map((c) => {
+        // Rivals are other verses that match several runs of words, not one shared phrase
+        const rival = Math.max(0, ...ranked.filter((o) => o !== c && o.hits >= 3).map((o) => o.score));
+        // Every run of three words of the verse that was said, common phrases included
+        const verse = this.verseTrigrams[c.id];
+        const matched = said.filter((h) => verse.has(h)).length;
+        const coverage = Math.min(1, matched / Math.max(1, this.verseSize[c.id] ?? matched));
+        const distinct = Math.max(0, 1 - rival / c.score);
+        return { ref: this.refs[c.id], confidence: Math.round(coverage * (0.75 + 0.25 * distinct) * 100) / 100 };
+      })
+      .sort((a, b) => b.confidence - a.confidence);
+  }
+
+  private rankQuotes(spoken: string[], onScreen?: VerseRef | null): { id: number; score: number; hits: number }[] {
     const scores = new Map<number, { score: number; hits: number }>();
     // The verse already on screen is not a rival (its words are often still in what was heard)
     const skip = onScreen ? this.refIds.get(`${onScreen.book}|${onScreen.chapter}|${onScreen.verse}`) : undefined;
@@ -169,16 +202,10 @@ export class ScriptureIndex {
       }
     }
     // Ties go to the earlier verse in the Bible (lower id)
-    const ranked = [...scores.entries()].sort((a, b) => b[1].score - a[1].score || a[0] - b[0]);
-    const [best, second] = ranked;
-    if (!best) return null;
-    const [id, { score, hits }] = best;
-    // Several distinct runs of words
-    if (hits < 3 || score < 18) return null;
-    // Another verse matches about as well (parallel passages, e.g. Matthew 7:7 and Luke 11:9):
-    // offer the first for the operator to confirm rather than show it
-    const clear = !second || second[1].score <= score * 0.7;
-    return { ref: this.refs[id], strong: clear && hits >= 5 && score >= 30 };
+    return [...scores.entries()]
+      .sort((a, b) => b[1].score - a[1].score || a[0] - b[0])
+      .slice(0, 6)
+      .map(([id, s]) => ({ id, ...s }));
   }
 
   /** How many runs of three of these words come from this verse (reading it aloud scores 2 or more). */
