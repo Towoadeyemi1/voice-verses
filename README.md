@@ -109,6 +109,19 @@ endpoint, so verses go through a ProPresenter message named "Voice Verses" with 
 and `{Reference}` tokens; ProPresenter's own theme and Looks decide how and where it shows.
 `node tools/propresenter-check.mjs` tests the client against a stand-in ProPresenter.
 
+### Templates, countdowns, media and songs
+
+- **Templates** (`src/lib/templates.ts`, Templates page): the look of scripture, songs,
+  announcements and countdowns per output; drawn by `TemplateRenderer`, which every output
+  and preview uses.
+- **Countdowns** (`src/lib/countdown.ts`): minutes or until a time of day; outputs compute
+  the time from the end time, so all screens agree.
+- **Videos** (`src/lib/mediaFiles.ts`): stored as files in IndexedDB on this computer;
+  template backgrounds and video slides.
+- **Songs** (`src/lib/songs.ts`): sections written once, arrangements, CCLI credits.
+- **Network outputs** (`electron/network.js`, `src/lib/networkPublisher.ts`): the desktop
+  app serves the outputs to browsers on the LAN, with live updates over Server-Sent Events.
+
 ### Storage
 
 Services and media are saved on the computer (IndexedDB). Optionally, Settings → Storage
