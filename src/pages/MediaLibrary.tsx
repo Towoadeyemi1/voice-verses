@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { appUrl } from '@/lib/appUrl';
+import { isSongFile, parseSongSelectFile } from '@/lib/songSelectImport';
 
 const MediaLibrary = () => {
   const [media, setMedia] = useState<MediaItem[]>([]);
@@ -60,12 +61,35 @@ const MediaLibrary = () => {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     let added = 0;
+    const existing = await ServiceStorage.getMedia();
     for (const file of files) {
       try {
+        if (isSongFile(file.name)) {
+          const song = parseSongSelectFile(file.name, await file.text());
+          if (!song) {
+            toast.error(`${file.name} is not a SongSelect song file`);
+            continue;
+          }
+          // The same song again (by CCLI number or title) is updated, not added twice
+          const same = existing.find(
+            (m) => m.type === 'song' && ((song.ccliNumber && m.ccliNumber === song.ccliNumber) || m.name.toLowerCase() === song.name.toLowerCase()),
+          );
+          await ServiceStorage.saveMediaItem({
+            ...(same ?? { id: `song-${Date.now()}-${added}`, createdAt: new Date(), category: 'SongSelect' }),
+            type: 'song',
+            name: song.name,
+            lyrics: song.lyrics,
+            author: song.author,
+            copyright: song.copyright,
+            ccliNumber: song.ccliNumber,
+          } as MediaItem);
+          added++;
+          continue;
+        }
         if (file.type.startsWith('video/')) await addVideoToLibrary(file);
         else if (file.type.startsWith('image/')) await addPictureToLibrary(file);
         else {
-          toast.error(`${file.name} is not a picture or video`);
+          toast.error(`${file.name} is not a picture, video or SongSelect song`);
           continue;
         }
         added++;
@@ -285,11 +309,11 @@ const MediaLibrary = () => {
               <h2 className="text-xl font-semibold mb-4">Upload Media</h2>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="image-upload">Add pictures or videos</Label>
+                  <Label htmlFor="image-upload">Add pictures, videos or songs</Label>
                   <Input
                     id="image-upload"
                     type="file"
-                    accept="image/*,video/*"
+                    accept="image/*,video/*,.usr,.txt"
                     multiple
                     onChange={handleUpload}
                     className="mt-2"
@@ -297,14 +321,16 @@ const MediaLibrary = () => {
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Pictures (JPG, PNG, WEBP) and videos (MP4, MOV, WEBM) for backgrounds, announcements and video
-                    slides. Videos stay on this computer.
+                    slides. Videos stay on this computer. Songs: the lyrics file (.txt) or import file (.usr) downloaded
+                    from CCLI SongSelect, with their sections, writers, copyright and CCLI number.
                   </p>
                 </div>
                 
                 <div className="pt-4 border-t">
                   <p className="text-sm text-muted-foreground">
-                    <strong>Note:</strong> Song lyrics can be added when building your service. 
-                    Use the Service Builder to create lyric slides.
+                    <strong>Songs from SongSelect:</strong> on songselect.ccli.com open a song, choose Download →
+                    Lyrics (or the import file), and add the file here. Several at once is fine. Songs in the library
+                    are recognised when sung and can be added to any service.
                   </p>
                 </div>
               </div>

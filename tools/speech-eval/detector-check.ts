@@ -10,6 +10,9 @@ console.warn = () => {};
 import { VerseDetectionController } from '@/speech/VerseDetectionController';
 import { loadScriptureIndex } from '@/speech/scriptureIndex';
 import { plainVerseText } from '@/lib/verseText';
+import { parseSongSelectFile } from '@/lib/songSelectImport';
+import { parseSongSections } from '@/lib/songs';
+import { duplicateService, nextSunday } from '@/lib/duplicateService';
 
 const single: [string, string | null][] = [
   ['Please turn with me to John chapter 3, verse 16.', 'John 3:16'],
@@ -282,6 +285,28 @@ const check = (label: string, got: string | null, want: string | null) => {
     ['by the hand of Moses. {by: Heb. by the hand of}', 'by the hand of Moses.'],
   ];
   for (const [input, want] of text) check(`verse text ${JSON.stringify(input.slice(0, 30))}…`, plainVerseText(input), want);
+
+  // Songs downloaded from SongSelect
+  {
+    const txt = `Way Maker\n\nVerse 1\nYou are here moving in our midst\nI worship You I worship You\n\nChorus\nWay maker miracle worker promise keeper\nLight in the darkness my God that is who You are\n\nVerse 2\nYou are here touching every heart\nI worship You I worship You\n\nCCLI Song # 7115744\nOsinachi Kalu Okoro Egbu\n© 2016 Integrity Music Europe (Admin. by Integrity Music)\nFor use solely with the SongSelect® Terms of Use. All rights reserved. www.ccli.com\nCCLI License # 1234567`;
+    const song = parseSongSelectFile('way-maker.txt', txt);
+    check('SongSelect .txt: title, number, writer, copyright', song && `${song.name} | ${song.ccliNumber} | ${song.author} | ${song.copyright}`, 'Way Maker | 7115744 | Osinachi Kalu Okoro Egbu | © 2016 Integrity Music Europe (Admin. by Integrity Music)');
+    check('SongSelect .txt: sections', song && parseSongSections(song.lyrics).map((x) => x.label).join(', '), 'Verse 1, Chorus, Verse 2');
+    const usr = `[File]\nType=SongSelect Import File\nVersion=3.0\n[S A2936948]\nTitle=10,000 Reasons (Bless The Lord)\nAuthor=Jonas Myrin | Matt Redman\nCopyright=2011 Thankyou Music\nFields=Verse 1/tChorus\nWords=The sun comes up it's a new day dawning/nIt's time to sing Your song again/tBless the Lord O my soul/nO my soul\n`;
+    const u = parseSongSelectFile('10000-reasons.usr', usr);
+    check('SongSelect .usr: title, number, writers', u && `${u.name} | ${u.ccliNumber} | ${u.author}`, '10,000 Reasons (Bless The Lord) | 2936948 | Jonas Myrin, Matt Redman');
+    check('SongSelect .usr: sections', u && parseSongSections(u.lyrics).map((x) => `${x.label}:${x.lines.length}`).join(', '), 'Verse 1:2, Chorus:2');
+  }
+
+  // Duplicating a service for next Sunday
+  {
+    check('next Sunday after a Wednesday', nextSunday(new Date(2026, 9, 28)).toDateString(), new Date(2026, 10, 1).toDateString());
+    check('next Sunday after a Sunday is a week on', nextSunday(new Date(2026, 10, 1)).toDateString(), new Date(2026, 10, 8).toDateString());
+    const original = { id: 's', name: 'Sunday Service', date: new Date(2026, 10, 1), startTime: '10:00', isTemplate: false, sections: [{ id: 'a', name: 'Worship', subsections: [{ id: 'b', name: 'Song', slides: [{ id: 'c', type: 'blank', title: '' }] }] }] } as unknown as import('@/types/service').Service;
+    const copy = duplicateService(original, new Date(2026, 10, 8));
+    const ids = [copy.id, copy.sections[0].id, copy.sections[0].subsections[0].id, copy.sections[0].subsections[0].slides[0].id];
+    check('duplicate has new ids everywhere and keeps the content', `${ids.every((id) => !['s', 'a', 'b', 'c'].includes(id))} ${copy.name} ${copy.sections[0].subsections[0].name} ${original.id}`, 'true Sunday Service Song s');
+  }
 
   if (failures) {
     print(`\n${failures} detector check(s) failed`);
