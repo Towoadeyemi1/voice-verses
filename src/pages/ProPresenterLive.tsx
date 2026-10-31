@@ -150,8 +150,8 @@ const ProPresenterLive = () => {
         onVerseDetected: (verse) => detected(verse),
         onTranscriptUpdate: (text) => setHeard(text),
         ...ai,
-        // AI guesses always wait for the operator
-        onVerseSuggested: ai.assistant ? (verse) => detected(verse, true) : undefined,
+        // Loose quotes and AI guesses always wait for the operator
+        onVerseSuggested: (verse) => detected(verse, true),
         autoDisplayAiMatches: false,
       });
       controller.current.setCurrentVerse(liveRef.current);

@@ -454,6 +454,11 @@ export class BibleParser {
     getBibleData().catch(error => console.error('Failed to load Bible data:', error));
   }
 
+  /** A free translation's full text (KJV, ASV or WEB), for searching by its words. */
+  static async getOfflineBooks(version: OfflineVersion): Promise<BibleBook[]> {
+    return loadOfflineBible(version);
+  }
+
   static getVersion(): BibleVersionType {
     const saved = localStorage.getItem('cornerstone-bible-version');
     currentVersion = (saved as BibleVersionType) || 'kjv';
