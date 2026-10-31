@@ -226,14 +226,14 @@ const check = (label: string, got: string | null, want: string | null) => {
       id: 'grace',
       title: 'Amazing Grace',
       lyrics:
-        "Verse 1\nAmazing grace how sweet the sound\nThat saved a wretch like me\nI once was lost but now am found\nWas blind but now I see\n\nVerse 2\n'Twas grace that taught my heart to fear\nAnd grace my fears relieved\nHow precious did that grace appear\nThe hour I first believed\n\nChorus\nMy chains are gone I've been set free\nMy God my Saviour has ransomed me",
+        "Verse 1\nAmazing grace how sweet the sound\nThat saved a wretch like me\nI once was lost but now am found\nWas blind but now I see\n\nVerse 2\n'Twas grace that taught my heart to fear\nAnd grace my fears relieved\nHow precious did that grace appear\nThe hour I first believed\n\nChorus\nPraise God from whom all blessings flow\nPraise Him all creatures here below",
     },
     {
       id: 'shepherd',
       title: 'The Lord Is My Shepherd',
       lyrics: 'The Lord is my shepherd I shall not want\nHe makes me down to lie in pastures green\nHe leadeth me the quiet waters by',
     },
-    { id: 'waymaker', title: 'Way Maker', lyrics: 'Way maker miracle worker promise keeper\nLight in the darkness my God that is who you are' },
+    { id: 'holy', title: 'Holy, Holy, Holy', lyrics: 'Holy holy holy Lord God Almighty\nEarly in the morning our song shall rise to Thee' },
   ];
   {
     const suggested: string[] = [];
@@ -260,7 +260,7 @@ const check = (label: string, got: string | null, want: string | null) => {
   }
   {
     // Following a song on screen, chorus sung twice
-    const slides = ['Amazing grace how sweet the sound\nThat saved a wretch like me', 'I once was lost but now am found\nWas blind but now I see', "My chains are gone I've been set free\nMy God my Saviour has ransomed me", "'Twas grace that taught my heart to fear\nAnd grace my fears relieved", "My chains are gone I've been set free\nMy God my Saviour has ransomed me"];
+    const slides = ['Amazing grace how sweet the sound\nThat saved a wretch like me', 'I once was lost but now am found\nWas blind but now I see', 'Praise God from whom all blessings flow\nPraise Him all creatures here below', "'Twas grace that taught my heart to fear\nAnd grace my fears relieved", 'Praise God from whom all blessings flow\nPraise Him all creatures here below'];
     const moves: number[] = [];
     const d = new VerseDetectionController({ onVerseDetected: () => {}, onLyricsMove: (i) => moves.push(i) });
     d.setSongLibrary(songs);
@@ -275,9 +275,9 @@ const check = (label: string, got: string | null, want: string | null) => {
     };
     d.setLiveLyrics(slides, 0);
     await sing('i once was lost but now i found was blind but now i see');
-    await sing('my chains are gone i have been set free');
+    await sing('praise god from whom all blessings flow');
     await sing('twas grace that taught my heart to fear and grace my fears relieved');
-    await sing('my chains are gone ive been set free my god my savior has ransomed me');
+    await sing('praise god from whom all blessings flow praise him all creatures here below');
     check('song followed, chorus the second time', moves.join(', '), '1, 2, 3, 4');
   }
 
@@ -293,13 +293,14 @@ const check = (label: string, got: string | null, want: string | null) => {
 
   // Songs downloaded from SongSelect
   {
-    const txt = `Way Maker\n\nVerse 1\nYou are here moving in our midst\nI worship You I worship You\n\nChorus\nWay maker miracle worker promise keeper\nLight in the darkness my God that is who You are\n\nVerse 2\nYou are here touching every heart\nI worship You I worship You\n\nCCLI Song # 7115744\nOsinachi Kalu Okoro Egbu\n© 2016 Integrity Music Europe (Admin. by Integrity Music)\nFor use solely with the SongSelect® Terms of Use. All rights reserved. www.ccli.com\nCCLI License # 1234567`;
-    const song = parseSongSelectFile('way-maker.txt', txt);
-    check('SongSelect .txt: title, number, writer, copyright', song && `${song.name} | ${song.ccliNumber} | ${song.author} | ${song.copyright}`, 'Way Maker | 7115744 | Osinachi Kalu Okoro Egbu | © 2016 Integrity Music Europe (Admin. by Integrity Music)');
+    // Public-domain hymns in SongSelect's formats (never copyrighted lyrics in the repo)
+    const txt = `Holy, Holy, Holy\n\nVerse 1\nHoly holy holy Lord God Almighty\nEarly in the morning our song shall rise to Thee\n\nChorus\nHoly holy holy merciful and mighty\nGod in three persons blessed Trinity\n\nVerse 2\nHoly holy holy all the saints adore Thee\nCasting down their golden crowns around the glassy sea\n\nCCLI Song # 1156\nJohn Bacchus Dykes | Reginald Heber\nPublic Domain\nFor use solely with the SongSelect® Terms of Use. All rights reserved. www.ccli.com\nCCLI License # 1234567`;
+    const song = parseSongSelectFile('holy-holy-holy.txt', txt);
+    check('SongSelect .txt: title, number, writer, copyright', song && `${song.name} | ${song.ccliNumber} | ${song.author} | ${song.copyright}`, 'Holy, Holy, Holy | 1156 | John Bacchus Dykes, Reginald Heber | Public Domain');
     check('SongSelect .txt: sections', song && parseSongSections(song.lyrics).map((x) => x.label).join(', '), 'Verse 1, Chorus, Verse 2');
-    const usr = `[File]\nType=SongSelect Import File\nVersion=3.0\n[S A2936948]\nTitle=10,000 Reasons (Bless The Lord)\nAuthor=Jonas Myrin | Matt Redman\nCopyright=2011 Thankyou Music\nFields=Verse 1/tChorus\nWords=The sun comes up it's a new day dawning/nIt's time to sing Your song again/tBless the Lord O my soul/nO my soul\n`;
-    const u = parseSongSelectFile('10000-reasons.usr', usr);
-    check('SongSelect .usr: title, number, writers', u && `${u.name} | ${u.ccliNumber} | ${u.author}`, '10,000 Reasons (Bless The Lord) | 2936948 | Jonas Myrin, Matt Redman');
+    const usr = `[File]\nType=SongSelect Import File\nVersion=3.0\n[S A25376]\nTitle=It Is Well With My Soul\nAuthor=Horatio Gates Spafford | Philip Paul Bliss\nCopyright=Public Domain\nFields=Verse 1/tChorus\nWords=When peace like a river attendeth my way/nWhen sorrows like sea billows roll/tIt is well with my soul/nIt is well it is well with my soul\n`;
+    const u = parseSongSelectFile('it-is-well.usr', usr);
+    check('SongSelect .usr: title, number, writers', u && `${u.name} | ${u.ccliNumber} | ${u.author}`, 'It Is Well With My Soul | 25376 | Horatio Gates Spafford, Philip Paul Bliss');
     check('SongSelect .usr: sections', u && parseSongSections(u.lyrics).map((x) => `${x.label}:${x.lines.length}`).join(', '), 'Verse 1:2, Chorus:2');
   }
 

@@ -67,7 +67,7 @@ function parseTxt(text: string): ImportedSong | null {
   const credits = creditsAt >= 0 ? lines.slice(creditsAt).map((l) => l.trim()).filter(Boolean) : [];
 
   const ccliNumber = credits[0]?.match(/\d+/)?.[0];
-  const copyright = credits.find((l) => /^(©|\(c\)|copyright)/i.test(l));
+  const copyright = credits.find((l) => /^(©|\(c\)|copyright|public domain)/i.test(l));
   const author = credits.slice(1).find((l) => l !== copyright && !/songselect|ccli|license|licence|terms of use|www\./i.test(l));
 
   // Blocks separated by blank lines; a block whose first line names a section keeps it
