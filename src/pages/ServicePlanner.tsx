@@ -15,6 +15,7 @@ import { ModeNav } from '@/components/ModeNav';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Monitor, ChevronDown, ExternalLink } from 'lucide-react';
 import { appUrl } from '@/lib/appUrl';
+import { duplicateService, nextSunday } from '@/lib/duplicateService';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { SERVICE_EXPORT_EXTENSION, exportService, importService } from '@/lib/library/files';
 
@@ -66,15 +67,16 @@ const ServicePlanner = () => {
     toast.success('Service deleted');
   };
 
+  /** A copy for the Sunday after the original (or after today, for an old service), opened to edit. */
   const handleDuplicateService = async (service: Service) => {
-    const duplicate: Service = {
-      ...service,
-      id: Date.now().toString(),
-      name: `${service.name} (Copy)`,
-    };
+    const after = new Date(Math.max(new Date(service.date).getTime(), Date.now()));
+    const date = nextSunday(after);
+    const duplicate = duplicateService(service, date);
     await ServiceStorage.saveService(duplicate);
-    await loadServices();
-    toast.success('Service duplicated');
+    toast.success(`Copied for ${date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}`, {
+      description: 'Change the date or anything else in the editor.',
+    });
+    navigate(`/service-builder/${duplicate.id}`);
   };
 
   const handleExportService = (service: Service) => {
@@ -289,7 +291,7 @@ const ServicePlanner = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDuplicateService(service)}
-                          title="Duplicate"
+                          title="Duplicate for next Sunday"
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
