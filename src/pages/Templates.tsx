@@ -11,6 +11,7 @@ import { RenderContent, TemplateRenderer } from '@/components/TemplateRenderer';
 import { VerseText } from '@/components/VerseText';
 import { useTemplates } from '@/hooks/use-templates';
 import { SlideDesigner } from '@/components/designer/SlideDesigner';
+import { TeamsAndThemes } from '@/components/designer/TeamsAndThemes';
 import {
   BUILT_IN_TEMPLATES,
   CONTENT_KINDS,
@@ -86,6 +87,8 @@ const Templates = () => {
       <div className="max-w-7xl mx-auto space-y-4">
         <PageHeader title="Templates" description="How scripture, songs and announcements look on each screen" />
         <ModeNav />
+
+        <TeamsAndThemes />
 
         {/* Where each template is used */}
         <Card className="p-4 space-y-3">

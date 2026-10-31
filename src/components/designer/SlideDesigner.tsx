@@ -19,6 +19,8 @@ import { addPictureToLibrary, addVideoToLibrary } from '@/lib/mediaFiles';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { DesignLayer, FONTS, Template } from '@/lib/templates';
 import { wrapSelection } from '@/lib/richText';
+import { TEAM_COLORS, teamColor } from '@/lib/colorTeams';
+import { useColorTeam } from '@/hooks/use-color-team';
 
 type Selection = 'background' | 'text' | 'label' | 'logo' | string;
 type Box = { x: number; y: number; width: number; height: number };
@@ -76,8 +78,29 @@ const Segmented = <T extends string | number>({ value, options, onChange }: { va
   </div>
 );
 
-/** A colour: the swatches the church uses most, or any colour. */
-const ColorPick = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+/**
+ * A colour: the colour team's colours (they change when the team changes),
+ * the swatches the church uses most, or any colour.
+ */
+const ColorPick = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const team = useColorTeam();
+  const resolved = teamColor(value, team) ?? '#000000';
+  return (
+  <div className="space-y-1.5">
+  <div className="flex items-center gap-1 flex-wrap" title={`Colour team: ${team.name}`}>
+    {TEAM_COLORS.map(({ key, label }) => (
+      <button
+        key={key}
+        type="button"
+        onClick={() => onChange(`team:${key}`)}
+        title={`${label} colour of the colour team (changes with the team)`}
+        className={`h-5 pl-0.5 pr-1.5 rounded-full border flex items-center gap-1 text-[10px] font-semibold ${value === `team:${key}` ? 'ring-2 ring-primary ring-offset-1 ring-offset-background border-transparent' : 'border-border'}`}
+      >
+        <span className="w-3.5 h-3.5 rounded-full" style={{ background: team.colors[key] }} />
+        {label}
+      </button>
+    ))}
+  </div>
   <div className="flex items-center gap-1.5 flex-wrap">
     {SWATCHES.map((c) => (
       <button
@@ -90,10 +113,12 @@ const ColorPick = ({ value, onChange }: { value: string; onChange: (v: string) =
       />
     ))}
     <label className="relative w-6 h-6 rounded-full border border-border overflow-hidden cursor-pointer" title="Any colour" style={{ background: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}>
-      <input type="color" value={value.slice(0, 7)} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
+      <input type="color" value={resolved.slice(0, 7)} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
     </label>
   </div>
-);
+  </div>
+  );
+};
 
 const Toggle = ({ on, onChange, children, title }: { on: boolean; onChange: (v: boolean) => void; children: ReactNode; title: string }) => (
   <button

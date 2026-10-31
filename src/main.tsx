@@ -1,6 +1,12 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { applyTeamAccent, TEAM_CHANGED } from "./lib/colorTeams";
+
+// The app's accent follows the colour team
+applyTeamAccent();
+window.addEventListener(TEAM_CHANGED, () => applyTeamAccent());
+window.addEventListener("storage", () => applyTeamAccent());
 import { registerSW } from 'virtual:pwa-register';
 
 const updateSW = registerSW({
