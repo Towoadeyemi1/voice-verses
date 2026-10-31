@@ -222,7 +222,7 @@ const Confidence = () => {
         {/* Next items sidebar - Yellow/Gold colored */}
         {nextItems.length > 0 && (
           <div 
-            className="w-96 border-l p-6 flex flex-col"
+            className="w-[26%] min-w-48 max-w-md border-l p-6 flex flex-col"
             style={{ 
               backgroundColor: '#fbbf24',
               borderColor: '#f59e0b',
