@@ -1,6 +1,8 @@
 import { desktop, NetworkStatus } from '@/lib/desktop';
 import { syncService } from '@/lib/syncService';
 import { loadAssignments, loadTemplates, TEMPLATES_CHANGED } from '@/lib/templates';
+import { activeTeam, TEAM_CHANGED } from '@/lib/colorTeams';
+import { loadShapes, SHAPES_CHANGED } from '@/lib/screenShapes';
 import { indexedDBService } from '@/lib/indexedDBService';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
@@ -39,6 +41,8 @@ function snapshot(): NetworkSnapshot {
     assignments: loadAssignments(),
     logo: localStorage.getItem('global-service-logo') || '',
     bibleVersion: BibleParser.getVersion(),
+    colorTeam: activeTeam(),
+    shapes: loadShapes(),
   };
 }
 
@@ -100,6 +104,8 @@ export function startNetworkPublisher(): void {
   if (!desktop) return;
   syncService.subscribe(schedule);
   window.addEventListener(TEMPLATES_CHANGED, schedule);
+  window.addEventListener(TEAM_CHANGED, schedule);
+  window.addEventListener(SHAPES_CHANGED, schedule);
   window.addEventListener('storage', schedule);
   const settings = loadNetworkSettings();
   if (settings.enabled) configureNetwork(settings).catch(() => {});

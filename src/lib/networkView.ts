@@ -1,6 +1,8 @@
 import type { SyncMessage } from '@/lib/syncService';
 import type { Countdown } from '@/lib/countdown';
-import type { Assignments, Template } from '@/lib/templates';
+import type { Assignments, Output, Template } from '@/lib/templates';
+import type { ColorTeam } from '@/lib/colorTeams';
+import type { ScreenShape } from '@/lib/screenShapes';
 
 declare global {
   interface Window {
@@ -19,6 +21,10 @@ export interface NetworkSnapshot {
   assignments: Assignments;
   logo: string;
   bibleVersion: string;
+  /** The colour team in use, so team colours look the same everywhere */
+  colorTeam?: ColorTeam;
+  /** Screen shapes set on the operator's computer */
+  shapes?: Partial<Record<Output, ScreenShape>>;
 }
 
 /** Where a viewer loads a picture or video from. */

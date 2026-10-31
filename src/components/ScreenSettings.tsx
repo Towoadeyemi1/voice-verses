@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { desktop, DisplayInfo, ScreenConfig, ScreenOutput } from '@/lib/desktop';
+import type { Output } from '@/lib/templates';
+import { ScreenShapePicker } from './ScreenShapePicker';
 
 const OUTPUTS: { output: ScreenOutput; label: string; hint: string }[] = [
   { output: 'projection', label: 'Projector', hint: 'Scripture, songs, pictures, videos, countdown and logo for the room' },
@@ -13,6 +15,9 @@ const OUTPUTS: { output: ScreenOutput; label: string; hint: string }[] = [
 ];
 
 const OFF = 'off';
+
+/** Outputs drawn from looks have a shape; the confidence monitor fills any screen by itself. */
+const SHAPED: Partial<Record<ScreenOutput, Output>> = { projection: 'projection', lowerThird: 'stream' };
 
 const describe = (d: DisplayInfo) =>
   `${d.label} — ${d.width}×${d.height}${d.primary ? " (this computer's main screen)" : ''}`;
@@ -38,13 +43,17 @@ export function ScreenSettings() {
 
   if (!desktop) {
     return (
-      <Alert>
-        <MonitorSmartphone className="h-4 w-4" />
-        <AlertDescription>
-          Choosing a screen for each output needs the Voice Verses desktop app. In a browser, open the output windows
-          and drag each one to its screen.
-        </AlertDescription>
-      </Alert>
+      <div className="space-y-4">
+        <Alert>
+          <MonitorSmartphone className="h-4 w-4" />
+          <AlertDescription>
+            Choosing a screen for each output needs the Voice Verses desktop app. In a browser, open the output windows
+            and drag each one to its screen.
+          </AlertDescription>
+        </Alert>
+        <ScreenShapePicker output="projection" label="Projector screen shape" />
+        <ScreenShapePicker output="stream" label="Lower-third screen shape" />
+      </div>
     );
   }
 
@@ -92,6 +101,7 @@ export function ScreenSettings() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">{hint}</p>
+              {SHAPED[output] && <ScreenShapePicker output={SHAPED[output]!} />}
             </div>
           );
         })}

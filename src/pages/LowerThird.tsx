@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { ScaledStage } from '@/components/ScaledStage';
 import { OutputContent } from '@/components/OutputContent';
 import { useLive } from '@/hooks/use-live';
+import { useOutputStage } from '@/hooks/use-screen-shape';
 import { useCountdown } from '@/hooks/use-countdown';
 import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-active';
 import { loadAssignments, loadTemplates, templateFor } from '@/lib/templates';
@@ -15,6 +16,7 @@ import { loadAssignments, loadTemplates, templateFor } from '@/lib/templates';
 const LowerThird = () => {
   const { live, logo } = useLive();
   const { countdown, remaining } = useCountdown();
+  const stage = useOutputStage('stream');
   const pointerActive = usePointerActive();
   useDoubleClickFullscreen();
   // "?transparent=1": no key colour, for OBS/vMix browser sources (Settings → Network)
@@ -28,7 +30,7 @@ const LowerThird = () => {
 
   return (
     <div className="fixed inset-0" style={{ backgroundColor: keyColor, cursor: pointerActive ? 'auto' : 'none' }}>
-      <ScaledStage className="absolute inset-0">
+      <ScaledStage stage={stage} className="absolute inset-0">
         <OutputContent live={logo !== null ? null : live} output="stream" countdown={countdown} remaining={remaining} transparent={transparent} />
       </ScaledStage>
       {pointerActive && !live && !countdown?.stream && !transparent && (
