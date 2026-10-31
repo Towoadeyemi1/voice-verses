@@ -14,7 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+        // Apple's system font on a Mac, Figtree (bundled) elsewhere
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"Figtree Variable"', '"Segoe UI Variable Text"', 'system-ui', 'sans-serif'],
+        // Scripture and lyrics in the operator's view (bundled, works offline)
+        scripture: ['"Newsreader Variable"', '"New York"', '"Iowan Old Style"', 'Georgia', 'serif'],
         serif: ['Crimson Text', 'Georgia', 'serif'],
       },
       colors: {

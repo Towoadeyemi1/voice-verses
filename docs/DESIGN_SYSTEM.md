@@ -9,7 +9,7 @@
 - The other screens shown as chips.
 - The layout follows the window size by itself, with no Laptop or 45″ switch.
 
-Where design 4 differs from the rules below, design 4 wins, pending the owner's verdict.
+Where design 4 differs from the rules below, design 4 wins. The owner approved it ("Proceed"), and it is built into the live screen in 1.4.0; `PRODUCT_SPEC.md` §8 lists the components.
 
 The earlier reference mock-up is [`design/live-redesign-v3.html`](design/live-redesign-v3.html). It is interactive and covers before the service, worship, preaching, light, dark, colour teams and an ultrawide monitor. Designs 1 and 2 were rejected. They are not kept in the repository, because they quoted copyrighted worship lyrics and the repository is public (churches can of course use those songs in the app under their CCLI licence); their lessons are in `LESSONS.md` → Design.
 
