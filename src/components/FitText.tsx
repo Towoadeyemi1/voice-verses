@@ -7,6 +7,8 @@ interface FitTextProps {
   minFontSize?: number;
   className?: string;
   style?: CSSProperties;
+  /** Where the text sits when it is smaller than the box */
+  verticalAlign?: 'top' | 'middle' | 'bottom';
   children: ReactNode;
 }
 
@@ -14,7 +16,7 @@ interface FitTextProps {
  * Text that shrinks to fit the space it is given, so a long verse never runs
  * off the screen. The box takes the remaining height of a flex column.
  */
-export const FitText = ({ maxFontSize, minFontSize = 12, className, style, children }: FitTextProps) => {
+export const FitText = ({ maxFontSize, minFontSize = 12, className, style, verticalAlign = 'middle', children }: FitTextProps) => {
   const box = useRef<HTMLDivElement>(null);
   const text = useRef<HTMLDivElement>(null);
 
@@ -44,7 +46,13 @@ export const FitText = ({ maxFontSize, minFontSize = 12, className, style, child
   });
 
   return (
-    <div ref={box} className="flex-1 min-h-0 w-full flex items-center justify-center overflow-hidden">
+    <div
+      ref={box}
+      className={cn(
+        'flex-1 min-h-0 w-full flex justify-center overflow-hidden',
+        verticalAlign === 'top' ? 'items-start' : verticalAlign === 'bottom' ? 'items-end' : 'items-center',
+      )}
+    >
       <div ref={text} className={cn('w-full', className)} style={{ ...style, fontSize: maxFontSize }}>
         {children}
       </div>

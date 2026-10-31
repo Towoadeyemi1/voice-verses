@@ -14,6 +14,7 @@ import ServicePlanner from "./pages/ServicePlanner";
 import ServiceBuilder from "./pages/ServiceBuilder";
 import Presenter from "./pages/Presenter";
 import MediaLibrary from "./pages/MediaLibrary";
+import Templates from "./pages/Templates";
 import NotFound from "./pages/NotFound";
 import { librarySync } from "./lib/library/librarySync";
 import { desktop } from "./lib/desktop";
@@ -54,6 +55,7 @@ const App = () => {
             <Route path="/service-builder/:serviceId" element={<ServiceBuilder />} />
             <Route path="/presenter" element={<Presenter />} />
             <Route path="/media-library" element={<MediaLibrary />} />
+            <Route path="/templates" element={<Templates />} />
             <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

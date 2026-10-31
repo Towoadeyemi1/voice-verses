@@ -26,6 +26,8 @@ export interface BaseSlide {
     alignment?: 'left' | 'center' | 'right';
   };
   slideNotes?: string; // Notes specific to this slide
+  /** A template other than the one assigned for this kind of slide */
+  templateId?: string;
 }
 
 export interface ScriptureSlide extends BaseSlide {
