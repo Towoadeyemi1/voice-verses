@@ -142,3 +142,15 @@ and imported elsewhere.
 This project can be deployed to any static hosting service that supports Vite applications.
 
 Build the project with `npm run build` and deploy the `dist` folder to your hosting provider.
+
+## Working on Voice Verses
+
+Start with [`CLAUDE.md`](CLAUDE.md), which holds the rules and a map of the code. Then read:
+
+- [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md): everything the app does.
+- [`docs/DECISIONS.md`](docs/DECISIONS.md): why it is built this way.
+- [`docs/LESSONS.md`](docs/LESSONS.md): mistakes not to repeat.
+- [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md): how it must look.
+- [`docs/REBUILD.md`](docs/REBUILD.md): how to build it again from nothing.
+
+Step-by-step procedures for testing, shipping, releasing, detection work and design review are in `.claude/skills/`. The desktop end-to-end checks are in [`tools/e2e/`](tools/e2e/README.md).
