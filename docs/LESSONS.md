@@ -59,6 +59,8 @@ Check this list before debugging. Add every new mistake that cost time.
 - **The stemmer made "loves" look rare:** `stem` keeps "love" from "loves" but makes "lov" from "love". For counting how rare a word is, also drop a final "e" (`storyStem`), or common words pass as telling ones.
 - **One rare word is not a story:** "please your neighbour" matched Romans 15:2. Ask for three telling words (or two very rare ones), and don't let a lone match look sure: distinctness counts fully only with three telling words.
 - **A story's words are spread over its chapter:** Goliath is named in 1 Samuel 17:4 and the sling is in 17:50. Count the telling words of the whole chapter when the verse itself has two.
+- **Verse 1 went up for "somewhere in Isaiah 53":** a chapter reference defaulted to verse 1 and was shown like a verse said outright. A chapter alone now waits for the verse (D24).
+- **Good suggestions sank under faint late ones:** the bar showed the newest. Show the surest of the last 20 seconds, let a later hearing of the same sentence replace its earlier guesses, and keep the full list one click away.
 - **A range or chapter showed only its first verse:** a range must become a passage that is followed (`followPassage`, then the reading tracker).
 - **The word tracker was too slow for fast readers:** search the whole rest of the verse, with neighbour agreement, and estimate pace between recognitions.
 - **Slow on older Macs:** partials piled up. Make partials lag-aware (`MAX_LAG`) and adapt the interval to decode time.

@@ -104,5 +104,6 @@ Settings live in `localStorage`, which every window shares, so outputs update th
 - Alerts (messages over any slide) shipped in 1.8.0.
 - 1.9.0: every slide of what is loaded in a strip or grid, "When I pick a slide: Goes live | Waits in Next" above Live, Quick edit, the translation switch on the live screen, several services a day, part countdowns that start themselves, and Move on by time.
 - 1.10.0: stories and paraphrases found offline from names and telling words, while the preacher is still speaking, and "help me find it" searches at once.
+- 1.11.0: a chapter alone waits for its verse (read, quoted or "verse 5"), every suggestion in a list, context makes suggestions surer, half-second partials.
 - Props layers, multiple timers, a stage layout editor, live captions and translation, verses on phones (QR), PowerPoint and Planning Center import, Stream Deck/remote control, NDI, CCLI reporting.
 - Signed and notarised installers, which need the owner's Apple Developer account and a Windows certificate.

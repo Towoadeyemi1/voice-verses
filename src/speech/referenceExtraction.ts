@@ -196,6 +196,7 @@ export interface ExtractedReference {
   startVerse: number;
   endVerse?: number;     // For ranges
   wholeChapter?: boolean; // "John 5": the whole chapter, from verse 1
+  fromVerse?: boolean; // "John 5 from verse 8": the verse to start at was said
   raw: string;           // Original matched text
   confidence: 'high' | 'medium' | 'low';
   index?: number;        // Position in the normalized text, for spoken order
@@ -372,6 +373,7 @@ export function extractReferences(text: string): ExtractedReference[] {
           chapter: parseInt(match[2], 10),
           startVerse: from ? parseInt(from[1], 10) : 1,  // Default to verse 1 for chapter references
           wholeChapter: true,
+          fromVerse: !!from,
           raw: match[0],
           confidence: 'low',
           index: match.index,

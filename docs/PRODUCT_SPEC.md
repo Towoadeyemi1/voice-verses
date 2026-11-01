@@ -54,7 +54,9 @@ Engine types are `builtin`, `webspeech` and `openai` (`src/speech/SpeechProvider
    - It returns the last confident reference spoken.
    - Forms understood: "John 3:16", "John chapter 3 verse 16", "John 5:8-13", "John 5 from verse 8", and a whole chapter ("John 5").
 3. **Partials:** a reference in a partial transcript is acted on when at least 2 words follow it, so it cannot still grow (3:1 becoming 3:16). Otherwise it waits for the final.
-4. **Passages:** a range or a whole chapter becomes a passage, and each verse goes on screen as it is read.
+4. **Passages:** a range becomes a passage, and each verse goes on screen as it is read.
+   - **A chapter named without a verse** (1.11.0: "somewhere in Isaiah 53", "turn to Psalm 23", not "John 5 from verse 8") puts nothing on screen. The whole chapter becomes the passage, `onChapterCalled` loads it into the live screen (verse 1 in Next, "which verse?"), and the verse goes up when three pairs of its words are heard, clearly more than any other verse of the chapter (read or quoted). A verse paraphrased is offered (two or more telling words shared, more than any other verse of the chapter; 55% and up). Showing any verse ends the wait.
+   - **"Verse 5"** with no book, while a chapter is called or a passage is being read, is that verse of it, said outright (in a partial, once a word follows the number).
    - **Following inside a passage** (`followPassage`) compares word pairs from the last 12 words heard with each verse of the passage.
    - **The word follower** (`readingTracker.ts`):
      - `readingPosition` finds the last word read, searching the rest of the verse. A jump counts only when the neighbouring word agrees, so a common word cannot jump it ahead.
@@ -75,8 +77,9 @@ Engine types are `builtin`, `webspeech` and `openai` (`src/speech/SpeechProvider
    - A few modern words also look for the Bible's own ("boat" → ship, "giant" → Philistine, Goliath; `STORY_WORDS`).
    - It needs three **telling words** (in under 300 verses: names, places, "sycamore", "fleece"), or two **very rare** ones (under 40 verses: "Goliath", "sling"), or two telling words in the verse when its chapter has three, two of them very rare (Goliath is named early in 1 Samuel 17, the sling at the end). The best match must have a word in under ~150 verses and enough weight overall.
    - Confidence = 0.3 + 0.35 × strength + 0.2 × how far ahead of the next story it is (counted fully only with three telling words), at most `STORY_MAX_CONFIDENCE` 0.9. **A story is always a suggestion, never shown by itself.** It is offered only when it is surer than the quote search's best.
-6c. **While the sentence is still being spoken** (1.10.0): every 600 ms, once the sentence has 6 words and 3 more since the last look, the quote and story searches run on the partial transcript and offer what it sounds like. Nothing goes on screen from a partial; a whole verse quoted word for word still goes up when the sentence ends (99%).
+6c. **While the sentence is still being spoken** (1.10.0; 450 ms from 1.11.0): every 450 ms, once the sentence has 6 words and 3 more since the last look, the quote and story searches run on the partial transcript and offer what it sounds like. Nothing goes on screen from a partial; a whole verse quoted word for word still goes up when the sentence ends (99%).
 6d. **"Help me find it"** (1.10.0, `ASKED_TO_FIND`): "help me find it", "somebody find it", "can you find…", "what verse is that", "look it up", "put it on the screen", acted on once per sentence as soon as the partial has it. Everything said since the screen last changed (up to 80 words) is searched at once, more widely (two telling words are enough), the AI assistant (if on) is asked about the last few sentences together, and the operator sees "Asked to find a scripture".
+6e. **Offering** (1.11.0, `offer`): each candidate is made surer by context, up to 0.98 (never enough to go up by itself): the chapter called or being read +0.15 (its book +0.05), a verse planned in today's service +0.12 (its chapter +0.06, `setPlanned`), a book hinted at in the last minute +0.1. Only the best and those within 0.2 of it are offered, none under 20% (`MIN_OFFER`). Each offer carries its sentence (`utterance`) and search (`batch`): the live screen drops a sentence's earlier, less sure guesses when a later search of it offers more.
 7. **AI assistant** (optional):
    - When the words describe a verse but don't quote it (and no quote or story was found), it asks the chosen model. A sentence under 8 words is asked about with the one before it. Bible people's names (Zacchaeus, Gideon, Elijah…) also wake it (1.10.0). It asks (Claude, OpenAI, Ollama or OpenAI-compatible) for a reference using a JSON schema.
    - The answer is checked against the Bible before it is offered.
@@ -239,7 +242,7 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   - The verse being read, large in Newsreader, with the word being read underlined at the reader's pace (`usePacedWord`).
   - What comes next, faded underneath.
   - "Heard" (the last words recognised).
-- **Suggestion bar** (`live/SuggestionBar.tsx`): one suggestion at a time, with a confidence ring, "n more", Show now, Use (puts it in Next), and dismiss.
+- **Suggestion bar** (`live/SuggestionBar.tsx`): the surest suggestion of the last 20 seconds (else the newest), with a confidence ring, Show now, Use (puts it in Next) and dismiss. Clicking it or "All n" (1.11.0) opens every suggestion of the last 3 minutes (at most 12), newest first, each with its ring, how long ago, Show now, Use and dismiss, and "Clear them all".
 - **Screens column** (`live/ScreensColumn.tsx`):
   - **When I pick a slide: Goes live | Waits in Next** (1.9.0, `lib/clickMode.ts`, key `voice-verses-click-mode`, default Waits in Next). It applies to the strip, step chips, Library verses and songs, parts of the service, ⌘K picks and moving on by time. Verses found by listening keep following Auto / Ask first.
   - Live (red frame), with Edit (Quick edit, for a slide), Logo and Clear.

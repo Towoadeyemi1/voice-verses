@@ -154,6 +154,8 @@ export const LiveWorkspace = () => {
   const [capture, setCapture] = useState<{ id: string; lines: string[] } | null>(null);
   const captureRef = useRef(capture);
   captureRef.current = capture;
+  /** A chapter named without a verse, until its verse is known ("Isaiah 53") */
+  const [awaitingChapter, setAwaitingChapter] = useState<string | null>(null);
   /** Predictive Next: the likely verse waiting in Next, and why */
   const [prediction, setPrediction] = useState<{ key: string; reason: string; heard: string } | null>(null);
 
@@ -230,6 +232,7 @@ export const LiveWorkspace = () => {
     // Anything else going on screen ends a capture (and keeps what was sung)
     if (captureRef.current && !opts.capturing) void stopCapture();
     if ('verse' in item) {
+      setAwaitingChapter(null);
       const verse = isOnlineVersion() ? (await BibleParser.getVerse(item.verse.book, item.verse.chapter, item.verse.verse)) ?? item.verse : item.verse;
       const shown: DisplayedVerse = { ...verse, timestamp: new Date() };
       syncService.broadcast({ type: 'VERSE_UPDATE', data: { verse: shown, timestamp: shown.timestamp } });
@@ -409,15 +412,22 @@ export const LiveWorkspace = () => {
 
   // ---- Suggestions ----------------------------------------------------------
 
+  /**
+   * Keeps the suggestions of the last 3 minutes, newest first (at most 12).
+   * A later search of the same sentence (more words heard) replaces that
+   * sentence's earlier guesses, so faint early guesses don't pile up.
+   */
   const addSuggestion = (s: LiveSuggestion) =>
     setSuggestions((prev) => {
       const now = Date.now();
       const same = (o: LiveSuggestion) =>
         o.kind === s.kind &&
         (o.kind === 'song' ? o.songId === (s as typeof o).songId : o.kind === 'verse' ? sameVerse(o.verse, (s as typeof o).verse) : true);
-      const kept = prev.filter((o) => !same(o) && now - o.at < 120_000);
+      const outdated = (o: LiveSuggestion) =>
+        s.kind === 'verse' && o.kind === 'verse' && s.utterance !== undefined && o.utterance === s.utterance && (o.batch ?? 0) < (s.batch ?? 0) && o.score <= s.score;
+      const kept = prev.filter((o) => !same(o) && !outdated(o) && now - o.at < 180_000);
       const score = (o: LiveSuggestion) => (o.kind === 'verse' ? o.score : 0.8);
-      return [{ ...s, at: now }, ...kept].sort((a, b) => b.at - a.at || score(b) - score(a)).slice(0, 6);
+      return [{ ...s, at: now }, ...kept].sort((a, b) => b.at - a.at || score(b) - score(a)).slice(0, 12);
     });
 
   const songForSuggestion = (s: Extract<LiveSuggestion, { kind: 'song' }>) => {
@@ -521,6 +531,10 @@ export const LiveWorkspace = () => {
     }
   };
 
+  /** The scripture planned in today's service */
+  const plannedVerses = () =>
+    (service?.sections ?? []).flatMap((sec) => sec.subsections.flatMap((item) => item.slides.flatMap((sl) => (sl.type === 'scripture' ? [sl.verse] : []))));
+
   // ---- Predictive Next -----------------------------------------------------------
 
   /**
@@ -530,9 +544,7 @@ export const LiveWorkspace = () => {
   const predict = async (hint: ScriptureHint) => {
     if (previewSuggestionId || captureRef.current) return; // the operator chose what is in Next, or a song is being captured
     await loadCrossReferences().catch(() => {});
-    const outline = (service?.sections ?? []).flatMap((sec) =>
-      sec.subsections.flatMap((item) => item.slides.flatMap((sl) => (sl.type === 'scripture' ? [sl.verse] : []))),
-    );
+    const outline = plannedVerses();
     const [best] = predictNext({ books: hint.books, live: liveVerse, recent: recent.filter((v) => !liveVerse || !sameVerse(v, liveVerse)), outline });
     if (!best) return;
     const verse = await BibleParser.getVerse(best.book, best.chapter, best.verse);
@@ -550,8 +562,20 @@ export const LiveWorkspace = () => {
   // ---- Listening --------------------------------------------------------------
 
   // The detector's callbacks are made once per listening session; they call the latest versions of these
-  const handlers = useRef({ present, addSuggestion, collection, captureLine, predict });
-  handlers.current = { present, addSuggestion, collection, captureLine, predict };
+  /**
+   * A chapter was named without a verse ("somewhere in Isaiah 53"): it fills
+   * the middle and the strip, verse 1 waits in Next, and nothing goes up until
+   * the verse is read, named or picked.
+   */
+  const chapterCalled = async (c: { book: string; chapter: number }) => {
+    const loaded = await loadChapter(c.book, c.chapter);
+    if (loaded?.kind !== 'chapter') return;
+    setAwaitingChapter(`${c.book} ${c.chapter}`);
+    if (!previewSuggestionId && !prediction) setPreview(loaded.verses[0] ? { verse: loaded.verses[0] } : null);
+  };
+
+  const handlers = useRef({ present, addSuggestion, collection, captureLine, predict, chapterCalled });
+  handlers.current = { present, addSuggestion, collection, captureLine, predict, chapterCalled };
 
   // ---- The demo: a scripted sermon and worship set through the real detector ----------
 
@@ -626,6 +650,7 @@ export const LiveWorkspace = () => {
         handlers.current.addSuggestion({ id: `song-${match.song.id}-${Date.now()}`, kind: 'song', songId: match.song.id, title: match.song.title, heard: match.heard }),
       onScriptureHint: (hint) => void handlers.current.predict(hint),
       onNewSinging: (lines) => handlers.current.addSuggestion({ id: `new-song-${Date.now()}`, kind: 'new-song', lines }),
+      onChapterCalled: (c) => void handlers.current.chapterCalled(c),
       onFindRequested: (heard) => toast.info('Asked to find a scripture', { description: `Heard “${heard.split(/\s+/).slice(-8).join(' ')}”. What it sounds like appears below, best first.`, duration: 5000 }),
       onCapturedLine: (line) => handlers.current.captureLine(line),
       onLyricsMove: (index, cue) => {
@@ -641,10 +666,11 @@ export const LiveWorkspace = () => {
       ...verseAssistantOptions(
         (verse) => handlers.current.present({ verse }),
         (verse, info) =>
-          handlers.current.addSuggestion({ id: `verse-${verseKey(verse)}-${Date.now()}`, kind: 'verse', verse, byAi: info.engine === 'ai', score: info.score ?? 0.5, heard: info.description }),
+          handlers.current.addSuggestion({ id: `verse-${verseKey(verse)}-${Date.now()}`, kind: 'verse', verse, byAi: info.engine === 'ai', score: info.score ?? 0.5, heard: info.description, utterance: info.utterance, batch: info.batch }),
       ),
     });
     controller.current = detector;
+    detector.setPlanned(plannedVerses());
     detector.setSongMode(songMode);
     detector.setSongLibrary(songs.map((m) => ({ id: m.id, title: m.name, lyrics: m.lyrics ?? '' })));
     return detector;
@@ -784,6 +810,11 @@ export const LiveWorkspace = () => {
   // The service on the timeline: the one chosen, or today's (the one under way when there are several)
   const service = useMemo(() => pickService(services, chosenService), [services, chosenService]);
   const todays = useMemo(() => todaysServices(services), [services]);
+
+  // Today's plan makes its verses likelier suggestions
+  useEffect(() => {
+    controller.current?.setPlanned(plannedVerses());
+  }, [service]); // eslint-disable-line react-hooks/exhaustive-deps
   // Opening the app: the service's first slide waits in Next, so the screens show the design straight away
   const primed = useRef(false);
   useEffect(() => {
@@ -807,7 +838,9 @@ export const LiveWorkspace = () => {
 
   // What fills the middle: a passage being read, a song or other slides
   const now = useMemo(() => {
-    const status = !listening ? 'start listening to follow the reader' : reading && reading.word >= 0 ? 'following the reader' : 'waiting for the reading';
+    const status = awaitingChapter && collection?.kind === 'chapter' && awaitingChapter === `${collection.book} ${collection.chapter}`
+      ? 'which verse? It goes up when it is read or named, or pick it below'
+      : !listening ? 'start listening to follow the reader' : reading && reading.word >= 0 ? 'following the reader' : 'waiting for the reading';
     if (collection?.kind === 'chapter') {
       const inChapter = (v: BibleVerse | null) => v && v.book === collection.book && v.chapter === collection.chapter;
       const focus = (inChapter(liveVerse) ? liveVerse : inChapter(previewVerse) ? previewVerse : collection.verses[0]) as BibleVerse;
@@ -874,7 +907,7 @@ export const LiveWorkspace = () => {
       };
     }
     return { title: null, sub: undefined, steps: [] as Step[], stepItems: [] as Live[], verse: liveVerse, word: -1, text: null as string | null, next: null };
-  }, [collection, live, preview, liveVerse, previewVerse, passage, reading, listening, songMode]);
+  }, [collection, live, preview, liveVerse, previewVerse, passage, reading, listening, songMode, awaitingChapter]);
 
   const pickStep = (index: number) => void choose(now.stepItems[index]);
 
@@ -1236,6 +1269,7 @@ export const LiveWorkspace = () => {
             onUse={previewSuggestion}
             onShowNow={sendSuggestion}
             onDismiss={(s) => setSuggestions((prev) => prev.filter((o) => o.id !== s.id))}
+            onDismissAll={() => setSuggestions([])}
           />
         </NowPane>
 

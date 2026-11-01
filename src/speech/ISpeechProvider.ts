@@ -10,6 +10,9 @@ export type DetectionInfo = {
   engine?: SpeechEngineType | 'ai';
   /** How sure, 0 to 1 (a reference said aloud is 1; a quote is how much of the verse was said and how clearly) */
   score?: number;
+  /** Which sentence it came from, and which search of it: a later search of the same sentence (more words) replaces an earlier one's guesses */
+  utterance?: number;
+  batch?: number;
 };
 
 export interface SpeechSettings {

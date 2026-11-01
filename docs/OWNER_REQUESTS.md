@@ -210,6 +210,14 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.10.0 "Help me find it" (also "somebody find it", "what verse is that", "look it up") searches everything he said since the screen last changed, at once and more widely, asks the AI helper (if on) about the last few sentences together, and tells the operator it heard the request.
 - ✅ 1.10.0 The AI helper (optional) also wakes on Bible names, and a short sentence is asked about with the one before it.
 
+## "For the suggestions area, users should be able to click and it will display the available suggestions by recency, like an overlay… or is there a better way?" · "Somewhere in Isaiah 53… what will let the app know which actual verse? Else the app is always pushing verse 1 to live, which is wrong" · "A lot of false suggestions push the right ones way below. How can we make suggestions more accurate?" · "Is the response time faster? It needs to be faster" · "Can you merge and push the update and build"
+
+- ✅ 1.10.0 merged and the desktop build started (the owner publishes the `v1.10.0` release).
+- ✅ 1.11.0 Clicking the suggestion bar (or "All n") opens every suggestion of the last 3 minutes, newest first, each with how sure, how long ago, Show now, Use and dismiss, plus "Clear them all". The bar itself shows the surest suggestion of the last 20 seconds, not simply the newest, so a faint late guess doesn't hide a good one.
+- ✅ 1.11.0 A chapter named without a verse ("somewhere in Isaiah 53", "turn to Psalm 23") no longer pushes verse 1. The chapter fills the middle with all its verses, verse 1 waits in Next, and the status says "which verse?". The verse goes up when it is read or quoted, or named ("verse 5"); one paraphrased is offered first.
+- ✅ 1.11.0 Fewer false suggestions: context makes a verse surer (the chapter called or being read, today's planned scripture, a book just mentioned); only the best and those nearly as good are offered; guesses under 20% are not offered; a later, longer hearing of the same sentence replaces that sentence's earlier guesses.
+- ✅ 1.11.0 Faster: the speech engine reports what it has heard every half second instead of every second (still under about a third of the computer's time), and the quote and story searches look every 0.45 s while the preacher speaks.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
