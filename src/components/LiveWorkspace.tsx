@@ -12,6 +12,9 @@ import { BibleParser } from '@/lib/bibleParser';
 import { LAST_SERVICE_KEY, ServiceStorage } from '@/lib/serviceStorage';
 import { buildSongSlides, ccliLicence } from '@/lib/songs';
 import { addLine, captureSlide, draftLyrics, draftTitle } from '@/lib/spontaneousSong';
+import { SAMPLES_CHANGED } from '@/lib/samples/seed';
+import { DEMO_STEPS } from '@/lib/demoScript';
+import { WelcomePane } from './live/WelcomePane';
 import { loadCrossReferences } from '@/lib/crossReferences';
 import { predictNext } from '@/lib/predictNext';
 import type { ScriptureHint } from '@/speech/scriptureHints';
@@ -133,7 +136,10 @@ export const LiveWorkspace = () => {
   const loadLibrary = () => {
     ServiceStorage.getMedia()
       .then((items) => {
-        const list = items.filter((m) => m.type === 'song' && m.lyrics).sort((a, b) => a.name.localeCompare(b.name));
+        const all = items.filter((m) => m.type === 'song' && m.lyrics);
+        // A sample hymn the church also has in its own library: keep the church's copy only
+        const own = new Set(all.filter((m) => !m.tags?.includes('sample')).map((m) => m.name.toLowerCase()));
+        const list = all.filter((m) => !m.tags?.includes('sample') || !own.has(m.name.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
         setSongs(list);
         controller.current?.setSongLibrary(list.map((m) => ({ id: m.id, title: m.name, lyrics: m.lyrics ?? '' })));
       })
@@ -143,6 +149,10 @@ export const LiveWorkspace = () => {
       .catch(() => {});
   };
   useEffect(loadLibrary, []);
+  useEffect(() => {
+    window.addEventListener(SAMPLES_CHANGED, loadLibrary);
+    return () => window.removeEventListener(SAMPLES_CHANGED, loadLibrary);
+  }, []);
   useLibraryUpdated(loadLibrary);
 
   const setSendMode = (mode: SendMode) => {
@@ -424,7 +434,104 @@ export const LiveWorkspace = () => {
   const handlers = useRef({ present, addSuggestion, collection, captureLine, predict });
   handlers.current = { present, addSuggestion, collection, captureLine, predict };
 
+  // ---- The demo: a scripted sermon and worship set through the real detector ----------
+
+  const [demo, setDemo] = useState<{ caption: string; mode: SendMode } | null>(null);
+  const suggestionsRef = useRef(suggestions);
+  suggestionsRef.current = suggestions;
+  const demoRun = useRef(0);
+
+  const stopDemo = (finished = false) => {
+    demoRun.current++;
+    setDemo((d) => {
+      if (d) setSendMode(d.mode);
+      return null;
+    });
+    controller.current?.reset();
+    controller.current = null;
+    setTranscript('');
+    setSongMode(false);
+    if (finished) toast.success('That was the demo', { description: 'Press Start listening to do the same with your microphone.', duration: 8000 });
+  };
+
+  const startDemo = async () => {
+    if (listening || demo) return;
+    const run = ++demoRun.current;
+    const wait = (ms: number) => new Promise<boolean>((done) => window.setTimeout(() => done(demoRun.current === run), ms));
+    setDemo({ caption: 'Starting the demo', mode: sendMode });
+    setSendMode('auto');
+    const detector = createDetector();
+    for (const step of DEMO_STEPS) {
+      if (demoRun.current !== run) return;
+      if (step.kind === 'caption') setDemo((d) => (d ? { ...d, caption: step.text } : d));
+      if (step.kind === 'say') {
+        await detector.onTranscript(step.text, false);
+        if (!(await wait(350))) return;
+        await detector.onTranscript(step.text, true);
+      }
+      if (step.kind === 'read') {
+        // A few words at a time, as speech recognition gives them
+        const words = step.text.split(' ');
+        for (let i = 3; i < words.length; i += 3) {
+          await detector.onTranscript(words.slice(0, i).join(' '), false);
+          if (!(await wait(260))) return;
+        }
+        await detector.onTranscript(step.text, true);
+      }
+      if (step.kind === 'take') {
+        const offered = suggestionsRef.current.find((x) => x.kind === 'verse');
+        if (offered) sendSuggestion(offered);
+      }
+      if (step.kind === 'song') {
+        const song = songs.find((m) => m.id === step.songId) ?? songs[0];
+        if (song) {
+          const loaded = loadSong(song);
+          await goLive({ slide: loaded.slides[0] }, { within: loaded });
+          detector.setSongMode(true);
+        }
+      }
+      if (!(await wait(step.wait))) return;
+    }
+    if (demoRun.current === run) stopDemo(true);
+  };
+
+  /** The detector, wired to this screen (used for listening, and for the demo). */
+  const createDetector = () => {
+    const detector = new VerseDetectionController({
+      onVerseDetected: (verse) => handlers.current.present({ verse }, { fromDetector: true }),
+      onTranscriptUpdate: setTranscript,
+      onPassageChange: setPassage,
+      onSongModeChange: setSongMode,
+      onReadingProgress: (p) => setReading({ verse: p.verse, word: p.word }),
+      onSongSuggested: (match) =>
+        handlers.current.addSuggestion({ id: `song-${match.song.id}-${Date.now()}`, kind: 'song', songId: match.song.id, title: match.song.title, heard: match.heard }),
+      onScriptureHint: (hint) => void handlers.current.predict(hint),
+      onNewSinging: (lines) => handlers.current.addSuggestion({ id: `new-song-${Date.now()}`, kind: 'new-song', lines }),
+      onCapturedLine: (line) => handlers.current.captureLine(line),
+      onLyricsMove: (index, cue) => {
+        const c = handlers.current.collection;
+        if (c?.kind !== 'slides' || !c.slides[index]) return;
+        handlers.current.present({ slide: c.slides[index] }, { fromDetector: true });
+        if (cue) {
+          const slide = c.slides[index];
+          const where = cue.kind === 'top' ? 'the start' : slide.type === 'lyrics' && slide.sectionLabel ? slide.sectionLabel : `slide ${index + 1}`;
+          toast(`Heard “${cue.heard}”`, { description: `Went to ${where}`, duration: 2500 });
+        }
+      },
+      ...verseAssistantOptions(
+        (verse) => handlers.current.present({ verse }),
+        (verse, info) =>
+          handlers.current.addSuggestion({ id: `verse-${verseKey(verse)}-${Date.now()}`, kind: 'verse', verse, byAi: info.engine === 'ai', score: info.score ?? 0.5, heard: info.description }),
+      ),
+    });
+    controller.current = detector;
+    detector.setSongMode(songMode);
+    detector.setSongLibrary(songs.map((m) => ({ id: m.id, title: m.name, lyrics: m.lyrics ?? '' })));
+    return detector;
+  };
+
   const startListening = async () => {
+    if (demo) stopDemo();
     const settings = loadSpeechSettings();
     if (settings.speechEngine === 'openai' && !(await hasSecret('openai'))) {
       setShowApiKey(true);
@@ -432,36 +539,7 @@ export const LiveWorkspace = () => {
     }
     try {
       setConnecting(true);
-      const detector = new VerseDetectionController({
-        onVerseDetected: (verse) => handlers.current.present({ verse }, { fromDetector: true }),
-        onTranscriptUpdate: setTranscript,
-        onPassageChange: setPassage,
-        onSongModeChange: setSongMode,
-        onReadingProgress: (p) => setReading({ verse: p.verse, word: p.word }),
-        onSongSuggested: (match) =>
-          handlers.current.addSuggestion({ id: `song-${match.song.id}-${Date.now()}`, kind: 'song', songId: match.song.id, title: match.song.title, heard: match.heard }),
-        onScriptureHint: (hint) => void handlers.current.predict(hint),
-        onNewSinging: (lines) => handlers.current.addSuggestion({ id: `new-song-${Date.now()}`, kind: 'new-song', lines }),
-        onCapturedLine: (line) => handlers.current.captureLine(line),
-        onLyricsMove: (index, cue) => {
-          const c = handlers.current.collection;
-          if (c?.kind !== 'slides' || !c.slides[index]) return;
-          handlers.current.present({ slide: c.slides[index] }, { fromDetector: true });
-          if (cue) {
-            const slide = c.slides[index];
-            const where = cue.kind === 'top' ? 'the start' : slide.type === 'lyrics' && slide.sectionLabel ? slide.sectionLabel : `slide ${index + 1}`;
-            toast(`Heard “${cue.heard}”`, { description: `Went to ${where}`, duration: 2500 });
-          }
-        },
-        ...verseAssistantOptions(
-          (verse) => handlers.current.present({ verse }),
-          (verse, info) =>
-            handlers.current.addSuggestion({ id: `verse-${verseKey(verse)}-${Date.now()}`, kind: 'verse', verse, byAi: info.engine === 'ai', score: info.score ?? 0.5, heard: info.description }),
-        ),
-      });
-      controller.current = detector;
-      detector.setSongMode(songMode);
-      detector.setSongLibrary(songs.map((m) => ({ id: m.id, title: m.name, lyrics: m.lyrics ?? '' })));
+      const detector = createDetector();
       if (live && 'verse' in live) detector.follow(live.verse);
 
       settings.language = localStorage.getItem('transcription_language') || 'en';
@@ -588,18 +666,36 @@ export const LiveWorkspace = () => {
     if (!services.length) return null;
     const today = new Date().toDateString();
     const lastId = localStorage.getItem(LAST_SERVICE_KEY);
+    const opened = services.find((s) => s.id === lastId);
+    // The church's own services come first; the samples only while there are none
+    const own = services.filter((s) => !s.sample);
+    const pool = own.length ? own : services;
     return (
-      services.find((s) => new Date(s.date).toDateString() === today) ??
-      services.find((s) => s.id === lastId) ??
-      [...services].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+      pool.find((s) => new Date(s.date).toDateString() === today) ??
+      opened ??
+      [...pool].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
     );
   }, [services]);
+  // Opening the app: the service's first slide waits in Next, so the screens show the design straight away
+  const primed = useRef(false);
+  useEffect(() => {
+    if (primed.current || !service || live || preview || collection) return;
+    const first = service.sections.flatMap((sec) => sec.subsections).find((item) => item.slides.length);
+    if (!first) return;
+    primed.current = true;
+    setCurrentItemId(first.id);
+    setPreview({ slide: first.slides[0] });
+  }, [service]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [nowMinutes, setNowMinutes] = useState(() => { const d = new Date(); return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60; });
   useEffect(() => {
     const timer = setInterval(() => { const d = new Date(); setNowMinutes(d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60); }, 15000);
     return () => clearInterval(timer);
   }, []);
-  const end = serviceEnd(service, nowMinutes);
+  // When it ends, and how far over it runs; only on the day, while it can still be running (not for samples)
+  const planned = serviceEnd(service, nowMinutes);
+  const onTheDay = service && !service.sample && new Date(service.date).toDateString() === new Date().toDateString();
+  const end = planned && (planned.over === 0 || (onTheDay && planned.over <= 90)) ? planned : null;
 
   // What fills the middle: a passage being read, a song or other slides
   const now = useMemo(() => {
@@ -820,9 +916,36 @@ export const LiveWorkspace = () => {
           word={now.word}
           text={now.text}
           next={now.next}
-          heard={listening ? `…${transcript.split(' ').slice(-16).join(' ')}` : undefined}
+          heard={listening || demo ? `…${transcript.split(' ').slice(-16).join(' ')}` : undefined}
           onSearch={() => setShowPalette(true)}
+          empty={
+            !collection && !live ? (
+              <WelcomePane
+                service={service}
+                listening={listening}
+                demoPlaying={!!demo}
+                onItem={loadServiceItem}
+                onListen={startListening}
+                onDemo={startDemo}
+                onVerse={(r) => void search(r)}
+                onSearch={() => setShowPalette(true)}
+                onPlan={() => navigate('/service-planner')}
+              />
+            ) : undefined
+          }
         >
+          {demo && (
+            <div className="flex flex-wrap items-center gap-3 p-3 pl-4 rounded-[18px] bg-card shadow-[0_1px_1px_rgba(0,0,0,.3),0_12px_36px_rgba(0,0,0,.35)]" data-demo>
+              <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse-soft flex-shrink-0" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className="m-0 text-[15px] font-semibold">Demo: {demo.caption}</p>
+                <p className="m-0 text-[13px] text-muted-foreground">Played through the real listening engine, as if it had been heard. It uses the real screens.</p>
+              </div>
+              <button type="button" onClick={() => stopDemo()} className="h-9 px-3.5 rounded-xl bg-muted text-sm font-semibold hover:bg-muted/70">
+                Stop the demo
+              </button>
+            </div>
+          )}
           {capture && (
             <div className="flex flex-wrap items-center gap-3 p-3 pl-4 rounded-[18px] bg-card shadow-[0_1px_1px_rgba(0,0,0,.3),0_12px_36px_rgba(0,0,0,.35)]" data-capture>
               <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse-soft flex-shrink-0" aria-hidden />

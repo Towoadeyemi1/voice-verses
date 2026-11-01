@@ -241,6 +241,21 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
 - **Keys:** Space or Enter = Take (or the next item); ←/→ = previous/next; Esc = clear the words; ⌘K = search.
 - **Colours:** warm graphite tokens in `index.css`; `--live` and `--next` for meaning. The live look's colours softly light the window.
 
+## 8b. Samples, welcome and demo (1.7.0)
+
+- **Samples** (`src/lib/samples/`): the first time the operator window opens (`seedSamplesOnce`, key `voice-verses-samples`), three services are added: "Sample: Sunday Celebration" (today, 10:00), "Sample: Christmas Carols by Candlelight" (20 December, using the night-sky and rising-lights looks) and "Sample: Midweek Bible Study" (next Wednesday). Nine public-domain hymns and carols are added too (tag `sample`, category Samples). Scripture comes from the bundled KJV.
+  - Services carry `sample: true`. The live screen and the Library only fall back to samples when the church has none of its own; a church song with the same title replaces the sample song in matching.
+  - Services → "Remove samples" / "Add samples". Removed samples are never added back by themselves.
+- **Welcome view** (`components/live/WelcomePane.tsx`): shown in the middle of the live screen while nothing is loaded or live. It has a greeting, "<service> is ready.", Start listening, "Watch a 1-minute demo", find (⌘K), a picture card for each part of today's service (click to load) and quick verses. The first slide of the service waits in Next from the start.
+- **Demo** (`src/lib/demoScript.ts`): scripted words fed through the real detector, with Auto send for its length (restored after). It shows:
+  - John 3:16 called, read and followed to 3:17;
+  - "And Paul says the same thing in Romans" → Romans 5:8 in Next;
+  - the quote offered with its percentage and taken by the operator;
+  - Blessed Assurance followed, with "Verse two!" and "Back to the chorus";
+  - new lines offered as a new song.
+  A bar shows each step with Stop the demo. Starting to listen stops it.
+- The overrun ("N min over") shows only on the service's day, for the church's own services, and up to 90 minutes.
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:
@@ -301,6 +316,7 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `voice-verses-color-teams`, `voice-verses-color-team`, `voice-verses-color-team-by-month` | Colour teams, the chosen team, follow the month |
 | `voice-verses-look-themes` | Saved themes |
 | `voice-verses-screen-shapes`, `voice-verses-screen-measured` | Shape for each output; the ratio measured by "Match the screen" |
+| `voice-verses-samples` | When the sample services were first added (they are never added again by themselves) |
 | `voice-verses-motion`, `voice-verses-motion-slow` | Moving backgrounds on this computer (`auto`/`full`/`still`); when and how slowly this computer drew them, if it was too slow |
 | `voice-verses-network`, `voice-verses-propresenter` | Network outputs and ProPresenter connection |
 | `voice-verses-mode`, `voice-verses-ask-first`, `voice-verses-last-service` | App mode, ask-before-showing, last opened service |

@@ -121,6 +121,11 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
   - Cross-references come from OpenBible.info (CC BY, bundled and credited) rather than a download at run time, so they work offline.
 - **Why:** Fast where speed matters, and never a wrong verse or wrong words on the big screen without a person choosing them.
 
+### D20. The app opens full, never blank
+- **Context:** The owner opened 1.6.0 and saw an empty live screen: "It looks like nothing is happening. It should come with full sample services."
+- **Decision:** Sample services and public-domain songs are added at first opening. The live screen opens on today's service with a picture of each part and its first slide in Next. A demo plays real detection from a script. Samples are clearly marked, never chosen over the church's own work, and removed in one click.
+- **Why:** A new church judges the app in its first minute. Showing it working with real content explains it better than any help text.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

@@ -13,7 +13,7 @@ const audio = process.argv[3] || path.join(OUT, 'sermon.wav');
   await win.evaluate((m) => localStorage.setItem('voice-verses-send-mode', m), mode);
   await seedMedia(win, [{ id: 'song-grace', type: 'song', name: 'Amazing Grace', lyrics: "Verse 1\nAmazing grace how sweet the sound\nThat saved a wretch like me\nI once was lost but now am found\nWas blind but now I see\n\nVerse 2\n'Twas grace that taught my heart to fear\nAnd grace my fears relieved\nHow precious did that grace appear\nThe hour I first believed" }]);
   await win.reload(); await win.waitForTimeout(2500);
-  await win.getByRole('button', { name: 'Start listening' }).click();
+  await win.getByRole('button', { name: 'Start listening' }).first().click();
   await win.waitForSelector('text=Using', { timeout: 150000 });
 
   const t0 = Date.now(); const seen = new Set(); let last = '';

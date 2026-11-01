@@ -47,6 +47,9 @@ Check this list before debugging. Add every new mistake that cost time.
 - **A saved input can come back with a new id** (an update, replugging, a cleared profile). Save its name too and find it again by name.
 - **A sound-check message that follows the instant level flickers** between words. Hold "sound is coming in" for about 2.5 s after the last sound.
 
+- **Writing a very large file in one go failed several times** (the sample library), and the owner saw repeated "writing it now" messages with nothing saved. Write big content in several smaller files.
+- **Adding a second "Start listening" button** (the welcome view) broke e2e scripts that clicked it by name. Use `.first()`, or scope to the capsule.
+
 ## Detection
 
 - **Psalm 23:1 was only suggested, or shown late:** words heard were cleared after a suggestion. Keep them, use a quote window of the last 18 words, and skip the verse already on screen.

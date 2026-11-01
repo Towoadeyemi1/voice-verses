@@ -12,6 +12,7 @@ import { duplicateService, nextSunday } from '@/lib/duplicateService';
 import { serviceFromStarter, STARTER_SERVICES, StarterService } from '@/lib/starters';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { SERVICE_EXPORT_EXTENSION, exportService, importService } from '@/lib/library/files';
+import { addSamples, removeSamples, SAMPLES_CHANGED } from '@/lib/samples/seed';
 
 const ServicePlanner = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -28,6 +29,21 @@ const ServicePlanner = () => {
   };
 
   useLibraryUpdated(() => loadServices());
+  useEffect(() => {
+    const reload = () => void loadServices();
+    window.addEventListener(SAMPLES_CHANGED, reload);
+    return () => window.removeEventListener(SAMPLES_CHANGED, reload);
+  }, []);
+  const hasSamples = services.some((s) => s.sample);
+  const toggleSamples = async () => {
+    if (hasSamples) {
+      await removeSamples();
+      toast.success('The sample services and songs are removed', { description: 'Add them back here any time.' });
+    } else {
+      await addSamples();
+      toast.success('Sample services and songs added');
+    }
+  };
 
   const getServicesForDate = (date: Date) => {
     return services.filter(s => 
@@ -135,6 +151,9 @@ const ServicePlanner = () => {
       subtitle="Plan each service ahead, then present it on the day. The live screen follows today's order."
       actions={
         <>
+          <Button variant="ghost" onClick={toggleSamples} title={hasSamples ? 'Remove the sample services and songs the app came with' : 'Add sample services and songs to try the app with'}>
+            {hasSamples ? 'Remove samples' : 'Add samples'}
+          </Button>
           <Button variant="outline" asChild>
             <label className="cursor-pointer">
               <Upload className="w-4 h-4" />
@@ -229,7 +248,10 @@ const ServicePlanner = () => {
                     <div key={service.id} className="rounded-xl bg-muted/40 p-4 hover:bg-muted/60 transition">
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
                         <button type="button" className="min-w-0 flex-1 text-left" onClick={() => navigate(`/service-builder/${service.id}`)}>
-                          <span className="block text-[17px] font-semibold truncate">{service.name}</span>
+                          <span className="flex items-center gap-2 text-[17px] font-semibold min-w-0">
+                            <span className="truncate">{service.name.replace(/^Sample: /, '')}</span>
+                            {service.sample && <span className="flex-shrink-0 h-6 px-2 rounded-full bg-primary/20 text-[12px] font-semibold grid place-items-center">Sample</span>}
+                          </span>
                           <span className="block text-sm text-muted-foreground">
                             {service.startTime} · {items} item{items === 1 ? '' : 's'}
                             {minutes > 0 && ` · about ${minutes >= 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60 ? `${minutes % 60} min` : ''}` : `${minutes} min`}`}

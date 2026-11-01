@@ -16,7 +16,7 @@ const HYMN = 'Verse 1\nAmazing grace how sweet the sound\nThat saved a wretch li
   await win.evaluate(() => localStorage.setItem('voice-verses-send-mode', 'auto'));
   await seedMedia(win, [{ id: 'song-grace', type: 'song', name: 'Amazing Grace', lyrics: HYMN }]);
   await win.reload(); await win.waitForTimeout(2500);
-  await win.getByRole('button', { name: 'Start listening' }).click();
+  await win.getByRole('button', { name: 'Start listening' }).first().click();
   await win.waitForSelector('text=Using', { timeout: 150000 });
 
   const t0 = Date.now(); const seen = []; let last = ''; let predicted = ''; let captured = 0; let capturedText = '';
