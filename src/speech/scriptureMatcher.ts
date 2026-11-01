@@ -90,7 +90,7 @@ const STORY_WORDS: Record<string, string[]> = {
 };
 
 /** A word's form for the story search: its stem without a final "e", so "love", "loves" and "loved" are one word. */
-const storyStem = (w: string) => (w.length > 3 ? w.replace(/e$/, '') : w);
+export const storyStem = (w: string) => (w.length > 3 ? w.replace(/e$/, '') : w);
 
 /** Words heard, for the story search: the Bible's own words added for modern ones. */
 function storyWords(spoken: string[]): string[] {
@@ -208,10 +208,10 @@ export class ScriptureIndex {
    * by its neighbours, because a story is told across several verses.
    * Confidence never reaches STORY_MAX_CONFIDENCE: it is always a suggestion.
    */
-  findStory(spoken: string[], onScreen?: VerseRef | null, limit = 2, { eager = false } = {}): { ref: VerseRef; confidence: number }[] {
+  findStory(spoken: string[], onScreen?: VerseRef | null, limit = 2, { eager = false } = {}): { ref: VerseRef; confidence: number; told: string[] }[] {
     const total = this.refs.length;
     const skip = onScreen ? this.refIds.get(`${onScreen.book}|${onScreen.chapter}|${onScreen.verse}`) : undefined;
-    const raw = new Map<number, { score: number; hits: number; rare: number; telling: number; veryRare: number }>();
+    const raw = new Map<number, { score: number; hits: number; rare: number; telling: number; veryRare: number; words: string[] }>();
     const chapters = new Map<string, { telling: Set<string>; veryRare: Set<string> }>();
     for (const w of storyWords(spoken.filter((x) => x.length >= 3))) {
       const verses = lookup(this.wordKeys, this.wordOffsets, this.wordPostings, wordHash(w));
@@ -226,10 +226,13 @@ export class ScriptureIndex {
           if (verses.length <= STORY_RARE) said.veryRare.add(w);
           chapters.set(key, said);
         }
-        const s = raw.get(id) ?? { score: 0, hits: 0, rare: 0, telling: 0, veryRare: 0 };
+        const s = raw.get(id) ?? { score: 0, hits: 0, rare: 0, telling: 0, veryRare: 0, words: [] };
         s.score += weight;
         s.hits++;
-        if (verses.length <= STORY_DISTINCT) s.telling++;
+        if (verses.length <= STORY_DISTINCT) {
+          s.telling++;
+          s.words.push(w);
+        }
         if (verses.length <= STORY_RARE) s.veryRare++;
         s.rare = Math.max(s.rare, weight);
         raw.set(id, s);
@@ -280,7 +283,10 @@ export class ScriptureIndex {
         const strength = Math.min(1, c.score / 40);
         const alone = c === best ? distinct * (c.telling >= 3 ? 1 : 0.3) : 0;
         const confidence = Math.min(STORY_MAX_CONFIDENCE, 0.3 + 0.35 * strength + 0.2 * alone);
-        return { ref: this.refs[c.id], confidence: Math.round(confidence * 100) / 100 };
+        // The telling words said that the story around it has (to tell the operator why)
+        const told = new Set<string>();
+        for (const n of [c.id, c.id - 1, c.id + 1, c.id - 2, c.id + 2]) if (sameChapter(c.id, n)) for (const w of raw.get(n)?.words ?? []) told.add(w);
+        return { ref: this.refs[c.id], confidence: Math.round(confidence * 100) / 100, told: [...told] };
       });
   }
 

@@ -10,7 +10,7 @@ import { Slide } from '@/types/service';
  * sung, or singing that is in no song at all (spontaneous worship, to show and keep).
  */
 export type LiveSuggestion =
-  | { id: string; kind: 'verse'; verse: BibleVerse; byAi: boolean; score: number; heard?: string; utterance?: number; batch?: number }
+  | { id: string; kind: 'verse'; verse: BibleVerse; byAi: boolean; score: number; heard?: string; why?: string; utterance?: number; batch?: number }
   | { id: string; kind: 'song'; songId: string; title: string; heard: string; preview?: Slide }
   | { id: string; kind: 'new-song'; lines: string[] };
 
@@ -19,7 +19,7 @@ const Ring = ({ value, size = 44 }: { value: number; size?: number }) => {
   const c = 2 * Math.PI * r;
   const color = value >= 0.9 ? 'hsl(var(--next))' : value >= 0.6 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))';
   return (
-    <div className="relative flex-shrink-0" style={{ width: size, height: size }} aria-label={`${Math.round(value * 100)}% sure`}>
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }} aria-label={`${Math.round(value * 100)}% match`}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--border))" strokeWidth="4" />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeDasharray={`${c * value} ${c}`} />
@@ -34,6 +34,14 @@ type Timed = LiveSuggestion & { at?: number };
 const titleOf = (s: LiveSuggestion) =>
   s.kind === 'verse' ? `${s.byAi ? 'AI suggests' : 'Sounds like'} ${s.verse.book} ${s.verse.chapter}:${s.verse.verse}` : s.kind === 'song' ? `They are singing ${s.title}` : 'Singing something new';
 const detailOf = (s: LiveSuggestion) => (s.kind === 'verse' ? plainVerseText(s.verse.text) : s.kind === 'song' ? `“${s.heard}”` : `“${s.lines[s.lines.length - 1]}”`);
+/**
+ * How strong a match is, in words. The number is how much of the verse's own
+ * wording was heard, not the chance it is right: a verse paraphrased or half
+ * quoted can be right at 30%, so faint matches are kept, and the reason is shown.
+ */
+export const strengthOf = (score: number) => (score >= 0.9 ? 'Strong match' : score >= 0.6 ? 'Likely' : score >= 0.35 ? 'Possible' : 'Faint match');
+const reasonOf = (s: LiveSuggestion) =>
+  s.kind === 'verse' ? `${strengthOf(s.score)}${s.why ? ` · ${s.why}` : ''}` : s.kind === 'song' ? 'from your library' : 'not in your library';
 const scoreOf = (s: LiveSuggestion) => (s.kind === 'verse' ? s.score : 0.8);
 const ago = (at: number | undefined, now: number) => {
   if (!at) return '';
@@ -112,13 +120,9 @@ export const SuggestionBar = ({
           <button type="button" className="min-w-0 text-left rounded-lg -my-1 py-1" onClick={() => setOpen(true)} title="See every suggestion, newest first">
             <p className="m-0 text-[15px] font-semibold truncate">
               {titleOf(s)}
-              {s.kind === 'verse' ? (
-                <span className="ml-1.5 text-[13px] font-medium text-muted-foreground">{Math.round(s.score * 100)}% sure</span>
-              ) : s.kind === 'song' ? (
-                <span className="ml-1.5 text-[13px] font-medium text-muted-foreground">from your library</span>
-              ) : (
-                <span className="ml-1.5 text-[13px] font-medium text-muted-foreground">not in your library</span>
-              )}
+              <span className="ml-1.5 text-[13px] font-medium text-muted-foreground" data-reason>
+                {reasonOf(s)}
+              </span>
             </p>
             <p className="m-0 mt-0.5 font-scripture text-[15px] text-muted-foreground truncate">{detailOf(s)}</p>
           </button>
@@ -155,7 +159,7 @@ export const SuggestionBar = ({
               )}
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-[14px] font-semibold truncate">
-                  {titleOf(x)} <span className="text-[13px] font-medium text-muted-foreground">· {ago(x.at, now)}</span>
+                  {titleOf(x)} <span className="text-[13px] font-medium text-muted-foreground">· {reasonOf(x)} · {ago(x.at, now)}</span>
                 </p>
                 <p className="m-0 font-scripture text-[14px] text-muted-foreground truncate">{detailOf(x)}</p>
               </div>

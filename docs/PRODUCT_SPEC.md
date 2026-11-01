@@ -242,7 +242,7 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   - The verse being read, large in Newsreader, with the word being read underlined at the reader's pace (`usePacedWord`).
   - What comes next, faded underneath.
   - "Heard" (the last words recognised).
-- **Suggestion bar** (`live/SuggestionBar.tsx`): the surest suggestion of the last 20 seconds (else the newest), with a confidence ring, Show now, Use (puts it in Next) and dismiss. Clicking it or "All n" (1.11.0) opens every suggestion of the last 3 minutes (at most 12), newest first, each with its ring, how long ago, Show now, Use and dismiss, and "Clear them all".
+- **Suggestion bar** (`live/SuggestionBar.tsx`): the surest suggestion of the last 20 seconds (else the newest), with a ring showing how much of the verse's wording was heard (not the chance it is right), its strength in words (1.11.1: Strong match ≥ 0.9, Likely ≥ 0.6, Possible ≥ 0.35, Faint match) and why (`DetectionInfo.why`: how much was quoted, the story's words as said, the chapter named, today's plan, a book mentioned, the AI's answer), Show now, Use (puts it in Next) and dismiss. Clicking it or "All n" (1.11.0) opens every suggestion of the last 3 minutes (at most 12), newest first, each with its ring, how long ago, Show now, Use and dismiss, and "Clear them all".
 - **Screens column** (`live/ScreensColumn.tsx`):
   - **When I pick a slide: Goes live | Waits in Next** (1.9.0, `lib/clickMode.ts`, key `voice-verses-click-mode`, default Waits in Next). It applies to the strip, step chips, Library verses and songs, parts of the service, ⌘K picks and moving on by time. Verses found by listening keep following Auto / Ask first.
   - Live (red frame), with Edit (Quick edit, for a slide), Logo and Clear.
