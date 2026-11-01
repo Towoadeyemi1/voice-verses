@@ -1,5 +1,6 @@
 import { ScaledStage } from '@/components/ScaledStage';
 import { OutputContent } from '@/components/OutputContent';
+import { AlertBanner } from '@/components/AlertBanner';
 import { useLive } from '@/hooks/use-live';
 import { useOutputStage } from '@/hooks/use-screen-shape';
 import { useCountdown } from '@/hooks/use-countdown';
@@ -11,7 +12,7 @@ import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-
  */
 const Projection = () => {
   const { live, logo } = useLive();
-  const { countdown, remaining } = useCountdown();
+  const { countdown, remaining } = useCountdown('projector');
   const stage = useOutputStage('projection');
   const pointerActive = usePointerActive();
   useDoubleClickFullscreen();
@@ -29,6 +30,10 @@ const Projection = () => {
           <OutputContent live={live} output="projection" countdown={countdown} remaining={remaining} />
         </ScaledStage>
       )}
+      {/* An alert goes over anything, the logo included */}
+      <ScaledStage stage={stage} className="absolute inset-0 pointer-events-none">
+        <AlertBanner output="projection" />
+      </ScaledStage>
     </div>
   );
 };

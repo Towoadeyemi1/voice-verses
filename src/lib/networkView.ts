@@ -1,5 +1,6 @@
 import type { SyncMessage } from '@/lib/syncService';
 import type { Countdown } from '@/lib/countdown';
+import type { ScreenAlert } from '@/lib/alerts';
 import type { Assignments, Output, Template } from '@/lib/templates';
 import type { ColorTeam } from '@/lib/colorTeams';
 import type { ScreenShape } from '@/lib/screenShapes';
@@ -17,6 +18,11 @@ export const isNetworkViewer = typeof window !== 'undefined' && window.__VOICE_V
 export interface NetworkSnapshot {
   live: SyncMessage | null;
   countdown: Countdown | null;
+  /** Every running countdown (older apps send only `countdown`) */
+  countdowns?: Countdown[];
+  /** The alert on screen (older apps don't send it) */
+  alert?: ScreenAlert | null;
+  alerts?: ScreenAlert[];
   templates: Template[];
   assignments: Assignments;
   logo: string;

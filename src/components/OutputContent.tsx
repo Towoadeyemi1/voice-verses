@@ -8,7 +8,7 @@ import { RenderContent, SlideOverrides, TemplateRenderer } from './TemplateRende
 import { SlideDisplay } from './SlideDisplay';
 import { VerseText } from './VerseText';
 import { VideoPlayer } from './VideoPlayer';
-import { Countdown, formatRemaining } from '@/lib/countdown';
+import { Countdown, countdownTone, formatRemaining, TONE_COLOR } from '@/lib/countdown';
 import { useStageSize } from './ScaledStage';
 import { Transition } from './Transition';
 import { cleanTransition } from '@/lib/transitions';
@@ -47,11 +47,24 @@ export function describe(live: Live): { kind: ContentKind; content: RenderConten
   }
 }
 
-const countdownContent = (countdown: Countdown, remaining: number): RenderContent => ({
-  key: countdown.id,
-  label: countdown.message,
-  body: <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatRemaining(remaining)}</span>,
-});
+/** Yellow when close, red when done; blinking then if the countdown asks for it. */
+const toneStyle = (countdown: Countdown, remaining: number) => {
+  const tone = countdownTone(countdown, remaining);
+  return { color: TONE_COLOR[tone], className: countdown.flash && tone !== 'normal' ? 'vv-blink' : undefined, tone };
+};
+
+const countdownContent = (countdown: Countdown, remaining: number): RenderContent => {
+  const { color, className } = toneStyle(countdown, remaining);
+  return {
+    key: countdown.id,
+    label: countdown.message,
+    body: (
+      <span className={className} style={{ fontVariantNumeric: 'tabular-nums', color }}>
+        {formatRemaining(remaining)}
+      </span>
+    ),
+  };
+};
 
 /**
  * The content of one output in the template assigned to it, with a running
@@ -86,8 +99,15 @@ export const OutputContent = ({
   const corner =
     !countdownTakesOver && countdown && output === 'projection' && countdown.projector === 'corner' ? (
       <div
-        className="absolute rounded-xl text-white font-semibold"
-        style={{ right: 48, bottom: 40, padding: '12px 28px', fontSize: 72, background: 'rgba(0,0,0,0.65)', fontVariantNumeric: 'tabular-nums' }}
+        className={`absolute rounded-xl text-white font-semibold ${toneStyle(countdown, remaining).className ?? ''}`}
+        style={{
+          right: 48,
+          bottom: 40,
+          padding: '12px 28px',
+          fontSize: 72,
+          background: { normal: 'rgba(0,0,0,0.65)', warn: 'rgba(161, 98, 7, 0.92)', over: 'rgba(185, 28, 28, 0.92)' }[toneStyle(countdown, remaining).tone],
+          fontVariantNumeric: 'tabular-nums',
+        }}
       >
         {formatRemaining(remaining)}
       </div>

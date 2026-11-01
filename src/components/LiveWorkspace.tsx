@@ -45,6 +45,7 @@ import type { Live } from './OutputContent';
 import { SettingsPanel } from './SettingsPanel';
 import { ApiKeyDialog } from './ApiKeyDialog';
 import { CountdownControl } from './CountdownControl';
+import { AlertControl } from './AlertControl';
 import { LibraryPanel } from './live/LibraryPanel';
 import { StatusCapsule } from './live/StatusCapsule';
 import { ServiceTimeline, serviceEnd } from './live/ServiceTimeline';
@@ -889,6 +890,7 @@ export const LiveWorkspace = () => {
           <button type="button" onClick={() => setShowPalette(true)} className="w-10 h-10 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" title="Find a verse, song or action (⌘K)" aria-label="Search">
             <Search className="w-5 h-5" />
           </button>
+          <AlertControl className="h-9 hidden xl:flex" />
           <CountdownControl className="h-9 hidden xl:flex" />
           <button type="button" onClick={() => setShowSettings(true)} className="w-10 h-10 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" title="Settings" aria-label="Settings">
             <Settings className="w-5 h-5" />

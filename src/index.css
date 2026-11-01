@@ -195,3 +195,6 @@ All colors MUST be HSL.
    (moving backgrounds, glass, previews) can be drawn over them; Safari otherwise sometimes did. */
 #root { isolation: isolate; }
 [data-radix-popper-content-wrapper] { z-index: 2147483000 !important; }
+/* Countdowns near the end and alerts that ask for attention */
+@keyframes vv-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.vv-blink { animation: vv-blink 1s ease-in-out infinite; }

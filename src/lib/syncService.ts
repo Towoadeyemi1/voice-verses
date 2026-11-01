@@ -1,6 +1,7 @@
 import { BibleVerse } from '@/types/bible';
 import { Slide } from '@/types/service';
 import type { Countdown } from '@/lib/countdown';
+import type { ScreenAlert } from '@/lib/alerts';
 import { isNetworkViewer, NetworkSnapshot } from '@/lib/networkView';
 import { saveAssignments, saveTemplates } from '@/lib/templates';
 import { BibleParser } from '@/lib/bibleParser';
@@ -8,7 +9,7 @@ import { loadTeams, saveTeams, setActiveTeam, setTeamsFollowMonths, teamsFollowM
 import { loadShapes, saveShapes } from '@/lib/screenShapes';
 
 export type SyncMessage = {
-  type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE' | 'LOGO' | 'COUNTDOWN';
+  type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE' | 'LOGO' | 'COUNTDOWN' | 'ALERT';
   data: {
     verse?: BibleVerse | null;
     timestamp?: Date;
@@ -21,8 +22,14 @@ export type SyncMessage = {
     /** The next few slides of the service, for the confidence monitor */
     upcoming?: Slide[];
     logoUrl?: string;
-    /** The running countdown, or null when stopped */
+    /** The first running countdown, or null (for screens from older versions) */
     countdown?: Countdown | null;
+    /** Every running countdown, each on its own screens */
+    countdowns?: Countdown[];
+    /** The first alert on screen, or null (for screens from older versions) */
+    alert?: ScreenAlert | null;
+    /** Every alert on screen (nursery, car, a note for the preacher), each on its own screens */
+    alerts?: ScreenAlert[];
   };
 };
 
@@ -31,6 +38,7 @@ const LIVE_TYPES = new Set<SyncMessage['type']>(['VERSE_UPDATE', 'SLIDE_UPDATE',
 const LIVE_KEY = 'voice-verses-live';
 // A countdown runs alongside what is on screen, so it is kept separately
 const COUNTDOWN_KEY = 'voice-verses-countdown';
+const ALERT_KEY = 'voice-verses-alert';
 
 /**
  * Keeps the operator window and the output windows (projection, confidence,
@@ -59,7 +67,8 @@ class SyncService {
     if (LIVE_TYPES.has(message.type)) this.remember(message);
     // Licensed online text that goes on screen is reported to its publisher
     if (message.type === 'VERSE_UPDATE' && message.data.verse) void BibleParser.reportShown(message.data.verse);
-    if (message.type === 'COUNTDOWN') this.rememberCountdown(message.data.countdown);
+    if (message.type === 'COUNTDOWN') this.rememberCountdowns(message.data.countdowns ?? (message.data.countdown ? [message.data.countdown] : []));
+    if (message.type === 'ALERT') this.rememberAlerts(message.data.alerts ?? (message.data.alert ? [message.data.alert] : []));
 
     // Same-window listeners first, then other windows
     this.listeners.forEach(listener => listener(message));
@@ -76,14 +85,19 @@ class SyncService {
     }
   }
 
-  /** The running countdown, if any. */
-  currentCountdown(): Countdown | null {
+  /** Every running countdown. */
+  currentCountdowns(): Countdown[] {
     try {
-      const saved = localStorage.getItem(COUNTDOWN_KEY);
-      return saved ? JSON.parse(saved) : null;
+      const saved = JSON.parse(localStorage.getItem(COUNTDOWN_KEY) || 'null');
+      return Array.isArray(saved) ? saved : saved ? [saved] : [];
     } catch {
-      return null;
+      return [];
     }
+  }
+
+  /** The first running countdown, if any. */
+  currentCountdown(): Countdown | null {
+    return this.currentCountdowns()[0] ?? null;
   }
 
   showLogo(logoUrl: string) {
@@ -104,6 +118,7 @@ class SyncService {
   private followNetwork() {
     let lastLive = '';
     let lastCountdown = '';
+    let lastAlert = '';
     const source = new EventSource('/live');
     source.onmessage = (event) => {
       const state = JSON.parse(event.data) as NetworkSnapshot;
@@ -130,19 +145,47 @@ class SyncService {
         this.listeners.forEach((listener) => listener(state.live!));
       }
       lastLive = live;
-      const countdown = JSON.stringify(state.countdown);
+      const countdowns = state.countdowns ?? (state.countdown ? [state.countdown] : []);
+      const countdown = JSON.stringify(countdowns);
       if (countdown !== lastCountdown) {
-        const message: SyncMessage = { type: 'COUNTDOWN', data: { countdown: state.countdown } };
-        this.rememberCountdown(state.countdown);
+        const message: SyncMessage = { type: 'COUNTDOWN', data: { countdowns, countdown: countdowns[0] ?? null } };
+        this.rememberCountdowns(countdowns);
         this.listeners.forEach((listener) => listener(message));
       }
       lastCountdown = countdown;
+      const alerts = state.alerts ?? (state.alert ? [state.alert] : []);
+      const alert = JSON.stringify(alerts);
+      if (alert !== lastAlert) {
+        const message: SyncMessage = { type: 'ALERT', data: { alerts, alert: alerts[0] ?? null } };
+        this.rememberAlerts(alerts);
+        this.listeners.forEach((listener) => listener(message));
+      }
+      lastAlert = alert;
     };
   }
 
-  private rememberCountdown(countdown: Countdown | null | undefined) {
+  /** Every alert on screen. */
+  currentAlerts(): ScreenAlert[] {
     try {
-      if (countdown) localStorage.setItem(COUNTDOWN_KEY, JSON.stringify(countdown));
+      const saved = JSON.parse(localStorage.getItem(ALERT_KEY) || 'null');
+      return Array.isArray(saved) ? saved : saved ? [saved] : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private rememberAlerts(alerts: ScreenAlert[]) {
+    try {
+      if (alerts.length) localStorage.setItem(ALERT_KEY, JSON.stringify(alerts));
+      else localStorage.removeItem(ALERT_KEY);
+    } catch {
+      // Storage full: reopened windows miss the alert until it changes
+    }
+  }
+
+  private rememberCountdowns(countdowns: Countdown[]) {
+    try {
+      if (countdowns.length) localStorage.setItem(COUNTDOWN_KEY, JSON.stringify(countdowns));
       else localStorage.removeItem(COUNTDOWN_KEY);
     } catch {
       // Storage full: reopened windows miss the countdown until it changes

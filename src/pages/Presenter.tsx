@@ -15,6 +15,7 @@ import { Play, Square, ChevronLeft, ChevronRight, Monitor, Edit2, ExternalLink, 
 import { toast } from 'sonner';
 import { ShowLogoButton } from '@/components/ShowLogoButton';
 import { CountdownControl } from '@/components/CountdownControl';
+import { AlertControl } from '@/components/AlertControl';
 import { countdownFromConfig, startCountdown, stopCountdown } from '@/lib/countdown';
 import { cn } from '@/lib/utils';
 import { BibleVerse } from '@/types/bible';
@@ -450,6 +451,7 @@ const Presenter = () => {
         </div>
 
         <div className="flex items-center justify-end gap-1.5">
+          <AlertControl className="h-9 hidden lg:flex" />
           <CountdownControl className="h-9 hidden lg:flex" />
           <Button variant="ghost" size="sm" onClick={() => setShowDisplayMonitor(!showDisplayMonitor)} aria-pressed={showDisplayMonitor}>
             <Monitor className="w-4 h-4" />
