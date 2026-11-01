@@ -1,3 +1,4 @@
+import type { TransitionSpec } from '@/lib/transitions';
 import { BibleVerse } from './bible';
 
 export type SlideType = 'scripture' | 'lyrics' | 'image' | 'video' | 'announcement' | 'blank';
@@ -36,6 +37,8 @@ export interface BaseSlide {
   slideNotes?: string; // Notes specific to this slide
   /** A template other than the one assigned for this kind of slide */
   templateId?: string;
+  /** How this slide arrives, instead of its look's transition */
+  transition?: TransitionSpec;
 }
 
 export interface ScriptureSlide extends BaseSlide {

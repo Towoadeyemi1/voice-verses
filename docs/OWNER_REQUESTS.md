@@ -80,7 +80,7 @@ Status: ✅ shipped (version) · 🟡 partly · ⏳ not yet · 💬 answered (ad
 
 All promised, none built yet. Do them in this order after design 4:
 
-1. ⏳ Slide transitions
+1. ✅ 1.5.0 Slide transitions (dissolve, through black, lift, zoom, push, cut; per look and per slide)
 2. ⏳ On-screen messages, and layers (props) that stay up across slides
 3. ⏳ Several timers at once
 4. ⏳ A stage-display layout editor; the preacher's outline on the stage monitor
@@ -100,6 +100,15 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 ## "Is that all the features? …come up with more ingenious features that other presentation apps have not even thought of, but it's a game changer."
 
 💬 Answered with 14 signature features that only an app that listens can do, in [`ROADMAP.md`](ROADMAP.md) → "Signature features". Recommended first, all offline: moment autopilot (prayer, offering, altar call recognised from speech), worship leader voice cues ("one more time", "go to the bridge") and sermon points on cue ("point number two…"). ⏳ waiting on the owner to choose the order
+
+## "Background and transitions" (chosen to build first, over the signature features)
+
+✅ 1.5.0:
+- Nine moving backgrounds made by the app in the colour team's colours (aurora, colour flow, lights, light rays, waves, stars, glow, dawn horizon, paper). They work offline with no files and no copyright to check.
+- The built-in projector looks are on them, so the app looks rich from the first launch; plain black versions are starter looks.
+- Looks → Backgrounds puts one behind everything on the projector in one click.
+- Transitions per look and per slide; only the words move when the background stays the same.
+- ⏳ Still in Phase 1: light mode and the designer inspector restyle.
 
 ## Process
 

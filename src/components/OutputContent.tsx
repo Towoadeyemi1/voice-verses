@@ -10,6 +10,8 @@ import { VerseText } from './VerseText';
 import { VideoPlayer } from './VideoPlayer';
 import { Countdown, formatRemaining } from '@/lib/countdown';
 import { useStageSize } from './ScaledStage';
+import { Transition } from './Transition';
+import { cleanTransition } from '@/lib/transitions';
 
 const SIZE_SCALE = { small: 0.7, medium: 0.85, large: 1, xlarge: 1.15 } as const;
 
@@ -29,6 +31,7 @@ export function describe(live: Live): { kind: ContentKind; content: RenderConten
     backgroundOpacity: slide.backgroundMedia?.opacity,
     align: slide.textFormatting?.alignment,
     scale: slide.textFormatting?.fontSize ? SIZE_SCALE[slide.textFormatting.fontSize] : undefined,
+    transition: slide.transition,
   };
   switch (slide.type) {
     case 'scripture': {
@@ -79,13 +82,9 @@ export const OutputContent = ({
 
   // A countdown can take over the screen (before the service, or on the stream)
   const countdownTakesOver = countdown && (output === 'projection' ? countdown.projector === 'full' : countdown.stream);
-  if (countdownTakesOver) {
-    return <TemplateRenderer template={templateFor(templates, assignments, output, 'countdown')} content={countdownContent(countdown, remaining)} transparent={transparent} />;
-  }
-
-  const described = describe(live);
+  const described = countdownTakesOver ? null : describe(live);
   const corner =
-    countdown && output === 'projection' && countdown.projector === 'corner' ? (
+    !countdownTakesOver && countdown && output === 'projection' && countdown.projector === 'corner' ? (
       <div
         className="absolute rounded-xl text-white font-semibold"
         style={{ right: 48, bottom: 40, padding: '12px 28px', fontSize: 72, background: 'rgba(0,0,0,0.65)', fontVariantNumeric: 'tabular-nums' }}
@@ -94,38 +93,46 @@ export const OutputContent = ({
       </div>
     ) : null;
 
+  // What kind of screen it is; changing between them (a look, a video, a picture, a countdown) plays a transition too
+  let mode = 'look';
   let screen;
-  if (live && 'slide' in live && live.slide.type === 'video') {
+  let template = templateFor(templates, assignments, output, 'scripture');
+  const slide = live && 'slide' in live ? live.slide : null;
+  if (countdownTakesOver) {
+    template = templateFor(templates, assignments, output, 'countdown');
+    mode = 'countdown';
+    screen = <TemplateRenderer template={template} content={countdownContent(countdown, remaining)} transparent={transparent} />;
+  } else if (slide?.type === 'video' && output === 'projection') {
     // Video slides play full screen on the projector (with their sound there only)
-    screen =
-      output === 'projection' ? (
-        <div style={{ width, height }} className="bg-black">
-          <VideoPlayer mediaId={live.slide.mediaId} loop={live.slide.loop} sound={live.slide.sound && !preview} className="w-full h-full" />
-        </div>
-      ) : (
-        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} transparent={transparent} />
-      );
-  } else if (live && 'slide' in live && !described && live.slide.type !== 'blank') {
+    mode = `video:${slide.id}`;
+    screen = (
+      <div style={{ width, height }} className="bg-black">
+        <VideoPlayer mediaId={slide.mediaId} loop={slide.loop} sound={slide.sound && !preview} className="w-full h-full" />
+      </div>
+    );
+  } else if (slide && !described && slide.type !== 'blank' && slide.type !== 'video' && output === 'projection') {
     // Picture slides fill the screen as they are
-    screen =
-      output === 'projection' ? (
-        <div style={{ width, height }} className="bg-black">
-          <SlideDisplay slide={live.slide} className="h-full w-full" />
-        </div>
-      ) : (
-        <TemplateRenderer template={templateFor(templates, assignments, output, 'scripture')} content={null} transparent={transparent} />
-      );
+    mode = `picture:${slide.id}`;
+    screen = (
+      <div style={{ width, height }} className="bg-black">
+        <SlideDisplay slide={slide} className="h-full w-full" />
+      </div>
+    );
+  } else if (slide && !described && slide.type !== 'blank') {
+    // Videos and pictures don't go to the lower third: it shows its look with nothing on it
+    screen = <TemplateRenderer template={template} content={null} transparent={transparent} />;
   } else {
-    const template = templateFor(templates, assignments, output, described?.kind ?? 'scripture', described?.templateId);
+    template = templateFor(templates, assignments, output, described?.kind ?? 'scripture', described?.templateId);
     screen = <TemplateRenderer template={template} content={blank ? null : described?.content ?? null} overrides={described?.overrides} transparent={transparent} />;
   }
+  const spec = cleanTransition(slide?.transition ?? template.transition);
 
-  return corner ? (
+  return (
     <div className="relative" style={{ width, height }}>
-      {screen}
+      <Transition id={mode} spec={spec} opaque={!transparent}>
+        {screen}
+      </Transition>
       {corner}
     </div>
-  ) : (
-    screen
   );
 };

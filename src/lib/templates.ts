@@ -8,6 +8,9 @@
  * moment a template changes.
  */
 
+import type { MotionBackground } from './backgrounds';
+import type { TransitionSpec } from './transitions';
+
 export type ContentKind = 'scripture' | 'lyrics' | 'announcement' | 'countdown';
 export type Output = 'projection' | 'stream';
 
@@ -27,7 +30,9 @@ export interface Template {
   id: string;
   name: string;
   background: {
-    type: 'color' | 'gradient' | 'image' | 'video';
+    /** 'motion': a moving or still background made by the app (lib/backgrounds.ts) */
+    type: 'color' | 'gradient' | 'motion' | 'image' | 'video';
+    /** The colour, or the colour underneath a gradient or app-made background */
     color: string;
     /** Second colour and direction, for a gradient */
     gradient?: { to: string; angle: number };
@@ -35,9 +40,13 @@ export interface Template {
     blur?: number;
     /** Picture or video from the media library */
     mediaId?: string;
-    /** Darkens the picture or video so text stays readable, 0–1 */
+    /** The app-made background, when type is 'motion' */
+    motion?: MotionBackground;
+    /** Darkens the picture, video or app-made background so text stays readable, 0–1 */
     dim: number;
   };
+  /** How slides in this look arrive (a slide can choose its own) */
+  transition?: TransitionSpec;
   /** Where the text goes, in % of the screen */
   area: { x: number; y: number; width: number; height: number };
   /** Panel behind the text (e.g. a lower-third bar) */
@@ -152,7 +161,12 @@ const base = TEMPLATE_BASE;
 
 /** Templates every church starts with; they can be edited, and reset. */
 export const BUILT_IN_TEMPLATES: Template[] = [
-  { ...base, id: 'scripture-full', name: 'Scripture – full screen' },
+  {
+    ...base,
+    id: 'scripture-full',
+    name: 'Scripture – full screen',
+    background: { type: 'motion', color: 'team:background', motion: { style: 'glow', colors: ['team:secondary', 'team:primary'], speed: 0.6 }, dim: 0.25 },
+  },
   {
     ...base,
     id: 'scripture-lower',
@@ -166,6 +180,7 @@ export const BUILT_IN_TEMPLATES: Template[] = [
     ...base,
     id: 'lyrics-center',
     name: 'Songs – centred',
+    background: { type: 'motion', color: 'team:background', motion: { style: 'aurora', colors: ['team:primary', 'team:secondary'], speed: 1 }, dim: 0.2 },
     text: { ...base.text, fontFamily: FONTS[4].value, fontSize: 88, fontWeight: 700, lineHeight: 1.3 },
     label: { ...base.label, show: false, fontSize: 32, color: '#d1d5db' },
   },
@@ -173,6 +188,7 @@ export const BUILT_IN_TEMPLATES: Template[] = [
     ...base,
     id: 'announcement',
     name: 'Announcements',
+    background: { type: 'motion', color: 'team:background', motion: { style: 'flow', colors: ['team:primary', 'team:secondary'], speed: 1 }, dim: 0.2 },
     text: { ...base.text, fontFamily: FONTS[4].value, fontSize: 64 },
     label: { ...base.label, position: 'above', fontSize: 72, color: '#ffffff', includeVersion: false },
   },
@@ -180,6 +196,7 @@ export const BUILT_IN_TEMPLATES: Template[] = [
     ...base,
     id: 'countdown',
     name: 'Countdown',
+    background: { type: 'motion', color: 'team:background', motion: { style: 'bokeh', colors: ['team:primary', 'team:highlight'], speed: 1 }, dim: 0.1 },
     area: { x: 10, y: 20, width: 80, height: 60 },
     text: { ...base.text, fontFamily: FONTS[4].value, fontSize: 260, fontWeight: 700, lineHeight: 1.1 },
     label: { ...base.label, position: 'above', fontSize: 64, color: '#ffffff', includeVersion: false },

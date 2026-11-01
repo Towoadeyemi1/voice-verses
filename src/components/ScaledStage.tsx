@@ -3,9 +3,12 @@ import { cn } from '@/lib/utils';
 import { STANDARD_STAGE, StageSize } from '@/lib/screenShapes';
 
 const StageContext = createContext<StageSize>(STANDARD_STAGE);
+const ScaleContext = createContext(1);
 
 /** The canvas size the content is laid out on (1920×1080 unless the screen is another shape). */
 export const useStageSize = () => useContext(StageContext);
+/** How much the stage is shrunk to fit on screen (1 = full size; 0 before it is measured). */
+export const useStageScale = () => useContext(ScaleContext);
 
 /**
  * Lays its content out on a canvas 1080 tall (1920 wide for 16:9, wider for
@@ -41,7 +44,9 @@ export const ScaledStage = ({
   return (
     <div ref={ref} className={cn('relative overflow-hidden', className)} style={fitShape ? { aspectRatio: `${width} / ${height}` } : undefined}>
       <div className="absolute left-1/2 top-1/2" style={{ width, height, transform: `translate(-50%, -50%) scale(${scale})` }}>
-        <StageContext.Provider value={stage}>{children}</StageContext.Provider>
+        <StageContext.Provider value={stage}>
+          <ScaleContext.Provider value={scale}>{children}</ScaleContext.Provider>
+        </StageContext.Provider>
       </div>
     </div>
   );

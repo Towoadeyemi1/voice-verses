@@ -6,6 +6,9 @@ These scripts drive the real Electron app with Playwright. Build the renderer fi
 ELECTRON_BUILD=true npx vite build
 xvfb-run -a -s "-screen 0 3840x1600x24" node tools/e2e/smoke.cjs     # outputs, screen shapes, settings (~30 s)
 xvfb-run -a -s "-screen 0 3840x1600x24" node tools/e2e/screens.cjs   # Settings → Screens with a faked second display
+xvfb-run -a node tools/e2e/transitions.cjs   # moving backgrounds, transitions, the designer and the backgrounds gallery
+xvfb-run -a node tools/e2e/starters.cjs      # starter looks, themes, colour teams, orders of service, countdowns
+xvfb-run -a node tools/e2e/pages.cjs         # every page renders without errors (screenshots)
 # Spoken sermon through the built-in engine (needs `npm run models` and Piper TTS):
 python3 tools/e2e/make-sermon-audio.py path/to/en_US-lessac-medium.onnx /tmp/vv-e2e/sermon.wav
 xvfb-run -a -s "-screen 0 3840x1600x24" node tools/e2e/sermon.cjs auto     # or: preview

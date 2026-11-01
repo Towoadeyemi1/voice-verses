@@ -99,5 +99,6 @@ Settings live in `localStorage`, which every window shares, so outputs update th
 
 - Design 4 is in the live screen (1.4.0), and every other page uses `AppShell` with the same design (1.4.2). The old redesign PR #8 is obsolete and can be closed.
 - Native DeckLink SDI output. It needs the Blackmagic Desktop Video SDK and testing on the owner's ProPresenter computer through Remote Control.
-- Transitions, props/messages layers, multiple timers, a stage layout editor, live captions and translation, verses on phones (QR), PowerPoint and Planning Center import, Stream Deck/remote control, NDI, CCLI reporting.
+- Moving backgrounds and transitions shipped in 1.5.0. Phase 1 still needs light mode and the designer inspector restyle.
+- Props/messages layers, multiple timers, a stage layout editor, live captions and translation, verses on phones (QR), PowerPoint and Planning Center import, Stream Deck/remote control, NDI, CCLI reporting.
 - Signed and notarised installers, which need the owner's Apple Developer account and a Windows certificate.
