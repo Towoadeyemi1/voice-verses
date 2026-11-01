@@ -19,6 +19,9 @@ The worst failure is a wrong verse on the big screen, and the second worst is a 
    - Quote search uses the last 40 words for coverage, rivals need at least 3 hits, and phrases in more than 120 verses are ignored.
    - The reading tracker accepts a jump only when a neighbouring word agrees, runs at most 3 words ahead, and stops after a 2.5 s pause.
    - Song mode lets through references said outright only.
+   - Worship cues count only in utterances of 10 words or fewer, act once per sentence, and never guess a section a song doesn't have.
+   - Spontaneous singing is only offered; its words go up after the operator chooses, and are saved as a draft.
+   - Predictive Next only fills Next; it never puts a verse on screen.
 4. Run the detector check:
    `npx esbuild tools/speech-eval/detector-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/dc.cjs && node /tmp/dc.cjs`
 5. Run the spoken sermon e2e (`e2e-electron` skill) in **auto** and **preview** modes. Check timing in the printed log: a verse should go live within about 1–2 s of being read.

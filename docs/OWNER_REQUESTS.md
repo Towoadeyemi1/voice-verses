@@ -120,9 +120,10 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 ## "First update the app, then build: worship leader voice cues, spontaneous worship captured, Predictive Next"
 
 - ✅ 1.5.0 merged (the owner publishes the `v1.5.0` release).
-- ⏳ Worship leader voice cues ("one more time", "go to the bridge", "back to the chorus").
-- ⏳ Spontaneous worship captured as slides and saved as a draft song.
-- ⏳ Predictive Next (outline, passage being read, cross-references).
+- ✅ 1.5.1 merged.
+- ✅ 1.6.0 Worship leader voice cues ("one more time", "go to the bridge", "back to the chorus", "verse two", "from the top").
+- ✅ 1.6.0 Spontaneous worship: offered as "Singing something new", shown live as it is sung once the operator chooses, and saved as a draft song.
+- ✅ 1.6.0 Predictive Next: "Paul says the same thing in Romans" puts the likely Romans verse in Next, from today's plan and cross-references. It never goes up by itself.
 
 ## Process
 

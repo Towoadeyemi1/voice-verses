@@ -15,6 +15,8 @@
 import { BibleVerse } from '@/types/bible';
 import { words } from './scriptureMatcher';
 import { LibrarySong, LyricsMatcher, SongMatch } from './lyricsMatcher';
+import { cueTarget, parseWorshipCue, WorshipCue } from './worshipCues';
+import { scriptureHint, ScriptureHint } from './scriptureHints';
 import { lastWordIndex, readingPosition, readingTokens, ReadingToken } from './readingTracker';
 import { loadScriptureIndex, scriptureIndex } from './scriptureIndex';
 import { BibleParser } from '@/lib/bibleParser';
@@ -47,8 +49,14 @@ export interface VerseDetectionOptions {
   onSongModeChange?: (on: boolean) => void;
   /** A song from the library is being sung: offered to the operator */
   onSongSuggested?: (match: SongMatch) => void;
-  /** While a song's lyrics are on screen: the slide (index into setLiveLyrics' slides) being sung now */
-  onLyricsMove?: (index: number) => void;
+  /** While a song's lyrics are on screen: the slide (index into setLiveLyrics' slides) being sung now; with the cue when the leader called it */
+  onLyricsMove?: (index: number, cue?: WorshipCue) => void;
+  /** The preacher hinted where they are going ("Paul says the same thing in Romans"): for Predictive Next, never shown by itself */
+  onScriptureHint?: (hint: ScriptureHint) => void;
+  /** In song mode, singing that is in no library song and not the song on screen: offered as a new song to capture */
+  onNewSinging?: (lines: string[]) => void;
+  /** While capturing a new song: each line as it is sung */
+  onCapturedLine?: (line: string) => void;
   /** How far the verse being read has got: the last word read (index into readingTokens(verse.text)), -1 for none yet */
   onReadingProgress?: (progress: ReadingProgress) => void;
   
@@ -107,7 +115,16 @@ export class VerseDetectionController {
   private songMode = false;
   private lyrics = new LyricsMatcher();
   /** The song on screen: its slides' text, and which one is showing */
-  private liveLyrics: { slides: string[]; index: number } | null = null;
+  private liveLyrics: { slides: string[]; index: number; labels: string[] } | null = null;
+  /** Spontaneous singing: lines heard that match nothing, and whether they are being captured */
+  private unknownLines: string[] = [];
+  private lastNewSingingOffer = 0;
+  private capturing = false;
+  private lastHint: { books: string; at: number } | null = null;
+  /** A cue already acted on in the sentence being spoken (partials repeat it) */
+  private cueTaken = false;
+  /** When the lyrics last moved to another slide */
+  private lyricsMovedAt = 0;
   /** Recent words for songs (kept apart from the scripture words, which reset on every verse) */
   private lyricWords: string[] = [];
   private lyricPartial: string[] = [];
@@ -155,11 +172,23 @@ export class VerseDetectionController {
     this.lyrics.setLibrary(songs);
   }
 
-  /** A song's lyrics are on screen (slides' text in order and the one showing), or null when not. */
-  setLiveLyrics(slides: string[] | null, index = 0): void {
+  /**
+   * A song's lyrics are on screen (slides' text in order and the one showing), or null when not.
+   * `labels` are each slide's section ("Chorus", "Verse 2"), for the leader's cues.
+   */
+  setLiveLyrics(slides: string[] | null, index = 0, labels: string[] = []): void {
     const sameSong = slides && this.liveLyrics && slides.join('\u0000') === this.liveLyrics.slides.join('\u0000');
-    if (!sameSong || index !== this.liveLyrics?.index) this.forgetLyricWords();
-    this.liveLyrics = slides?.length ? { slides, index } : null;
+    if (!sameSong || index !== this.liveLyrics?.index) {
+      this.forgetLyricWords();
+      this.lyricsMovedAt = Date.now();
+    }
+    this.liveLyrics = slides?.length ? { slides, index, labels } : null;
+  }
+
+  /** Capture each sung line (a new song the operator chose to show), or stop. */
+  setCapturing(on: boolean): void {
+    this.capturing = on;
+    this.unknownLines = [];
   }
 
   isSongMode(): boolean {
@@ -247,6 +276,7 @@ export class VerseDetectionController {
       // No reference: a navigation command, a song being sung, the passage being read on, a quoted verse, or a described one
       if (await this.handleNavigationCommands(cleanText, isFinal)) return;
       if (this.handleSinging(cleanText, isFinal)) return;
+      this.noticeHint(cleanText);
       const recent = this.hear(cleanText, isFinal);
       if (await this.trackReading()) return;
       if (await this.followReading(recent)) return;
@@ -343,12 +373,15 @@ export class VerseDetectionController {
    */
   private handleSinging(text: string, isFinal: boolean): boolean {
     if (!this.lyrics.size && !this.liveLyrics && !this.songMode) return false;
+    if (this.liveLyrics && this.followCue(text, isFinal)) return true;
     const sung = this.hearLyrics(text, isFinal);
+    if (isFinal && (this.songMode || this.capturing)) this.noticeNewSinging(text);
     if (this.liveLyrics) {
       const next = this.lyrics.follow(this.liveLyrics.slides, this.liveLyrics.index, sung);
       if (next !== null && next !== this.liveLyrics.index) {
         this.liveLyrics = { ...this.liveLyrics, index: next };
         this.forgetLyricWords();
+        this.lyricsMovedAt = Date.now();
         this.options.onLyricsMove?.(next);
       }
       return true;
@@ -363,6 +396,63 @@ export class VerseDetectionController {
       return true;
     }
     return this.songMode;
+  }
+
+  /**
+   * The worship leader called a cue ("one more time", "go to the bridge"): move the lyrics there.
+   * Acts once per sentence, as soon as the cue is heard (partials included).
+   */
+  private followCue(text: string, isFinal: boolean): boolean {
+    const live = this.liveLyrics!;
+    const taken = this.cueTaken;
+    if (isFinal) this.cueTaken = false;
+    const cue = parseWorshipCue(text);
+    if (!cue) return false;
+    if (taken) return true;
+    // Without section names only "from the top" can be followed
+    const named = live.labels.length === live.slides.length && live.labels.some(Boolean);
+    const justArrived = Date.now() - this.lyricsMovedAt < 4000;
+    const target = named ? cueTarget(cue, live.labels, live.index, { justArrived }) : cue.kind === 'top' && live.index !== 0 ? 0 : null;
+    if (!isFinal) this.cueTaken = true;
+    if (target === null) return true;
+    this.liveLyrics = { ...live, index: target };
+    this.forgetLyricWords();
+    this.options.onLyricsMove?.(target, cue);
+    return true;
+  }
+
+  /** A hint of the next verse's book, passed on once (partials repeat it). */
+  private noticeHint(text: string): void {
+    if (!this.options.onScriptureHint) return;
+    const hint = scriptureHint(text);
+    if (!hint) return;
+    const books = hint.books.join('|');
+    if (this.lastHint?.books === books && Date.now() - this.lastHint.at < 15_000) return;
+    this.lastHint = { books, at: Date.now() };
+    this.options.onScriptureHint(hint);
+  }
+
+  /**
+   * A finished sung line that is in no library song and not in the song on screen. Two in a row in
+   * song mode: offered as a new song. While capturing, every line is passed on as it is sung.
+   */
+  private noticeNewSinging(text: string): void {
+    const line = words(text);
+    if (this.capturing) {
+      if (line.length >= 3) this.options.onCapturedLine?.(text);
+      return;
+    }
+    if (line.length < 4) return;
+    const known = this.liveLyrics ? this.lyrics.matchScore(this.liveLyrics.slides, line) >= 3 : false;
+    if (known || this.lyrics.libraryScore(line) >= 4) {
+      this.unknownLines = [];
+      return;
+    }
+    this.unknownLines = [...this.unknownLines, text].slice(-4);
+    if (this.unknownLines.length >= 2 && Date.now() - this.lastNewSingingOffer > 60_000) {
+      this.lastNewSingingOffer = Date.now();
+      this.options.onNewSinging?.([...this.unknownLines]);
+    }
   }
 
   private hearLyrics(text: string, isFinal: boolean): string[] {

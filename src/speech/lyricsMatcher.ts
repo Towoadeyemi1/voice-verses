@@ -88,6 +88,18 @@ export class LyricsMatcher {
     return { song: best.s.song, heard: line };
   }
 
+  /** How well a sung line matches the closest of these texts (0: not at all; 4 or more: clearly the same words). */
+  matchScore(texts: string[], heard: string[]): number {
+    if (heard.length < 2) return 0;
+    return Math.max(0, ...texts.map((t) => score(index(t), heard)));
+  }
+
+  /** How well a sung line matches the closest song in the library. */
+  libraryScore(heard: string[]): number {
+    if (heard.length < 2) return 0;
+    return Math.max(0, ...this.songs.map((s) => score(s.all, heard)));
+  }
+
   /**
    * While a song is on screen: the slide being sung now, or null to stay.
    * `slides` are the slides' text in order (the arrangement, with repeats).

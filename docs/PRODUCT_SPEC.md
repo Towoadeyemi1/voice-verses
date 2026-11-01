@@ -74,7 +74,19 @@ Engine types are `builtin`, `webspeech` and `openai` (`src/speech/SpeechProvider
     - Pauses scripture detection while people sing. A reference said outright, such as "John 3:16", still works.
     - **Library songs are recognised** from the words sung (`lyricsMatcher.ts`: triples score 2, pairs score 1). The app asks before switching to the song, and does not re-ask about the same song within 60 s.
     - **Following a song:** once a song is live, the matcher follows the section being sung and moves the slide.
-11. **Send mode** (`src/lib/sendMode.ts`, key `voice-verses-send-mode`):
+    - **Worship leader cues** (1.6.0, `src/speech/worshipCues.ts`): "one more time", "sing it again", "last time", "go to the bridge", "back to the chorus", "pre-chorus", "verse two", "from the top".
+      - Only an utterance of 10 words or fewer counts (a sung line with "again" is not a cue); "again"/"one more"/"last time" alone need 4 words or fewer, and a bare "verse" is ignored.
+      - Acted on once per sentence, as soon as the partial transcript has it. The operator sees "Heard “go to the bridge” · Went to Bridge".
+      - Targets use the slides' section labels in sung order: a section goes to its next occurrence after here, else the last one before. "One more time" goes to the start of the section being sung, or of the one just sung if the lyrics moved on in the last 4 s. Without section labels only "from the top" is followed.
+    - **Spontaneous worship** (1.6.0, `src/lib/spontaneousSong.ts`): in song mode, two finished sung lines in a row (4+ words) that match neither the song on screen (score < 3) nor any library song (< 4) bring a "Singing something new" suggestion (at most once a minute).
+      - "Show the words live" captures: each sung line (3+ words, fillers dropped, a line heard twice in a row kept once) goes up two lines to a slide, and the middle shows the song so far. A captured song is not followed or cued.
+      - "Stop and save", song mode ending, or anything else going live ends it and saves a draft song (category Drafts, tags `draft`, `sung live`): lines sung three or more times become the Chorus, the rest Verses of four lines, Chorus after each verse.
+12. **Predictive Next** (1.6.0, `src/speech/scriptureHints.ts`, `src/lib/predictNext.ts`):
+    - A hint is a book named without a chapter ("the book of Acts", "turn to Isaiah", "in Romans", "Proverbs says") or a writer saying something ("Paul says", "as David wrote", "Jesus said"); with both ("Paul says the same thing in Romans") the book wins. Book names that are ordinary words or people (Job, Acts, Mark, John, Numbers…) count only after "the book of", "turn to", "the gospel of" and similar.
+    - Candidates in the hinted books, best first: scripture planned in today's service (score 3), cross-references of the live verse (2, by votes), of the 4 verses before it (1.2 down). Verses already shown are skipped.
+    - The best goes into **Next** labelled "likely next (why) · Take to show it". It never goes on screen by itself, and not while the operator has a suggestion in Next or a song is being captured.
+    - Cross-references: OpenBible.info (CC BY), top 10 per verse with 4+ votes, bundled (`src/data/cross-references.json`, loaded when first needed; see `src/data/CROSS-REFERENCES.md`). Credited in Settings → Bible.
+13. **Send mode** (`src/lib/sendMode.ts`, key `voice-verses-send-mode`):
     - **Auto:** clear references and 99%+ matches go live.
     - **Preview first (Ask):** everything waits in Preview/Next until the operator takes it.
 

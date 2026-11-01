@@ -17,6 +17,12 @@ import { BibleParser } from '@/lib/bibleParser';
 import { setApiBibleKey, setChosenApiBibles, versesFromApiBibleJson, versesFromBracketed, versesFromNltHtml } from '@/lib/onlineBibles';
 import { parseSongSelectFile } from '@/lib/songSelectImport';
 import { parseSongSections } from '@/lib/songs';
+import { cueTarget, parseWorshipCue } from '@/speech/worshipCues';
+import { addLine, captureSlide, draftLyrics, tidyLine } from '@/lib/spontaneousSong';
+import { scriptureHint } from '@/speech/scriptureHints';
+import { predictNext } from '@/lib/predictNext';
+import { crossReferences, setCrossReferenceData } from '@/lib/crossReferences';
+import crossReferenceData from '@/data/cross-references.json';
 import { duplicateService, nextSunday } from '@/lib/duplicateService';
 
 const single: [string, string | null][] = [
@@ -279,6 +285,136 @@ const check = (label: string, got: string | null, want: string | null) => {
     await sing('twas grace that taught my heart to fear and grace my fears relieved');
     await sing('praise god from whom all blessings flow praise him all creatures here below');
     check('song followed, chorus the second time', moves.join(', '), '1, 2, 3, 4');
+  }
+
+  // Worship leader voice cues
+  {
+    const cue = (t: string) => {
+      const c = parseWorshipCue(t);
+      return c ? (c.kind === 'section' ? `${c.section}${c.number ?? ''}` : c.kind) : null;
+    };
+    const cues: [string, string | null][] = [
+      ['One more time!', 'again'],
+      ['come on church, sing it again', 'again'],
+      ["let's sing that again", 'again'],
+      ['again', 'again'],
+      ['last time', 'again'],
+      ['go to the bridge', 'bridge'],
+      ['Back to the chorus', 'chorus'],
+      ['sing the chorus church', 'chorus'],
+      ['Bridge!', 'bridge'],
+      ['pre-chorus', 'pre-chorus'],
+      ['verse two', 'verse2'],
+      ["let's go to the second verse", 'verse2'],
+      ['take it from the top', 'top'],
+      // Sung lines and speech that are not cues
+      ['Christ will come again', null],
+      ['again and again', null],
+      ['and we will sing it again and again forever more to the King of all the earth', null],
+      ['join the chorus of the angels', null],
+      ['be thou my vision O Lord of my heart', null],
+      ['go to the verse', null],
+    ];
+    for (const [text, want] of cues) check(`cue ${JSON.stringify(text)}`, cue(text), want);
+
+    // Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus (two slides each)
+    const labels = ['Verse 1', 'Verse 1', 'Chorus', 'Chorus', 'Verse 2', 'Verse 2', 'Chorus', 'Chorus', 'Bridge', 'Bridge', 'Chorus', 'Chorus'];
+    const go = (t: string, at: number, justArrived = false) => cueTarget(parseWorshipCue(t)!, labels, at, { justArrived });
+    check('one more time at the end of a chorus: its start', go('one more time', 3), 2);
+    check('one more time just after the song moved on: the section just sung', go('one more time', 4, true), 2);
+    check('one more time at the start of a section sung a while: stay', go('one more time', 4), null);
+    check('go to the bridge', go('go to the bridge', 5), 8);
+    check('back to the chorus from the bridge: the next chorus', go('back to the chorus', 9), 10);
+    check('back to the chorus after the last one: the last one', go('back to the chorus', 11), 10);
+    check('verse two', go('verse two', 1), 4);
+    check('from the top', go('from the top', 9), 0);
+    check('a section the song does not have: stay', go('go to the tag', 3), null);
+
+    // In the controller: the cue moves the lyrics once, as soon as it is heard
+    const moves: string[] = [];
+    const d = new VerseDetectionController({ onVerseDetected: () => {}, onLyricsMove: (i, c) => moves.push(`${i}${c ? `:${c.kind}` : ''}`) });
+    const slides = labels.map((l, i) => `${l} line ${i}`);
+    d.setLiveLyrics(slides, 5, labels);
+    await d.onTranscript('go to the', false);
+    await d.onTranscript('go to the bridge', false);
+    await d.onTranscript('go to the bridge', true);
+    check('cue acted on once, from the partial', moves.join(', '), '8:section');
+    d.setLiveLyrics(slides, 8, labels.map(() => ''));
+    await d.onTranscript('one more time', true);
+    check('no section names: "one more time" is not guessed', moves.length, 1);
+  }
+
+  // Spontaneous worship: singing that is in no song is offered, then captured line by line
+  {
+    const offers: string[][] = [];
+    const captured: string[] = [];
+    const d = new VerseDetectionController({ onVerseDetected: () => {}, onNewSinging: (l) => offers.push(l), onCapturedLine: (l) => captured.push(l) });
+    d.setSongLibrary(songs);
+    d.setSongMode(true);
+    await d.onTranscript('amazing grace how sweet the sound that saved a wretch like me', true);
+    check('a library song is not offered as new', offers.length, 0);
+    // Words written for this test (never copyrighted lyrics)
+    await d.onTranscript('morning light is breaking over every hill', true);
+    await d.onTranscript('grace upon grace is falling on us here', true);
+    check('two new lines in a row: offered as a new song', offers.map((o) => o.length).join(','), '2');
+    await d.onTranscript('we will rest within your mercy', true);
+    check('offered once, not every line', offers.length, 1);
+    d.setCapturing(true);
+    await d.onTranscript('we will rest within your mercy', true);
+    await d.onTranscript('yeah', true);
+    check('while capturing, each sung line is passed on', captured.join(' | '), 'we will rest within your mercy');
+
+    check('tidy line', tidyLine('grace upon grace is falling .'), 'Grace upon grace is falling');
+    check('fillers alone are dropped', tidyLine('oh oh yeah'), null);
+    let lines: string[] = [];
+    for (const l of ['morning light is breaking', 'grace upon grace is falling', 'grace upon grace is falling', 'we will rest in your mercy', 'grace upon grace is falling', 'morning light is breaking', 'grace upon grace is falling']) lines = addLine(lines, l);
+    check('a line heard twice in a row is kept once', lines.length, 6);
+    check('slides show two lines, changing every second line', captureSlide(lines.slice(0, 3), 'Sung live', 'c')?.content, 'We will rest in your mercy');
+    const draft = draftLyrics(lines);
+    check('lines sung three times become the chorus', draft.lyrics, 'Verse 1\nMorning light is breaking\nWe will rest in your mercy\n\nChorus\nGrace upon grace is falling');
+    check('chorus after each verse', draft.arrangement.join(', '), 'Verse 1, Chorus');
+  }
+
+  // Predictive Next: hints of where the preacher is going, and the likely verse
+  {
+    const hint = (t: string) => scriptureHint(t)?.books.join(' / ') ?? null;
+    const hints: [string, string | null][] = [
+      ['and Paul says the same thing in Romans', 'Romans'],
+      ['turn with me to the book of Acts', 'Acts'],
+      ['over in Isaiah the prophet says', 'Isaiah'],
+      ['first Corinthians tells us', '1 Corinthians'],
+      ['as David wrote', 'Psalms'],
+      ['Jesus said', 'Matthew / Mark / Luke / John'],
+      ['the gospel of John', 'John'],
+      // Not hints
+      ['the Romans built roads everywhere', null],
+      ['I got a new job last week', null],
+      ['their acts of kindness', null],
+      ['mark my words', null],
+      ['Romans 8:28 says', null],
+    ];
+    for (const [text, want] of hints) check(`hint ${JSON.stringify(text)}`, hint(text), want);
+
+    setCrossReferenceData(crossReferenceData as Record<string, string[]>);
+    const ref = (s: string) => {
+      const m = s.match(/^(.+) (\d+):(\d+)$/)!;
+      return { book: m[1], chapter: Number(m[2]), verse: Number(m[3]) };
+    };
+    const show = (p: { book: string; chapter: number; verse: number } | undefined) => (p ? `${p.book} ${p.chapter}:${p.verse}` : null);
+    check('cross-references load (John 3:16)', crossReferences(ref('John 3:16')).length > 3, true);
+    check('John 3:16, "in Romans": a Romans cross-reference', show(predictNext({ books: ['Romans'], live: ref('John 3:16') })[0]), 'Romans 5:8');
+    check('the plan wins over cross-references', show(predictNext({ books: ['Romans'], live: ref('John 3:16'), outline: [ref('Romans 10:9')] })[0]), 'Romans 10:9');
+    check('nothing in that book: no guess', show(predictNext({ books: ['Obadiah'], live: ref('John 3:16') })[0]), null);
+    check('a verse already shown is not predicted', show(predictNext({ books: ['Romans'], live: ref('John 3:16'), recent: [ref('Romans 5:8')] })[0]) !== 'Romans 5:8', true);
+
+    // In the controller: a hint is passed on once, and never shows a verse
+    const seen: string[] = [];
+    const shown: string[] = [];
+    const d = new VerseDetectionController({ onVerseDetected: (v) => shown.push(v.reference ?? ''), onScriptureHint: (h) => seen.push(h.books.join('/')) });
+    await d.onTranscript('and Paul says the same thing in Romans', false);
+    await d.onTranscript('and Paul says the same thing in Romans', true);
+    check('hint passed on once', seen.join(', '), 'Romans');
+    check('a hint shows nothing by itself', shown.length, 0);
   }
 
   // Verse text on screen: KJV supplied words kept (shown in italics), margin notes never shown
