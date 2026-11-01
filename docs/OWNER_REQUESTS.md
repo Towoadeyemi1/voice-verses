@@ -125,6 +125,21 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.6.0 Spontaneous worship: offered as "Singing something new", shown live as it is sung once the operator chooses, and saved as a draft song.
 - ✅ 1.6.0 Predictive Next: "Paul says the same thing in Romans" puts the likely Romans verse in Next, from today's plan and cross-references. It never goes up by itself.
 
+## "It should come with full sample services… the landing page of the app is just blank, why? It looks like nothing is happening. Most of the dropdown options are hidden when clicked."
+
+(Said with a photo of the live screen in Safari, 1 Nov 2026.)
+- ⏳ Full sample services, songs and looks installed at first opening, so the app shows what it can do and how it looks.
+- ⏳ The live screen never opens blank: today's service, its parts with pictures, and clear first steps, plus a demo that shows listening in action.
+- ✅ 1.6.1 Dropdowns and pop-up windows always on top and fully visible: menus fit the window, and tall windows scroll instead of being cut off (Safari included).
+
+## "I cannot get sound signal saved or working in the new version, also channel selection does not seem to be working"
+
+✅ 1.6.1:
+- The app now checks whether the computer lets it use the microphone. If not, it says so and opens the right privacy settings in one click. Unsigned updates can look like a new app to macOS, which then refuses the microphone without asking.
+- Settings → Listening starts a sound check by itself: one bar for what Voice Verses hears, plus a meter for every channel. The input is remembered by name as well as its id, so it is found again after an update or replugging.
+- Starting to listen with no sound for 10 seconds now shows a warning with a button to the Listening settings.
+- If the desk's channels don't all reach the computer (only 2 shown), Settings explains how to route the preacher's channel.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

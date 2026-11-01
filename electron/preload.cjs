@@ -23,6 +23,11 @@ contextBridge.exposeInMainWorld('voiceVerses', {
     clear: (name) => invoke('secrets:clear', name),
     fetch: (name, request) => invoke('secrets:fetch', name, request),
   },
+  microphone: {
+    status: () => invoke('mic:status'),
+    ask: () => invoke('mic:ask'),
+    openSettings: () => invoke('mic:open-settings'),
+  },
   speech: {
     isAvailable: () => invoke('speech:available'),
     start: (mode) => invoke('speech:start', mode),

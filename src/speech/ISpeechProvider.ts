@@ -16,6 +16,8 @@ export interface SpeechSettings {
   speechEngine: SpeechEngineType;
   language?: string;
   audioDevice?: string | null;
+  /** The input's name, to find it again if the computer gives it a new id (after an update or replugging) */
+  audioDeviceName?: string | null;
   /** 0-based channel of a multichannel input device; null for its normal input */
   audioChannel?: number | null;
 }

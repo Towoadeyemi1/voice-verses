@@ -152,6 +152,18 @@ handle('power:listening', (listening, event) => {
   event.sender.once('destroyed', () => keepAwake(reason, false));
 });
 handle('speech:available', () => speech.isAvailable());
+
+// Microphone access. macOS remembers it per app signature, so an unsigned update can look like a
+// new app and be refused silently; the page shows this and opens the right System Settings pane.
+handle('mic:status', () =>
+  process.platform === 'darwin' || process.platform === 'win32' ? systemPreferences.getMediaAccessStatus('microphone') : 'granted',
+);
+handle('mic:ask', async () => (process.platform === 'darwin' ? systemPreferences.askForMediaAccess('microphone').catch(() => false) : true));
+handle('mic:open-settings', () => {
+  if (process.platform === 'darwin') return shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone');
+  if (process.platform === 'win32') return shell.openExternal('ms-settings:privacy-microphone');
+  return undefined;
+});
 handle('speech:start', (mode, event) => speech.start(event.sender, mode));
 listen('speech:audio', (session, samples) => speech.sendAudio(session, samples));
 listen('speech:finish', (session) => speech.finish(session));

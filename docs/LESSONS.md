@@ -43,6 +43,10 @@ Check this list before debugging. Add every new mistake that cost time.
   - Fold static overlays together (the vignette and the darkening are one layer).
 - **Keep the leaving slide's React key** when it moves to the "leaving" list, or React remounts it and a video behind it restarts.
 
+- **"Can't get sound" after an update (1.6.0):** unsigned (ad-hoc signed) Mac builds get a new code signature with every version, so macOS can treat the update as a new app. It may refuse the microphone without asking, while System Settings still shows it switched on. The app now asks the system (`mic:status`), says so plainly and opens the privacy pane (`mic:open-settings`). Signing with the owner's Apple Developer ID ends this for good.
+- **A saved input can come back with a new id** (an update, replugging, a cleared profile). Save its name too and find it again by name.
+- **A sound-check message that follows the instant level flickers** between words. Hold "sound is coming in" for about 2.5 s after the last sound.
+
 ## Detection
 
 - **Psalm 23:1 was only suggested, or shown late:** words heard were cleared after a suggestion. Keep them, use a quote window of the last 18 words, and skip the verse already on screen.
