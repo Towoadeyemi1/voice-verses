@@ -23,6 +23,9 @@ import { sendVerseToProPresenter } from '@/lib/proPresenter';
 import { hasSecret } from '@/lib/secrets';
 import { desktop } from '@/lib/desktop';
 import { loadSendMode, saveSendMode, SendMode } from '@/lib/sendMode';
+import { ClickMode, loadAutoAdvance, loadClickMode, saveAutoAdvance, saveClickMode } from '@/lib/clickMode';
+import { Countdown, countdownFromConfig, startCountdown, stopCountdown } from '@/lib/countdown';
+import type { BibleVersionType } from '@/types/bibleVersion';
 import { showLogo } from '@/lib/showLogo';
 import { templateFor } from '@/lib/templates';
 import { withTeamColors } from '@/lib/colorTeams';
@@ -48,7 +51,11 @@ import { CountdownControl } from './CountdownControl';
 import { AlertControl } from './AlertControl';
 import { LibraryPanel } from './live/LibraryPanel';
 import { StatusCapsule } from './live/StatusCapsule';
-import { ServiceTimeline, serviceEnd } from './live/ServiceTimeline';
+import { ServiceTimeline, serviceEnd, timelineParts } from './live/ServiceTimeline';
+import { SlideStrip, StripItem } from './live/SlideStrip';
+import { QuickEdit } from './live/QuickEdit';
+import { VersionSwitcher } from './live/VersionSwitcher';
+import { ServicePicker, AutoAdvanceToggle, todaysServices, pickService } from './live/ServicePicker';
 import { NowPane, Step } from './live/NowPane';
 import { SuggestionBar, LiveSuggestion } from './live/SuggestionBar';
 import { ScreensColumn } from './live/ScreensColumn';
@@ -103,6 +110,26 @@ export const LiveWorkspace = () => {
     const { countdown, remaining } = useCountdown();
 
   const [sendMode, setSendModeState] = useState<SendMode>(loadSendMode);
+  /** What picking a slide does: straight to Live, or into Next first (the switch above Live) */
+  const [clickMode, setClickModeState] = useState<ClickMode>(loadClickMode);
+  /** The order of service moves on by itself when each part's time is up */
+  const [autoAdvance, setAutoAdvanceState] = useState(loadAutoAdvance);
+  /** Every slide as a grid filling the middle, instead of the words large */
+  const [stripExpanded, setStripExpanded] = useState(false);
+  /** The slide open in Quick edit */
+  const [editing, setEditing] = useState<Slide | null>(null);
+  /** The service chosen when there are several (several services on a Sunday) */
+  const [chosenService, setChosenService] = useState<{ id: string | null; explicit: boolean }>(() => {
+    try {
+      return { id: localStorage.getItem(LAST_SERVICE_KEY), explicit: false };
+    } catch {
+      return { id: null, explicit: false };
+    }
+  });
+  /** The part of the service on the screens now, and since when (for moving on by time) */
+  const [livePart, setLivePart] = useState<{ id: string; at: number } | null>(null);
+  /** The countdown this screen started for a part with its own countdown (the Countdown before the service) */
+  const partCountdown = useRef<{ itemId: string; id: string } | null>(null);
   const [preview, setPreview] = useState<Live>(null);
   const [previewSuggestionId, setPreviewSuggestionId] = useState<string | undefined>();
   const [collection, setCollection] = useState<Collection | null>(null);
@@ -162,6 +189,17 @@ export const LiveWorkspace = () => {
     toast.info(mode === 'auto' ? 'Auto send: scripture goes straight to the screens' : 'Preview first: check, then press Send (Space)');
   };
 
+  const setClickMode = (mode: ClickMode) => {
+    setClickModeState(mode);
+    saveClickMode(mode);
+    toast.info(mode === 'live' ? 'Picking a slide now shows it straight away' : 'Picking a slide now puts it in Next: press Take (Space) to show it');
+  };
+  const setAutoAdvance = (on: boolean) => {
+    setAutoAdvanceState(on);
+    saveAutoAdvance(on);
+    toast.info(on ? 'The service moves on by itself when each part’s time is up' : 'The service waits for you to move on');
+  };
+
   // ---- Collections ----------------------------------------------------------
 
   const loadChapter = async (book: string, chapter: number) => {
@@ -206,11 +244,8 @@ export const LiveWorkspace = () => {
     } else {
       const from = opts.within ?? collection;
       const c = from?.kind === 'slides' ? from : null;
-      const index = c ? c.slides.findIndex((s) => s.id === item.slide.id) : -1;
-      syncService.broadcast({
-        type: 'SLIDE_UPDATE',
-        data: { slide: item.slide, index, slideIndex: index, upcoming: c && index >= 0 ? c.slides.slice(index + 1, index + 4) : [], timestamp: new Date() },
-      });
+      const index = broadcastSlide(item.slide, c);
+      if (!opts.capturing) startPart(item.slide.id);
       // A song being captured is not followed: its words are what is being sung
       if (item.slide.type === 'lyrics' && c && index >= 0 && !opts.capturing) {
         controller.current?.setLiveLyrics(
@@ -225,6 +260,56 @@ export const LiveWorkspace = () => {
     }
     setPreviewSuggestionId(undefined);
     setPrediction(null);
+  };
+
+  /** Sends a slide to the screens, with the few after it for the stage monitor. */
+  const broadcastSlide = (slide: Slide, c: Collection | null): number => {
+    const index = c?.kind === 'slides' ? c.slides.findIndex((s) => s.id === slide.id) : -1;
+    syncService.broadcast({
+      type: 'SLIDE_UPDATE',
+      data: { slide, index, slideIndex: index, upcoming: c?.kind === 'slides' && index >= 0 ? c.slides.slice(index + 1, index + 4) : [], timestamp: new Date() },
+    });
+    return index;
+  };
+
+  /** The part of a service a slide belongs to (any service in the library). */
+  const partOf = (slideId: string): { service: Service; item: ServiceSubsection } | null => {
+    for (const svc of services) {
+      for (const sec of svc.sections) {
+        const item = sec.subsections.find((it) => it.slides.some((sl) => sl.id === slideId));
+        if (item) return { service: svc, item };
+      }
+    }
+    return null;
+  };
+
+  /**
+   * A slide of another part went on screen: time the new part (for moving on
+   * by time) and start its own countdown if it has one (the Countdown before
+   * the service), stopping the one this screen started for the part before.
+   */
+  const startPart = (slideId: string) => {
+    const part = partOf(slideId)?.item ?? null;
+    if (part && livePart?.id !== part.id) {
+      setLivePart({ id: part.id, at: Date.now() });
+      movedOn.current = null;
+    }
+    if (partCountdown.current && partCountdown.current.itemId !== part?.id) {
+      stopCountdown(partCountdown.current.id);
+      partCountdown.current = null;
+    }
+    if (part?.countdown?.enabled && part.autoStartCountdown !== false && partCountdown.current?.itemId !== part.id) {
+      const started = startCountdown(countdownFromConfig(part.countdown, part.name));
+      partCountdown.current = { itemId: part.id, id: started.id };
+    }
+  };
+
+  /** Picked by the operator: on screen now, or into Next, as the switch above Live says. */
+  const choose = async (item: Live, within?: Collection) => {
+    if (!item) return;
+    if (clickMode === 'live') return goLive(item, { within });
+    if ('verse' in item) await loadChapter(item.verse.book, item.verse.chapter);
+    setPreview(item);
   };
 
   /** Detected or chosen: on screen straight away (Auto send), or into Preview to check first. */
@@ -265,7 +350,7 @@ export const LiveWorkspace = () => {
     await loadChapter(verse.book, verse.chapter);
     // A chapter ("Psalm 23") loads it with its first verse ready in Preview; a verse is presented
     if (/^\s*[1-3]?\s*[a-z ]+\s+\d+\s*$/i.test(text)) setPreview({ verse });
-    else present({ verse });
+    else void choose({ verse });
     return true;
   };
 
@@ -279,14 +364,47 @@ export const LiveWorkspace = () => {
     const slides = songSlides(song);
     const loaded = { kind: 'slides' as const, title: song.name, slides };
     setCollection(loaded);
+    setCurrentItemId(undefined);
     setPreview(slides[0] ? { slide: slides[0] } : null);
     return loaded;
   };
 
-  const loadServiceItem = (service: Service, item: ServiceSubsection) => {
+  /** A song from the library, picked by the operator: its first slide in Next, or on screen. */
+  const pickSong = (song: MediaItem) => {
+    const loaded = loadSong(song);
+    if (clickMode === 'live' && loaded.slides[0]) void goLive({ slide: loaded.slides[0] }, { within: loaded });
+  };
+
+  /**
+   * Loads a part of a service into the middle (every slide in the strip). Its
+   * first slide waits in Next, or goes on screen when picking a slide goes live
+   * (`show`; switching services never puts anything on screen).
+   */
+  const loadServiceItem = (svc: Service, item: ServiceSubsection, show = true) => {
     setCurrentItemId(item.id);
-    setCollection({ kind: 'slides', title: item.name, slides: item.slides });
-    setPreview(item.slides[0] ? { slide: item.slides[0] } : null);
+    if (svc.id !== service?.id) chooseService(svc.id);
+    const loaded = { kind: 'slides' as const, title: item.name, slides: item.slides };
+    setCollection(loaded);
+    const first = item.slides[0];
+    if (show && clickMode === 'live' && first) void goLive({ slide: first }, { within: loaded });
+    else setPreview(first ? { slide: first } : null);
+  };
+
+  const chooseService = (id: string) => {
+    setChosenService({ id, explicit: true });
+    try {
+      localStorage.setItem(LAST_SERVICE_KEY, id);
+    } catch {
+      // Not remembered; still applies now
+    }
+  };
+
+  /** Another of today's services: its order on the timeline, its first part loaded (nothing goes on screen). */
+  const switchService = (svc: Service) => {
+    chooseService(svc.id);
+    const first = svc.sections.flatMap((sec) => sec.subsections).find((it) => it.slides.length);
+    if (first) loadServiceItem(svc, first, false);
+    else setCurrentItemId(undefined);
   };
 
   // ---- Suggestions ----------------------------------------------------------
@@ -662,21 +780,9 @@ export const LiveWorkspace = () => {
     return total ? (reading.word + 1) / total : 0;
   }, [reading, liveVerse]);
 
-  // The service on today (or the one opened last), for the timeline
-  const service = useMemo(() => {
-    if (!services.length) return null;
-    const today = new Date().toDateString();
-    const lastId = localStorage.getItem(LAST_SERVICE_KEY);
-    const opened = services.find((s) => s.id === lastId);
-    // The church's own services come first; the samples only while there are none
-    const own = services.filter((s) => !s.sample);
-    const pool = own.length ? own : services;
-    return (
-      pool.find((s) => new Date(s.date).toDateString() === today) ??
-      opened ??
-      [...pool].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
-    );
-  }, [services]);
+  // The service on the timeline: the one chosen, or today's (the one under way when there are several)
+  const service = useMemo(() => pickService(services, chosenService), [services, chosenService]);
+  const todays = useMemo(() => todaysServices(services), [services]);
   // Opening the app: the service's first slide waits in Next, so the screens show the design straight away
   const primed = useRef(false);
   useEffect(() => {
@@ -718,7 +824,7 @@ export const LiveWorkspace = () => {
       const nextVerse = previewVerse && !sameVerse(previewVerse, focus) ? previewVerse : null;
       return {
         title: inPassage ? `${collection.book} ${collection.chapter}:${passage.from}–${passage.to}` : `${collection.book} ${collection.chapter}`,
-        sub: `${BibleParser.getVersionLabel()} · ${status}`,
+        sub: status,
         steps,
         stepItems: steps.map((st) => ({ verse: collection.verses.find((v) => verseKey(v) === st.key)! }) as Live),
         verse: focus,
@@ -769,12 +875,133 @@ export const LiveWorkspace = () => {
     return { title: null, sub: undefined, steps: [] as Step[], stepItems: [] as Live[], verse: liveVerse, word: -1, text: null as string | null, next: null };
   }, [collection, live, preview, liveVerse, previewVerse, passage, reading, listening, songMode]);
 
-  const pickStep = (index: number) => {
-    const item = now.stepItems[index];
-    if (!item) return;
-    if (sendMode === 'auto') goLive(item);
-    else setPreview(item);
+  const pickStep = (index: number) => void choose(now.stepItems[index]);
+
+  // Every slide (or verse) of what is loaded, for the strip
+  const slideCaption = (sl: Slide) =>
+    sl.type === 'lyrics' ? sl.content.split('\n')[0] : sl.type === 'image' ? sl.caption || sl.title || 'Picture' : sl.type === 'announcement' ? sl.title || sl.content.split('\n')[0] : sl.title;
+  const stripItems = useMemo((): StripItem[] => {
+    if (collection?.kind === 'chapter') {
+      const inChapter = liveVerse && liveVerse.book === collection.book && liveVerse.chapter === collection.chapter;
+      return collection.verses.map((v) => ({
+        key: verseKey(v),
+        label: String(v.verse),
+        item: { verse: v },
+        text: plainVerseText(v.text),
+        state: liveVerse && sameVerse(v, liveVerse) ? 'live' : previewVerse && sameVerse(v, previewVerse) ? 'next' : inChapter && v.verse < liveVerse.verse ? 'done' : '',
+      }));
+    }
+    if (collection?.kind === 'slides') {
+      return collection.slides.map((sl, i) => ({ key: sl.id, label: now.steps[i]?.label ?? String(i + 1), item: { slide: sl }, caption: slideCaption(sl), state: now.steps[i]?.state ?? '' }));
+    }
+    return [];
+  }, [collection, now, liveVerse, previewVerse]);
+
+  // ---- Quick edit -------------------------------------------------------------------
+
+  const editWhere = (slide: Slide) => {
+    const part = partOf(slide.id);
+    if (part) return `Saved to ${part.service.name.replace(/^Sample: /, '')}, ${part.item.name}. Fix a word or change the look, then save.`;
+    return slide.type === 'lyrics'
+      ? 'For this time only. To keep a change to the song, edit it in Media → Songs.'
+      : 'For this time only.';
   };
+
+  /** Saves a quick edit: in the middle, in Next, on the screens if it is showing, and in its service. */
+  const saveEdit = async (updated: Slide) => {
+    setEditing(null);
+    const swap = (list: Slide[]) => list.map((sl) => (sl.id === updated.id ? updated : sl));
+    const nextCollection = collection?.kind === 'slides' ? { ...collection, slides: swap(collection.slides) } : collection;
+    if (nextCollection !== collection) setCollection(nextCollection);
+    if (preview && 'slide' in preview && preview.slide.id === updated.id) setPreview({ slide: updated });
+    if (live && 'slide' in live && live.slide.id === updated.id) broadcastSlide(updated, nextCollection);
+    const part = partOf(updated.id);
+    if (!part) {
+      toast.success('Changed for now');
+      return;
+    }
+    const saved: Service = {
+      ...part.service,
+      sections: part.service.sections.map((sec) => ({ ...sec, subsections: sec.subsections.map((it) => (it.id === part.item.id ? { ...it, slides: swap(it.slides) } : it)) })),
+    };
+    try {
+      await ServiceStorage.saveService(saved);
+      setServices((prev) => prev.map((x) => (x.id === saved.id ? saved : x)));
+      toast.success(`Saved to ${saved.name.replace(/^Sample: /, '')}`);
+    } catch {
+      toast.error('Could not save the change', { description: 'It is on the screens for now. Try again, or edit it on the Services page.' });
+    }
+  };
+
+  // ---- Bible translation --------------------------------------------------------------
+
+  /** The translation changed on the live screen: the chapter, Next and the verse on screen follow at once. */
+  const changeVersion = async (version: BibleVersionType) => {
+    toast.success(`Verses now show in ${BibleParser.getVersionLabel(version)}`);
+    const refetch = (v: BibleVerse) => BibleParser.getVerse(v.book, v.chapter, v.verse);
+    if (collection?.kind === 'chapter') {
+      const verses = await chapterVerses(collection.book, collection.chapter);
+      if (verses.length) setCollection({ ...collection, verses });
+    }
+    if (preview && 'verse' in preview) {
+      const v = await refetch(preview.verse);
+      if (v) setPreview({ verse: v });
+    }
+    if (live && 'verse' in live) {
+      const v = await refetch(live.verse);
+      if (v) {
+        const shown: DisplayedVerse = { ...v, timestamp: new Date() };
+        syncService.broadcast({ type: 'VERSE_UPDATE', data: { verse: shown, timestamp: shown.timestamp } });
+        sendVerseToProPresenter(v);
+      }
+    }
+  };
+  const openBibleSettings = () => {
+    setSettingsPane('bible');
+    setShowSettings(true);
+  };
+
+  // ---- Moving on by time ------------------------------------------------------------
+
+  const parts = useMemo(() => timelineParts(service), [service]);
+  const timedPart = livePart ? parts.find((p) => p.item.id === livePart.id) : undefined;
+  const [tick, setTick] = useState(() => Date.now());
+  useEffect(() => {
+    if (!autoAdvance || !timedPart) return;
+    setTick(Date.now());
+    const timer = window.setInterval(() => setTick(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [autoAdvance, timedPart?.item.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const partLeft = autoAdvance && timedPart && livePart ? livePart.at + timedPart.minutes * 60_000 - tick : null;
+  // The sermon, and a verse on screen, never move on by themselves: the preacher decides
+  const holdPart = !!timedPart && (/word|sermon|message|preach|teach/i.test(`${timedPart.section} ${timedPart.item.name}`) || !!liveVerse || !!capture);
+  const partDue = partLeft !== null && partLeft <= 0;
+  const movedOn = useRef<string | null>(null);
+  useEffect(() => {
+    if (!partDue || holdPart || !service || !timedPart || movedOn.current === timedPart.item.id) return;
+    const next = parts[parts.indexOf(timedPart) + 1];
+    if (!next) return;
+    movedOn.current = timedPart.item.id;
+    loadServiceItem(service, next.item);
+    toast.info(`Moved on to ${next.item.name}`, {
+      description: `${timedPart.item.name} had ${timedPart.minutes} minutes. ${clickMode === 'live' ? 'It is on the screens.' : 'Its first slide is in Next: press Take to show it.'}`,
+      duration: 8000,
+    });
+  }, [partDue, holdPart]); // eslint-disable-line react-hooks/exhaustive-deps
+  const partLeftLabel =
+    partLeft === null ? undefined : partLeft > 0 ? `${Math.floor(partLeft / 60000)}:${String(Math.floor((partLeft % 60000) / 1000)).padStart(2, '0')} left` : holdPart ? 'time up' : 'moving on';
+
+  // The countdown a part in Next will start, shown in the Next picture (what the room will see)
+  const nextPart = preview && 'slide' in preview ? partOf(preview.slide.id)?.item : undefined;
+  const nextCountdown: { countdown: Countdown; remaining: number } | null =
+    nextPart?.countdown?.enabled && nextPart.autoStartCountdown !== false && partCountdown.current?.itemId !== nextPart.id
+      ? (() => {
+          const c = { ...countdownFromConfig(nextPart.countdown!, nextPart.name), id: `next-${nextPart.id}` };
+          return { countdown: c, remaining: c.endsAt - Date.now() };
+        })()
+      : null;
+  // The service part whose slides are in the middle (none for a song from the library or a chapter)
+  const loadedPart = collection?.kind === 'slides' && collection.slides[0] ? partOf(collection.slides[0].id)?.item : undefined;
 
   const describeLive = (item: Live): string => {
     if (!item) return 'Nothing on screen';
@@ -812,6 +1039,7 @@ export const LiveWorkspace = () => {
       : { id: 'listen', label: 'Start listening', icon: 'mic', run: startListening },
     { id: 'song', label: songMode ? 'Back to scripture (song mode off)' : 'Song mode: follow the singing', icon: 'song', run: toggleSong },
     { id: 'mode', label: sendMode === 'auto' ? 'Ask before showing verses' : 'Show verses by themselves (Auto)', icon: 'timer', run: () => setSendMode(sendMode === 'auto' ? 'preview' : 'auto') },
+    { id: 'click', label: clickMode === 'live' ? 'Picking a slide puts it in Next first' : 'Picking a slide shows it straight away', icon: 'timer', run: () => setClickMode(clickMode === 'live' ? 'next' : 'live') },
     { id: 'screens', label: 'Screens: where each output goes', icon: 'screens', run: () => navigate('/display-manager') },
     { id: 'settings', label: 'Settings', icon: 'settings', run: () => setShowSettings(true) },
   ];
@@ -824,9 +1052,12 @@ export const LiveWorkspace = () => {
       services={services}
       onSearch={search}
       onChapter={(book, chapter) => loadChapter(book, chapter)}
-      onVerse={(verse) => present({ verse })}
-      onSong={(song) => { loadSong(song); setShowLibrary(false); }}
+      onVerse={(verse) => void choose({ verse })}
+      onSong={(song) => { pickSong(song); setShowLibrary(false); }}
       onServiceItem={(svc, item) => { loadServiceItem(svc, item); setShowLibrary(false); }}
+      currentServiceId={service?.id}
+      currentItemId={currentItemId}
+      versionSwitcher={<VersionSwitcher onChange={changeVersion} onMore={openBibleSettings} />}
     />
   );
 
@@ -902,8 +1133,20 @@ export const LiveWorkspace = () => {
         </div>
       </header>
 
-      <nav className="relative px-6 pt-1 pb-4" aria-label="Order of service">
-        <ServiceTimeline service={service} currentId={currentItemId} now={nowMinutes} onPick={(item) => service && loadServiceItem(service, item)} onPlan={() => navigate('/service-planner')} />
+      <nav className="relative px-6 pt-1 pb-4 flex items-center gap-3" aria-label="Order of service">
+        {todays.length > 1 && <ServicePicker services={todays} currentId={service?.id} onPick={switchService} />}
+        <div className="min-w-0 flex-1">
+          <ServiceTimeline
+            service={service}
+            currentId={currentItemId}
+            now={nowMinutes}
+            timedId={partLeftLabel ? timedPart?.item.id : undefined}
+            timeLeft={partLeftLabel}
+            onPick={(item) => service && loadServiceItem(service, item)}
+            onPlan={() => navigate('/service-planner')}
+          />
+        </div>
+        {service && parts.length > 1 && <AutoAdvanceToggle on={autoAdvance} onChange={setAutoAdvance} />}
       </nav>
 
       <div className="relative min-h-0 grid grid-cols-[minmax(0,1fr)_clamp(380px,33vw,720px)] min-[1900px]:grid-cols-[300px_minmax(0,1fr)_clamp(560px,34vw,900px)] max-[1000px]:grid-cols-1">
@@ -912,7 +1155,31 @@ export const LiveWorkspace = () => {
         <NowPane
           title={now.title}
           sub={now.sub}
-          steps={now.steps}
+          steps={stripItems.length ? [] : now.steps}
+          titleExtra={collection?.kind === 'chapter' || (!collection && liveVerse) ? <VersionSwitcher onChange={changeVersion} onMore={openBibleSettings} /> : undefined}
+          expanded={stripExpanded && stripItems.length > 0}
+          strip={
+            stripItems.length ? (
+              <SlideStrip
+                items={stripItems}
+                expanded={stripExpanded}
+                onExpand={setStripExpanded}
+                onPick={(i) => void choose(stripItems[i].item)}
+                onTake={(i) => void goLive(stripItems[i].item)}
+                onEdit={collection?.kind === 'slides' ? (i) => setEditing(collection.slides[i]) : undefined}
+                extra={
+                  loadedPart?.countdown?.enabled ? (
+                    <span className="text-[13px] text-muted-foreground flex items-center gap-2" data-part-countdown>
+                      <span className="h-7 px-2.5 rounded-lg bg-muted/70 text-foreground font-semibold grid place-items-center tabular-nums">
+                        Countdown {loadedPart.countdown.mode === 'until' && loadedPart.countdown.untilTime ? `to ${loadedPart.countdown.untilTime}` : `${loadedPart.countdown.durationMinutes}:00`}
+                      </span>
+                      {partCountdown.current?.itemId === loadedPart.id ? 'running' : loadedPart.autoStartCountdown === false ? 'start it with Countdown' : 'starts with the first slide'}
+                    </span>
+                  ) : undefined
+                }
+              />
+            ) : undefined
+          }
           onStep={pickStep}
           verse={now.verse}
           word={now.word}
@@ -983,6 +1250,11 @@ export const LiveWorkspace = () => {
           onTake={() => (preview ? sendPreview() : step(1))}
           onClear={clearText}
           onLogo={() => showLogo(service?.id)}
+          clickMode={clickMode}
+          onClickMode={setClickMode}
+          onEditLive={live && 'slide' in live ? () => setEditing(live.slide) : undefined}
+          onEditNext={preview && 'slide' in preview ? () => setEditing(preview.slide) : undefined}
+          nextCountdown={nextCountdown}
         />
       </div>
 
@@ -993,6 +1265,15 @@ export const LiveWorkspace = () => {
         </SheetContent>
       </Sheet>
 
+      <QuickEdit
+        slide={editing}
+        where={editing ? editWhere(editing) : ''}
+        live={!!editing && !!live && 'slide' in live && live.slide.id === editing.id}
+        onClose={() => setEditing(null)}
+        onSave={(sl) => void saveEdit(sl)}
+        onDesigner={partOf(editing?.id ?? '') ? () => { setEditing(null); navigate('/service-planner'); } : undefined}
+      />
+
       <CommandPalette
         open={showPalette}
         onOpenChange={setShowPalette}
@@ -1000,7 +1281,7 @@ export const LiveWorkspace = () => {
         service={service}
         actions={paletteActions}
         onReference={search}
-        onSong={loadSong}
+        onSong={pickSong}
         onServiceItem={(item) => service && loadServiceItem(service, item)}
       />
 

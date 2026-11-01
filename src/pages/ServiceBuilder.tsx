@@ -226,34 +226,37 @@ const ServiceBuilder = () => {
     toast.success('Subsection duplicated');
   };
 
+  /** Pictures as slides, one each, in the order of their names (Slide1, Slide2 … Slide10, as PowerPoint exports them), whatever order they were picked in */
+  const addPictureFiles = async (list: FileList | null) => {
+    const files = Array.from(list ?? [])
+      .filter((file) => file.type.startsWith('image/') || (toast.error(`${file.name} is not an image`), false))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+    if (!files.length) return;
+    const urls = await Promise.all(
+      files.map(
+        (file) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+          }),
+      ),
+    );
+    const stamp = Date.now();
+    files.forEach((file, i) =>
+      addSlideToSubsection({ id: `slide-${stamp}-${i}`, type: 'image', title: file.name.replace(/\.[^/.]+$/, ''), imageUrl: urls[i] } as ImageSlide),
+    );
+    toast.success(`${files.length} picture${files.length > 1 ? 's' : ''} added, in order of their names`);
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedSubsection) {
       toast.error('Please select a subsection first');
       return;
     }
 
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} is not an image`);
-        continue;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const newSlide: ImageSlide = {
-          id: `slide-${Date.now()}-${Math.random()}`,
-          type: 'image',
-          title: file.name,
-          imageUrl: e.target?.result as string,
-        };
-        addSlideToSubsection(newSlide);
-      };
-      reader.readAsDataURL(file);
-    }
-    toast.success(`${files.length} image(s) uploaded`);
+    await addPictureFiles(event.target.files);
     event.target.value = '';
   };
 
@@ -513,32 +516,7 @@ const ServiceBuilder = () => {
     input.type = 'file';
     input.accept = 'image/*';
     input.multiple = true;
-    input.onchange = async (e) => {
-      const files = (e.target as HTMLInputElement).files;
-      if (!files || files.length === 0) return;
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file.type.startsWith('image/')) {
-          toast.error(`${file.name} is not an image`);
-          continue;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const imageUrl = event.target?.result as string;
-          const newSlide: ImageSlide = {
-            id: `slide-${Date.now()}-${i}`,
-            type: 'image',
-            title: file.name.replace(/\.[^/.]+$/, ''),
-            imageUrl: imageUrl,
-          };
-          addSlideToSubsection(newSlide);
-        };
-        reader.readAsDataURL(file);
-      }
-      toast.success(`${files.length} image${files.length > 1 ? 's' : ''} added`);
-    };
+    input.onchange = (e) => void addPictureFiles((e.target as HTMLInputElement).files);
     input.click();
   };
 

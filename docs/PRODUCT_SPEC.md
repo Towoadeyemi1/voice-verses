@@ -221,22 +221,28 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   - `StatusCapsule`: Start/Stop listening, a level meter, what the app is following, Mute, ♪ Song, and Auto / Ask first.
   - Search (⌘K), Countdown, Settings, and a clock with "ends hh:mm" or "n min over".
 - **Timeline** (`live/ServiceTimeline.tsx`):
-  - Today's service (or the one opened last), with each item as wide as its minutes. The length is the item's timer, or a typical length for its kind.
+  - The service chosen this session; otherwise, of today's services, the one under way (started, or starting within 30 minutes); otherwise the one opened last. Each item is as wide as its minutes.
+  - **Several services today** (1.9.0, `live/ServicePicker.tsx`): they sit side by side before the timeline (time and name); one click switches, loading the first part into Next without putting anything on screen.
+  - **Move on by time** (1.9.0, key `voice-verses-auto-advance`): a switch after the timeline. The part on screen is timed from when its first slide went live and shows "m:ss left" on its tile. When the time is up the next part loads (strip and Next, or on screen if picking a slide goes live). Parts named sermon/word/message/preach/teach, a verse on screen, and a song being captured never move on by themselves ("time up"). The length is the item's timer, or a typical length for its kind.
   - Each item is tinted by kind; the current one is solid with its progress.
   - It scrolls sideways; click an item to load it.
 - **Now pane** (`live/NowPane.tsx`), the same pattern for scripture and songs:
-  - A title and status, plus step chips: verses of the passage or near the live verse, or a song's sections (V1, C, V2.1…). Red marks live and green marks next.
+  - A title and status, with the **translation switch** (1.9.0, `live/VersionSwitcher.tsx`, "KJV ▾") beside a chapter or verse: KJV, ASV, WEB, plus ESV/NLT with a key and the chosen API.Bible translations. Changing it refetches the chapter, Next and the verse on screen, and re-sends it. Step chips (verses or song sections) show only when nothing is loaded into the strip.
+  - **The slides strip** (1.9.0, `live/SlideStrip.tsx`) along the bottom: every slide of what is loaded, as 184px pictures drawn by `OutputContent` (verses of a chapter as text cards), each with its label (V1.2, C, 16) and first words. Live is framed red ("Live · V2"), Next green, done slides faded. Click = pick (per the switch above Live); double-click = show now; the pencil = Quick edit. It scrolls to keep Live in view. "See all slides" makes it a grid filling the middle; "Show the words large" goes back. A part with its own countdown shows "Countdown 5:00 · starts with the first slide" (then "running").
   - The verse being read, large in Newsreader, with the word being read underlined at the reader's pace (`usePacedWord`).
   - What comes next, faded underneath.
   - "Heard" (the last words recognised).
 - **Suggestion bar** (`live/SuggestionBar.tsx`): one suggestion at a time, with a confidence ring, "n more", Show now, Use (puts it in Next), and dismiss.
 - **Screens column** (`live/ScreensColumn.tsx`):
-  - Live (red frame), with Logo and Clear.
+  - **When I pick a slide: Goes live | Waits in Next** (1.9.0, `lib/clickMode.ts`, key `voice-verses-click-mode`, default Waits in Next). It applies to the strip, step chips, Library verses and songs, parts of the service, ⌘K picks and moving on by time. Verses found by listening keep following Auto / Ask first.
+  - Live (red frame), with Edit (Quick edit, for a slide), Logo and Clear.
   - **Take** (Space): a raised graphite button whose arrow turns green when Next is ready.
-  - Next (green frame).
+  - Next (green frame), with Edit. If Next is the first slide of a part with its own countdown, the picture shows that countdown, as the room will see it.
   - The stream and stage screens, as chips (below 1900px) or live pictures (1900px and up).
   - Monitors keep the projector's shape and fit the window's height (`.monitor-fit`).
-- **Library:** a column at 1900px and wider; otherwise a drawer from the left. The palette (`live/CommandPalette.tsx`, ⌘K or Ctrl+K) finds references, service items, songs and actions.
+- **Quick edit** (1.9.0, `live/QuickEdit.tsx`): title, section name, words (lyrics, announcement, picture caption) and look, beside a picture of how the room will see it. Saved to the slide's service in IndexedDB (or for this time only for a library song), in the strip and Next, and re-sent to the screens if live. Scripture keeps the Bible's words; only its look changes.
+- **Part countdowns** (1.9.0): when a slide of a part whose `countdown.enabled` (and `autoStartCountdown` is not false) goes live, its countdown starts (`countdownFromConfig`); it is stopped when a slide of another part goes live. Only the countdown this screen started is stopped.
+- **Library:** a column at 1900px and wider; otherwise a drawer from the left. Bible tab has the translation switch. Service tab (1.9.0) groups services under Today, Coming up, Earlier and Samples (date tile, time, number of parts, a green dot on the one on the timeline); inside, sections carry their timeline colour and each part its slides and minutes, the loaded one marked. The palette (`live/CommandPalette.tsx`, ⌘K or Ctrl+K) finds references, service items, songs and actions.
 - **Layout by window width:** under 1000px, one column; 1000–1900px, Now and Screens; 1900px and up, Library, Now and Screens.
 - **Keys:** Space or Enter = Take (or the next item); ←/→ = previous/next; Esc = clear the words; ⌘K = search.
 - **Colours:** warm graphite tokens in `index.css`; `--live` and `--next` for meaning. The live look's colours softly light the window.
@@ -334,6 +340,8 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | --- | --- |
 | `voice-verses-live`, `voice-verses-countdown` | What is on screen, and the running countdown (for late-opened windows) |
 | `voice-verses-send-mode` | `auto` or `preview` |
+| `voice-verses-click-mode` | `live` or `next`: what picking a slide does (1.9.0) |
+| `voice-verses-auto-advance` | `on` or `off`: the service moves on by time (1.9.0) |
 | `voice-verses-templates`, `voice-verses-template-assignments` | Looks and which look each output and kind uses |
 | `voice-verses-color-teams`, `voice-verses-color-team`, `voice-verses-color-team-by-month` | Colour teams, the chosen team, follow the month |
 | `voice-verses-look-themes` | Saved themes |

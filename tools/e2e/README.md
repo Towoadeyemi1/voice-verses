@@ -17,6 +17,7 @@ python3 tools/e2e/make-sermon-audio.py path/to/en_US-lessac-medium.onnx /tmp/vv-
 xvfb-run -a -s "-screen 0 3840x1600x24" node tools/e2e/sermon.cjs auto     # or: preview
 python3 tools/e2e/make-worship-audio.py path/to/en_US-lessac-medium.onnx /tmp/vv-e2e/worship.wav
 xvfb-run -a node tools/e2e/worship.cjs     # Predictive Next, the leader's cues, spontaneous worship (~2 min)
+xvfb-run -a node tools/e2e/live-slides.cjs # slides strip and grid, Goes live / Waits in Next, Quick edit, part countdowns, translation switch, two services, Move on by time
 node tools/e2e/mock-ollama.cjs &                                           # fake Ollama for AI slide tests
 ```
 
