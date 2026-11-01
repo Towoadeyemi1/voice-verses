@@ -2,7 +2,7 @@
   "name": "voice-verses",
   "productName": "Voice Verses",
   "private": true,
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Voice-activated Bible verse projection system for church services",
   "author": "Voice Verses Team",
   "main": "electron/main.js",

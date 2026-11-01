@@ -102,5 +102,6 @@ Settings live in `localStorage`, which every window shares, so outputs update th
 - Worship leader cues, spontaneous worship capture and Predictive Next shipped in 1.6.0. Remaining signature features are in `docs/ROADMAP.md` (moment autopilot first).
 - Moving backgrounds and transitions shipped in 1.5.0 (17 styles, 40 samples and the speed guard in 1.5.1). Phase 1 still needs light mode and the designer inspector restyle.
 - Alerts (messages over any slide) shipped in 1.8.0.
+- 1.9.0: every slide of what is loaded in a strip or grid, "When I pick a slide: Goes live | Waits in Next" above Live, Quick edit, the translation switch on the live screen, several services a day, part countdowns that start themselves, and Move on by time.
 - Props layers, multiple timers, a stage layout editor, live captions and translation, verses on phones (QR), PowerPoint and Planning Center import, Stream Deck/remote control, NDI, CCLI reporting.
 - Signed and notarised installers, which need the owner's Apple Developer account and a Windows certificate.

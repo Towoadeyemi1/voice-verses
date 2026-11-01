@@ -1,4 +1,5 @@
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Pencil } from 'lucide-react';
+import { ClickMode } from '@/lib/clickMode';
 import { ScaledStage } from '../ScaledStage';
 import { OutputContent, Live } from '../OutputContent';
 import { AlertBanner } from '../AlertBanner';
@@ -32,6 +33,11 @@ export const ScreensColumn = ({
   onTake,
   onClear,
   onLogo,
+  clickMode,
+  onClickMode,
+  onEditLive,
+  onEditNext,
+  nextCountdown,
 }: {
   live: Live;
   logo: string | null;
@@ -45,6 +51,14 @@ export const ScreensColumn = ({
   onTake: () => void;
   onClear: () => void;
   onLogo: () => void;
+  /** What picking a slide does: straight to Live, or into Next first */
+  clickMode: ClickMode;
+  onClickMode: (mode: ClickMode) => void;
+  /** Quick edit (only for a slide, not a verse) */
+  onEditLive?: () => void;
+  onEditNext?: () => void;
+  /** The countdown Next will start (a part with its own countdown), shown in its picture */
+  nextCountdown?: { countdown: Countdown; remaining: number } | null;
 }) => {
   const projector = usePreviewStage('projection');
   const stream = usePreviewStage('stream');
@@ -52,7 +66,33 @@ export const ScreensColumn = ({
 
   return (
     <section className="min-h-0 flex flex-col gap-3 pl-2 pr-6 pt-1 pb-5 overflow-y-auto" aria-label="Screens">
+      {/* What picking a slide does: the operator's choice, kept for next time */}
+      <div className="monitor-fit flex items-center gap-2 flex-shrink-0" style={{ ['--ratio' as string]: projector.width / projector.height }}>
+        <span className="text-[13px] font-semibold text-muted-foreground whitespace-nowrap">When I pick a slide</span>
+        <div className="ml-auto flex p-[3px] rounded-full bg-muted/70" role="radiogroup" aria-label="When I pick a slide">
+          {(['live', 'next'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              role="radio"
+              aria-checked={clickMode === m}
+              onClick={() => onClickMode(m)}
+              className={`h-[30px] px-3 rounded-full text-[13px] font-semibold flex items-center gap-1.5 whitespace-nowrap ${clickMode === m ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              title={m === 'live' ? 'Clicking a slide, verse or part of the service shows it on the screens straight away' : 'Clicking a slide, verse or part waits in Next until you press Take (Space)'}
+            >
+              <i className="w-[7px] h-[7px] rounded-full" style={{ background: `hsl(var(--${m}))` }} />
+              {m === 'live' ? 'Goes live' : 'Waits in Next'}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <Label tone="live" title="Live" detail={logoUp ? (logo ? 'Logo' : 'Clear') : liveLabel}>
+        {onEditLive && !logoUp && (
+          <button type="button" onClick={onEditLive} className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5" title="Quick edit: change the words or the look of what is on the screens">
+            <Pencil className="w-3.5 h-3.5" /> Edit
+          </button>
+        )}
         <button type="button" onClick={onLogo} className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground" title="Show the church logo on every screen">
           Logo
         </button>
@@ -87,10 +127,16 @@ export const ScreensColumn = ({
         <kbd className="font-sans text-xs font-semibold px-1.5 py-0.5 rounded-md bg-white/[0.07] text-muted-foreground">Space</kbd>
       </button>
 
-      <Label tone="next" title="Next" detail={nextLabel} />
+      <Label tone="next" title="Next" detail={nextLabel}>
+        {onEditNext && (
+          <button type="button" onClick={onEditNext} className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5" title="Quick edit: change the words or the look of the slide in Next">
+            <Pencil className="w-3.5 h-3.5" /> Edit
+          </button>
+        )}
+      </Label>
       <div className="monitor-fit relative rounded-[14px] overflow-hidden shadow-[0_0_0_2px_hsl(var(--next))] flex-shrink-0" style={{ ['--ratio' as string]: projector.width / projector.height }}>
         <ScaledStage stage={projector} fitShape className="bg-black">
-          <OutputContent live={next} output="projection" preview />
+          <OutputContent live={next} output="projection" countdown={nextCountdown?.countdown} remaining={nextCountdown?.remaining ?? 0} preview />
         </ScaledStage>
         {!next && <div className="absolute inset-0 grid place-items-center text-sm text-white/45">The next verse or slide waits here</div>}
       </div>

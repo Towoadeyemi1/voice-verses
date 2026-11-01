@@ -126,6 +126,16 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Decision:** Sample services and public-domain songs are added at first opening. The live screen opens on today's service with a picture of each part and its first slide in Next. A demo plays real detection from a script. Samples are clearly marked, never chosen over the church's own work, and removed in one click.
 - **Why:** A new church judges the app in its first minute. Showing it working with real content explains it better than any help text.
 
+### D21. Picking a slide and hearing a verse are separate choices
+- **Context:** The owner asked for a switch above Live so picked items "go straight instead of staying at preview first". The top bar already had Auto / Ask first for verses found by listening.
+- **Decision:** A second, separate setting above Live, "When I pick a slide: Goes live | Waits in Next", for everything the operator picks (strip, verses, songs, parts, moving on by time). Auto / Ask first stays for detection only.
+- **Why:** They are different risks. A click is a person's choice, so showing it at once is safe for a confident operator. Detection is the app's guess, which rule 1 governs. One switch for both would force a church to loosen detection to get fast clicking, or slow clicking to keep detection careful.
+
+### D22. Moving on by time never leaves the preacher
+- **Context:** The owner asked for the order of service to move on by itself when each part's time is up.
+- **Decision:** It is a switch, off by default. Timing starts when a part's first slide goes live. The sermon (by name), a verse on screen and a song being captured are never left by the clock: the tile says "time up" instead.
+- **Why:** Announcements and countdowns run to time, but preachers don't. Taking the preacher's verse away because a plan said 35 minutes would be the worst possible surprise.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

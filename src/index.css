@@ -7,6 +7,13 @@ All colors MUST be HSL.
 */
 
 @layer base {
+  /* The app is dark: native scrollbars and controls match (no bright white scrollbars in a dark booth) */
+  html {
+    color-scheme: dark;
+  }
+  * {
+    scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+  }
   :root {
     --background: 270 8% 7%;
     --foreground: 280 14% 96%;

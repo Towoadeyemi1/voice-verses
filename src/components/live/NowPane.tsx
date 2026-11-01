@@ -45,6 +45,9 @@ export const NowPane = ({
   children,
   onSearch,
   empty,
+  titleExtra,
+  strip,
+  expanded = false,
 }: {
   title: string | null;
   sub?: string;
@@ -62,12 +65,18 @@ export const NowPane = ({
   /** The suggestion bar */
   children?: ReactNode;
   onSearch: () => void;
+  /** Beside the title: the Bible translation */
+  titleExtra?: ReactNode;
+  /** Every slide of what is loaded, along the bottom (or filling the middle when expanded) */
+  strip?: ReactNode;
+  expanded?: boolean;
 }) => (
-  <main className="min-h-0 grid grid-rows-[auto_minmax(0,1fr)_auto] gap-3 px-6 xl:px-10 pt-3 pb-5">
+  <main className={`min-h-0 grid gap-3 px-6 xl:px-10 pt-3 pb-5 ${strip ? (expanded ? 'grid-rows-[auto_minmax(0,1fr)_auto]' : 'grid-rows-[auto_minmax(0,1fr)_auto_auto]') : 'grid-rows-[auto_minmax(0,1fr)_auto]'}`}>
     <div className="flex items-center gap-x-4 gap-y-2 flex-wrap min-h-9">
       {title ? (
         <>
           <h1 className="m-0 text-[28px] xl:text-[30px] font-bold tracking-[-0.025em] leading-tight">{title}</h1>
+          {titleExtra}
           {sub && <span className="text-sm text-muted-foreground">{sub}</span>}
         </>
       ) : null}
@@ -96,6 +105,9 @@ export const NowPane = ({
       )}
     </div>
 
+    {strip && expanded ? (
+      strip
+    ) : (
     <div className="self-center min-w-0 overflow-hidden">
       {verse ? (
         <ReadAlong verse={verse} word={word ?? -1} />
@@ -122,6 +134,8 @@ export const NowPane = ({
         </p>
       )}
     </div>
+    )}
+    {strip && !expanded && <div className="min-w-0">{strip}</div>}
 
     <div className="space-y-2.5 min-w-0">
       {heard !== undefined && (

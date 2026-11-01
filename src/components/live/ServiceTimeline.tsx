@@ -66,8 +66,13 @@ export const ServiceTimeline = ({
   now,
   onPick,
   onPlan,
+  timedId,
+  timeLeft,
 }: {
   service: Service | null;
+  /** The part being timed (moving on by time), and its time left ("3:12 left") */
+  timedId?: string;
+  timeLeft?: string;
   /** The item loaded now (its slides are in the middle) */
   currentId?: string;
   /** Minutes since midnight */
@@ -122,7 +127,9 @@ export const ServiceTimeline = ({
               )}
               <span className="relative w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: on ? '#fff' : p.color }} />
               <span className="relative truncate">{p.item.name}</span>
-              <span className={`relative text-xs font-medium ${on ? 'text-white/75' : 'text-muted-foreground'}`}>{clock(begins + p.start)}</span>
+              <span className={`relative text-xs font-medium tabular-nums ${on ? 'text-white/75' : 'text-muted-foreground'}`} data-time-left={timedId === p.item.id && timeLeft ? '' : undefined}>
+                {timedId === p.item.id && timeLeft ? timeLeft : clock(begins + p.start)}
+              </span>
             </button>
           );
         })}

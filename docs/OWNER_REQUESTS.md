@@ -154,6 +154,54 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.8.0 Several countdowns and alerts at once, each on the screens chosen (All screens, or any of projector, stage monitor, stream). A new one takes only its screens, so each screen can show its own: the room counts down to the start while the stage times the sermon. The panels list what is running, each with its own Stop or Clear.
 - ✅ 1.8.0 Countdowns turn yellow when close (30 s, 1, 2 or 5 min left, as chosen) and red when done, blinking if chosen (on by default), on the projector, stage monitor, stream and the Countdown button. Alerts can blink too.
 - 💬 Also asked: "How else can we make this way better and excellent features wise, aesthetically, and intuitive" (answered with a prioritised list).
+- ✅ 1.8.0 merged and released by the owner (v1.8.0).
+
+## "Here is ProPresenter. Do you think our own design is more aesthetic, exceptional, intuitive and excellent?"
+
+- 💬 Answered honestly: calmer and clearer (one status, Live and Next framed like a switcher, the words large, listening built in), but ProPresenter showed every slide of a section at once and Voice Verses did not. Fixed in 1.9.0 (below).
+
+## "Why can't we see the slides or rest of the slides or content below… Do you think it should spread horizontally?"
+
+- ✅ 1.9.0 Every slide of what is loaded (a song, a service part, a chapter's verses) along the bottom of the middle, spreading horizontally, as small pictures drawn exactly as the room will see them. Live is framed red and Next green, each with its word. Click picks a slide, double-click shows it now, and the pencil opens Quick edit.
+- ✅ 1.9.0 "See all slides" turns the middle into a grid of every slide (like ProPresenter), and "Show the words large" goes back.
+
+## "Can we only have suggestions that are at least 50%…" then "actually can you leave it, don't adjust it to 50%, because sometimes it's less than 50%"
+
+- 💬 Left as it is, as asked. A 30% suggestion can still be the right verse; suggestions never go on screen by themselves.
+
+## "What if there are more than 1 service on Sunday, can we see multiple services listed?"
+
+- ✅ 1.9.0 When there are several services today, they sit side by side before the order of service (9:00 First service · 11:00 Second service). The one under way is chosen by the clock, and one click switches (nothing goes on screen when switching).
+- ✅ 1.9.0 The Library's Service tab lists services under Today, Coming up, Earlier and Samples, each with its date, time and number of parts. The one on the timeline is marked.
+
+## "Can order of service be timed and self move and display the next section in the slides section?"
+
+- ✅ 1.9.0 "Move on by time" beside the order of service. While on, the part on screen shows its time left on the timeline. When its planned time is up, the next part loads into the slides strip, with its first slide in Next (or on screen, if picking a slide goes live). The sermon, a verse on screen and a song being captured never move on by themselves.
+
+## "I don't see anywhere to switch scripture versions without going into Settings"
+
+- ✅ 1.9.0 A translation switch ("KJV ▾") beside the passage on the live screen and in the Library's Bible tab: KJV, ASV and WEB always, plus ESV, NLT and API.Bible translations once set up. The verse on screen, Next and the chapter change at once. "More translations" opens Settings → Bible.
+
+## "Can slides or any item be quickly edited from the preview area? Where users can click and have a quick edit on the go"
+
+- ✅ 1.9.0 Quick edit: Edit on the Live and Next pictures, and a pencil on every slide in the strip. Change the words, title, section name or look, with a picture of how the room will see it. It is saved to the service, and the screens update at once if it is showing. (A song from the library changes for this time only; scripture keeps the Bible's words.)
+
+## "The countdown section of your template has no countdown, why, and is that possible?"
+
+- ✅ 1.9.0 A part with its own countdown (the sample's "Countdown" before the service) now starts it when its slide goes on the live screen ("We begin in 4:59"), and stops it when the service moves to another part. Next shows the countdown it will start, and the strip says "Countdown 5:00 · starts with the first slide", then "running".
+
+## "Sometimes all the slides could be pictures. Does the app and service settings allow that?"
+
+- 💬 Yes: Services → Pictures adds many pictures at once, one slide each, full screen. A whole service can be pictures (an exported PowerPoint, for example).
+- ✅ 1.9.0 The pictures now keep the order of their file names (Slide1, Slide2 … Slide10), whatever order they were picked in, and show as pictures in the slides strip.
+
+## "Also on top of the area where the live display is should have something that could allow users to change the settings so that sent items go straight instead of staying at preview first"
+
+- ✅ 1.9.0 Above Live: "When I pick a slide: Goes live | Waits in Next". It applies to slides in the strip, verses, songs, parts of the service and the order of service moving on by time, and it is remembered. (Verses found by listening still follow Auto / Ask first in the top bar.)
+
+## "For the list section on the right, can it be made more aesthetically pleasing and more organised"
+
+- ✅ 1.9.0 The Library's service list is grouped (Today, Coming up, Earlier, Samples) with a date tile, time and number of parts. Inside a service, each section has its colour from the timeline, and each part shows its slides and minutes, with the loaded part marked.
 
 ## Process
 
