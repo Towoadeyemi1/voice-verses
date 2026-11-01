@@ -37,6 +37,10 @@ Check this list before debugging. Add every new mistake that cost time.
 - **Blending two team colours halfway made grey** (gold and blue are opposites). Blend a colour towards the background colour instead.
 - **A dissolve dipped darker halfway:** two opaque layers each at 50% let black show through. The leaving background holds at full opacity under the new one (`vv-hold`).
 - **Crossfading the whole slide flickered shapes and logos** that were the same on both slides. Transition the background, the look's own layers and the words separately, each keyed on what actually changed.
+- **Measuring background cost:** under Xvfb there is no graphics chip, so it shows the worst case. Plain slides drew at 60 fps; full-screen soft gradients at 17–25.
+  - Stepped animation timing (`steps()`) saved nothing: the screen is still redrawn every frame.
+  - One element drawing a whole field of lights with `box-shadow` was **slower** (18 fps) than many tiny separate layers (33 fps). Chromium skips empty tiles, so small separate layers cost little.
+  - Fold static overlays together (the vignette and the darkening are one layer).
 - **Keep the leaving slide's React key** when it moves to the "leaving" list, or React remounts it and a video behind it restarts.
 
 ## Detection

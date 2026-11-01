@@ -16,6 +16,7 @@ import { ProPresenterSettings } from './ProPresenterSettings';
 import { MicrophoneSettings } from './MicrophoneSettings';
 import { NetworkOutputSettings } from './NetworkOutputSettings';
 import { ScreenSettings } from './ScreenSettings';
+import { MotionSettings } from './MotionSettings';
 
 type Pane = 'bible' | 'listening' | 'screens' | 'network' | 'songs' | 'logo' | 'library' | 'propresenter' | 'app';
 
@@ -143,7 +144,12 @@ export const SettingsPanel = ({ onClose, initial = 'bible', framed = true }: { o
             </>
           )}
 
-          {pane === 'screens' && <ScreenSettings />}
+          {pane === 'screens' && (
+            <>
+              <ScreenSettings />
+              <MotionSettings />
+            </>
+          )}
           {pane === 'network' && <NetworkOutputSettings />}
 
           {pane === 'songs' && (

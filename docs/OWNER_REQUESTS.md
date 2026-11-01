@@ -110,6 +110,20 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - Transitions per look and per slide; only the words move when the background stays the same.
 - ⏳ Still in Phase 1: light mode and the designer inspector restyle.
 
+## "Can you add many great sample backgrounds… is the app going to be slow and freezing? Or you are going to make it fast?"
+
+✅ 1.5.1:
+- 17 background styles (new: cross of light, clouds, snow, fireflies, ripples, sunburst, light streaks, sheen) and 40 named samples in their own colours (Worship, Scripture and prayer, Seasons, Celebration, Calm).
+- They're chosen from Looks → Backgrounds, or "All backgrounds and samples" in the designer.
+- Speed: measured. Listening runs on its own and is never slowed by backgrounds. Each computer checks itself and keeps backgrounds still if it can't move them smoothly; Settings → Screens can choose Automatic, Always move or Keep still.
+
+## "First update the app, then build: worship leader voice cues, spontaneous worship captured, Predictive Next"
+
+- ✅ 1.5.0 merged (the owner publishes the `v1.5.0` release).
+- ⏳ Worship leader voice cues ("one more time", "go to the bridge", "back to the chorus").
+- ⏳ Spontaneous worship captured as slides and saved as a draft song.
+- ⏳ Predictive Next (outline, passage being read, cross-references).
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

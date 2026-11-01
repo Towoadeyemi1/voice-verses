@@ -26,6 +26,8 @@ import { describeShape, shapeOf, STANDARD_STAGE, StageSize } from '@/lib/screenS
 import { DEFAULT_MOTION, MOTION_STYLES, MotionBackground as Motion } from '@/lib/backgrounds';
 import { MotionBackground } from '@/components/MotionBackground';
 import { TransitionPicker } from '@/components/TransitionPicker';
+import { BackgroundChooser, BackgroundChoice, withBackground } from './BackgroundGallery';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cleanTransition, TRANSITIONS } from '@/lib/transitions';
 
 type Selection = 'background' | 'text' | 'label' | 'logo' | 'transition' | string;
@@ -245,6 +247,40 @@ const MotionPick = ({ value, base, onChange }: { value: Motion; base: string; on
         </button>
       ))}
     </div>
+  );
+};
+
+/** Every background and sample, to choose one for this look. */
+const MoreBackgrounds = ({ template, onChange }: { template: Template; onChange: (t: Template) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [choice, setChoice] = useState<BackgroundChoice>({ team: template.background.motion?.style ?? 'aurora' });
+  return (
+    <>
+      <Button type="button" size="sm" variant="outline" className="w-full gap-1.5" onClick={() => setOpen(true)}>
+        <Sparkles className="w-3.5 h-3.5" />
+        All backgrounds and samples
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Backgrounds for “{template.name}”</DialogTitle>
+            <DialogDescription>Point at one to see it move; choose it to use it behind this look.</DialogDescription>
+          </DialogHeader>
+          <BackgroundChooser value={choice} onChange={setChoice} />
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                onChange(withBackground(template, choice));
+                setOpen(false);
+              }}
+            >
+              Use it
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
@@ -548,6 +584,7 @@ export const SlideDesigner = ({
                 <>
                   <p className="m-0 text-xs text-muted-foreground">Made by the app in your colours: no files, nothing to download, no copyright to check.</p>
                   <MotionPick value={background.motion ?? DEFAULT_MOTION} base={background.color} onChange={(style) => set('background', { motion: { ...(background.motion ?? DEFAULT_MOTION), style } })} />
+                  <MoreBackgrounds template={template} onChange={(t) => commit(t)} />
                   <Row label="Colour 1"><ColorPick value={(background.motion ?? DEFAULT_MOTION).colors[0]} onChange={(c) => { const m = background.motion ?? DEFAULT_MOTION; set('background', { motion: { ...m, colors: [c, m.colors[1]] } }); }} /></Row>
                   <Row label="Colour 2"><ColorPick value={(background.motion ?? DEFAULT_MOTION).colors[1]} onChange={(c) => { const m = background.motion ?? DEFAULT_MOTION; set('background', { motion: { ...m, colors: [m.colors[0], c] } }); }} /></Row>
                   <Row label="Underneath"><ColorPick value={background.color} onChange={(color) => set('background', { color })} /></Row>

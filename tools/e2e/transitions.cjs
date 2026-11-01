@@ -16,6 +16,19 @@ const running = (page) =>
   const { app, win, errors } = await launch('transitions');
   await setBounds(app, 1600, 900);
 
+  // ---- The speed guard (Automatic): the projector measures how smoothly this computer draws (light rays: the heaviest)
+  await win.evaluate(() => {
+    localStorage.setItem('voice-verses-templates', JSON.stringify([{ id: 'scripture-full', name: 'Scripture – full screen', background: { type: 'motion', color: 'team:background', motion: { style: 'rays', colors: ['team:primary', 'team:secondary'], speed: 1 }, dim: 0.2 } }]));
+    location.hash = '#/projection';
+  });
+  await win.waitForTimeout(7500);
+  const finding = await win.evaluate(() => JSON.parse(localStorage.getItem('voice-verses-motion-slow') || 'null'));
+  const stillNow = (await win.locator('[data-motion][data-still="yes"]').count()) === 1;
+  check('speed guard: a slow computer gets still backgrounds, a fast one keeps them moving', finding ? stillNow : !stillNow, finding ? `slow here: ${finding.fps} fps` : 'smooth here');
+  // The rest of the checks need movement
+  await win.evaluate(() => { localStorage.removeItem('voice-verses-templates'); localStorage.setItem('voice-verses-motion', 'full'); window.dispatchEvent(new Event('voice-verses-motion-changed')); location.hash = '#/settings'; });
+  await win.waitForTimeout(800);
+
   // ---- The projector: built-in scripture look on a moving glow, dissolving between verses
   await win.evaluate(() => (location.hash = '#/projection'));
   await win.waitForTimeout(1500);
@@ -75,7 +88,7 @@ const running = (page) =>
   await win.getByRole('button', { name: 'Backgrounds' }).click();
   await win.waitForTimeout(800);
   await win.screenshot({ path: `${OUT}/transitions-gallery.png` });
-  await win.getByRole('radio', { name: /^Waves/ }).click();
+  await win.getByRole('radio', { name: 'Waves', exact: true }).click();
   await win.getByRole('button', { name: 'Use Waves' }).click();
   await win.waitForTimeout(500);
   const all = await win.evaluate(() => {
@@ -85,8 +98,23 @@ const running = (page) =>
   });
   check('every projector look now has waves', all.length === 4 && all.every((s) => s === 'waves'), all.join(', '));
 
+  // A ready-made sample in its own colours
+  await win.getByRole('button', { name: 'Backgrounds' }).click();
+  await win.waitForTimeout(600);
+  await win.getByRole('tab', { name: /^Samples/ }).click();
+  await win.waitForTimeout(600);
+  await win.screenshot({ path: `${OUT}/transitions-samples.png` });
+  await win.getByRole('radio', { name: 'Christmas snow' }).hover();
+  await win.waitForTimeout(400);
+  check('the sample pointed at moves; the others stand still', await win.evaluate(() => [...document.querySelectorAll('[role=dialog] [data-motion]')].filter((e) => !e.dataset.still).length === 1));
+  await win.getByRole('radio', { name: 'Christmas snow' }).click();
+  await win.getByRole('button', { name: 'Use Christmas snow' }).click();
+  await win.waitForTimeout(500);
+  const snow = await win.evaluate(() => JSON.parse(localStorage.getItem('voice-verses-templates')).find((t) => t.id === 'scripture-full').background);
+  check('a sample keeps its own colours', snow.motion.style === 'snow' && snow.color === '#071226', JSON.stringify(snow));
+
   // ---- Every style draws without errors on the projector
-  for (const style of ['aurora', 'flow', 'bokeh', 'rays', 'waves', 'stars', 'glow', 'horizon', 'texture']) {
+  for (const style of ['aurora', 'flow', 'bokeh', 'rays', 'waves', 'stars', 'glow', 'horizon', 'texture', 'cross', 'clouds', 'snow', 'fireflies', 'ripples', 'sunburst', 'streaks', 'sheen']) {
     await win.evaluate((style) => {
       const t = JSON.parse(localStorage.getItem('voice-verses-templates'));
       const s = t.find((x) => x.id === 'scripture-full');
@@ -102,7 +130,7 @@ const running = (page) =>
     await win.evaluate(() => (location.hash = '#/templates'));
     await win.waitForTimeout(400);
   }
-  check('all nine backgrounds drawn', true);
+  check('all seventeen backgrounds drawn', true);
 
   // Through black: the whole screen (background too) goes down and up
   await win.evaluate(() => {

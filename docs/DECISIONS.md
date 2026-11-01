@@ -110,6 +110,7 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
   - Transitions belong to a look, with a per-slide choice; the incoming slide's transition is used, as in ProPresenter.
   - The background, the look's shapes and the words change as separate layers, so a verse change never flickers the background.
 - **Why:** Rich from the first launch, offline, and the operator's previews still show exactly what the room sees.
+- **1.5.1, the speed guard:** each computer measures itself the first time it shows a moving background and keeps them still if it draws under 40 frames a second (Settings can override). The owner asked "is the app going to be slow and freezing?"; the honest answer is that a computer without a working graphics chip can't move full-screen gradients smoothly, so the app must notice and stop rather than stutter. Listening is unaffected either way: it runs in its own process.
 
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
