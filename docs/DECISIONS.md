@@ -136,6 +136,11 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Decision:** It is a switch, off by default. Timing starts when a part's first slide goes live. The sermon (by name), a verse on screen and a song being captured are never left by the clock: the tile says "time up" instead.
 - **Why:** Announcements and countdowns run to time, but preachers don't. Taking the preacher's verse away because a plan said 35 minutes would be the worst possible surprise.
 
+### D23. Stories are found offline, early, and only ever offered
+- **Context:** The owner: when the preacher paraphrases a passage or tells a story with its names ("Zacchaeus climbed a tree"), and even says "help me find it", the app was too slow or never found it. Offline search only matched word-for-word runs, and only once a sentence ended; the AI helper (optional) was asked about one sentence at a time, and "help me find it" alone was too short to ask about.
+- **Decision:** A second offline index of single words, weighted by rarity, finds the story from its names and telling words, searched while the sentence is still being spoken. "Help me find it" searches everything said since the screen changed, at once. A story is never shown by itself (at most 90%).
+- **Why:** Offline and fast (about 3 ms a search) on the owner's iMac, and works without an AI key. A paraphrase can't be checked word for word, so a person must choose it: rule 1 still holds, and the right verse is in front of the operator seconds earlier.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

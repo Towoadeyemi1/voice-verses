@@ -38,9 +38,11 @@ const RESPONSE_SCHEMA = {
   additionalProperties: false,
 };
 
-// Words that suggest scripture is being talked about
+// Words that suggest scripture is being talked about, including the people of its stories
 const SCRIPTURE_CUES =
-  /\b(verse|scripture|bible|written|the word|says|said|jesus|christ|lord|god|psalm|psalmist|proverb|prophet|apostle|paul|peter|moses|david|book of|chapter|passage|parable|gospel|blessed|amen)\b/i;
+  /\b(verse|scripture|bible|written|the word|says|said|jesus|christ|lord|god|psalm|psalmist|proverb|prophet|apostle|book of|chapter|passage|parable|gospel|blessed|amen|story|remember when|help me find)\b/i;
+const PEOPLE =
+  /\b(adam|eve|cain|abel|noah|abraham|sarah|isaac|rebekah|jacob|esau|rachel|leah|joseph|moses|aaron|miriam|pharaoh|joshua|caleb|rahab|gideon|samson|delilah|deborah|ruth|naomi|boaz|hannah|samuel|saul|david|goliath|jonathan|bathsheba|solomon|elijah|elisha|jezebel|ahab|naaman|isaiah|jeremiah|ezekiel|daniel|shadrach|meshach|abednego|nebuchadnezzar|esther|mordecai|nehemiah|ezra|job|jonah|hosea|mary|martha|lazarus|zacchaeus|nicodemus|peter|andrew|james|john|thomas|judas|matthew|bartimaeus|herod|pilate|barabbas|stephen|philip|paul|saul|silas|barnabas|timothy|lydia|cornelius|ananias|sapphira|priscilla|aquila|apollos|onesimus)\b/i;
 
 const MIN_WORDS = 5;
 
@@ -64,7 +66,7 @@ export function createVerseAssistant(settings: AiAssistantSettings): VerseAssist
   return {
     shouldAsk(text) {
       if (text.trim().split(/\s+/).length < MIN_WORDS) return false;
-      return settings.trigger === 'every' || SCRIPTURE_CUES.test(text);
+      return settings.trigger === 'every' || SCRIPTURE_CUES.test(text) || PEOPLE.test(text);
     },
 
     async identify(text, context, signal) {
