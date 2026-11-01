@@ -13,7 +13,7 @@
  */
 
 import { BibleVerse } from '@/types/bible';
-import { words } from './scriptureMatcher';
+import { stem, storyStem, words } from './scriptureMatcher';
 import { LibrarySong, LyricsMatcher, SongMatch } from './lyricsMatcher';
 import { cueTarget, parseWorshipCue, WorshipCue } from './worshipCues';
 import { scriptureHint, ScriptureHint } from './scriptureHints';
@@ -87,6 +87,21 @@ export const AUTO_SHOW_CONFIDENCE = 0.99;
 /** The preacher asking the media team to find a scripture */
 const ASKED_TO_FIND =
   /\b(?:help me (?:find|look)|find (?:it|that|this|the (?:verse|scripture|passage)) for me|(?:can|could|would) (?:you|somebody|someone|anybody|the media(?: team)?) (?:find|look|bring|put)|(?:somebody|someone|media(?: team)?),? (?:find|look|bring|put)|where is (?:it|that|this)(?: found)?(?: in the bible)?\??$|what (?:verse|scripture|chapter) is (?:it|that|this)|look (?:it|that) up|put (?:it|that) on the screen)/i;
+
+/** Why a quote is offered, in plain words */
+const quoteWhy = (confidence: number) => (confidence >= 0.75 ? 'most of it quoted' : confidence >= 0.4 ? 'part of it quoted' : 'a few of its words said');
+
+/** "the story: Zacchaeus, sycamore" from the telling words he said (as he said them) */
+function storyWhy(said: string, told: string[]): string {
+  const wanted = new Set(told);
+  const named: string[] = [];
+  for (const token of said.split(/[^A-Za-z']+/)) {
+    if (!token || named.some((n) => n.toLowerCase() === token.toLowerCase())) continue;
+    if (wanted.has(storyStem(stem(token)))) named.push(token);
+    if (named.length === 3) break;
+  }
+  return named.length ? `the story: ${named.join(', ')}` : 'the story he told';
+}
 
 /** Fainter guesses than this are not offered */
 const MIN_OFFER = 0.2;
@@ -730,7 +745,7 @@ export class VerseDetectionController {
       }
       return best.confidence;
     }
-    await this.offer(candidates.map((c) => ({ ...c, confidence: Math.min(c.confidence, offerOnly ? 0.98 : c.confidence) })), heard);
+    await this.offer(candidates.map((c) => ({ ...c, confidence: Math.min(c.confidence, offerOnly ? 0.98 : c.confidence), why: quoteWhy(c.confidence) })), heard);
     return best.confidence;
   }
 
@@ -745,7 +760,8 @@ export class VerseDetectionController {
     if (!index) return 0;
     const candidates = index.findStory(recent.slice(eager ? -80 : -30), this.currentVerse, 2, { eager });
     if (!candidates.length || candidates[0].confidence <= quote) return 0;
-    await this.offer(candidates, heard);
+    const said = [...this.recentFinals.slice(-3), heard].join(' ');
+    await this.offer(candidates.map((c) => ({ ...c, why: storyWhy(said, c.told) })), heard);
     return candidates[0].confidence;
   }
 
@@ -827,7 +843,7 @@ export class VerseDetectionController {
       .sort((a, b) => b.n - a.n || a.verse - b.verse);
     const [top, next] = shared;
     if (!top || top.n < 2 || top.n <= (next?.n ?? 0)) return false;
-    await this.offer([{ ref: { book: called.book, chapter: called.chapter, verse: top.verse }, confidence: Math.min(0.9, 0.55 + 0.1 * (top.n - (next?.n ?? 0))) }], heard);
+    await this.offer([{ ref: { book: called.book, chapter: called.chapter, verse: top.verse }, confidence: Math.min(0.9, 0.55 + 0.1 * (top.n - (next?.n ?? 0))), why: `told in his words, in ${called.book} ${called.chapter} he named` }], heard);
     return true;
   }
 
@@ -852,7 +868,7 @@ export class VerseDetectionController {
     if (index && said.length >= 4) {
       const quotes = index.findQuotes(said.slice(-40), this.currentVerse, 3, said);
       if (quotes.length) {
-        await this.offer(quotes.map((c) => ({ ...c, confidence: Math.min(c.confidence, 0.98) })), heard);
+        await this.offer(quotes.map((c) => ({ ...c, confidence: Math.min(c.confidence, 0.98), why: `${quoteWhy(c.confidence)}, asked to find it` })), heard);
         best = quotes[0].confidence;
       }
       best = Math.max(best, await this.findStory(said, heard, best, true));
@@ -874,14 +890,26 @@ export class VerseDetectionController {
    * being read (+0.15) or its book (+0.05), today's plan (+0.12 for the verse,
    * +0.06 for its chapter), a book hinted at in the last minute (+0.1).
    */
-  private contextBoost(ref: { book: string; chapter: number; verse: number }): number {
+  private contextBoost(ref: { book: string; chapter: number; verse: number }): { boost: number; reasons: string[] } {
     let boost = 0;
+    const reasons: string[] = [];
     const here = this.calledChapter ?? this.passage ?? this.currentVerse;
-    if (here && here.book === ref.book) boost += here.chapter === ref.chapter ? 0.15 : 0.05;
-    if (this.planned.verses.has(`${ref.book}|${ref.chapter}|${ref.verse}`)) boost += 0.12;
-    else if (this.planned.chapters.has(`${ref.book}|${ref.chapter}`)) boost += 0.06;
-    if (this.hinted && Date.now() - this.hinted.at < 60_000 && this.hinted.books.has(ref.book)) boost += 0.1;
-    return boost;
+    if (here && here.book === ref.book) {
+      boost += here.chapter === ref.chapter ? 0.15 : 0.05;
+      if (here.chapter === ref.chapter) reasons.push(`in ${ref.book} ${ref.chapter}, the chapter open now`);
+    }
+    if (this.planned.verses.has(`${ref.book}|${ref.chapter}|${ref.verse}`)) {
+      boost += 0.12;
+      reasons.push("in today's plan");
+    } else if (this.planned.chapters.has(`${ref.book}|${ref.chapter}`)) {
+      boost += 0.06;
+      reasons.push("its chapter is in today's plan");
+    }
+    if (this.hinted && Date.now() - this.hinted.at < 60_000 && this.hinted.books.has(ref.book)) {
+      boost += 0.1;
+      reasons.push(`${ref.book} was just mentioned`);
+    }
+    return { boost, reasons };
   }
 
   /**
@@ -891,9 +919,14 @@ export class VerseDetectionController {
    * any nearly as good, are offered; very faint guesses (under 20%) are not.
    * The same verse again only when surer, or a while later.
    */
-  private async offer(candidates: { ref: { book: string; chapter: number; verse: number }; confidence: number }[], heard: string): Promise<void> {
+  private async offer(candidates: { ref: { book: string; chapter: number; verse: number }; confidence: number; why?: string }[], heard: string): Promise<void> {
     const boosted = candidates
-      .map((c) => ({ ...c, confidence: Math.round(Math.min(0.98, c.confidence + this.contextBoost(c.ref)) * 100) / 100 }))
+      .map((c) => {
+        const context = this.contextBoost(c.ref);
+        // The chapter he named is already the reason for a verse found in it
+        const reasons = [c.why, ...context.reasons.filter((r) => !c.why?.includes(`${c.ref.book} ${c.ref.chapter}`))].filter(Boolean);
+        return { ...c, confidence: Math.round(Math.min(0.98, c.confidence + context.boost) * 100) / 100, why: reasons.join(' · ') || undefined };
+      })
       .sort((a, b) => b.confidence - a.confidence);
     const top = boosted[0]?.confidence ?? 0;
     const kept = boosted.filter((c, i) => c.confidence >= MIN_OFFER && (i === 0 || c.confidence >= top - 0.2));
@@ -917,6 +950,7 @@ export class VerseDetectionController {
         confidence: candidate.confidence >= 0.75 ? 'high' : candidate.confidence >= 0.45 ? 'medium' : 'low',
         engine: this.currentEngine,
         score: candidate.confidence,
+        why: candidate.why,
         utterance: this.utterance,
         batch,
       });
@@ -977,7 +1011,7 @@ export class VerseDetectionController {
     const verse = await this.lookupVerse(reference);
     if (!verse) return;
 
-    const info: DetectionInfo = { method: 'description', description: heard, confidence, engine: 'ai', score: confidence === 'high' ? 0.85 : 0.6 };
+    const info: DetectionInfo = { method: 'description', description: heard, confidence, engine: 'ai', score: confidence === 'high' ? 0.85 : 0.6, why: 'the AI helper’s answer' };
 
     if (this.options.autoDisplayAiMatches && confidence === 'high') {
       if (this.passesDedupeCheck(reference)) this.triggerVerseDetected(verse, info);

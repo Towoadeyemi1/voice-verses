@@ -11,6 +11,8 @@ export type DetectionInfo = {
   /** How sure, 0 to 1 (a reference said aloud is 1; a quote is how much of the verse was said and how clearly) */
   score?: number;
   /** Which sentence it came from, and which search of it: a later search of the same sentence (more words) replaces an earlier one's guesses */
+  /** Why it is offered, in plain words ("part of it quoted", "the story: Zacchaeus, sycamore", "in today's plan") */
+  why?: string;
   utterance?: number;
   batch?: number;
 };

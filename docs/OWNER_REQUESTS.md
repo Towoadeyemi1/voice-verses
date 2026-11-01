@@ -218,6 +218,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.11.0 Fewer false suggestions: context makes a verse surer (the chapter called or being read, today's planned scripture, a book just mentioned); only the best and those nearly as good are offered; guesses under 20% are not offered; a later, longer hearing of the same sentence replaces that sentence's earlier guesses.
 - ✅ 1.11.0 Faster: the speech engine reports what it has heard every half second instead of every second (still under about a third of the computer's time), and the quote and story searches look every 0.45 s while the preacher speaks.
 
+## "Do you think 50% should be the yardstick? I have seen right ones at 30%, making me confused too" · "Are the changes aesthetically, design and structurally pleasing and excellent? Can you also push"
+
+- 💬 No yardstick at 50%: the number is how much of the verse's own wording was heard, not the chance it is right, so a right verse paraphrased or half quoted can honestly be 30%. Hiding those would hide right answers.
+- ✅ 1.11.0 merged.
+- ✅ 1.11.1 The suggestion bar and list say the strength in words ("Strong match" 90%+, "Likely" 60%+, "Possible" 35%+, "Faint match") and why it is offered, in plain words: "most of it quoted", "part of it quoted", "a few of its words said", "the story: Zacchaeus, sycamore", "told in his words, in Isaiah 53 he named", "in today's plan", "Romans was just mentioned", "the AI helper's answer". The ring keeps the number.
+- 💬 Design: answered honestly with screenshots (what is strong, and the rough edges still to polish).
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

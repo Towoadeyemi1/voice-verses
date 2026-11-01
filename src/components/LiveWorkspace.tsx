@@ -666,7 +666,7 @@ export const LiveWorkspace = () => {
       ...verseAssistantOptions(
         (verse) => handlers.current.present({ verse }),
         (verse, info) =>
-          handlers.current.addSuggestion({ id: `verse-${verseKey(verse)}-${Date.now()}`, kind: 'verse', verse, byAi: info.engine === 'ai', score: info.score ?? 0.5, heard: info.description, utterance: info.utterance, batch: info.batch }),
+          handlers.current.addSuggestion({ id: `verse-${verseKey(verse)}-${Date.now()}`, kind: 'verse', verse, byAi: info.engine === 'ai', score: info.score ?? 0.5, heard: info.description, why: info.why, utterance: info.utterance, batch: info.batch }),
       ),
     });
     controller.current = detector;

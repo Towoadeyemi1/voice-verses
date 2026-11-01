@@ -184,6 +184,19 @@ const check = (label: string, got: string | null, want: string | null) => {
       check(`story: ${label} is offered`, top && want.test(top.ref) ? 'offered' : `${top?.ref ?? 'nothing'}`, 'offered');
       check(`story: ${label} is not shown by itself`, r.shown.join(', ') || null, null);
     }
+    // Each suggestion says why, in plain words
+    {
+      const whys: string[] = [];
+      const d = new VerseDetectionController({ onVerseDetected: () => {}, onVerseSuggested: (_v, info) => whys.push(info.why ?? '') });
+      await d.onTranscript('Zacchaeus the tax collector was too short to see over the crowd so he climbed up a sycamore tree', true);
+      check('a story says which of its words were heard', whys[0]?.replace(/,.*/, '') ?? null, 'the story: Zacchaeus');
+      whys.length = 0;
+      d.setPlanned([{ book: 'Galatians', chapter: 3, verse: 11 }]);
+      await pause();
+      await d.onTranscript('the just shall live by faith', true);
+      const planned = whys.find((w) => /plan/.test(w)) ?? whys.join(' | ');
+      check("a quote says how much was said, and that it is in today's plan", /^(most of it quoted|part of it quoted|a few of its words said) · in today's plan$/.test(planned) ? 'yes' : planned, 'yes');
+    }
     // Offered from the sentence still being spoken (a partial), not only once it ends
     {
       const r = await story(['Peter stepped out of the boat onto the waves and began to sink when he saw the wind'], true);
