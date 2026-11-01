@@ -129,7 +129,10 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
 
 - **Template** (`src/lib/templates.ts`):
   - **background:** colour, gradient, **moving** (made by the app), image or video, with dim and blur.
-    - Moving backgrounds (`src/lib/backgrounds.ts`, drawn by `components/MotionBackground.tsx`): aurora, colour flow, lights (bokeh), light rays, waves, stars, glow, horizon (dawn) and paper. Each has two colours (team colours by default) over the background colour, and a speed from 0 (still) to 2.
+    - Moving backgrounds (`src/lib/backgrounds.ts`, drawn by `components/MotionBackground.tsx`): 17 styles: aurora, colour flow, lights (bokeh), light rays, waves, stars, glow, horizon (dawn), paper, cross of light, clouds, snow, fireflies, ripples, sunburst, light streaks and sheen. Each has two colours (team colours by default) over the background colour, and a speed from 0 (still) to 2.
+    - 40 ready-made **samples** in their own colours (`BACKGROUND_SAMPLES`), grouped Worship, Scripture and prayer, Seasons, Celebration and Calm. Samples don't follow the colour team.
+    - **Speed guard** (`src/lib/motionQuality.ts`, Settings → Screens → "Moving backgrounds on this computer"): Automatic (default), Always move, Keep still. In Automatic, the first time a window shows a moving background at least 960 px wide, it counts frames for 3 s after a 1.5 s warm-up; under 40 a second, this computer is marked slow and every background stands still, with a "Try moving again" button. Hidden or paused windows abandon the measurement.
+    - Galleries animate only the tile pointed at or chosen.
     - They are gradients moved only with CSS `transform` and `opacity` (keyframes `vv-*` in `index.css`), timed from the wall clock so every screen and preview is at the same point.
     - Where a stage is shown under 240 px wide on screen (thumbnails), they stand still.
   - **transition:** how slides in this look arrive (see Transitions below). Default: dissolve, 0.5 s.
@@ -147,7 +150,7 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
   - A leaving background stays fully visible under the new one until covered, so a dissolve never dips darker. Through black fades out, then in.
   - Changing between a look, a full-screen video, a picture and a countdown also plays the transition (`OutputContent`).
   - Nothing animates when a screen first opens. A timer removes the old slide even if the window was hidden and the animation never ran.
-- **Backgrounds gallery** (Looks → Backgrounds): every moving background, live in the team colours; one click puts it behind scripture, songs, announcements and countdowns on the projector (it changes the looks those use).
+- **Backgrounds gallery** (Looks → Backgrounds, and "All backgrounds and samples" in the designer): every style in the team colours and every sample; one click puts it behind scripture, songs, announcements and countdowns on the projector (it changes the looks those use), or behind the look being designed.
 - **Assignments:** one look per output and content kind (`scripture`, `lyrics`, `announcement`, `countdown`). A slide can choose its own look.
 - **Rich text in bodies:** `**bold**`, `*italic*`, `__underline__`, `==highlight==`, `[#hex]coloured[/]` (`src/lib/richText.tsx`).
 - **Rendering:**
@@ -280,6 +283,7 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `voice-verses-color-teams`, `voice-verses-color-team`, `voice-verses-color-team-by-month` | Colour teams, the chosen team, follow the month |
 | `voice-verses-look-themes` | Saved themes |
 | `voice-verses-screen-shapes`, `voice-verses-screen-measured` | Shape for each output; the ratio measured by "Match the screen" |
+| `voice-verses-motion`, `voice-verses-motion-slow` | Moving backgrounds on this computer (`auto`/`full`/`still`); when and how slowly this computer drew them, if it was too slow |
 | `voice-verses-network`, `voice-verses-propresenter` | Network outputs and ProPresenter connection |
 | `voice-verses-mode`, `voice-verses-ask-first`, `voice-verses-last-service` | App mode, ask-before-showing, last opened service |
 | `voice-verses-countdown-setup` | Countdown defaults |

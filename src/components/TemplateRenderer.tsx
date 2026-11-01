@@ -133,14 +133,14 @@ export const TemplateRenderer = ({
 
   const backdrop = transparent ? null : (
     <div className="absolute inset-0" style={{ backgroundColor: background.color, backgroundImage: fill }}>
-      {motion && <MotionBackground motion={motion} base={background.color} />}
+      {motion && <MotionBackground motion={motion} base={background.color} dim={dim} />}
       {backgroundUrl &&
         (isVideo ? (
           <video src={backgroundUrl} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ filter: blur, transform: blur ? 'scale(1.06)' : undefined }} />
         ) : (
           <img src={backgroundUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: blur, transform: blur ? 'scale(1.06)' : undefined }} />
         ))}
-      {(backgroundUrl || motion) && dim > 0 && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${dim})` }} />}
+      {backgroundUrl && dim > 0 && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${dim})` }} />}
     </div>
   );
 
