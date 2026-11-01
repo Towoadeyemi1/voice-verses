@@ -191,7 +191,7 @@ export const TeamsAndThemes = () => {
                   <span className="text-sm font-semibold">{t.name}</span>
                 </div>
                 <p className="m-0 text-xs text-muted-foreground leading-snug flex-1">{t.description}</p>
-                <Button size="sm" variant="outline" className="h-8" onClick={() => applyStarterTheme(t)}>Use this theme</Button>
+                <Button size="sm" variant="outline" className="h-8" aria-label={`Use the ${t.name} theme`} onClick={() => applyStarterTheme(t)}>Use this theme</Button>
               </div>
             );
           })}

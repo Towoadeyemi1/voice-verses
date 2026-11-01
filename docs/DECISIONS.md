@@ -101,6 +101,16 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
   - Warm graphite dark and warm paper light.
 - **Why:** Volunteers under pressure need one obvious action. Colour should carry meaning, and the screens should be the hero.
 
+### D18. Backgrounds made by the app, and layered transitions
+- **Context:** The owner chose "Background and transitions" first. Built-in looks were plain black and slides cut hard.
+- **Decision:**
+  - Moving backgrounds are drawn by the app from gradients, not shipped as videos. They take the colour team's colours, need no files or downloads, and have no copyright to check.
+  - Only `transform` and `opacity` animate (the graphics card does it), so they stay smooth on the owner's 2020 Intel iMac. No JavaScript timers drive them (rule 7).
+  - They are timed from the wall clock (a negative `animation-delay`), so the projector, lower third and previews match exactly.
+  - Transitions belong to a look, with a per-slide choice; the incoming slide's transition is used, as in ProPresenter.
+  - The background, the look's shapes and the words change as separate layers, so a verse change never flickers the background.
+- **Why:** Rich from the first launch, offline, and the operator's previews still show exactly what the room sees.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

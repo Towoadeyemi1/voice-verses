@@ -128,14 +128,26 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
 ## 6. Looks (templates), the designer, colour teams, themes
 
 - **Template** (`src/lib/templates.ts`):
-  - **background:** colour, gradient, image or video, with dim and blur.
+  - **background:** colour, gradient, **moving** (made by the app), image or video, with dim and blur.
+    - Moving backgrounds (`src/lib/backgrounds.ts`, drawn by `components/MotionBackground.tsx`): aurora, colour flow, lights (bokeh), light rays, waves, stars, glow, horizon (dawn) and paper. Each has two colours (team colours by default) over the background colour, and a speed from 0 (still) to 2.
+    - They are gradients moved only with CSS `transform` and `opacity` (keyframes `vv-*` in `index.css`), timed from the wall clock so every screen and preview is at the same point.
+    - Where a stage is shown under 240 px wide on screen (thumbnails), they stand still.
+  - **transition:** how slides in this look arrive (see Transitions below). Default: dissolve, 0.5 s.
   - **area:** the text box in %.
   - **panel:** a box behind the text, with colour, opacity and radius.
   - **text:** font, size, weight, italic, letter spacing, colour, alignment, vertical alignment, line height, uppercase, shadow, outline, and a highlight colour.
   - **label:** reference or title; above or below; size and colour; whether to include the version.
   - **logo:** corner position and size.
   - **layers:** text, shape or image, each positioned in %, with opacity, rotation, and above or below the text.
-- **Built-in looks:** scripture full screen, scripture lower part, songs centred, announcements, countdown, stream lower third (green), "Lower third – colour bar", "Lower third – light card".
+- **Built-in looks:** scripture full screen (glow), scripture lower part, songs centred (aurora), announcements (colour flow), countdown (lights), stream lower third (green), "Lower third – colour bar", "Lower third – light card". The four projector looks are on moving backgrounds in the team colours (1.5.0), so the app looks rich from the first launch. Plain black versions are starter looks.
+- **Transitions** (`src/lib/transitions.ts`, `components/Transition.tsx`):
+  - Kinds: dissolve, through black, lift, zoom, push and cut, each with a length from 0.2 to 3 s.
+  - A look has one; a slide in a service can choose its own (Slide settings). The incoming slide's transition is used.
+  - Layers: the background, the look's own shapes and logo, and the words each change separately. When only the words change, the background and shapes carry on untouched (no flicker, a video keeps playing). Through black is the exception: it takes the whole screen down to black and up again.
+  - A leaving background stays fully visible under the new one until covered, so a dissolve never dips darker. Through black fades out, then in.
+  - Changing between a look, a full-screen video, a picture and a countdown also plays the transition (`OutputContent`).
+  - Nothing animates when a screen first opens. A timer removes the old slide even if the window was hidden and the animation never ran.
+- **Backgrounds gallery** (Looks → Backgrounds): every moving background, live in the team colours; one click puts it behind scripture, songs, announcements and countdowns on the projector (it changes the looks those use).
 - **Assignments:** one look per output and content kind (`scripture`, `lyrics`, `announcement`, `countdown`). A slide can choose its own look.
 - **Rich text in bodies:** `**bold**`, `*italic*`, `__underline__`, `==highlight==`, `[#hex]coloured[/]` (`src/lib/richText.tsx`).
 - **Rendering:**
@@ -158,9 +170,9 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
 
 Ready-made choices for everything that takes a design or a set-up. Each is added as the church's own copy, to change freely. They contain titles and layouts only, never copyrighted words.
 
-- **Looks** (Templates page → Starter looks): 6 scripture, 5 songs, 4 announcements, 3 countdowns and 6 lower thirds. They are previewed with public-domain words; lower thirds are shown over a stand-in camera picture. "Add" copies one in; "Use on projector" or "Use on stream" also assigns it.
+- **Looks** (Templates page → Starter looks): 10 scripture, 9 songs, 6 announcements, 6 countdowns and 6 lower thirds, many on moving backgrounds, and a plain black version of each projector built-in. They are previewed with public-domain words; lower thirds are shown over a stand-in camera picture. "Add" copies one in; "Use on projector" or "Use on stream" also assigns it.
 - **Colour teams:** "More colour teams" adds Christmas, Lent (March), Royal blue, Graphite, Spring (May), Youth and Thanksgiving.
-- **Themes:** Classic, Modern, Editorial, Christmas, Easter, Pentecost and Youth night. "Use this theme" adds its looks and colour team, then applies them.
+- **Themes:** Living colour (the built-ins), Classic black, Night sky, Ocean, Modern, Editorial, Christmas, Easter, Pentecost and Youth night. "Use this theme" adds its looks and colour team, then applies them.
 - **Orders of service** (Service Planner → Start from an order of service): Sunday, Midweek Bible Study, Prayer Meeting, Communion, Youth, Wedding and Thanksgiving (celebration of life). Each part has a typical length, stored as a switched-off timer so the live timeline works.
 - **Stage layouts** (the confidence monitor's settings): Classic, Large words, Preacher, Singers and High contrast.
 - **Countdowns** (Countdown → Quick start): before the service, until the service starts, a sermon timer (stage only), a 5-minute speaker timer (stage only), offering and break.

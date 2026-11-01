@@ -12,6 +12,7 @@ import { useTemplates } from '@/hooks/use-templates';
 import { SlideDesigner } from '@/components/designer/SlideDesigner';
 import { TeamsAndThemes } from '@/components/designer/TeamsAndThemes';
 import { StarterLooks } from '@/components/designer/StarterLooks';
+import { BackgroundGallery } from '@/components/designer/BackgroundGallery';
 import {
   BUILT_IN_TEMPLATES,
   CONTENT_KINDS,
@@ -92,6 +93,7 @@ const Templates = () => {
       subtitle="How scripture, songs, announcements and countdowns look on each screen. Changes show on the screens straight away."
       actions={
         <>
+          <BackgroundGallery />
           <StarterLooks onPick={(id) => { setSelectedId(id); setTab('design'); }} />
           <Button onClick={createNew}><Plus className="w-4 h-4" />New look</Button>
         </>

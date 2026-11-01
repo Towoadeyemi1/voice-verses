@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import {
   AlignCenter, AlignLeft, AlignRight, ArrowDownToLine, ArrowUpToLine, Bold, Copy, Highlighter, Image as ImageIcon, ImagePlus, Italic,
-  Layers, Palette, Redo2, Square, Trash2, Type, Underline, Undo2,
+  Layers, Palette, Redo2, Sparkles, Square, Trash2, Type, Underline, Undo2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,8 +23,12 @@ import { TEAM_COLORS, teamColor } from '@/lib/colorTeams';
 import { useColorTeam } from '@/hooks/use-color-team';
 import { usePreviewStage } from '@/hooks/use-screen-shape';
 import { describeShape, shapeOf, STANDARD_STAGE, StageSize } from '@/lib/screenShapes';
+import { DEFAULT_MOTION, MOTION_STYLES, MotionBackground as Motion } from '@/lib/backgrounds';
+import { MotionBackground } from '@/components/MotionBackground';
+import { TransitionPicker } from '@/components/TransitionPicker';
+import { cleanTransition, TRANSITIONS } from '@/lib/transitions';
 
-type Selection = 'background' | 'text' | 'label' | 'logo' | string;
+type Selection = 'background' | 'text' | 'label' | 'logo' | 'transition' | string;
 type Box = { x: number; y: number; width: number; height: number };
 
 const AREA_PRESETS: { label: string; area: Box }[] = [
@@ -218,6 +222,32 @@ const RichField = ({ value, onChange, rows = 3 }: { value: string; onChange: (v:
   );
 };
 
+/** The app-made backgrounds as small pictures in the colours chosen. */
+const MotionPick = ({ value, base, onChange }: { value: Motion; base: string; onChange: (style: Motion['style']) => void }) => {
+  const team = useColorTeam();
+  const colors: [string, string] = [teamColor(value.colors[0], team) ?? '#888888', teamColor(value.colors[1], team) ?? '#444444'];
+  return (
+    <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Background">
+      {MOTION_STYLES.map((m) => (
+        <button
+          key={m.id}
+          type="button"
+          role="radio"
+          aria-checked={value.style === m.id}
+          title={m.description}
+          onClick={() => onChange(m.id)}
+          className={`rounded-lg overflow-hidden text-left ring-2 transition ${value.style === m.id ? 'ring-foreground' : 'ring-transparent hover:ring-foreground/30'}`}
+        >
+          <ScaledStage className="aspect-video">
+            <MotionBackground motion={{ ...value, style: m.id, colors }} base={teamColor(base, team) ?? '#000000'} />
+          </ScaledStage>
+          <span className="block px-1 py-0.5 text-[11px] font-semibold truncate bg-muted/60">{m.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
 // ---- The designer -------------------------------------------------------------------
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -256,6 +286,8 @@ export const SlideDesigner = ({
     { value: 'stream', label: `Lower third ${describeShape(shapeOf('stream'), 'stream')}`, stage: streamStage },
   ].filter((o) => o.stage.width !== STANDARD_STAGE.width && o.stage.layout === 'spread');
   const [shapeChoice, setShapeChoice] = useState('16:9');
+  // Plays the transition on the preview by showing the sample again as new
+  const [replay, setReplay] = useState(0);
   const stage = wideShapes.find((o) => o.value === shapeChoice)?.stage ?? STANDARD_STAGE;
 
   const commit = (next: Template, record = true) => {
@@ -379,7 +411,9 @@ export const SlideDesigner = ({
     window.addEventListener('pointerup', up);
   };
 
-  const content = samples.find((s) => s.id === sample)?.content ?? samples[0]?.content ?? null;
+  const sampleContent = samples.find((s) => s.id === sample)?.content ?? samples[0]?.content ?? null;
+  const content = sampleContent && replay ? { ...sampleContent, key: `${sampleContent.key}#${replay}` } : sampleContent;
+  const transition = cleanTransition(template.transition);
   const layer = layers.find((l) => l.id === selected);
   const { background, area, panel, text, label, logo } = template;
 
@@ -408,6 +442,7 @@ export const SlideDesigner = ({
     { id: 'text', label: 'Main text', icon: <Type className="w-3.5 h-3.5" /> },
     { id: 'label', label: 'Reference / title', icon: <Type className="w-3.5 h-3.5 opacity-60" /> },
     { id: 'logo', label: 'Logo', icon: <ImageIcon className="w-3.5 h-3.5 opacity-60" /> },
+    { id: 'transition', label: `Transition: ${TRANSITIONS.find((t) => t.id === transition.kind)?.label}`, icon: <Sparkles className="w-3.5 h-3.5" /> },
     ...layers.map((l) => ({
       id: l.id,
       label: l.kind === 'text' ? (l.text || 'Text').replace(/[*_=]|\[[^\]]*\]/g, '').slice(0, 22) : l.name ?? (l.kind === 'shape' ? 'Shape' : 'Picture'),
@@ -483,16 +518,46 @@ export const SlideDesigner = ({
         {selected === 'background' && (
           <>
             <Group title="Background">
-              <Segmented
-                value={background.type}
-                onChange={(type) => set('background', { type, gradient: type === 'gradient' ? background.gradient ?? { to: '#1e3a8a', angle: 135 } : background.gradient })}
-                options={[
-                  { value: 'color', label: 'Colour' },
-                  { value: 'gradient', label: 'Gradient' },
-                  { value: 'image', label: 'Picture' },
-                  { value: 'video', label: 'Video' },
-                ]}
-              />
+              <div className="grid grid-cols-3 gap-1" role="radiogroup" aria-label="Kind of background">
+                {([
+                  ['color', 'Colour'],
+                  ['gradient', 'Gradient'],
+                  ['motion', 'Moving'],
+                  ['image', 'Picture'],
+                  ['video', 'Video'],
+                ] as const).map(([type, label]) => (
+                  <button
+                    key={type}
+                    type="button"
+                    role="radio"
+                    aria-checked={background.type === type}
+                    onClick={() =>
+                      set('background', {
+                        type,
+                        gradient: type === 'gradient' ? background.gradient ?? { to: '#1e3a8a', angle: 135 } : background.gradient,
+                        motion: type === 'motion' ? background.motion ?? DEFAULT_MOTION : background.motion,
+                      })
+                    }
+                    className={`h-8 rounded-md text-xs font-semibold transition ${background.type === type ? 'bg-card text-foreground shadow-sm ring-1 ring-foreground/30' : 'bg-muted/60 text-muted-foreground hover:text-foreground'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {background.type === 'motion' && (
+                <>
+                  <p className="m-0 text-xs text-muted-foreground">Made by the app in your colours: no files, nothing to download, no copyright to check.</p>
+                  <MotionPick value={background.motion ?? DEFAULT_MOTION} base={background.color} onChange={(style) => set('background', { motion: { ...(background.motion ?? DEFAULT_MOTION), style } })} />
+                  <Row label="Colour 1"><ColorPick value={(background.motion ?? DEFAULT_MOTION).colors[0]} onChange={(c) => { const m = background.motion ?? DEFAULT_MOTION; set('background', { motion: { ...m, colors: [c, m.colors[1]] } }); }} /></Row>
+                  <Row label="Colour 2"><ColorPick value={(background.motion ?? DEFAULT_MOTION).colors[1]} onChange={(c) => { const m = background.motion ?? DEFAULT_MOTION; set('background', { motion: { ...m, colors: [m.colors[0], c] } }); }} /></Row>
+                  <Row label="Underneath"><ColorPick value={background.color} onChange={(color) => set('background', { color })} /></Row>
+                  <Row label="Speed">
+                    <Range value={(background.motion ?? DEFAULT_MOTION).speed} min={0} max={2} step={0.1} onChange={(speed) => set('background', { motion: { ...(background.motion ?? DEFAULT_MOTION), speed } })} />
+                  </Row>
+                  <p className="m-0 -mt-1 text-[11px] text-muted-foreground">0 stands still. Slow is calmest behind words.</p>
+                  <Row label="Darken"><Range value={background.dim} min={0} max={0.9} step={0.05} onChange={(dim) => set('background', { dim })} /></Row>
+                </>
+              )}
               {(background.type === 'color' || background.type === 'gradient') && (
                 <Row label={background.type === 'gradient' ? 'From' : 'Colour'}>
                   <ColorPick value={background.color} onChange={(color) => set('background', { color })} />
@@ -689,7 +754,13 @@ export const SlideDesigner = ({
             </Group>
           </>
         )}
-        {!layer && !['background', 'text', 'label', 'logo'].includes(selected) && <p className="py-4 text-sm text-muted-foreground">Select something on the slide.</p>}
+        {selected === 'transition' && (
+          <Group title="How slides arrive">
+            <TransitionPicker value={transition} onChange={(t) => commit({ ...template, transition: t })} onPlay={() => setReplay((n) => n + 1)} />
+            <p className="m-0 text-xs text-muted-foreground">Used whenever a slide in this look goes on screen. When only the words change, the background carries on underneath. A slide in a service can choose its own.</p>
+          </Group>
+        )}
+        {!layer && !['background', 'text', 'label', 'logo', 'transition'].includes(selected) && <p className="py-4 text-sm text-muted-foreground">Select something on the slide.</p>}
         <div className="py-3 border-t border-border">
           <Row label="Name"><Input value={template.name} onChange={(e) => commit({ ...template, name: e.target.value }, false)} className="h-8" /></Row>
         </div>

@@ -7,6 +7,9 @@ import { useLogo, useMediaUrl } from '@/hooks/use-templates';
 import { FitText } from './FitText';
 import { useStageSize } from './ScaledStage';
 import { STANDARD_WIDTH } from '@/lib/screenShapes';
+import { cleanTransition, TransitionSpec } from '@/lib/transitions';
+import { Transition } from './Transition';
+import { MotionBackground } from './MotionBackground';
 
 export interface RenderContent {
   /** The main text (verse, lyrics lines, announcement) */
@@ -27,6 +30,8 @@ export interface SlideOverrides {
   align?: 'left' | 'center' | 'right';
   /** Multiplies the template's text size */
   scale?: number;
+  /** How this slide arrives, instead of the look's transition */
+  transition?: TransitionSpec;
 }
 
 const hexToRgba = (hex: string, alpha: number) => {
@@ -59,7 +64,7 @@ export const TemplateRenderer = ({
   const team = useColorTeam();
   const template = withTeamColors(look, team);
   const { background, area, panel, text, label, logo } = template;
-  const mediaSrc = useMediaUrl(background.type === 'color' ? undefined : background.mediaId);
+  const mediaSrc = useMediaUrl(background.type === 'image' || background.type === 'video' ? background.mediaId : undefined);
   const logoUrl = useLogo();
   const stage = useStageSize();
   const middle = stage.layout === 'middle' && stage.width > STANDARD_WIDTH;
@@ -73,6 +78,7 @@ export const TemplateRenderer = ({
         ? `linear-gradient(${background.gradient.angle}deg, ${background.color}, ${background.gradient.to})`
         : undefined;
   const isVideo = !overrides?.backgroundUrl && background.type === 'video';
+  const motion = !transparent && !backgroundUrl && background.type === 'motion' && background.motion ? background.motion : undefined;
   const dim = overrides?.backgroundUrl ? 1 - (overrides.backgroundOpacity ?? 0.3) : background.dim;
   const align = overrides?.align ?? text.align;
 
@@ -117,76 +123,117 @@ export const TemplateRenderer = ({
     'bottom-right': { bottom: 40, right: 48 },
   };
 
-  return (
-    <div className="relative overflow-hidden" style={{ width: stage.width, height: stage.height, backgroundColor: transparent ? 'transparent' : background.color, backgroundImage: fill }}>
+  const spec = cleanTransition(overrides?.transition ?? look.transition);
+  // Through black takes the whole screen down and up again, not just the words
+  const dip = spec.kind === 'black' ? `|${content?.key ?? ''}` : '';
+  // What the background is; while it stays the same, only the words move when the slide changes
+  const backgroundId = transparent
+    ? 'none'
+    : JSON.stringify([background.type, background.color, background.gradient, backgroundUrl, isVideo, blur, dim, motion]) + dip;
+
+  const backdrop = transparent ? null : (
+    <div className="absolute inset-0" style={{ backgroundColor: background.color, backgroundImage: fill }}>
+      {motion && <MotionBackground motion={motion} base={background.color} />}
       {backgroundUrl &&
         (isVideo ? (
           <video src={backgroundUrl} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ filter: blur, transform: blur ? 'scale(1.06)' : undefined }} />
         ) : (
           <img src={backgroundUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ filter: blur, transform: blur ? 'scale(1.06)' : undefined }} />
         ))}
-      {backgroundUrl && dim > 0 && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${dim})` }} />}
+      {(backgroundUrl || motion) && dim > 0 && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${dim})` }} />}
+    </div>
+  );
 
-      {/* Everything but the background: across the whole screen, or in its middle 16:9 */}
-      <div className="absolute top-0 bottom-0" style={middle ? { left: (stage.width - STANDARD_WIDTH) / 2, width: STANDARD_WIDTH } : { left: 0, right: 0 }}>
-        {!transparent && (template.layers ?? []).filter((l) => !l.above).map((l) => <Layer key={l.id} layer={l} />)}
+  /* Everything but the background goes across the whole screen, or in its middle 16:9 */
+  const frame = (children: ReactNode) => (
+    <div className="absolute top-0 bottom-0" style={middle ? { left: (stage.width - STANDARD_WIDTH) / 2, width: STANDARD_WIDTH } : { left: 0, right: 0 }}>
+      {children}
+    </div>
+  );
 
-        {logo.show && logoUrl && (
-          <img
-            src={logoUrl}
-            alt=""
-            className="absolute object-contain"
-            // Sized against the height, so a wide screen does not make it bigger
-            style={{ ...logoCorner[logo.position], width: (logo.size / 100) * STANDARD_WIDTH, maxHeight: `${logo.size * 1.78}%` }}
-          />
-        )}
+  // The look's own shapes, pictures and logo stay still while only the words change
+  const under = frame(
+    <>
+      {!transparent && (template.layers ?? []).filter((l) => !l.above).map((l) => <Layer key={l.id} layer={l} />)}
+      {logo.show && logoUrl && (
+        <img
+          src={logoUrl}
+          alt=""
+          className="absolute object-contain"
+          // Sized against the height, so a wide screen does not make it bigger
+          style={{ ...logoCorner[logo.position], width: (logo.size / 100) * STANDARD_WIDTH, maxHeight: `${logo.size * 1.78}%` }}
+        />
+      )}
+    </>,
+  );
+  const over = frame(!transparent && (template.layers ?? []).filter((l) => l.above).map((l) => <Layer key={l.id} layer={l} />));
 
-        {content?.footer && (
+  const words = frame(
+    <>
+      {content?.footer && (
+        <div
+          className="absolute"
+          style={{ left: 48, right: 48, bottom: 24, fontFamily: text.fontFamily, fontSize: 22, color: text.color, opacity: 0.75, textAlign: 'center', textShadow: textStyle.textShadow }}
+        >
+          {content.footer}
+        </div>
+      )}
+
+      {content && (
+        <div
+          className="absolute flex flex-col"
+          style={{
+            left: `${area.x}%`,
+            top: `${area.y}%`,
+            width: `${area.width}%`,
+            height: `${area.height}%`,
+            justifyContent:
+              text.verticalAlign === 'top' ? 'flex-start' : text.verticalAlign === 'bottom' ? 'flex-end' : 'center',
+          }}
+        >
           <div
-            className="absolute"
-            style={{ left: 48, right: 48, bottom: 24, fontFamily: text.fontFamily, fontSize: 22, color: text.color, opacity: 0.75, textAlign: 'center', textShadow: textStyle.textShadow }}
+            className="flex flex-col min-h-0 max-h-full"
+            style={
+              panel.show
+                ? { backgroundColor: hexToRgba(panel.color, panel.opacity), borderRadius: panel.radius, padding: '28px 40px' }
+                : undefined
+            }
           >
-            {content.footer}
-          </div>
-        )}
-
-        {content && (
-          <div
-            className="absolute flex flex-col"
-            style={{
-              left: `${area.x}%`,
-              top: `${area.y}%`,
-              width: `${area.width}%`,
-              height: `${area.height}%`,
-              justifyContent:
-                text.verticalAlign === 'top' ? 'flex-start' : text.verticalAlign === 'bottom' ? 'flex-end' : 'center',
-            }}
-          >
-            <div
-              key={content.key}
-              className="flex flex-col min-h-0 max-h-full animate-fade-in"
-              style={
-                panel.show
-                  ? { backgroundColor: hexToRgba(panel.color, panel.opacity), borderRadius: panel.radius, padding: '28px 40px' }
-                  : undefined
-              }
+            {label.position === 'above' && labelEl}
+            <FitText
+              maxFontSize={text.fontSize * (overrides?.scale ?? 1)}
+              minFontSize={16}
+              verticalAlign={text.verticalAlign}
+              style={textStyle}
             >
-              {label.position === 'above' && labelEl}
-              <FitText
-                maxFontSize={text.fontSize * (overrides?.scale ?? 1)}
-                minFontSize={16}
-                verticalAlign={text.verticalAlign}
-                style={textStyle}
-              >
-                {typeof content.body === 'string' ? <RichText text={content.body} highlight={text.highlight} /> : content.body}
-              </FitText>
-              {label.position === 'below' && labelEl}
-            </div>
+              {typeof content.body === 'string' ? <RichText text={content.body} highlight={text.highlight} /> : content.body}
+            </FitText>
+            {label.position === 'below' && labelEl}
           </div>
-        )}
+        </div>
+      )}
+    </>,
+  );
+  const lookId = `${look.id}|${middle}${dip}`;
 
-        {!transparent && (template.layers ?? []).filter((l) => l.above).map((l) => <Layer key={l.id} layer={l} />)}
-      </div>
+  return (
+    <div
+      className="relative overflow-hidden"
+      style={{ width: stage.width, height: stage.height, backgroundColor: transparent ? 'transparent' : '#000000' }}
+      data-transition={spec.kind}
+    >
+      <Transition id={backgroundId} spec={spec} opaque>
+        {backdrop}
+      </Transition>
+      <Transition id={lookId} spec={spec}>
+        {under}
+      </Transition>
+      <Transition id={`${lookId}|${content?.key ?? ''}`} spec={spec}>
+        {words}
+      </Transition>
+      <Transition id={lookId} spec={spec}>
+        {over}
+      </Transition>
     </div>
   );
 };

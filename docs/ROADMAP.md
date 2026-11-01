@@ -94,10 +94,10 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 ## Plan (each phase ships as releases; record each in OWNER_REQUESTS.md)
 
 **Phase 1: make it beautiful and smooth (1.5.x)**
-- Built-in motion and still backgrounds, generated in the app so they work offline with no copyright issues: soft gradients, light rays, bokeh, aurora and paper textures in the colour team's colours.
-- Built-in looks rebuilt on them, so the app looks rich from the first launch.
-- Transitions: dissolve, through black, push and zoom, with a duration, per look and per slide.
-- Restyle the remaining dialogs and the designer inspector, and add a light mode.
+- ✅ 1.5.0 Built-in motion and still backgrounds, generated in the app so they work offline with no copyright issues: soft gradients, light rays, bokeh, aurora and paper textures in the colour team's colours.
+- ✅ 1.5.0 Built-in looks rebuilt on them, so the app looks rich from the first launch.
+- ✅ 1.5.0 Transitions: dissolve, through black, lift, push and zoom, with a duration, per look and per slide.
+- 🟡 Restyle the remaining dialogs (slide settings done in 1.5.0) and the designer inspector, and add a light mode.
 
 **Phase 2: layers, messages, timers, stage (1.6.x)**
 - Layers: slide, media, announcements, props and messages, with clear groups.

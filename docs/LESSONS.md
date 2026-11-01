@@ -33,6 +33,12 @@ Check this list before debugging. Add every new mistake that cost time.
 - **A class name shared by layout and content** (`.now` for both the pane and a timeline segment) silently broke layout. Use specific names.
 - **`useEffect(() => el.scrollIntoView(...))` crashed with "c is not a function":** that Chromium returned a Promise from `scrollIntoView`, and an arrow without braces returns it as the cleanup. Always use braces in effects.
 
+- **Moving backgrounds came out flat grey:** CSS `color-mix()` does not work inside an SVG `fill` in a data URI, and older Safari lacks it. Work colours out in JavaScript (`rgba()`, blended hex).
+- **Blending two team colours halfway made grey** (gold and blue are opposites). Blend a colour towards the background colour instead.
+- **A dissolve dipped darker halfway:** two opaque layers each at 50% let black show through. The leaving background holds at full opacity under the new one (`vv-hold`).
+- **Crossfading the whole slide flickered shapes and logos** that were the same on both slides. Transition the background, the look's own layers and the words separately, each keyed on what actually changed.
+- **Keep the leaving slide's React key** when it moves to the "leaving" list, or React remounts it and a video behind it restarts.
+
 ## Detection
 
 - **Psalm 23:1 was only suggested, or shown late:** words heard were cleared after a suggestion. Keep them, use a quote window of the last 18 words, and skip the verse already on screen.
@@ -63,6 +69,8 @@ Check this list before debugging. Add every new mistake that cost time.
   - dnd-kit menus needed keyboard focus plus Enter.
   - "Save as Template" was clicked instead of "Save".
   - Use exact names and roles.
+- **Sending a verse to an output open in the same window:** `localStorage` changes don't fire `storage` events in the window that made them. Post on a new `BroadcastChannel('cornerstone-bible-sync')` too (`tools/e2e/transitions.cjs`).
+- **The starters e2e broke silently in 1.4.2** when themes moved to their own tab. Run every e2e script, not only the one for the feature.
 - **IndexedDB in tests:** open version 2 and create the stores (`services`, `media` with keyPath `id`; `settings`, `state`, `files`) before seeding.
 - **Merging main into a feature branch** dropped a closing brace in `detector-check.ts`. Run the detector check after every merge.
 - **A component used a prop (`still`) that existed only on an unmerged branch.** Build from `main` before opening a PR.

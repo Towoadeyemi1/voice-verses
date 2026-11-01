@@ -15,7 +15,8 @@ const { launch, setBounds, check, done, OUT } = require('./lib.cjs');
   await win.screenshot({ path: `${OUT}/starters-songs.png` });
   await win.keyboard.press('Escape'); await win.waitForTimeout(400);
   // A ready-made theme
-  await win.getByRole('button', { name: 'Use this theme' }).nth(1).click(); await win.waitForTimeout(600);
+  await win.getByRole('tab', { name: 'Colour teams and themes' }).click(); await win.waitForTimeout(600);
+  await win.getByRole('button', { name: 'Use the Modern theme' }).click(); await win.waitForTimeout(600);
   a = await win.evaluate(() => JSON.parse(localStorage.getItem('voice-verses-template-assignments') || '{}'));
   const team = await win.evaluate(() => localStorage.getItem('voice-verses-color-team'));
   check('Modern theme: looks and team', a.projection?.scripture === 'starter-scripture-modern' && team?.includes('team-ocean'), `${a.projection?.scripture} ${team}`);

@@ -94,7 +94,12 @@ export function withTeamColors(t: Template, team: ColorTeam): Template {
   const c = (v: string | undefined) => teamColor(v, team);
   return {
     ...t,
-    background: { ...t.background, color: c(t.background.color)!, gradient: t.background.gradient && { ...t.background.gradient, to: c(t.background.gradient.to)! } },
+    background: {
+      ...t.background,
+      color: c(t.background.color)!,
+      gradient: t.background.gradient && { ...t.background.gradient, to: c(t.background.gradient.to)! },
+      motion: t.background.motion && { ...t.background.motion, colors: [c(t.background.motion.colors[0])!, c(t.background.motion.colors[1])!] },
+    },
     panel: { ...t.panel, color: c(t.panel.color)! },
     text: { ...t.text, color: c(t.text.color)!, highlight: c(t.text.highlight), outlineColor: c(t.text.outlineColor) },
     label: { ...t.label, color: c(t.label.color)! },

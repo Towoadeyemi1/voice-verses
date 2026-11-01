@@ -9,7 +9,8 @@
  * Everything is added as the church's own copy, to change as they like.
  * No copyrighted words: titles and layouts only.
  */
-import { Assignments, ContentKind, FONTS, Template, TEMPLATE_BASE } from './templates';
+import { Assignments, BUILT_IN_TEMPLATES, ContentKind, FONTS, Template, TEMPLATE_BASE } from './templates';
+import type { MotionBackground } from './backgrounds';
 import type { ColorTeam } from './colorTeams';
 import type { ConfidenceSettings } from '@/components/ConfidenceScreen';
 import type { Service, ServiceSection } from '@/types/service';
@@ -39,6 +40,16 @@ type LookChange = Omit<Partial<Template>, 'background' | 'area' | 'panel' | 'tex
   logo?: Partial<Template['logo']>;
 };
 
+/** An app-made background in the colour team's colours. */
+const moving = (style: MotionBackground['style'], dim = 0.2, speed = 1, colors: [string, string] = ['team:primary', 'team:secondary']): Partial<Template['background']> => ({
+  type: 'motion',
+  color: 'team:background',
+  motion: { style, colors, speed },
+  dim,
+});
+const BLACK: Partial<Template['background']> = { type: 'color', color: '#000000', dim: 0 };
+const builtIn = (id: string) => structuredClone(BUILT_IN_TEMPLATES.find((t) => t.id === id)!);
+
 const look = (id: string, name: string, change: LookChange): Template => ({
   ...b,
   ...change,
@@ -56,8 +67,41 @@ export const STARTER_LOOKS: StarterLook[] = [
   // ---- Scripture -------------------------------------------------------------
   {
     kind: 'scripture',
-    description: 'White serif on black, reference underneath in the team colour. Clear in any room.',
-    look: look('scripture-full', 'Scripture – full screen', {}),
+    description: 'White serif over a soft glow in the team colours, reference underneath. Clear in any room.',
+    look: builtIn('scripture-full'),
+  },
+  {
+    kind: 'scripture',
+    description: 'White serif on plain black. Nothing moves; the words are everything.',
+    look: look('starter-scripture-black', 'Scripture – plain black', { background: BLACK }),
+  },
+  {
+    kind: 'scripture',
+    description: 'Beams of light from above, swaying slowly. Large serif text.',
+    look: look('starter-scripture-rays', 'Scripture – light rays', {
+      background: moving('rays', 0.2, 0.7, ['team:highlight', 'team:secondary']),
+      text: { fontFamily: PALATINO, fontSize: 84 },
+      label: { color: 'team:highlight', fontSize: 44 },
+    }),
+  },
+  {
+    kind: 'scripture',
+    description: 'Like a printed page on warm paper: left-aligned serif, nothing moving.',
+    look: look('starter-scripture-paper', 'Scripture – paper', {
+      background: moving('texture', 0, 0),
+      area: { x: 12, y: 14, width: 76, height: 72 },
+      text: { fontFamily: SERIF, fontSize: 80, align: 'left', lineHeight: 1.32, shadow: false },
+      label: { position: 'above', fontSize: 38, color: 'team:highlight' },
+    }),
+  },
+  {
+    kind: 'scripture',
+    description: 'A quiet night sky with stars twinkling: for evening services and Christmas.',
+    look: look('starter-scripture-stars', 'Scripture – night sky', {
+      background: moving('stars', 0.1, 0.8),
+      text: { fontFamily: PALATINO, fontSize: 84 },
+      label: { color: 'team:highlight', fontSize: 44 },
+    }),
   },
   {
     kind: 'scripture',
@@ -111,10 +155,45 @@ export const STARTER_LOOKS: StarterLook[] = [
   // ---- Songs -------------------------------------------------------------------
   {
     kind: 'lyrics',
-    description: 'Bold, centred lines: the classic worship look.',
-    look: look('lyrics-center', 'Songs – centred', {
+    description: 'Bold, centred lines over slowly drifting colour: the classic worship look.',
+    look: builtIn('lyrics-center'),
+  },
+  {
+    kind: 'lyrics',
+    description: 'Bold, centred lines on plain black.',
+    look: look('starter-lyrics-black', 'Songs – plain black', {
+      background: BLACK,
       text: { fontFamily: SANS, fontSize: 88, fontWeight: 700, lineHeight: 1.3 },
       label: { show: false, fontSize: 32, color: '#d1d5db' },
+    }),
+  },
+  {
+    kind: 'lyrics',
+    description: 'Soft lights rising slowly behind the words: warm and gentle.',
+    look: look('starter-lyrics-lights', 'Songs – rising lights', {
+      background: moving('bokeh', 0.2, 0.8, ['team:primary', 'team:highlight']),
+      text: { fontFamily: AVENIR, fontSize: 84, fontWeight: 700, lineHeight: 1.3 },
+      label: { show: false },
+    }),
+  },
+  {
+    kind: 'lyrics',
+    description: 'Layers of waves rolling along the bottom of the screen.',
+    look: look('starter-lyrics-waves', 'Songs – waves', {
+      background: moving('waves', 0.1, 0.8),
+      area: { x: 6, y: 6, width: 88, height: 66 },
+      text: { fontFamily: SANS, fontSize: 84, fontWeight: 700, lineHeight: 1.3 },
+      label: { show: false },
+    }),
+  },
+  {
+    kind: 'lyrics',
+    description: 'Dawn light rising over the horizon: for hymns of praise and Easter.',
+    look: look('starter-lyrics-horizon', 'Songs – dawn', {
+      background: moving('horizon', 0.15, 0.7, ['team:highlight', 'team:secondary']),
+      area: { x: 6, y: 6, width: 88, height: 60 },
+      text: { fontFamily: PALATINO, fontSize: 80, lineHeight: 1.35 },
+      label: { show: false },
     }),
   },
   {
@@ -158,10 +237,27 @@ export const STARTER_LOOKS: StarterLook[] = [
   // ---- Announcements ---------------------------------------------------------
   {
     kind: 'announcement',
-    description: 'A big title with the details underneath.',
-    look: look('announcement', 'Announcements', {
+    description: 'A big title with the details underneath, over flowing team colours.',
+    look: builtIn('announcement'),
+  },
+  {
+    kind: 'announcement',
+    description: 'A big title with the details underneath, on plain black.',
+    look: look('starter-announce-black', 'Announcements – plain black', {
+      background: BLACK,
       text: { fontFamily: SANS, fontSize: 64 },
       label: { position: 'above', fontSize: 72, color: '#ffffff', includeVersion: false },
+    }),
+  },
+  {
+    kind: 'announcement',
+    description: 'Details on a glass card over drifting colour, title in the team colour.',
+    look: look('starter-announce-aurora', 'Announcements – aurora card', {
+      background: moving('aurora', 0.15),
+      area: { x: 14, y: 18, width: 72, height: 64 },
+      panel: { show: true, color: '#000000', opacity: 0.4, radius: 28 },
+      text: { fontFamily: AVENIR, fontSize: 56, fontWeight: 400, shadow: false },
+      label: { position: 'above', fontSize: 70, color: 'team:highlight', includeVersion: false },
     }),
   },
   {
@@ -200,11 +296,37 @@ export const STARTER_LOOKS: StarterLook[] = [
   // ---- Countdowns ------------------------------------------------------------
   {
     kind: 'countdown',
-    description: 'Huge numbers with the message above.',
-    look: look('countdown', 'Countdown', {
+    description: 'Huge numbers with the message above, over soft rising lights.',
+    look: builtIn('countdown'),
+  },
+  {
+    kind: 'countdown',
+    description: 'Huge numbers on plain black.',
+    look: look('starter-countdown-black', 'Countdown – plain black', {
+      background: BLACK,
       area: { x: 10, y: 20, width: 80, height: 60 },
       text: { fontFamily: SANS, fontSize: 260, fontWeight: 700, lineHeight: 1.1 },
       label: { position: 'above', fontSize: 64, color: '#ffffff', includeVersion: false },
+    }),
+  },
+  {
+    kind: 'countdown',
+    description: 'Numbers under a starry sky: calm before an evening service.',
+    look: look('starter-countdown-stars', 'Countdown – night sky', {
+      background: moving('stars', 0.05, 0.8),
+      area: { x: 10, y: 22, width: 80, height: 56 },
+      text: { fontFamily: AVENIR, fontSize: 240, fontWeight: 600, lineHeight: 1.05, shadow: false },
+      label: { position: 'below', fontSize: 52, color: 'team:highlight', includeVersion: false },
+    }),
+  },
+  {
+    kind: 'countdown',
+    description: 'Numbers over rolling waves in the team colours.',
+    look: look('starter-countdown-waves', 'Countdown – waves', {
+      background: moving('waves', 0.05),
+      area: { x: 10, y: 14, width: 80, height: 52 },
+      text: { fontFamily: AVENIR, fontSize: 240, fontWeight: 600, lineHeight: 1.05, shadow: false },
+      label: { position: 'below', fontSize: 52, color: '#ffffff', includeVersion: false },
     }),
   },
   {
@@ -358,11 +480,14 @@ const theme = (
 });
 
 export const STARTER_THEMES: StarterTheme[] = [
-  theme('classic', 'Classic', 'Serif scripture, bold songs, black backgrounds. Works everywhere.', 'team-gold', ['scripture-full', 'lyrics-center', 'announcement', 'countdown'], 'stream-lower-third'),
+  theme('living', 'Living colour', 'The built-in looks: soft moving backgrounds in your team colours, serif scripture, bold songs.', 'team-gold', ['scripture-full', 'lyrics-center', 'announcement', 'countdown'], 'stream-lower-third'),
+  theme('classic', 'Classic black', 'Serif scripture, bold songs, plain black backgrounds. Nothing moves. Works everywhere.', 'team-gold', ['starter-scripture-black', 'starter-lyrics-black', 'starter-announce-black', 'starter-countdown-black'], 'stream-lower-third'),
+  theme('night', 'Night sky', 'Stars and soft rising lights: for evening services and carols.', 'team-royal', ['starter-scripture-stars', 'starter-lyrics-lights', 'starter-announce-aurora', 'starter-countdown-stars'], 'stream-bar-team'),
+  theme('ocean', 'Ocean', 'Waves in blue and teal, clean sans-serif.', 'team-ocean', ['starter-scripture-modern', 'starter-lyrics-waves', 'starter-announce-aurora', 'starter-countdown-waves'], 'stream-bar-team'),
   theme('modern', 'Modern', 'Clean sans-serif, dark backgrounds, a colour bar on the stream.', 'team-ocean', ['starter-scripture-modern', 'starter-lyrics-modern', 'starter-announce-banner', 'starter-countdown-bar'], 'stream-bar-team'),
-  theme('editorial', 'Editorial', 'Like a printed page: left-aligned serif, quiet graphite colours.', 'team-mono', ['starter-scripture-editorial', 'starter-lyrics-serif', 'starter-announce-card', 'starter-countdown-minimal'], 'starter-lt-minimal'),
-  theme('christmas', 'Christmas', 'Team gradients in red, green and gold.', 'team-christmas', ['starter-scripture-gradient', 'starter-lyrics-serif', 'starter-announce-card', 'starter-countdown-bar'], 'stream-bar-team'),
-  theme('easter', 'Easter', 'White and gold gradients, elegant hymn lyrics.', 'team-easter', ['starter-scripture-gradient', 'starter-lyrics-serif', 'starter-announce-card', 'starter-countdown-bar'], 'stream-bar-light'),
+  theme('editorial', 'Editorial', 'Like a printed page: left-aligned serif on paper, quiet graphite colours.', 'team-mono', ['starter-scripture-paper', 'starter-lyrics-serif', 'starter-announce-card', 'starter-countdown-minimal'], 'starter-lt-minimal'),
+  theme('christmas', 'Christmas', 'A starry night and soft lights in red, green and gold.', 'team-christmas', ['starter-scripture-stars', 'starter-lyrics-lights', 'starter-announce-card', 'starter-countdown-bar'], 'stream-bar-team'),
+  theme('easter', 'Easter', 'Light rays and dawn over the horizon in white and gold.', 'team-easter', ['starter-scripture-rays', 'starter-lyrics-horizon', 'starter-announce-card', 'starter-countdown-bar'], 'stream-bar-light'),
   theme('pentecost', 'Pentecost', 'Red and orange, bold and bright.', 'team-pentecost', ['starter-scripture-gradient', 'starter-lyrics-bold', 'starter-announce-banner', 'starter-countdown-bar'], 'starter-lt-news'),
   theme('youth', 'Youth night', 'Vibrant colours, bold uppercase songs, news-strip lower thirds.', 'team-youth', ['starter-scripture-bold', 'starter-lyrics-bold', 'starter-announce-poster', 'starter-countdown-bar'], 'starter-lt-news'),
 ];

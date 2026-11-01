@@ -112,6 +112,7 @@ Monitors take the projector's shape (`usePreviewStage('projection')`). The outpu
 8. **Wide screens:** extra width goes to the library column and bigger monitors, never to longer lines of reading text (cap at 36ch).
 9. Motion is short (150–300 ms) and meaningful: the word highlight, a crossfade on Take, the playhead. Respect `prefers-reduced-motion`.
 10. Glass only on the toolbar and the palette.
+11. **On the screens (outputs), motion serves the words.** Moving backgrounds are slow (cycles of 12–90 s), soft and dark enough under text, with a vignette; speed 0 makes them still. Transitions are short (0.5 s by default). Small thumbnails stand still. The operator's UI rule 9 (150–300 ms) is for the app itself, not the projector.
 
 ## Building it into the app
 
