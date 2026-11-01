@@ -467,7 +467,10 @@ export const LiveWorkspace = () => {
       settings.language = localStorage.getItem('transcription_language') || 'en';
       speech.current = createSpeechProvider(settings, {
         onTranscript: (text, isFinal) => controller.current?.onTranscript(text, isFinal),
-        onVolumeUpdate: setVolume,
+        onVolumeUpdate: (v) => {
+          setVolume(v);
+          loudest.current = Math.max(loudest.current, v);
+        },
         onError: (error) => toast.error('Speech recognition error', { description: error.message }),
       });
       detector.setEngine(settings.speechEngine);
@@ -476,12 +479,44 @@ export const LiveWorkspace = () => {
       desktop?.setListening(true);
       toast.success('Listening', { description: `Using ${getEngineDisplayName(settings)}` });
     } catch (error) {
-      toast.error('Could not start listening', { description: error instanceof Error ? error.message : String(error) });
+      const blocked = desktop?.microphone && ['denied', 'restricted'].includes(await desktop.microphone.status().catch(() => ''));
+      toast.error(blocked ? 'The computer is not letting Voice Verses use the microphone' : 'Could not start listening', {
+        description: blocked
+          ? 'Switch Voice Verses on in the microphone privacy settings (if it is on, switch it off and on again), then press Start listening.'
+          : error instanceof Error ? error.message : String(error),
+        duration: 15000,
+        action: blocked
+          ? { label: 'Open microphone settings', onClick: () => void desktop?.microphone?.openSettings() }
+          : { label: 'Listening settings', onClick: () => openListeningSettings() },
+      });
       stopListening(true);
     } finally {
       setConnecting(false);
     }
   };
+
+  const [settingsPane, setSettingsPane] = useState<'bible' | 'listening'>('bible');
+  const openListeningSettings = () => {
+    setSettingsPane('listening');
+    setShowSettings(true);
+  };
+
+  // No sound at all for 10 seconds after listening starts: say so, rather than seeming to work
+  const loudest = useRef(0);
+  useEffect(() => {
+    if (!listening) return;
+    loudest.current = 0;
+    const timer = window.setTimeout(() => {
+      if (loudest.current < 2 && !muted) {
+        toast.warning('No sound is reaching Voice Verses', {
+          description: 'Check the input and channel in Settings → Listening: the sound check there shows which channel moves.',
+          duration: 15000,
+          action: { label: 'Listening settings', onClick: () => openListeningSettings() },
+        });
+      }
+    }, 10_000);
+    return () => window.clearTimeout(timer);
+  }, [listening]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stopListening = (quiet = false) => {
     speech.current?.disconnect();
@@ -847,7 +882,7 @@ export const LiveWorkspace = () => {
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent className="max-w-6xl p-0 overflow-hidden gap-0 [&>button.absolute]:hidden">
           <DialogTitle className="sr-only">Settings</DialogTitle>
-          <SettingsPanel onClose={() => setShowSettings(false)} />
+          <SettingsPanel onClose={() => setShowSettings(false)} key={settingsPane} initial={settingsPane} />
         </DialogContent>
       </Dialog>
       <ApiKeyDialog

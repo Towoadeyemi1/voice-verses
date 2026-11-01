@@ -13,23 +13,35 @@ export const MAX_CHANNELS = 32;
 
 export interface MicrophoneChoice {
   deviceId: string | null;
+  /** Its name, used when the id is no longer there (the computer gave the same input a new id) */
+  deviceName?: string | null;
   /** 0-based channel of a multichannel device, or null for the device's normal (first) input */
   channel: number | null;
 }
 
-export async function openMicrophone({ deviceId, channel }: MicrophoneChoice): Promise<MediaStream> {
+export async function openMicrophone({ deviceId, deviceName, channel }: MicrophoneChoice): Promise<MediaStream> {
   const audio: MediaTrackConstraints =
     channel === null
       ? { echoCancellation: false, noiseSuppression: true, autoGainControl: true, channelCount: 1 }
       : // A desk feed is already clean; processing would also mix the channels down
         { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: { ideal: MAX_CHANNELS } };
   if (deviceId && deviceId !== 'default') {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    if (devices.some((d) => d.kind === 'audioinput' && d.deviceId === deviceId)) {
-      audio.deviceId = { exact: deviceId };
-    }
+    const inputs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
+    const found = inputs.find((d) => d.deviceId === deviceId) ?? (deviceName ? inputs.find((d) => d.label === deviceName) : undefined);
+    if (found) audio.deviceId = { exact: found.deviceId };
   }
   return navigator.mediaDevices.getUserMedia({ audio });
+}
+
+/** What went wrong opening the input, in words a volunteer can act on. */
+export function explainMicrophoneError(error: unknown): string {
+  const name = error instanceof DOMException || error instanceof Error ? error.name : '';
+  if (name === 'NotAllowedError' || name === 'SecurityError') {
+    return 'The computer is not letting Voice Verses use the microphone. Allow it in the microphone privacy settings (on a Mac: System Settings → Privacy & Security → Microphone; if Voice Verses is already on there, switch it off and on again).';
+  }
+  if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'That input is not connected. Plug it in, or choose another input.';
+  if (name === 'NotReadableError' || name === 'AbortError') return 'Another app is holding that input in a way that blocks others. Close it or choose another input, then try again.';
+  return error instanceof Error ? error.message : 'Could not open this input';
 }
 
 /** How many channels the opened input really has. */

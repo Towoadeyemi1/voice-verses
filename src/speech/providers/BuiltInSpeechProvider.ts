@@ -6,10 +6,11 @@ import {
   ErrorCallback,
   SpeechEngineType,
 } from '../ISpeechProvider';
-import { channelCountOf, createChannelCapture, openMicrophone } from '../audioInput';
+import { channelCountOf, createChannelCapture, openMicrophone, explainMicrophoneError } from '../audioInput';
 
 interface BuiltInProviderConfig {
   audioDeviceId: string | null;
+  audioDeviceName?: string | null;
   /** One channel of a multichannel input (e.g. the pulpit mic in a desk feed), or null */
   audioChannel: number | null;
 }
@@ -91,7 +92,7 @@ export class BuiltInSpeechProvider implements ISpeechProvider {
       // Loads the model on first use (a few seconds)
       this.session = await desktop.speech.start('live');
 
-      this.stream = await openMicrophone({ deviceId: this.config.audioDeviceId, channel: this.config.audioChannel });
+      this.stream = await openMicrophone({ deviceId: this.config.audioDeviceId, deviceName: this.config.audioDeviceName, channel: this.config.audioChannel });
 
       // The browser resamples the microphone to the model's 16 kHz
       this.audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
@@ -107,7 +108,7 @@ export class BuiltInSpeechProvider implements ISpeechProvider {
       this.connected = true;
     } catch (error) {
       this.disconnect();
-      throw error instanceof Error ? error : new Error('Could not start built-in speech recognition');
+      throw new Error(error instanceof DOMException ? explainMicrophoneError(error) : error instanceof Error ? error.message : 'Could not start built-in speech recognition');
     }
   }
 

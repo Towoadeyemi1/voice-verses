@@ -190,3 +190,8 @@ All colors MUST be HSL.
 @keyframes vv-sweep { 0% { transform: translateX(-110%) skewX(-18deg); } 55%, 100% { transform: translateX(310%) skewX(-18deg); } }
 @keyframes vv-drop { from { transform: translateY(0); } to { transform: translateY(var(--vv-drop, 1200px)); } }
 @keyframes vv-firefly { 0% { transform: translate(0, 0); opacity: 0.2; } 50% { transform: translate(40px, -30px); opacity: 1; } 100% { transform: translate(-20px, -60px); opacity: 0.3; } }
+
+/* Menus, lists and pop-ups always show above the page. The app is its own layer, so nothing in it
+   (moving backgrounds, glass, previews) can be drawn over them; Safari otherwise sometimes did. */
+#root { isolation: isolate; }
+[data-radix-popper-content-wrapper] { z-index: 2147483000 !important; }

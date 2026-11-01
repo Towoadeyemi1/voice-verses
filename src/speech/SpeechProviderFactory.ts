@@ -19,11 +19,12 @@ export function createSpeechProvider(
 ): ISpeechProvider {
   console.log('Creating speech provider with engine:', settings.speechEngine);
   const audioDeviceId = settings.audioDevice || null;
+  const audioDeviceName = settings.audioDeviceName || null;
   const audioChannel = settings.audioChannel ?? null;
 
   switch (settings.speechEngine) {
     case 'builtin':
-      return new BuiltInSpeechProvider({ audioDeviceId, audioChannel }, callbacks);
+      return new BuiltInSpeechProvider({ audioDeviceId, audioDeviceName, audioChannel }, callbacks);
     case 'webspeech':
       return new WebSpeechProvider({ language: settings.language || 'en-US', audioDeviceId }, callbacks);
     case 'openai':
@@ -86,6 +87,7 @@ export function loadSpeechSettings(): SpeechSettings {
     speechEngine: isUsable(saved.speechEngine) ? saved.speechEngine : getDefaultSpeechEngine(),
     language: localStorage.getItem('transcription_language') || 'en',
     audioDevice: (saved.audioDevice as string) || null,
+    audioDeviceName: (saved.audioDeviceName as string) || null,
     audioChannel: typeof saved.audioChannel === 'number' ? saved.audioChannel : null,
   };
 }
@@ -100,6 +102,7 @@ export function saveSpeechSettings(settings: Partial<SpeechSettings>): void {
     ...current,
     speechEngine: settings.speechEngine ?? current.speechEngine,
     audioDevice: settings.audioDevice !== undefined ? settings.audioDevice : current.audioDevice,
+    audioDeviceName: settings.audioDeviceName !== undefined ? settings.audioDeviceName : current.audioDeviceName,
     audioChannel: settings.audioChannel !== undefined ? settings.audioChannel : current.audioChannel,
   };
 

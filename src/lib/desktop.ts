@@ -78,6 +78,15 @@ export interface DesktopBridge {
     /** Sends the request from the main process with the stored key added; the key never reaches the page. */
     fetch(name: SecretName, request: SerializedRequest): Promise<SerializedResponse>;
   };
+  /** Microphone access from the computer (missing in desktop apps older than 1.7.0) */
+  microphone?: {
+    /** 'granted', 'denied', 'restricted', 'not-determined' or 'unknown' */
+    status(): Promise<string>;
+    /** Asks the person (macOS); true when allowed */
+    ask(): Promise<boolean>;
+    /** Opens the computer's microphone privacy settings */
+    openSettings(): Promise<void>;
+  };
   speech: {
     /** Whether the bundled on-device speech models are installed */
     isAvailable(): Promise<boolean>;

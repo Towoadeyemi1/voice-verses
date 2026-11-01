@@ -35,6 +35,12 @@ Engine types are `builtin`, `webspeech` and `openai` (`src/speech/SpeechProvider
   - Windows are created with `backgroundThrottling: false`.
   - `powerSaveBlocker` uses `prevent-display-sleep` while outputs are open or listening, and `prevent-app-suspension`.
 
+- **Microphone access and sound check** (1.6.1):
+  - The desktop app asks the system whether it may use the microphone (`mic:status`: granted, denied, restricted, not-determined). When refused, Settings → Listening and a failed Start listening say so, with "Open microphone settings" (`mic:open-settings`: macOS Privacy → Microphone, Windows privacy-microphone).
+  - Settings → Listening runs a sound check while open: one bar for what Voice Verses hears (the chosen channel, or the first two for the normal input), and a meter per channel to pick the preacher's. "Sound is coming in" holds 2.5 s after the last sound above 5%.
+  - The input is saved with its name (`audioDeviceName` in `cornerstone-settings`) and found again by name when its id changes.
+  - Listening with no sound (volume under 2) for the first 10 s shows "No sound is reaching Voice Verses", with a button to the Listening settings.
+
 ## 3. Detection (the heart)
 
 `src/speech/VerseDetectionController.ts` receives every partial and final transcript.
