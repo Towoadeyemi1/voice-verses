@@ -55,6 +55,10 @@ Check this list before debugging. Add every new mistake that cost time.
 - **Psalm 23:1 was only suggested, or shown late:** words heard were cleared after a suggestion. Keep them, use a quote window of the last 18 words, and skip the verse already on screen.
 - **That change made John 3:15 match while 3:16 was being read:** skip quote search while the reader is still in the verse on screen (`wordsFrom(current) >= 2`).
 - **Whole-verse quotes never reached 99%:** coverage ignored common trigrams and the window was too short. Measure coverage with all trigrams over the last 40 words, and count only rivals with at least 3 hits.
+- **Paraphrased stories were never found offline:** only runs of three words in a row were searched, and only after the sentence ended. Single rare words (names, places) carry a story; search them, while the sentence is spoken (1.10.0).
+- **The stemmer made "loves" look rare:** `stem` keeps "love" from "loves" but makes "lov" from "love". For counting how rare a word is, also drop a final "e" (`storyStem`), or common words pass as telling ones.
+- **One rare word is not a story:** "please your neighbour" matched Romans 15:2. Ask for three telling words (or two very rare ones), and don't let a lone match look sure: distinctness counts fully only with three telling words.
+- **A story's words are spread over its chapter:** Goliath is named in 1 Samuel 17:4 and the sling is in 17:50. Count the telling words of the whole chapter when the verse itself has two.
 - **A range or chapter showed only its first verse:** a range must become a passage that is followed (`followPassage`, then the reading tracker).
 - **The word tracker was too slow for fast readers:** search the whole rest of the verse, with neighbour agreement, and estimate pace between recognitions.
 - **Slow on older Macs:** partials piled up. Make partials lag-aware (`MAX_LAG`) and adapt the interval to decode time.

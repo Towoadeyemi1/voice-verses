@@ -70,8 +70,15 @@ Engine types are `builtin`, `webspeech` and `openai` (`src/speech/SpeechProvider
      - Distinctness compares the match against rivals that have at least 3 hits.
    - `AUTO_SHOW_CONFIDENCE = 0.99`: only a verse said word for word, with nothing else matching, goes up by itself.
    - Everything else is a **suggestion** with its percentage (high ≥ 0.75, medium ≥ 0.45) and a preview of the verse.
+6b. **Stories told in the preacher's own words** (1.10.0, `scriptureMatcher.findStory`):
+   - A second index of single words (KJV and WEB, stems without a final "e"), searched by weight: words in fewer verses count more (`ln(N/df)`), words in more than 1,200 verses are ignored, and a verse is weighed by its length (gently, like BM25). Its neighbours count a little (±1 at 0.35, ±2 at 0.15), because a story is told over several verses. One verse per story is offered (others within 3 verses are dropped).
+   - A few modern words also look for the Bible's own ("boat" → ship, "giant" → Philistine, Goliath; `STORY_WORDS`).
+   - It needs three **telling words** (in under 300 verses: names, places, "sycamore", "fleece"), or two **very rare** ones (under 40 verses: "Goliath", "sling"), or two telling words in the verse when its chapter has three, two of them very rare (Goliath is named early in 1 Samuel 17, the sling at the end). The best match must have a word in under ~150 verses and enough weight overall.
+   - Confidence = 0.3 + 0.35 × strength + 0.2 × how far ahead of the next story it is (counted fully only with three telling words), at most `STORY_MAX_CONFIDENCE` 0.9. **A story is always a suggestion, never shown by itself.** It is offered only when it is surer than the quote search's best.
+6c. **While the sentence is still being spoken** (1.10.0): every 600 ms, once the sentence has 6 words and 3 more since the last look, the quote and story searches run on the partial transcript and offer what it sounds like. Nothing goes on screen from a partial; a whole verse quoted word for word still goes up when the sentence ends (99%).
+6d. **"Help me find it"** (1.10.0, `ASKED_TO_FIND`): "help me find it", "somebody find it", "can you find…", "what verse is that", "look it up", "put it on the screen", acted on once per sentence as soon as the partial has it. Everything said since the screen last changed (up to 80 words) is searched at once, more widely (two telling words are enough), the AI assistant (if on) is asked about the last few sentences together, and the operator sees "Asked to find a scripture".
 7. **AI assistant** (optional):
-   - When the words describe a verse but don't quote it, it asks the chosen model (Claude, OpenAI, Ollama or OpenAI-compatible) for a reference using a JSON schema.
+   - When the words describe a verse but don't quote it (and no quote or story was found), it asks the chosen model. A sentence under 8 words is asked about with the one before it. Bible people's names (Zacchaeus, Gideon, Elijah…) also wake it (1.10.0). It asks (Claude, OpenAI, Ollama or OpenAI-compatible) for a reference using a JSON schema.
    - The answer is checked against the Bible before it is offered.
    - It is shown as an "AI suggests…" suggestion, never auto-shown.
 8. **Commands:** "next" or "next verse" (alone, on a final transcript) moves on. "previous verse" goes back. In song mode, "next" moves to the next slide.

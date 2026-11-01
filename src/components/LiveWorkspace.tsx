@@ -626,6 +626,7 @@ export const LiveWorkspace = () => {
         handlers.current.addSuggestion({ id: `song-${match.song.id}-${Date.now()}`, kind: 'song', songId: match.song.id, title: match.song.title, heard: match.heard }),
       onScriptureHint: (hint) => void handlers.current.predict(hint),
       onNewSinging: (lines) => handlers.current.addSuggestion({ id: `new-song-${Date.now()}`, kind: 'new-song', lines }),
+      onFindRequested: (heard) => toast.info('Asked to find a scripture', { description: `Heard “${heard.split(/\s+/).slice(-8).join(' ')}”. What it sounds like appears below, best first.`, duration: 5000 }),
       onCapturedLine: (line) => handlers.current.captureLine(line),
       onLyricsMove: (index, cue) => {
         const c = handlers.current.collection;

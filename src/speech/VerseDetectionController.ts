@@ -59,6 +59,8 @@ export interface VerseDetectionOptions {
   onCapturedLine?: (line: string) => void;
   /** How far the verse being read has got: the last word read (index into readingTokens(verse.text)), -1 for none yet */
   onReadingProgress?: (progress: ReadingProgress) => void;
+  /** The preacher asked for help finding a scripture ("help me find it"): the app is looking now */
+  onFindRequested?: (heard: string) => void;
   
   // Dedupe settings
   dedupeWindowMs?: number;      // Ignore same verse within this window (default: 10000ms)
@@ -76,6 +78,13 @@ export interface ReadingProgress {
 
 /** Quotes shown without asking only when at least this sure (the whole verse, word for word, and nothing else like it) */
 export const AUTO_SHOW_CONFIDENCE = 0.99;
+
+/** The preacher asking the media team to find a scripture */
+const ASKED_TO_FIND =
+  /\b(?:help me (?:find|look)|find (?:it|that|this|the (?:verse|scripture|passage)) for me|(?:can|could|would) (?:you|somebody|someone|anybody|the media(?: team)?) (?:find|look|bring|put)|(?:somebody|someone|media(?: team)?),? (?:find|look|bring|put)|where is (?:it|that|this)(?: found)?(?: in the bible)?\??$|what (?:verse|scripture|chapter) is (?:it|that|this)|look (?:it|that) up|put (?:it|that) on the screen)/i;
+
+/** How often the sentence still being spoken is searched for a quote or a story (ms) */
+const PARTIAL_SEARCH_MS = 600;
 
 /** A called passage: a range of verses, or a whole chapter */
 export interface Passage {
@@ -133,6 +142,10 @@ export class VerseDetectionController {
   private readWords: string[] = [];
   private reading: { verse: BibleVerse; tokens: ReadingToken[]; word: number; done: boolean } | null = null;
   private suggested = new Map<string, number>();
+  /** When the sentence in progress was last searched, and how many words it had then */
+  private partialSearch = { at: 0, words: 0 };
+  /** "Help me find it" was already acted on in this sentence */
+  private findAsked = false;
   
   private dedupeWindowMs: number;
   private debounceMs: number;
@@ -280,8 +293,18 @@ export class VerseDetectionController {
       const recent = this.hear(cleanText, isFinal);
       if (await this.trackReading()) return;
       if (await this.followReading(recent)) return;
-      if (isFinal && !(await this.findQuote(recent, cleanText))) {
-        this.askAssistant(cleanText);
+      if (this.askedToFind(cleanText, isFinal)) {
+        await this.findForPreacher(cleanText);
+        return;
+      }
+      if (isFinal) {
+        const quote = await this.findQuote(recent, cleanText);
+        const story = quote === 'reading' ? 0 : await this.findStory(recent, cleanText, quote);
+        if (!quote && !story) this.askAssistant(cleanText);
+      } else if (this.dueForPartialSearch(recent)) {
+        // While the sentence is still being spoken: offer what it sounds like now (nothing goes up from a partial)
+        const quote = await this.findQuote(recent, cleanText, { offerOnly: true });
+        if (quote !== 'reading') await this.findStory(recent, cleanText, quote);
       }
       return;
     }
@@ -536,6 +559,7 @@ export class VerseDetectionController {
       this.readWords = [...this.readWords, ...fresh].slice(-300);
       this.partialWords = [];
       this.usedWords = 0;
+      this.partialSearch = { at: 0, words: 0 };
       this.readingNow = this.readWords;
       return this.heardWords;
     }
@@ -649,23 +673,88 @@ export class VerseDetectionController {
    * word for word and nothing else matches (99%+); otherwise the likely verses
    * are offered with how sure each is, for the operator to check and choose.
    */
-  private async findQuote(recent: string[], heard: string): Promise<boolean> {
+  /**
+   * Returns how sure the best quote found is (0 for none), or 'reading' when
+   * the words are the verse on screen being read on (not a new quote).
+   * `offerOnly`: the sentence is still being spoken, so nothing goes up yet.
+   */
+  private async findQuote(recent: string[], heard: string, { offerOnly = false } = {}): Promise<number | 'reading'> {
     const index = scriptureIndex();
-    if (!index) return false;
+    if (!index) return 0;
     // The last sentence or two: enough for a quote, without older words competing with it
     const spoken = recent.slice(-18);
     // Still reading the verse on screen: not a new quote (and not a question for the AI)
-    if (this.currentVerse && index.wordsFrom(this.currentVerse, spoken) >= 2) return true;
+    if (this.currentVerse && index.wordsFrom(this.currentVerse, spoken) >= 2) return 'reading';
     const candidates = index.findQuotes(spoken, this.currentVerse, 3, recent);
-    if (!candidates.length) return false;
+    if (!candidates.length) return 0;
     const [best] = candidates;
-    if (best.confidence >= AUTO_SHOW_CONFIDENCE) {
+    if (best.confidence >= AUTO_SHOW_CONFIDENCE && !offerOnly) {
       const verse = await BibleParser.getVerse(best.ref.book, best.ref.chapter, best.ref.verse);
       if (verse && `${verse.book}:${verse.chapter}:${verse.verse}` !== this.lastDisplayedKey) {
         this.triggerVerseDetected(verse, { method: 'description', description: heard, confidence: 'high', engine: this.currentEngine, score: best.confidence });
       }
-      return true;
+      return best.confidence;
     }
+    await this.offer(candidates.map((c) => ({ ...c, confidence: Math.min(c.confidence, offerOnly ? 0.98 : c.confidence) })), heard);
+    return best.confidence;
+  }
+
+  /**
+   * A Bible story told in the preacher's own words, with its names ("Zacchaeus
+   * climbed a tree"): offered for the operator to choose, never shown by
+   * itself. Only when no quote was found that is as sure. Returns how sure the
+   * best is (0 for none).
+   */
+  private async findStory(recent: string[], heard: string, quote = 0, eager = false): Promise<number> {
+    const index = scriptureIndex();
+    if (!index) return 0;
+    const candidates = index.findStory(recent.slice(eager ? -80 : -30), this.currentVerse, 2, { eager });
+    if (!candidates.length || candidates[0].confidence <= quote) return 0;
+    await this.offer(candidates, heard);
+    return candidates[0].confidence;
+  }
+
+  /** The sentence in progress has grown enough since it was last searched. */
+  private dueForPartialSearch(recent: string[]): boolean {
+    const now = Date.now();
+    const spoken = this.partialWords.length;
+    if (spoken < 6 || now - this.partialSearch.at < PARTIAL_SEARCH_MS || spoken - this.partialSearch.words < 3) return false;
+    this.partialSearch = { at: now, words: spoken };
+    return recent.length >= 6;
+  }
+
+  /** "Help me find it", acted on once per sentence (as soon as the partial has it). */
+  private askedToFind(text: string, isFinal: boolean): boolean {
+    const heard = ASKED_TO_FIND.test(text);
+    const act = heard && !this.findAsked;
+    this.findAsked = isFinal ? false : this.findAsked || heard;
+    return act;
+  }
+
+  /**
+   * The preacher asked for help finding it: everything said since the screen
+   * last changed is searched at once, more widely (quotes and stories), and
+   * the AI assistant is asked about the last few sentences together.
+   */
+  private async findForPreacher(heard: string): Promise<void> {
+    this.options.onFindRequested?.(heard);
+    const said = this.readWords.slice(-80);
+    const index = scriptureIndex();
+    let best = 0;
+    if (index && said.length >= 4) {
+      const quotes = index.findQuotes(said.slice(-40), this.currentVerse, 3, said);
+      if (quotes.length) {
+        await this.offer(quotes.map((c) => ({ ...c, confidence: Math.min(c.confidence, 0.98) })), heard);
+        best = quotes[0].confidence;
+      }
+      best = Math.max(best, await this.findStory(said, heard, best, true));
+    }
+    const told = [...this.recentFinals.slice(-3), heard].join(' ');
+    this.askAssistant(told, { force: true, remember: false });
+  }
+
+  /** Offers verses to the operator with how sure each is; the same verse again only when surer, or a while later. */
+  private async offer(candidates: { ref: { book: string; chapter: number; verse: number }; confidence: number }[], heard: string): Promise<void> {
     const now = Date.now();
     for (const candidate of candidates) {
       const verse = await BibleParser.getVerse(candidate.ref.book, candidate.ref.chapter, candidate.ref.verse);
@@ -687,7 +776,6 @@ export class VerseDetectionController {
         score: candidate.confidence,
       });
     }
-    return true;
   }
 
   /**
@@ -714,11 +802,14 @@ export class VerseDetectionController {
    * Ask the AI assistant about a sentence the rules couldn't place. Only the
    * latest sentence is in flight; an older request is cancelled.
    */
-  private askAssistant(text: string): void {
+  private askAssistant(text: string, { force = false, remember = true } = {}): void {
     const assistant = this.options.assistant;
     const context = this.recentFinals;
-    this.rememberFinal(text);
-    if (!assistant?.shouldAsk(text)) return;
+    if (remember) this.rememberFinal(text);
+    if (!assistant) return;
+    // A short sentence ("he climbed up a tree") is asked about with the one before it
+    if (!force && text.split(/\s+/).length < 8 && context.length) text = `${context[context.length - 1]} ${text}`;
+    if (!force && !assistant.shouldAsk(text)) return;
 
     this.assistantRequest?.abort();
     const request = new AbortController();

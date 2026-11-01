@@ -203,6 +203,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 - ✅ 1.9.0 The Library's service list is grouped (Today, Coming up, Earlier, Samples) with a date tile, time and number of parts. Inside a service, each section has its colour from the timeline, and each part shows its slides and minutes, with the loaded part marked.
 
+## "When he quotes or paraphrases scripture, sometimes he even says help me find it, but it takes too long to find it and suggest it. He mentions names of the Bible characters and paraphrases what happens, but it still didn't catch it fast enough"
+
+- 💬 Also asked: "If the preacher mentions or calls for the particular chapter and verse, you can send it directly to Live, is that what is happening?" Yes: in Auto, a reference said outright goes live at once and the reading is followed; quotes go up by themselves only at 99%+, and Ask first holds everything in Next.
+- ✅ 1.10.0 Stories told in his own words are found offline from their names and telling words ("Zacchaeus… climbed a sycamore tree", "a sling and a stone… Goliath", "the walls of Jericho fell"), and offered while he is still speaking (every 0.6 s), not after the sentence ends. They are offered, never shown by themselves.
+- ✅ 1.10.0 "Help me find it" (also "somebody find it", "what verse is that", "look it up") searches everything he said since the screen last changed, at once and more widely, asks the AI helper (if on) about the last few sentences together, and tells the operator it heard the request.
+- ✅ 1.10.0 The AI helper (optional) also wakes on Bible names, and a short sentence is asked about with the one before it.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

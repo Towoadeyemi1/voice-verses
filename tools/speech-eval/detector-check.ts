@@ -149,6 +149,68 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('part of a verse is offered with a confidence below 99%', scores[0]?.replace(/\d+%$/, (m) => (parseInt(m) < 99 && parseInt(m) > 30 ? 'ok' : m)) ?? null, 'John 3:16 ok');
   }
   check('sermon talk is not a quote', (await quote('Let us pray together this morning, church, the Lord is good all the time')).shown, null);
+  // A story told in the preacher's own words, with the names in it: offered while still talking, never shown by itself
+  {
+    const story = async (parts: string[], partial = false) => {
+      const shown: string[] = [];
+      const offered: { ref: string; score: number }[] = [];
+      const d = new VerseDetectionController({
+        onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`),
+        onVerseSuggested: (v, info) => offered.push({ ref: `${v.book} ${v.chapter}:${v.verse}`, score: info.score ?? 0 }),
+      });
+      for (const [i, text] of parts.entries()) {
+        await d.onTranscript(text, !(partial && i === parts.length - 1));
+        await pause();
+      }
+      return { shown, offered };
+    };
+    const told: [string, string[], RegExp][] = [
+      ['Peter walking on the water', ['Peter stepped out of the boat onto the waves and began to sink when he saw the wind'], /^Matthew 14:(2[89]|3[01])$/],
+      ['Zacchaeus up the tree', ['Zacchaeus the tax collector was too short to see over the crowd so he climbed up a sycamore tree'], /^Luke 19:[2-4]$/],
+      ['David and Goliath', ['little David with only a sling and a stone brought down the giant Goliath'], /^1 Samuel 17:(4[0-9]|50|51)$/],
+      ['Daniel and the lions', ['God shut the mouths of the lions so they could not hurt Daniel'], /^Daniel 6:2[0-3]$/],
+      ['Elijah on Carmel', ['Elijah called down fire from heaven on mount Carmel and it consumed the offering and licked up the water'], /^1 Kings 18:(19|2[0-9]|3[0-9])$/],
+      ['the woman and the hem', ['the woman with the issue of blood pushed through the crowd and touched the hem of his garment'], /^(Matthew 9:2[01]|Mark 5:2[5-9]|Luke 8:4[3-4])$/],
+      ['Lazarus four days dead', ['Martha said Lord by now he stinks, Lazarus has been dead four days'], /^John 11:(1[7-9]|39)$/],
+      ['five loaves and two fish', ['Jesus took five loaves and two fishes and fed five thousand men'], /^(Matthew 14:1[5-9]|Matthew 14:2[01]|Matthew 16:9|Mark 6:(3[5-9]|4[0-4])|Mark 8:19|Luke 9:1[2-7]|John 6:([5-9]|1[0-3]))$/],
+      ['the Red Sea parted', ['Moses stretched out his rod and the Red Sea parted and Israel crossed over on dry ground'], /^Exodus 14:(1[5-9]|2[0-9])$/],
+      ['the walls of Jericho', ['Joshua and the people marched around Jericho seven times, they shouted and the walls fell down flat'], /^Joshua 6:([2-5]|1[0-9]|20)$/],
+    ];
+    for (const [label, parts, want] of told) {
+      const r = await story(parts);
+      // The suggestion bar shows the surest first
+      const top = [...r.offered].sort((x, y) => y.score - x.score)[0];
+      check(`story: ${label} is offered`, top && want.test(top.ref) ? 'offered' : `${top?.ref ?? 'nothing'}`, 'offered');
+      check(`story: ${label} is not shown by itself`, r.shown.join(', ') || null, null);
+    }
+    // Offered from the sentence still being spoken (a partial), not only once it ends
+    {
+      const r = await story(['Peter stepped out of the boat onto the waves and began to sink when he saw the wind'], true);
+      check('story: offered while the sentence is still being spoken', r.offered.some((o) => /^Matthew 14:/.test(o.ref)) ? 'offered' : r.offered[0]?.ref ?? 'nothing', 'offered');
+    }
+    // "Help me find it": the story told before it is searched at once
+    {
+      const r = await story([
+        'You know Gideon, he wanted a sign so he laid a fleece out overnight',
+        'and asked for dew on the fleece but dry ground all around',
+        'Somebody help me find it',
+      ]);
+      check('"help me find it" finds the story told before it', r.offered.some((o) => /^Judges 6:3[6-9]|^Judges 6:40/.test(o.ref)) ? 'offered' : r.offered.map((o) => o.ref).join(', ') || 'nothing', 'offered');
+    }
+    // Ordinary sermon talk brings nothing
+    for (const text of [
+      'Good morning church, it is good to be in the house of the Lord today, please greet your neighbour',
+      'We are going to have lunch after the service in the fellowship hall, everyone is welcome',
+      'God is faithful and he loves you more than you could ever know',
+      'Paul was a great apostle and we can all learn something from his life',
+      'Turn off your phones and let us open our hearts to what the Spirit is saying this morning',
+    ]) {
+      const r = await story([text]);
+      // (a short phrase from a verse may still be offered faintly by the quote search, below 45%)
+      check(`story: ordinary talk brings nothing (${text.slice(0, 30)}…)`, r.offered.filter((o) => o.score >= 0.45).map((o) => o.ref).join(', ') || r.shown.join(', ') || null, null);
+    }
+  }
+
   check('a common phrase is not a quote', (await quote('And it came to pass that we went to the market')).shown, null);
 
   // A called passage: shown from its first verse, followed through it even when the reading is misheard
