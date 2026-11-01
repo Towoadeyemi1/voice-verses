@@ -113,7 +113,18 @@ export const SettingsPanel = ({ onClose, initial = 'bible', framed = true }: { o
         </div>
 
         <div className="px-7 pb-8 space-y-8">
-          {pane === 'bible' && <BibleVersionSettings currentVersion={bibleVersion} onVersionChange={setBibleVersion} />}
+          {pane === 'bible' && (
+            <>
+              <BibleVersionSettings currentVersion={bibleVersion} onVersionChange={setBibleVersion} />
+              <p className="m-0 text-[13px] text-muted-foreground max-w-[70ch]">
+                Predictive Next uses cross-references from{' '}
+                <a href="https://www.openbible.info/labs/cross-references/" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-4">
+                  OpenBible.info
+                </a>{' '}
+                (CC BY), kept on this computer so they work offline.
+              </p>
+            </>
+          )}
 
           {pane === 'listening' && (
             <>

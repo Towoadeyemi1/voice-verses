@@ -11,6 +11,10 @@ import { syncService } from '@/lib/syncService';
 import { BibleParser } from '@/lib/bibleParser';
 import { LAST_SERVICE_KEY, ServiceStorage } from '@/lib/serviceStorage';
 import { buildSongSlides, ccliLicence } from '@/lib/songs';
+import { addLine, captureSlide, draftLyrics, draftTitle } from '@/lib/spontaneousSong';
+import { loadCrossReferences } from '@/lib/crossReferences';
+import { predictNext } from '@/lib/predictNext';
+import type { ScriptureHint } from '@/speech/scriptureHints';
 import { plainVerseText } from '@/lib/verseText';
 import { sendVerseToProPresenter } from '@/lib/proPresenter';
 import { hasSecret } from '@/lib/secrets';
@@ -115,6 +119,12 @@ export const LiveWorkspace = () => {
   const [showPalette, setShowPalette] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   const [currentItemId, setCurrentItemId] = useState<string | undefined>();
+  /** A new song being sung (spontaneous worship), its words going on screen as they are sung */
+  const [capture, setCapture] = useState<{ id: string; lines: string[] } | null>(null);
+  const captureRef = useRef(capture);
+  captureRef.current = capture;
+  /** Predictive Next: the likely verse waiting in Next, and why */
+  const [prediction, setPrediction] = useState<{ key: string; reason: string; heard: string } | null>(null);
 
   const speech = useRef<ISpeechProvider | null>(null);
   const controller = useRef<VerseDetectionController | null>(null);
@@ -166,8 +176,10 @@ export const LiveWorkspace = () => {
   // ---- Going live -----------------------------------------------------------
 
   /** Puts an item on the screens. After it, the next item waits in Preview. */
-  const goLive = async (item: Live, opts: { fromDetector?: boolean; within?: Collection } = {}) => {
+  const goLive = async (item: Live, opts: { fromDetector?: boolean; within?: Collection; capturing?: boolean } = {}) => {
     if (!item) return;
+    // Anything else going on screen ends a capture (and keeps what was sung)
+    if (captureRef.current && !opts.capturing) void stopCapture();
     if ('verse' in item) {
       const verse = isOnlineVersion() ? (await BibleParser.getVerse(item.verse.book, item.verse.chapter, item.verse.verse)) ?? item.verse : item.verse;
       const shown: DisplayedVerse = { ...verse, timestamp: new Date() };
@@ -188,14 +200,20 @@ export const LiveWorkspace = () => {
         type: 'SLIDE_UPDATE',
         data: { slide: item.slide, index, slideIndex: index, upcoming: c && index >= 0 ? c.slides.slice(index + 1, index + 4) : [], timestamp: new Date() },
       });
-      if (item.slide.type === 'lyrics' && c && index >= 0) {
-        controller.current?.setLiveLyrics(c.slides.map((s) => (s.type === 'lyrics' ? s.content : '')), index);
+      // A song being captured is not followed: its words are what is being sung
+      if (item.slide.type === 'lyrics' && c && index >= 0 && !opts.capturing) {
+        controller.current?.setLiveLyrics(
+          c.slides.map((s) => (s.type === 'lyrics' ? s.content : '')),
+          index,
+          c.slides.map((s) => (s.type === 'lyrics' ? s.sectionLabel ?? '' : '')),
+        );
       } else {
         controller.current?.setLiveLyrics(null);
       }
       setPreview(c && index >= 0 && c.slides[index + 1] ? { slide: c.slides[index + 1] } : null);
     }
     setPreviewSuggestionId(undefined);
+    setPrediction(null);
   };
 
   /** Detected or chosen: on screen straight away (Auto send), or into Preview to check first. */
@@ -266,9 +284,10 @@ export const LiveWorkspace = () => {
     setSuggestions((prev) => {
       const now = Date.now();
       const same = (o: LiveSuggestion) =>
-        o.kind === s.kind && (o.kind === 'song' ? o.songId === (s as typeof o).songId : sameVerse(o.verse, (s as typeof o).verse));
+        o.kind === s.kind &&
+        (o.kind === 'song' ? o.songId === (s as typeof o).songId : o.kind === 'verse' ? sameVerse(o.verse, (s as typeof o).verse) : true);
       const kept = prev.filter((o) => !same(o) && now - o.at < 120_000);
-      const score = (o: LiveSuggestion) => (o.kind === 'song' ? 0.8 : o.score);
+      const score = (o: LiveSuggestion) => (o.kind === 'verse' ? o.score : 0.8);
       return [{ ...s, at: now }, ...kept].sort((a, b) => b.at - a.at || score(b) - score(a)).slice(0, 6);
     });
 
@@ -285,8 +304,10 @@ export const LiveWorkspace = () => {
     if (s.kind === 'verse') {
       await loadChapter(s.verse.book, s.verse.chapter);
       setPreview({ verse: s.verse });
-    } else {
+    } else if (s.kind === 'song') {
       setPreview(songForSuggestion(s)?.item ?? null);
+    } else {
+      startCapture(s.lines);
     }
   };
 
@@ -294,6 +315,8 @@ export const LiveWorkspace = () => {
     setSuggestions((prev) => prev.filter((o) => o.id !== s.id));
     if (s.kind === 'verse') {
       goLive({ verse: s.verse });
+    } else if (s.kind === 'new-song') {
+      startCapture(s.lines);
     } else {
       const found = songForSuggestion(s);
       controller.current?.setSongMode(true);
@@ -301,11 +324,105 @@ export const LiveWorkspace = () => {
     }
   };
 
+  // ---- Spontaneous worship: a new song, shown as it is sung and kept as a draft ----
+
+  /** Shows the newest captured lines and the whole song so far in the middle. */
+  const showCapture = (next: { id: string; lines: string[] }) => {
+    const title = 'Sung live';
+    const slides = next.lines
+      .map((_, i) => (i % 2 === 1 || i === next.lines.length - 1 ? captureSlide(next.lines.slice(0, i + 1), title, next.id) : null))
+      .filter((x): x is NonNullable<typeof x> => !!x);
+    const latest = slides[slides.length - 1];
+    if (!latest) return;
+    const loaded = { kind: 'slides' as const, title: 'New song, sung live', slides };
+    setCollection(loaded);
+    goLive({ slide: latest }, { within: loaded, capturing: true });
+  };
+
+  const startCapture = (lines: string[]) => {
+    setSuggestions((prev) => prev.filter((o) => o.kind !== 'new-song'));
+    const next = { id: `sung-${Date.now()}`, lines: lines.reduce(addLine, [] as string[]) };
+    setCapture(next);
+    captureRef.current = next;
+    controller.current?.setSongMode(true);
+    controller.current?.setCapturing(true);
+    showCapture(next);
+  };
+
+  const captureLine = (text: string) => {
+    const current = captureRef.current;
+    if (!current) return;
+    const lines = addLine(current.lines, text);
+    if (lines === current.lines) return;
+    const next = { ...current, lines };
+    setCapture(next);
+    captureRef.current = next;
+    showCapture(next);
+  };
+
+  /** Stops capturing and keeps what was sung as a draft song in the library. */
+  const stopCapture = async () => {
+    const current = captureRef.current;
+    if (!current) return;
+    setCapture(null);
+    captureRef.current = null;
+    controller.current?.setCapturing(false);
+    if (current.lines.length < 2) return;
+    const { lyrics, arrangement } = draftLyrics(current.lines);
+    const day = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    const title = draftTitle(current.lines);
+    const song: MediaItem = {
+      id: `song-sung-${Date.now()}`,
+      type: 'song',
+      name: `${title} (sung live, ${day})`,
+      category: 'Drafts',
+      tags: ['draft', 'sung live'],
+      lyrics,
+      arrangement,
+      author: 'Sung live; check the words and add the writer',
+      createdAt: new Date(),
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      await ServiceStorage.saveMediaItem(song);
+      loadLibrary();
+      toast.success(`Saved “${title}” as a draft song`, { description: 'Find it in Media → Songs to check the words before next week.' });
+    } catch {
+      toast.error('Could not save the new song', { description: 'The words are still on screen; copy them from the middle before closing.' });
+    }
+  };
+
+  // ---- Predictive Next -----------------------------------------------------------
+
+  /**
+   * The preacher hinted where they are going next ("Paul says the same thing in Romans"):
+   * the likely verse waits in Next, from today's plan and cross-references. Never sent by itself.
+   */
+  const predict = async (hint: ScriptureHint) => {
+    if (previewSuggestionId || captureRef.current) return; // the operator chose what is in Next, or a song is being captured
+    await loadCrossReferences().catch(() => {});
+    const outline = (service?.sections ?? []).flatMap((sec) =>
+      sec.subsections.flatMap((item) => item.slides.flatMap((sl) => (sl.type === 'scripture' ? [sl.verse] : []))),
+    );
+    const [best] = predictNext({ books: hint.books, live: liveVerse, recent: recent.filter((v) => !liveVerse || !sameVerse(v, liveVerse)), outline });
+    if (!best) return;
+    const verse = await BibleParser.getVerse(best.book, best.chapter, best.verse);
+    if (!verse) return;
+    await loadChapter(verse.book, verse.chapter);
+    setPreview({ verse });
+    setPrediction({ key: verseKey(verse), reason: best.reason, heard: hint.heard });
+  };
+
+  // Singing is over (song mode off): keep what was sung
+  useEffect(() => {
+    if (!songMode && captureRef.current) void stopCapture();
+  }, [songMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ---- Listening --------------------------------------------------------------
 
   // The detector's callbacks are made once per listening session; they call the latest versions of these
-  const handlers = useRef({ present, addSuggestion, collection });
-  handlers.current = { present, addSuggestion, collection };
+  const handlers = useRef({ present, addSuggestion, collection, captureLine, predict });
+  handlers.current = { present, addSuggestion, collection, captureLine, predict };
 
   const startListening = async () => {
     const settings = loadSpeechSettings();
@@ -323,9 +440,18 @@ export const LiveWorkspace = () => {
         onReadingProgress: (p) => setReading({ verse: p.verse, word: p.word }),
         onSongSuggested: (match) =>
           handlers.current.addSuggestion({ id: `song-${match.song.id}-${Date.now()}`, kind: 'song', songId: match.song.id, title: match.song.title, heard: match.heard }),
-        onLyricsMove: (index) => {
+        onScriptureHint: (hint) => void handlers.current.predict(hint),
+        onNewSinging: (lines) => handlers.current.addSuggestion({ id: `new-song-${Date.now()}`, kind: 'new-song', lines }),
+        onCapturedLine: (line) => handlers.current.captureLine(line),
+        onLyricsMove: (index, cue) => {
           const c = handlers.current.collection;
-          if (c?.kind === 'slides' && c.slides[index]) handlers.current.present({ slide: c.slides[index] }, { fromDetector: true });
+          if (c?.kind !== 'slides' || !c.slides[index]) return;
+          handlers.current.present({ slide: c.slides[index] }, { fromDetector: true });
+          if (cue) {
+            const slide = c.slides[index];
+            const where = cue.kind === 'top' ? 'the start' : slide.type === 'lyrics' && slide.sectionLabel ? slide.sectionLabel : `slide ${index + 1}`;
+            toast(`Heard “${cue.heard}”`, { description: `Went to ${where}`, duration: 2500 });
+          }
         },
         ...verseAssistantOptions(
           (verse) => handlers.current.present({ verse }),
@@ -524,9 +650,12 @@ export const LiveWorkspace = () => {
     const sl = item.slide;
     return sl.type === 'lyrics' ? `${sl.songTitle}${sl.sectionLabel ? ` · ${sl.sectionLabel}` : ''}` : sl.title || 'Slide';
   };
+  const predicted = prediction && preview && 'verse' in preview && verseKey(preview.verse) === prediction.key;
   const nextLabel = !preview
     ? sendMode === 'auto' ? 'what comes next appears here' : 'waits here for Take'
-    : `${describeLive(preview)} · ${sendMode === 'auto' && 'verse' in preview && liveVerse ? 'goes up when this verse ends' : 'waiting for Take'}`;
+    : predicted
+      ? `${describeLive(preview)} · likely next (${prediction.reason.charAt(0).toLowerCase()}${prediction.reason.slice(1)}) · Take to show it`
+      : `${describeLive(preview)} · ${sendMode === 'auto' && 'verse' in preview && liveVerse ? 'goes up when this verse ends' : 'waiting for Take'}`;
 
   const doing = songMode
     ? 'following the singers'
@@ -659,6 +788,20 @@ export const LiveWorkspace = () => {
           heard={listening ? `…${transcript.split(' ').slice(-16).join(' ')}` : undefined}
           onSearch={() => setShowPalette(true)}
         >
+          {capture && (
+            <div className="flex flex-wrap items-center gap-3 p-3 pl-4 rounded-[18px] bg-card shadow-[0_1px_1px_rgba(0,0,0,.3),0_12px_36px_rgba(0,0,0,.35)]" data-capture>
+              <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse-soft flex-shrink-0" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className="m-0 text-[15px] font-semibold">Showing a new song as it is sung</p>
+                <p className="m-0 text-[13px] text-muted-foreground">
+                  {capture.lines.length} {capture.lines.length === 1 ? 'line' : 'lines'} so far. It is kept as a draft song when you stop.
+                </p>
+              </div>
+              <button type="button" onClick={() => void stopCapture()} className="h-9 px-3.5 rounded-xl bg-primary/20 text-sm font-semibold hover:bg-primary/30">
+                Stop and save
+              </button>
+            </div>
+          )}
           <SuggestionBar
             suggestions={suggestions}
             inNextId={previewSuggestionId}

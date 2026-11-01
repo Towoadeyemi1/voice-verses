@@ -112,6 +112,15 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Why:** Rich from the first launch, offline, and the operator's previews still show exactly what the room sees.
 - **1.5.1, the speed guard:** each computer measures itself the first time it shows a moving background and keeps them still if it draws under 40 frames a second (Settings can override). The owner asked "is the app going to be slow and freezing?"; the honest answer is that a computer without a working graphics chip can't move full-screen gradients smoothly, so the app must notice and stop rather than stutter. Listening is unaffected either way: it runs in its own process.
 
+### D19. The worship features never guess on the big screen
+- **Context:** The owner asked for worship leader voice cues, spontaneous worship captured, and Predictive Next (1.6.0).
+- **Decision:**
+  - Cues act at once, because a late jump is useless, but only on short utterances and only between sections the song really has. Without section labels nothing is guessed but "from the top".
+  - New singing is only *offered*. Its words go on screen after the operator chooses "Show the words live", because speech recognition of singing is rough. It is always saved as a **draft** for a person to check.
+  - Predictive Next only fills Next. Scripture still goes up by itself only when said outright or 99% sure (rule 1).
+  - Cross-references come from OpenBible.info (CC BY, bundled and credited) rather than a download at run time, so they work offline.
+- **Why:** Fast where speed matters, and never a wrong verse or wrong words on the big screen without a person choosing them.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

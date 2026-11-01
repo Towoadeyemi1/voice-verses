@@ -73,6 +73,9 @@ Check this list before debugging. Add every new mistake that cost time.
   - dnd-kit menus needed keyboard focus plus Enter.
   - "Save as Template" was clicked instead of "Save".
   - Use exact names and roles.
+- **Test words for songs:** a test line quoted a modern song's title and opening line. Use public-domain hymns (Amazing Grace, the Doxology, Be Thou My Vision) or words written for the test.
+- **"One more time" at the first slide of a section** is ambiguous: the section just sung, or this one? It means the one just sung only if the lyrics moved on in the last few seconds. Record when the follower moves the lyrics in the controller itself; the window's later `setLiveLyrics` sees no change.
+- **A captured spontaneous song must not be followed** by the song follower, or its own lines move the slides and end the capture.
 - **Sending a verse to an output open in the same window:** `localStorage` changes don't fire `storage` events in the window that made them. Post on a new `BroadcastChannel('cornerstone-bible-sync')` too (`tools/e2e/transitions.cjs`).
 - **The starters e2e broke silently in 1.4.2** when themes moved to their own tab. Run every e2e script, not only the one for the feature.
 - **IndexedDB in tests:** open version 2 and create the stores (`services`, `media` with keyPath `id`; `settings`, `state`, `files`) before seeding.

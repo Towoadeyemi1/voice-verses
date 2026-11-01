@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Music, X } from 'lucide-react';
+import { Mic, Music, X } from 'lucide-react';
 import { plainVerseText } from '@/lib/verseText';
 import { BibleVerse } from '@/types/bible';
 import { Slide } from '@/types/service';
 
-/** Something the app thinks may be meant: a verse quoted without its reference, or a library song being sung. */
+/**
+ * Something the app thinks may be meant: a verse quoted without its reference, a library song being
+ * sung, or singing that is in no song at all (spontaneous worship, to show and keep).
+ */
 export type LiveSuggestion =
   | { id: string; kind: 'verse'; verse: BibleVerse; byAi: boolean; score: number; heard?: string }
-  | { id: string; kind: 'song'; songId: string; title: string; heard: string; preview?: Slide };
+  | { id: string; kind: 'song'; songId: string; title: string; heard: string; preview?: Slide }
+  | { id: string; kind: 'new-song'; lines: string[] };
 
 const Ring = ({ value }: { value: number }) => {
   const r = 19;
@@ -56,7 +60,7 @@ export const SuggestionBar = ({
       {s.kind === 'verse' ? (
         <Ring value={s.score} />
       ) : (
-        <div className="w-11 h-11 rounded-full bg-primary/15 grid place-items-center text-primary"><Music className="w-5 h-5" /></div>
+        <div className="w-11 h-11 rounded-full bg-primary/15 grid place-items-center text-primary">{s.kind === 'song' ? <Music className="w-5 h-5" /> : <Mic className="w-5 h-5" />}</div>
       )}
       <div className="min-w-0">
         <p className="m-0 text-[15px] font-semibold truncate">
@@ -65,15 +69,20 @@ export const SuggestionBar = ({
               {s.byAi ? 'AI suggests' : 'Sounds like'} {s.verse.book} {s.verse.chapter}:{s.verse.verse}
               <span className="ml-1.5 text-[13px] font-medium text-muted-foreground">{Math.round(s.score * 100)}% sure</span>
             </>
-          ) : (
+          ) : s.kind === 'song' ? (
             <>
               They are singing {s.title}
               <span className="ml-1.5 text-[13px] font-medium text-muted-foreground">from your library</span>
             </>
+          ) : (
+            <>
+              Singing something new
+              <span className="ml-1.5 text-[13px] font-medium text-muted-foreground">not in your library</span>
+            </>
           )}
         </p>
         <p className="m-0 mt-0.5 font-scripture text-[15px] text-muted-foreground truncate">
-          {s.kind === 'verse' ? plainVerseText(s.verse.text) : `“${s.heard}”`}
+          {s.kind === 'verse' ? plainVerseText(s.verse.text) : s.kind === 'song' ? `“${s.heard}”` : `“${s.lines[s.lines.length - 1]}”`}
         </p>
       </div>
       <div className="flex items-center gap-1.5">
@@ -82,12 +91,20 @@ export const SuggestionBar = ({
             {more} more
           </button>
         )}
-        <button type="button" className="h-9 px-3 rounded-xl bg-muted/70 text-sm font-semibold hover:bg-muted" onClick={() => onShowNow(s)} title="Put it on the screens now">
-          Show now
-        </button>
-        <button type="button" className="h-9 px-3.5 rounded-xl bg-primary/20 text-sm font-semibold hover:bg-primary/30" onClick={() => onUse(s)} title="Put it in Next; Take sends it">
-          {inNextId === s.id ? 'In Next ✓' : s.kind === 'song' ? 'Switch to it' : 'Use'}
-        </button>
+        {s.kind === 'new-song' ? (
+          <button type="button" className="h-9 px-3.5 rounded-xl bg-primary/20 text-sm font-semibold hover:bg-primary/30" onClick={() => onShowNow(s)} title="Put the words on the screens as they are sung, and keep them as a draft song">
+            Show the words live
+          </button>
+        ) : (
+          <>
+            <button type="button" className="h-9 px-3 rounded-xl bg-muted/70 text-sm font-semibold hover:bg-muted" onClick={() => onShowNow(s)} title="Put it on the screens now">
+              Show now
+            </button>
+            <button type="button" className="h-9 px-3.5 rounded-xl bg-primary/20 text-sm font-semibold hover:bg-primary/30" onClick={() => onUse(s)} title="Put it in Next; Take sends it">
+              {inNextId === s.id ? 'In Next ✓' : s.kind === 'song' ? 'Switch to it' : 'Use'}
+            </button>
+          </>
+        )}
         <button type="button" className="w-9 h-9 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => onDismiss(s)} title="Not this" aria-label="Dismiss">
           <X className="w-4 h-4" />
         </button>
