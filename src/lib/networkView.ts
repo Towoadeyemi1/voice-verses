@@ -18,8 +18,11 @@ export const isNetworkViewer = typeof window !== 'undefined' && window.__VOICE_V
 export interface NetworkSnapshot {
   live: SyncMessage | null;
   countdown: Countdown | null;
+  /** Every running countdown (older apps send only `countdown`) */
+  countdowns?: Countdown[];
   /** The alert on screen (older apps don't send it) */
   alert?: ScreenAlert | null;
+  alerts?: ScreenAlert[];
   templates: Template[];
   assignments: Assignments;
   logo: string;

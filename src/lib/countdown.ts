@@ -15,9 +15,24 @@ export interface Countdown {
   projector: 'full' | 'corner' | 'off';
   confidence: boolean;
   stream: boolean;
-  /** Turns the confidence monitor timer amber from this many seconds left */
+  /** Turns the timer yellow from this many seconds left (red after zero) */
   warnSeconds?: number;
+  /** Blinks while yellow or red, to catch the eye */
+  flash?: boolean;
 }
+
+/** The screens a countdown or alert can be on. */
+export type Screen = 'projector' | 'stage' | 'stream';
+
+/** Whether a countdown shows on this screen. */
+export const countdownOn = (c: Countdown, screen: Screen) => (screen === 'projector' ? c.projector !== 'off' : screen === 'stage' ? c.confidence : c.stream);
+
+/** Normal, yellow when close to the end, red when done. */
+export function countdownTone(c: Countdown, remaining: number): 'normal' | 'warn' | 'over' {
+  if (remaining <= 0) return 'over';
+  return remaining <= (c.warnSeconds ?? 60) * 1000 ? 'warn' : 'normal';
+}
+export const TONE_COLOR = { normal: undefined, warn: '#facc15', over: '#ef4444' } as const;
 
 export type CountdownTarget = { minutes: number; seconds?: number } | { until: string };
 
@@ -44,18 +59,36 @@ export function formatRemaining(ms: number, { overrun = false } = {}): string {
   return late ? `+${text}` : text;
 }
 
+const publish = (countdowns: Countdown[]) =>
+  syncService.broadcast({ type: 'COUNTDOWN', data: { countdowns, countdown: countdowns[0] ?? null } });
+
+/**
+ * Starts a countdown on the screens it names. Countdowns already running keep
+ * their other screens, so each screen can show its own: the room "Service
+ * begins in", the stage the sermon timer.
+ */
 export function startCountdown(countdown: Omit<Countdown, 'id'>): Countdown {
   const running = { ...countdown, id: `cd-${Date.now()}` };
-  syncService.broadcast({ type: 'COUNTDOWN', data: { countdown: running } });
+  const others = syncService
+    .currentCountdowns()
+    .map((c) => ({
+      ...c,
+      projector: running.projector !== 'off' ? ('off' as const) : c.projector,
+      confidence: running.confidence ? false : c.confidence,
+      stream: running.stream ? false : c.stream,
+    }))
+    .filter((c) => c.projector !== 'off' || c.confidence || c.stream);
+  publish([running, ...others]);
   return running;
 }
 
-export function stopCountdown(): void {
-  syncService.broadcast({ type: 'COUNTDOWN', data: { countdown: null } });
+/** Stops one countdown, or all of them. */
+export function stopCountdown(id?: string): void {
+  publish(id ? syncService.currentCountdowns().filter((c) => c.id !== id) : []);
 }
 
 export function extendCountdown(countdown: Countdown, seconds: number): void {
-  syncService.broadcast({ type: 'COUNTDOWN', data: { countdown: { ...countdown, endsAt: countdown.endsAt + seconds * 1000 } } });
+  publish(syncService.currentCountdowns().map((c) => (c.id === countdown.id ? { ...c, endsAt: c.endsAt + seconds * 1000 } : c)));
 }
 
 /** A section timer from the Service Builder, as a running countdown. */

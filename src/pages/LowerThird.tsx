@@ -16,7 +16,7 @@ import { loadAssignments, loadTemplates, templateFor } from '@/lib/templates';
  */
 const LowerThird = () => {
   const { live, logo } = useLive();
-  const { countdown, remaining } = useCountdown();
+  const { countdown, remaining } = useCountdown('stream');
   const stage = useOutputStage('stream');
   const pointerActive = usePointerActive();
   useDoubleClickFullscreen();

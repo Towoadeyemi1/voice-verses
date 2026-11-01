@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScaledStage } from '@/components/ScaledStage';
 import { OutputContent } from '@/components/OutputContent';
 import { AlertBanner } from '@/components/AlertBanner';
-import { useAlert } from '@/hooks/use-alert';
+import { chipClass, describeScreens, ScreenPicker, Screens } from '@/components/ScreenPicker';
+import { useAlerts } from '@/hooks/use-alert';
 import { useLive } from '@/hooks/use-live';
 import { ALERT_PRESETS, AlertPreset, clearAlert, fillAlert, ScreenAlert, showAlert } from '@/lib/alerts';
 
@@ -18,24 +19,23 @@ const HIDE_AFTER: { label: string; seconds: number }[] = [
   { label: '2 minutes', seconds: 120 },
 ];
 
-const chip = (on: boolean) =>
-  `min-h-9 px-3.5 rounded-full text-[13px] font-semibold transition ${on ? 'bg-card text-foreground shadow-sm ring-1 ring-foreground/30' : 'bg-muted/60 text-muted-foreground hover:text-foreground'}`;
-
 /**
- * Putting an alert on the screens: a message over whatever is showing, for the
- * room (nursery, a car), the stream, or only the stage monitor (a note for the
- * preacher). The button turns amber while one is up, with Clear beside it.
+ * Alerts on the screens: a message over whatever is showing, for the room
+ * (nursery, a car), the stream, or only the stage monitor (a note for the
+ * preacher). Each screen can show its own: a new alert takes only the screens
+ * chosen for it. The button turns amber while any is up, with Clear beside it.
  */
 export const AlertControl = ({ className = '' }: { className?: string }) => {
-  const current = useAlert();
+  const alerts = useAlerts();
   const { live } = useLive();
   const [open, setOpen] = useState(false);
   const [preset, setPreset] = useState<AlertPreset | null>(ALERT_PRESETS[0]);
   const [value, setValue] = useState('');
   const [text, setText] = useState(fillAlert(ALERT_PRESETS[0], ''));
-  const [screens, setScreens] = useState(ALERT_PRESETS[0].screens);
+  const [screens, setScreens] = useState<Screens>(ALERT_PRESETS[0].screens);
   const [position, setPosition] = useState<ScreenAlert['position']>('bottom');
   const [urgent, setUrgent] = useState(false);
+  const [flash, setFlash] = useState(false);
   const [hideAfter, setHideAfter] = useState(0);
 
   const pick = (p: AlertPreset) => {
@@ -45,8 +45,9 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
     setScreens(p.screens);
     setUrgent(!!p.urgent);
   };
-  const draft: Omit<ScreenAlert, 'id'> = { text: text.trim(), ...screens, position, urgent, until: hideAfter ? Date.now() + hideAfter * 1000 : undefined };
+  const draft: Omit<ScreenAlert, 'id'> = { text: text.trim(), ...screens, position, urgent, flash };
   const nothingChosen = !screens.projector && !screens.stream && !screens.stage;
+  const replaced = alerts.filter((a) => (screens.projector && a.projector) || (screens.stage && a.stage) || (screens.stream && a.stream));
   const show = () => {
     showAlert({ ...draft, until: hideAfter ? Date.now() + hideAfter * 1000 : undefined });
     setOpen(false);
@@ -57,15 +58,15 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
       <div className={`flex items-center ${className}`}>
         <Button
           variant="outline"
-          className={`gap-2 h-full ${current ? 'border-amber-500/70 text-amber-300' : ''}`}
+          className={`gap-2 h-full ${alerts.length ? 'border-amber-500/70 text-amber-300' : ''}`}
           onClick={() => setOpen(true)}
-          title={current ? `On the screens: ${current.text}` : 'Put a message on the screens: nursery, a car, a note for the preacher'}
+          title={alerts.length ? `On the screens: ${alerts.map((a) => a.text).join(' · ')}` : 'Put a message on the screens: nursery, a car, a note for the preacher'}
         >
           <BellRing className="w-4 h-4" />
-          <span className="max-w-[12rem] truncate">{current ? 'Alert on' : 'Alert'}</span>
+          {alerts.length ? `Alert on${alerts.length > 1 ? ` (${alerts.length})` : ''}` : 'Alert'}
         </Button>
-        {current && (
-          <Button variant="ghost" size="icon" className="h-full w-9" onClick={clearAlert} title="Take the alert off the screens" aria-label="Clear the alert">
+        {alerts.length > 0 && (
+          <Button variant="ghost" size="icon" className="h-full w-9" onClick={() => clearAlert()} title="Take every alert off the screens" aria-label="Clear the alerts">
             <X className="w-4 h-4" />
           </Button>
         )}
@@ -75,17 +76,27 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Alert</DialogTitle>
-            <DialogDescription>A message over whatever is on screen, without changing it.</DialogDescription>
+            <DialogDescription>A message over whatever is on screen, without changing it. Each screen can show its own.</DialogDescription>
           </DialogHeader>
 
-          {current && (
-            <div className="rounded-xl bg-amber-500/15 p-3 flex items-center gap-3">
-              <p className="m-0 text-sm flex-1 min-w-0">
-                <b>On the screens now:</b> {current.text}
-              </p>
-              <Button size="sm" variant="outline" onClick={clearAlert}>
-                Clear it
-              </Button>
+          {alerts.length > 0 && (
+            <div className="rounded-xl bg-amber-500/15 p-3 space-y-2" data-alerts-on>
+              <p className="m-0 text-[13px] font-semibold">On the screens now</p>
+              {alerts.map((a) => (
+                <div key={a.id} className="flex items-center gap-3">
+                  <p className="m-0 text-sm flex-1 min-w-0 truncate">
+                    {a.text} <span className="text-muted-foreground">· {describeScreens(a)}</span>
+                  </p>
+                  <Button size="sm" variant="outline" onClick={() => clearAlert(a.id)}>
+                    Clear
+                  </Button>
+                </div>
+              ))}
+              {alerts.length > 1 && (
+                <Button size="sm" variant="ghost" onClick={() => clearAlert()}>
+                  Clear them all
+                </Button>
+              )}
             </div>
           )}
 
@@ -93,7 +104,7 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
             <p className="m-0 text-[13px] font-semibold text-muted-foreground">For the room</p>
             <div className="flex flex-wrap gap-1.5">
               {ALERT_PRESETS.filter((p) => !p.screens.stage).map((p) => (
-                <button key={p.id} type="button" className={chip(preset?.id === p.id)} onClick={() => pick(p)}>
+                <button key={p.id} type="button" className={chipClass(preset?.id === p.id)} onClick={() => pick(p)}>
                   {p.label}
                 </button>
               ))}
@@ -101,7 +112,7 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
             <p className="m-0 pt-1 text-[13px] font-semibold text-muted-foreground">For the stage only (the preacher and singers)</p>
             <div className="flex flex-wrap gap-1.5">
               {ALERT_PRESETS.filter((p) => p.screens.stage).map((p) => (
-                <button key={p.id} type="button" className={chip(preset?.id === p.id)} onClick={() => pick(p)}>
+                <button key={p.id} type="button" className={chipClass(preset?.id === p.id)} onClick={() => pick(p)}>
                   {p.label}
                 </button>
               ))}
@@ -129,22 +140,22 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
             <Input value={text} onChange={(e) => { setText(e.target.value); setPreset(null); }} placeholder="Type any message" />
           </label>
 
+          <div className="space-y-1.5">
+            <p className="m-0 text-sm font-semibold">Show it on</p>
+            <ScreenPicker value={screens} onChange={setScreens} />
+            {replaced.length > 0 && (
+              <p className="m-0 text-[13px] text-muted-foreground">
+                It replaces “{replaced[0].text}” on {describeScreens({ projector: screens.projector && replaced[0].projector, stage: screens.stage && replaced[0].stage, stream: screens.stream && replaced[0].stream })}.
+              </p>
+            )}
+          </div>
+
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <p className="m-0 text-sm font-semibold">Show it on</p>
-              <div className="flex flex-wrap gap-1.5">
-                {([['projector', 'Projector'], ['stream', 'Stream'], ['stage', 'Stage monitor']] as const).map(([key, label]) => (
-                  <button key={key} type="button" role="checkbox" aria-checked={screens[key]} className={chip(screens[key])} onClick={() => setScreens({ ...screens, [key]: !screens[key] })}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
             <div className="space-y-1.5">
               <p className="m-0 text-sm font-semibold">Hide it</p>
               <div className="flex flex-wrap gap-1.5">
                 {HIDE_AFTER.map((h) => (
-                  <button key={h.seconds} type="button" className={chip(hideAfter === h.seconds)} onClick={() => setHideAfter(h.seconds)}>
+                  <button key={h.seconds} type="button" className={chipClass(hideAfter === h.seconds)} onClick={() => setHideAfter(h.seconds)}>
                     {h.label}
                   </button>
                 ))}
@@ -154,7 +165,7 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
               <p className="m-0 text-sm font-semibold">Where on the projector</p>
               <div className="flex gap-1.5">
                 {(['bottom', 'top'] as const).map((p) => (
-                  <button key={p} type="button" className={chip(position === p)} onClick={() => setPosition(p)}>
+                  <button key={p} type="button" className={chipClass(position === p)} onClick={() => setPosition(p)}>
                     {p === 'bottom' ? 'Bottom' : 'Top'}
                   </button>
                 ))}
@@ -162,9 +173,14 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
             </div>
             <div className="space-y-1.5">
               <p className="m-0 text-sm font-semibold">Make it stand out</p>
-              <button type="button" role="switch" aria-checked={urgent} className={chip(urgent)} onClick={() => setUrgent(!urgent)}>
-                {urgent ? 'Amber: urgent' : 'Normal'}
-              </button>
+              <div className="flex flex-wrap gap-1.5">
+                <button type="button" role="switch" aria-checked={urgent} className={chipClass(urgent)} onClick={() => setUrgent(!urgent)}>
+                  Amber
+                </button>
+                <button type="button" role="switch" aria-checked={flash} className={chipClass(flash)} onClick={() => setFlash(!flash)}>
+                  Blink
+                </button>
+              </div>
             </div>
           </div>
 
@@ -173,7 +189,7 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
               <p className="m-0 mb-1.5 text-[13px] font-semibold text-muted-foreground">How the projector will look</p>
               <ScaledStage className="aspect-video rounded-xl bg-black">
                 <OutputContent live={live} output="projection" preview />
-                <AlertBanner output={screens.projector ? 'projection' : 'stream'} alert={{ ...draft, id: 'preview', projector: true, stream: true }} />
+                <AlertBanner output="projection" alert={{ ...draft, id: 'preview', projector: true, stream: true }} />
               </ScaledStage>
             </div>
           )}
@@ -183,7 +199,7 @@ export const AlertControl = ({ className = '' }: { className?: string }) => {
               Cancel
             </Button>
             <Button onClick={show} disabled={!draft.text || nothingChosen}>
-              Show on the screens
+              Show on {describeScreens(screens)}
             </Button>
           </div>
         </DialogContent>

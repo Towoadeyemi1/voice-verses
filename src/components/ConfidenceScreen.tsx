@@ -5,7 +5,8 @@ import { SyncMessage, syncService } from '@/lib/syncService';
 import { plainVerseText } from '@/lib/verseText';
 import { BibleParser } from '@/lib/bibleParser';
 import { formatRemaining } from '@/lib/countdown';
-import { useCountdown } from '@/hooks/use-countdown';
+import { useCountdowns } from '@/hooks/use-countdown';
+import { countdownTone, TONE_COLOR } from '@/lib/countdown';
 import { useAlert } from '@/hooks/use-alert';
 import { VerseText } from './VerseText';
 import { FitText } from './FitText';
@@ -58,9 +59,9 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
   const [currentVerse, setCurrentVerse] = useState<BibleVerse | null>(null);
   const [nextItems, setNextItems] = useState<{ ref: string; snippet: string }[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const { countdown, remaining } = useCountdown();
-  const alert = useAlert();
-  const stageAlert = alert?.stage ? alert : null;
+  const { countdowns, now } = useCountdowns();
+  const stageCountdowns = countdowns.filter((c) => c.confidence);
+  const stageAlert = useAlert('stage');
 
   useEffect(() => {
     const snippetOf = (slide: Slide) => {
@@ -142,7 +143,7 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
           <div
             key={stageAlert.id}
             data-stage-alert={stageAlert.text}
-            className="absolute left-0 right-0 top-0 z-10 flex items-center justify-center gap-4 px-8 py-6 font-bold text-center"
+            className={`absolute left-0 right-0 top-0 z-10 flex items-center justify-center gap-4 px-8 py-6 font-bold text-center ${stageAlert.flash ? 'vv-blink' : ''}`}
             style={{
               fontSize: `${Math.round(settings.currentVerseFontSize * 0.9)}px`,
               lineHeight: 1.15,
@@ -172,19 +173,26 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
               )}
             </div>
             <div className="flex items-center gap-8">
-              {countdown?.confidence && (
-                <div
-                  className="font-bold tabular-nums rounded-lg px-4"
-                  title={countdown.message}
-                  style={{
-                    fontSize: `${settings.clockFontSize * 1.6}px`,
-                    color: remaining < 0 ? '#ffffff' : remaining <= (countdown.warnSeconds ?? 60) * 1000 ? '#fbbf24' : settings.textColor,
-                    backgroundColor: remaining < 0 ? '#dc2626' : 'transparent',
-                  }}
-                >
-                  {formatRemaining(remaining, { overrun: true })}
-                </div>
-              )}
+              {stageCountdowns.map((countdown) => {
+                const remaining = countdown.endsAt - now;
+                const tone = countdownTone(countdown, remaining);
+                return (
+                  <div
+                    key={countdown.id}
+                    data-stage-countdown={tone}
+                    className={`font-bold tabular-nums rounded-lg px-4 flex flex-col items-end leading-none ${countdown.flash && tone !== 'normal' ? 'vv-blink' : ''}`}
+                    title={countdown.message}
+                    style={{
+                      color: tone === 'over' ? '#ffffff' : TONE_COLOR[tone] ?? settings.textColor,
+                      backgroundColor: tone === 'over' ? '#dc2626' : 'transparent',
+                      padding: tone === 'over' ? '8px 16px' : undefined,
+                    }}
+                  >
+                    {stageCountdowns.length > 1 && <span style={{ fontSize: `${Math.round(settings.clockFontSize * 0.45)}px`, fontWeight: 600, opacity: 0.8 }}>{countdown.message}</span>}
+                    <span style={{ fontSize: `${settings.clockFontSize * 1.6}px` }}>{formatRemaining(remaining, { overrun: true })}</span>
+                  </div>
+                );
+              })}
               <div
                 className="font-bold tabular-nums"
                 style={{ fontSize: `${settings.clockFontSize}px`, color: settings.textColor }}

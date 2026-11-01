@@ -256,9 +256,21 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   A bar shows each step with Stop the demo. Starting to listen stops it.
 - The overrun ("N min over") shows only on the service's day, for the church's own services, and up to 90 minutes.
 
-## 8c. Alerts (1.8.0, `src/lib/alerts.ts`)
+## 8c. Countdowns, alerts and screens (1.8.0)
 
-- An alert is a short message over whatever is on screen, without changing it: `{ text, projector, stream, stage, position: bottom|top, urgent, until? }`. It is sent like the countdown (sync message `ALERT`, kept in `voice-verses-alert` so reopened windows show it, and included in the network snapshot).
+**Countdowns** (`src/lib/countdown.ts`):
+- Several can run at once. Each has its screens (projector full/corner/off, stage monitor, stream), `warnSeconds` and `flash`. Starting one takes only its screens from those already running, so each screen can count to something of its own. Section timers from Presenter work the same way.
+- Tones: normal; yellow (`#facc15`) from `warnSeconds` left; red (`#ef4444`) at zero. With `flash`, the time blinks (`.vv-blink`, 1 s) while yellow or red.
+  - Projector: the full-screen numbers change colour, and the corner timer's box turns amber or red.
+  - Stage monitor: every stage countdown is listed with its message (when there are several), and when over shows a red box with how far over it is.
+- The sync message `COUNTDOWN` carries `countdowns` (and `countdown`, the first, for older screens). `voice-verses-countdown` holds the list.
+- The panel lists what is running (time in its tone, +1 min, −1 min, Stop, Stop them all) above the form: quick starts, length or until, message, Show it on (All screens, Projector, Stage monitor, Stream, plus full screen or corner), Turn yellow with (30 s, 1, 2, 5 min) and Blink.
+
+**Alerts** (`src/lib/alerts.ts`):
+
+- An alert is a short message over whatever is on screen, without changing it: `{ text, projector, stream, stage, position: bottom|top, urgent, flash, until? }`.
+- Several can be up at once. A new alert takes only the screens chosen for it; alerts already up keep their other screens and are dropped when they have none left. Each screen shows its newest.
+- Alerts are sent like countdowns: sync message `ALERT` with `alerts` (and `alert`, the first, for older screens), kept in `voice-verses-alert` (a list) so reopened windows show them, and included in the network snapshot.
 - **Projector and stream** (`components/AlertBanner.tsx`): a dark rounded bar 5% from the bottom (or top), 54 px bold Figtree, with the team colour along its left edge and a glowing dot. Urgent alerts are amber. It is drawn on the stage canvas over everything, the logo included, and on the operator's Live monitor and stream preview.
 - **Stage monitor:** a full-width bar across the top (blue, or amber when urgent) at 90% of the verse size.
 - **Operator** (`components/AlertControl.tsx`): an "Alert" button beside Countdown on the live screen, every page and Presenter. It turns amber ("Alert on") with a × to clear while one is up.

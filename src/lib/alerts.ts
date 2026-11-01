@@ -19,6 +19,8 @@ export interface ScreenAlert {
   urgent?: boolean;
   /** When it hides itself (ms since 1970); none: until cleared */
   until?: number;
+  /** Blinks to catch the eye */
+  flash?: boolean;
 }
 
 export interface AlertPreset {
@@ -49,12 +51,27 @@ export const ALERT_PRESETS: AlertPreset[] = [
 /** The preset's words with its blank filled in. */
 export const fillAlert = (preset: AlertPreset, value: string) => (preset.field ? preset.text.replace(`{${preset.field.key}}`, value.trim() || '…') : preset.text);
 
+export type AlertScreen = 'projector' | 'stream' | 'stage';
+export const alertOn = (a: ScreenAlert, screen: AlertScreen) => a[screen] && (!a.until || Date.now() < a.until);
+
+const publish = (alerts: ScreenAlert[]) => syncService.broadcast({ type: 'ALERT', data: { alerts, alert: alerts[0] ?? null } });
+
+/**
+ * Puts an alert on the screens it names. Alerts already up keep their other
+ * screens, so the room and the stage can each show their own.
+ */
 export function showAlert(alert: Omit<ScreenAlert, 'id'>): ScreenAlert {
   const shown = { ...alert, id: `alert-${Date.now()}` };
-  syncService.broadcast({ type: 'ALERT', data: { alert: shown } });
+  const others = syncService
+    .currentAlerts()
+    .filter((a) => !a.until || Date.now() < a.until)
+    .map((a) => ({ ...a, projector: a.projector && !shown.projector, stream: a.stream && !shown.stream, stage: a.stage && !shown.stage }))
+    .filter((a) => a.projector || a.stream || a.stage);
+  publish([shown, ...others]);
   return shown;
 }
 
-export function clearAlert(): void {
-  syncService.broadcast({ type: 'ALERT', data: { alert: null } });
+/** Takes one alert off the screens, or all of them. */
+export function clearAlert(id?: string): void {
+  publish(id ? syncService.currentAlerts().filter((a) => a.id !== id) : []);
 }

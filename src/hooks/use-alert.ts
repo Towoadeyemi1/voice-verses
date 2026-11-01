@@ -1,26 +1,32 @@
 import { useEffect, useState } from 'react';
 import { syncService } from '@/lib/syncService';
-import type { ScreenAlert } from '@/lib/alerts';
+import { alertOn, AlertScreen, ScreenAlert } from '@/lib/alerts';
 
-/** The alert on screen now, or null (cleared, or past the time it hides itself). */
-export function useAlert(): ScreenAlert | null {
-  const [alert, setAlert] = useState<ScreenAlert | null>(() => syncService.currentAlert());
+/** Every alert on screen now (ones past the time they hide themselves are left out). */
+export function useAlerts(): ScreenAlert[] {
+  const [alerts, setAlerts] = useState<ScreenAlert[]>(() => syncService.currentAlerts());
   const [, setTick] = useState(0);
 
   useEffect(
     () =>
       syncService.subscribe((message) => {
-        if (message.type === 'ALERT') setAlert(message.data.alert ?? null);
+        if (message.type === 'ALERT') setAlerts(message.data.alerts ?? (message.data.alert ? [message.data.alert] : []));
       }),
     [],
   );
 
-  // Re-check when it is due to hide itself
+  // Re-check when the next one is due to hide itself
   useEffect(() => {
-    if (!alert?.until) return;
-    const timer = window.setTimeout(() => setTick((n) => n + 1), Math.max(0, alert.until - Date.now()) + 50);
+    const next = Math.min(...alerts.map((a) => a.until ?? Infinity));
+    if (!Number.isFinite(next)) return;
+    const timer = window.setTimeout(() => setTick((n) => n + 1), Math.max(0, next - Date.now()) + 50);
     return () => window.clearTimeout(timer);
-  }, [alert]);
+  }, [alerts]);
 
-  return alert && (!alert.until || Date.now() < alert.until) ? alert : null;
+  return alerts.filter((a) => !a.until || Date.now() < a.until);
+}
+
+/** The alert on one screen (the newest put there), or null. */
+export function useAlert(screen: AlertScreen): ScreenAlert | null {
+  return useAlerts().find((a) => alertOn(a, screen)) ?? null;
 }

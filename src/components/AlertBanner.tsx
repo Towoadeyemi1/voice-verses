@@ -9,7 +9,7 @@ import type { ScreenAlert } from '@/lib/alerts';
  * urgent. Draws on the stage canvas, so previews show exactly the same.
  */
 export const AlertBanner = ({ output, alert: given }: { output: 'projection' | 'stream'; alert?: ScreenAlert | null }) => {
-  const current = useAlert();
+  const current = useAlert(output === 'projection' ? 'projector' : 'stream');
   const alert = given === undefined ? current : given;
   const team = useColorTeam();
   const { width, height } = useStageSize();
@@ -20,7 +20,7 @@ export const AlertBanner = ({ output, alert: given }: { output: 'projection' | '
     <div className="absolute inset-0 pointer-events-none" style={{ width, height }} data-alert={alert.text}>
       <div
         key={alert.id}
-        className="absolute flex items-center gap-6"
+        className={`absolute flex items-center gap-6 ${alert.flash ? 'vv-blink' : ''}`}
         style={{
           left: inset,
           right: inset,

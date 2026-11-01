@@ -149,6 +149,12 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
   - For the stage only: "Five minutes", "Please wrap up", "A little louder, please", "Your microphone is off".
   - Choose the projector, stream and stage monitor; bottom or top; normal or amber; hide after 15 s to 2 min, or stay until cleared. A preview shows how the projector will look, and the Live monitor shows it too.
 
+## "The alerts and countdown should have the option to add it to individual screens or all, or different alerts and countdown for each screen. Some alerts also have ability to blink yellow when close and red when done"
+
+- ✅ 1.8.0 Several countdowns and alerts at once, each on the screens chosen (All screens, or any of projector, stage monitor, stream). A new one takes only its screens, so each screen can show its own: the room counts down to the start while the stage times the sermon. The panels list what is running, each with its own Stop or Clear.
+- ✅ 1.8.0 Countdowns turn yellow when close (30 s, 1, 2 or 5 min left, as chosen) and red when done, blinking if chosen (on by default), on the projector, stage monitor, stream and the Countdown button. Alerts can blink too.
+- 💬 Also asked: "How else can we make this way better and excellent features wise, aesthetically, and intuitive" (answered with a prioritised list).
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

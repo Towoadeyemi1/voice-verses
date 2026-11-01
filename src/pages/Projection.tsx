@@ -12,7 +12,7 @@ import { useDoubleClickFullscreen, usePointerActive } from '@/hooks/use-pointer-
  */
 const Projection = () => {
   const { live, logo } = useLive();
-  const { countdown, remaining } = useCountdown();
+  const { countdown, remaining } = useCountdown('projector');
   const stage = useOutputStage('projection');
   const pointerActive = usePointerActive();
   useDoubleClickFullscreen();

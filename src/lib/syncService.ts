@@ -22,10 +22,14 @@ export type SyncMessage = {
     /** The next few slides of the service, for the confidence monitor */
     upcoming?: Slide[];
     logoUrl?: string;
-    /** The running countdown, or null when stopped */
+    /** The first running countdown, or null (for screens from older versions) */
     countdown?: Countdown | null;
-    /** The alert on screen (nursery, car, a note for the preacher), or null when cleared */
+    /** Every running countdown, each on its own screens */
+    countdowns?: Countdown[];
+    /** The first alert on screen, or null (for screens from older versions) */
     alert?: ScreenAlert | null;
+    /** Every alert on screen (nursery, car, a note for the preacher), each on its own screens */
+    alerts?: ScreenAlert[];
   };
 };
 
@@ -63,8 +67,8 @@ class SyncService {
     if (LIVE_TYPES.has(message.type)) this.remember(message);
     // Licensed online text that goes on screen is reported to its publisher
     if (message.type === 'VERSE_UPDATE' && message.data.verse) void BibleParser.reportShown(message.data.verse);
-    if (message.type === 'COUNTDOWN') this.rememberCountdown(message.data.countdown);
-    if (message.type === 'ALERT') this.rememberAlert(message.data.alert);
+    if (message.type === 'COUNTDOWN') this.rememberCountdowns(message.data.countdowns ?? (message.data.countdown ? [message.data.countdown] : []));
+    if (message.type === 'ALERT') this.rememberAlerts(message.data.alerts ?? (message.data.alert ? [message.data.alert] : []));
 
     // Same-window listeners first, then other windows
     this.listeners.forEach(listener => listener(message));
@@ -81,14 +85,19 @@ class SyncService {
     }
   }
 
-  /** The running countdown, if any. */
-  currentCountdown(): Countdown | null {
+  /** Every running countdown. */
+  currentCountdowns(): Countdown[] {
     try {
-      const saved = localStorage.getItem(COUNTDOWN_KEY);
-      return saved ? JSON.parse(saved) : null;
+      const saved = JSON.parse(localStorage.getItem(COUNTDOWN_KEY) || 'null');
+      return Array.isArray(saved) ? saved : saved ? [saved] : [];
     } catch {
-      return null;
+      return [];
     }
+  }
+
+  /** The first running countdown, if any. */
+  currentCountdown(): Countdown | null {
+    return this.currentCountdowns()[0] ?? null;
   }
 
   showLogo(logoUrl: string) {
@@ -136,45 +145,47 @@ class SyncService {
         this.listeners.forEach((listener) => listener(state.live!));
       }
       lastLive = live;
-      const countdown = JSON.stringify(state.countdown);
+      const countdowns = state.countdowns ?? (state.countdown ? [state.countdown] : []);
+      const countdown = JSON.stringify(countdowns);
       if (countdown !== lastCountdown) {
-        const message: SyncMessage = { type: 'COUNTDOWN', data: { countdown: state.countdown } };
-        this.rememberCountdown(state.countdown);
+        const message: SyncMessage = { type: 'COUNTDOWN', data: { countdowns, countdown: countdowns[0] ?? null } };
+        this.rememberCountdowns(countdowns);
         this.listeners.forEach((listener) => listener(message));
       }
       lastCountdown = countdown;
-      const alert = JSON.stringify(state.alert ?? null);
+      const alerts = state.alerts ?? (state.alert ? [state.alert] : []);
+      const alert = JSON.stringify(alerts);
       if (alert !== lastAlert) {
-        const message: SyncMessage = { type: 'ALERT', data: { alert: state.alert ?? null } };
-        this.rememberAlert(state.alert ?? null);
+        const message: SyncMessage = { type: 'ALERT', data: { alerts, alert: alerts[0] ?? null } };
+        this.rememberAlerts(alerts);
         this.listeners.forEach((listener) => listener(message));
       }
       lastAlert = alert;
     };
   }
 
-  /** The alert on screen, if any. */
-  currentAlert(): ScreenAlert | null {
+  /** Every alert on screen. */
+  currentAlerts(): ScreenAlert[] {
     try {
-      const saved = localStorage.getItem(ALERT_KEY);
-      return saved ? JSON.parse(saved) : null;
+      const saved = JSON.parse(localStorage.getItem(ALERT_KEY) || 'null');
+      return Array.isArray(saved) ? saved : saved ? [saved] : [];
     } catch {
-      return null;
+      return [];
     }
   }
 
-  private rememberAlert(alert: ScreenAlert | null | undefined) {
+  private rememberAlerts(alerts: ScreenAlert[]) {
     try {
-      if (alert) localStorage.setItem(ALERT_KEY, JSON.stringify(alert));
+      if (alerts.length) localStorage.setItem(ALERT_KEY, JSON.stringify(alerts));
       else localStorage.removeItem(ALERT_KEY);
     } catch {
       // Storage full: reopened windows miss the alert until it changes
     }
   }
 
-  private rememberCountdown(countdown: Countdown | null | undefined) {
+  private rememberCountdowns(countdowns: Countdown[]) {
     try {
-      if (countdown) localStorage.setItem(COUNTDOWN_KEY, JSON.stringify(countdown));
+      if (countdowns.length) localStorage.setItem(COUNTDOWN_KEY, JSON.stringify(countdowns));
       else localStorage.removeItem(COUNTDOWN_KEY);
     } catch {
       // Storage full: reopened windows miss the countdown until it changes
