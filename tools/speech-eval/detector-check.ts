@@ -36,7 +36,8 @@ const single: [string, string | null][] = [
   ['Look at Ephesians chapter 2 verses 8 and 9', 'Ephesians 2:8'],
   ['Obadiah verse 17 says upon mount Zion', 'Obadiah 1:17'],
   ['Jude verse 24', 'Jude 1:24'],
-  ['Turn to Psalm 23', 'Psalms 23:1'],
+  // A chapter alone is not a verse: it waits for the verse (see "a chapter called" below)
+  ['Turn to Psalm 23', null],
   ['john 316', 'John 3:16'],
   ['Song of Solomon 2:4', 'Song of Solomon 2:4'],
   ['Turn to 1 Corinthians 13:4. Then the book of Isaiah chapter 53 verse 5 says', 'Isaiah 53:5'],
@@ -245,7 +246,61 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('whole chapter called', passage, 'Psalms 23:1-6');
     await d.onTranscript('he maketh me to lie down in green pastures he leadeth me beside the still waters', true);
     await pause();
-    check('whole chapter followed', shown.join(', '), 'Psalms 23:1, Psalms 23:2');
+    // Verse 1 is not pushed: the verse being read goes up
+    check('whole chapter: the verse being read goes up, not verse 1', shown.join(', '), 'Psalms 23:2');
+  }
+
+  // "Somewhere in Isaiah 53": which verse? The one he reads, quotes, paraphrases or names
+  {
+    const chapter = async (call: string, then: string[]) => {
+      const shown: string[] = [];
+      const offered: string[] = [];
+      let called: string | null = null;
+      const d = new VerseDetectionController({
+        onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`),
+        onVerseSuggested: (v) => offered.push(`${v.book} ${v.chapter}:${v.verse}`),
+        onChapterCalled: (c) => (called = `${c.book} ${c.chapter}`),
+      });
+      await d.onTranscript(call, true);
+      await pause();
+      const before = shown.join(', ') || null;
+      for (const t of then) {
+        await d.onTranscript(t, true);
+        await pause();
+      }
+      return { before, called, shown: shown.join(', ') || null, offered };
+    };
+    {
+      const r = await chapter('There is a word somewhere in Isaiah 53', []);
+      check('a chapter called: nothing goes up yet', r.before, null);
+      check('a chapter called: it is loaded to choose from', r.called, 'Isaiah 53');
+    }
+    check('a chapter called, then a verse of it read', (await chapter('Somewhere in Isaiah 53', ['he was wounded for our transgressions, he was bruised for our iniquities'])).shown, 'Isaiah 53:5');
+    check('a chapter called, then "verse 5"', (await chapter('Turn to Isaiah 53', ['look at verse 5 with me'])).shown, 'Isaiah 53:5');
+    check('a chapter called, then "verse five" in words', (await chapter('Turn to Isaiah 53', ['verse five'])).shown, 'Isaiah 53:5');
+    {
+      // In his own words: the verse of that chapter it sounds like is offered first
+      const r = await chapter('Isaiah 53 says it', ['he never opened his mouth, he was led like a lamb to be slaughtered']);
+      check('a chapter called, then paraphrased: that verse', r.shown ?? r.offered[0] ?? null, 'Isaiah 53:7');
+    }
+    check('"John 5 from verse 8" still goes up at verse 8', (await chapter('John 5 from verse 8', [])).before, 'John 5:8');
+    {
+      // The same words in four books: the one in today's plan comes first
+      const offered: { ref: string; score: number }[] = [];
+      const d = new VerseDetectionController({ onVerseDetected: () => {}, onVerseSuggested: (v, i) => offered.push({ ref: `${v.book} ${v.chapter}:${v.verse}`, score: i.score ?? 0 }) });
+      const plain = [...offered];
+      await d.onTranscript('the just shall live by faith', true);
+      const before = [...offered].sort((a, b) => b.score - a.score)[0]?.ref ?? null;
+      offered.length = 0;
+      plain.length = 0;
+      const planned = new VerseDetectionController({ onVerseDetected: () => {}, onVerseSuggested: (v, i) => offered.push({ ref: `${v.book} ${v.chapter}:${v.verse}`, score: i.score ?? 0 }) });
+      planned.setPlanned([{ book: 'Galatians', chapter: 3, verse: 11 }]);
+      await planned.onTranscript('the just shall live by faith', true);
+      const after = [...offered].sort((a, b) => b.score - a.score)[0]?.ref ?? null;
+      check('a verse in today\'s plan comes first', `${before === 'Galatians 3:11' ? 'already first' : 'not first'} → ${after}`, `not first → Galatians 3:11`);
+      // Never sure enough to go up by itself through context alone
+      check('context never makes a guess go up', String(offered.every((o) => o.score < 0.99)), 'true');
+    }
   }
 
   // Reading a called passage word by word: at the end of each verse the next comes up
@@ -477,6 +532,12 @@ const check = (label: string, got: string | null, want: string | null) => {
     await d.onTranscript('and Paul says the same thing in Romans', true);
     check('hint passed on once', seen.join(', '), 'Romans');
     check('a hint shows nothing by itself', shown.length, 0);
+    // The sentence still being spoken: "Paul says…" waits, as it may go on to name the book
+    const early: string[] = [];
+    const e = new VerseDetectionController({ onVerseDetected: () => {}, onScriptureHint: (h) => early.push(h.books[0]) });
+    await e.onTranscript('and Paul says the same thing', false);
+    await e.onTranscript('and Paul says the same thing in Romans', false);
+    check('a writer named mid-sentence waits for the book', early.join(', '), 'Romans');
   }
 
   // Verse text on screen: KJV supplied words kept (shown in italics), margin notes never shown

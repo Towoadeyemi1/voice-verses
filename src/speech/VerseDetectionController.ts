@@ -59,6 +59,11 @@ export interface VerseDetectionOptions {
   onCapturedLine?: (line: string) => void;
   /** How far the verse being read has got: the last word read (index into readingTokens(verse.text)), -1 for none yet */
   onReadingProgress?: (progress: ReadingProgress) => void;
+  /**
+   * A chapter was named without a verse ("somewhere in Isaiah 53"): nothing goes up yet. The chapter is
+   * loaded for the operator; the verse goes up when it is read or named ("verse 5"), or is offered when paraphrased.
+   */
+  onChapterCalled?: (chapter: { book: string; chapter: number }) => void;
   /** The preacher asked for help finding a scripture ("help me find it"): the app is looking now */
   onFindRequested?: (heard: string) => void;
   
@@ -83,8 +88,14 @@ export const AUTO_SHOW_CONFIDENCE = 0.99;
 const ASKED_TO_FIND =
   /\b(?:help me (?:find|look)|find (?:it|that|this|the (?:verse|scripture|passage)) for me|(?:can|could|would) (?:you|somebody|someone|anybody|the media(?: team)?) (?:find|look|bring|put)|(?:somebody|someone|media(?: team)?),? (?:find|look|bring|put)|where is (?:it|that|this)(?: found)?(?: in the bible)?\??$|what (?:verse|scripture|chapter) is (?:it|that|this)|look (?:it|that) up|put (?:it|that) on the screen)/i;
 
+/** Fainter guesses than this are not offered */
+const MIN_OFFER = 0.2;
+
+/** Words too common to tell verses of one chapter apart */
+const COMMON_WORDS = new Set(['that', 'this', 'with', 'from', 'they', 'them', 'their', 'there', 'have', 'has', 'were', 'will', 'shall', 'unto', 'your', 'what', 'when', 'which', 'then', 'than', 'into', 'upon', 'also', 'said', 'says', 'lord', 'god', 'people', 'like', 'just', 'know', 'because', 'about', 'some', 'come', 'came', 'went', 'make', 'made', 'does', 'even', 'every', 'over', 'only', 'very']);
+
 /** How often the sentence still being spoken is searched for a quote or a story (ms) */
-const PARTIAL_SEARCH_MS = 600;
+const PARTIAL_SEARCH_MS = 450;
 
 /** A called passage: a range of verses, or a whole chapter */
 export interface Passage {
@@ -146,6 +157,15 @@ export class VerseDetectionController {
   private partialSearch = { at: 0, words: 0 };
   /** "Help me find it" was already acted on in this sentence */
   private findAsked = false;
+  /** Sentences finished so far, and searches offered (to tie suggestions to the sentence they came from) */
+  private utterance = 0;
+  private batch = 0;
+  /** Books hinted at lately ("in Romans", "Paul says"): their verses are a little more likely */
+  private hinted: { books: Set<string>; at: number } | null = null;
+  /** Scripture planned in today's service, by verse and by chapter */
+  private planned = { verses: new Set<string>(), chapters: new Set<string>() };
+  /** A chapter named without a verse, waiting to learn which verse */
+  private calledChapter: { book: string; chapter: number } | null = null;
   
   private dedupeWindowMs: number;
   private debounceMs: number;
@@ -289,8 +309,10 @@ export class VerseDetectionController {
       // No reference: a navigation command, a song being sung, the passage being read on, a quoted verse, or a described one
       if (await this.handleNavigationCommands(cleanText, isFinal)) return;
       if (this.handleSinging(cleanText, isFinal)) return;
-      this.noticeHint(cleanText);
+      this.noticeHint(cleanText, isFinal);
       const recent = this.hear(cleanText, isFinal);
+      if (await this.verseOfPassage(cleanText, isFinal)) return;
+      if (this.calledChapter && (await this.findInCalledChapter(recent, cleanText, isFinal))) return;
       if (await this.trackReading()) return;
       if (await this.followReading(recent)) return;
       if (this.askedToFind(cleanText, isFinal)) {
@@ -334,6 +356,12 @@ export class VerseDetectionController {
         this.lastPartialReference = reference;
         return;
       }
+    }
+
+    // A chapter alone ("somewhere in Isaiah 53") is not a verse: wait to learn which one
+    if (reference.wholeChapter && !reference.fromVerse) {
+      await this.callChapter(reference.book, reference.chapter);
+      return;
     }
 
     // Check dedupe rules
@@ -444,11 +472,16 @@ export class VerseDetectionController {
     return true;
   }
 
-  /** A hint of the next verse's book, passed on once (partials repeat it). */
-  private noticeHint(text: string): void {
-    if (!this.options.onScriptureHint) return;
+  /**
+   * A hint of the next verse's book, passed on once (partials repeat it). In a
+   * sentence still being spoken, only a hint naming one book: "Paul says the
+   * same thing…" may still go on to name the book ("…in Romans").
+   */
+  private noticeHint(text: string, isFinal = true): void {
     const hint = scriptureHint(text);
-    if (!hint) return;
+    if (!hint || (!isFinal && hint.books.length > 1)) return;
+    this.hinted = { books: new Set(hint.books), at: Date.now() };
+    if (!this.options.onScriptureHint) return;
     const books = hint.books.join('|');
     if (this.lastHint?.books === books && Date.now() - this.lastHint.at < 15_000) return;
     this.lastHint = { books, at: Date.now() };
@@ -560,6 +593,7 @@ export class VerseDetectionController {
       this.partialWords = [];
       this.usedWords = 0;
       this.partialSearch = { at: 0, words: 0 };
+      this.utterance++;
       this.readingNow = this.readWords;
       return this.heardWords;
     }
@@ -607,6 +641,7 @@ export class VerseDetectionController {
   /** A verse is now the one on screen: following starts again from its first word. */
   private markShown(verse: BibleVerse): void {
     this.currentVerse = verse;
+    this.calledChapter = null;
     this.lastPartialReference = null;
     this.partialMatchCount = 0;
     this.forgetHeardWords();
@@ -723,6 +758,79 @@ export class VerseDetectionController {
     return recent.length >= 6;
   }
 
+  /** Loads a chapter named without a verse, for following: nothing goes on screen until the verse is known. */
+  private async callChapter(book: string, chapter: number): Promise<void> {
+    const length = await BibleParser.getChapterLength(book, chapter);
+    if (!length) return;
+    const verses = await Promise.all(Array.from({ length }, (_, i) => BibleParser.getVerse(book, chapter, i + 1)));
+    const first = verses.find((v) => v);
+    if (!first) return;
+    const wordsByVerse = new Map<number, string[]>();
+    verses.forEach((v) => v && wordsByVerse.set(v.verse, words(v.text)));
+    this.calledChapter = { book: first.book, chapter };
+    this.setPassage({ book: first.book, chapter, from: 1, to: length, words: wordsByVerse });
+    this.forgetHeardWords();
+    this.options.onChapterCalled?.({ book: first.book, chapter });
+  }
+
+  /** "Verse 5" (no book) while a chapter is called or a passage is being read: that verse of it, said outright. */
+  private async verseOfPassage(text: string, isFinal: boolean): Promise<boolean> {
+    const p = this.passage;
+    if (!p) return false;
+    const match = /(?:^|[\s,.])(?:verses?\s+|:)(\d{1,3})\b(?!\s*:)/i.exec(normalizeTranscript(text));
+    if (!match) return false;
+    const n = parseInt(match[1], 10);
+    // In a partial the number may still grow ("verse 1" becoming "verse 14"): wait for a word after it
+    if (!isFinal && !/\S+\s+\S/.test(text.slice(text.toLowerCase().lastIndexOf(match[1])))) return false;
+    const book = this.calledChapter?.book ?? p.book;
+    const chapter = this.calledChapter?.chapter ?? p.chapter;
+    if (n < 1 || n > (this.calledChapter ? p.to : Math.max(p.to, n))) return false;
+    if (this.currentVerse && this.currentVerse.book === book && this.currentVerse.chapter === chapter && this.currentVerse.verse === n) return false;
+    const verse = await BibleParser.getVerse(book, chapter, n);
+    if (!verse) return false;
+    this.triggerVerseDetected(verse, { method: 'explicit', confidence: 'high', engine: this.currentEngine, score: 1 });
+    return true;
+  }
+
+  /**
+   * A chapter was called: find the verse of it being read or quoted (it goes up,
+   * as a reading does), or the one paraphrased (offered, surer than elsewhere).
+   */
+  private async findInCalledChapter(recent: string[], heard: string, isFinal: boolean): Promise<boolean> {
+    const called = this.calledChapter;
+    const p = this.passage;
+    if (!called || !p) return false;
+    const spoken = recent.slice(-14);
+    if (spoken.length < 3) return false;
+    const pairsOf = (w: string[]) => new Set(w.slice(1).map((x, i) => `${w[i]} ${x}`));
+    const heardPairs = pairsOf(spoken);
+    const scored = [...p.words.entries()].map(([verse, w]) => {
+      let hits = 0;
+      for (const pair of pairsOf(w)) if (heardPairs.has(pair)) hits++;
+      return { verse, hits };
+    });
+    scored.sort((a, b) => b.hits - a.hits || a.verse - b.verse);
+    const [best, second] = scored;
+    // Read or quoted: three pairs of its words, clearly more than any other verse of the chapter
+    if (best && best.hits >= 3 && best.hits >= (second?.hits ?? 0) + 2) {
+      const verse = await BibleParser.getVerse(called.book, called.chapter, best.verse);
+      if (verse) {
+        this.triggerVerseDetected(verse, { method: 'explicit', confidence: 'medium', engine: this.currentEngine, score: 1 });
+        return true;
+      }
+    }
+    if (!isFinal) return false;
+    // In his own words: the telling words it shares with each verse of the chapter
+    const told = new Set(recent.slice(-30).filter((w) => w.length >= 4 && !COMMON_WORDS.has(w)));
+    const shared = [...p.words.entries()]
+      .map(([verse, w]) => ({ verse, n: new Set(w.filter((x) => told.has(x))).size }))
+      .sort((a, b) => b.n - a.n || a.verse - b.verse);
+    const [top, next] = shared;
+    if (!top || top.n < 2 || top.n <= (next?.n ?? 0)) return false;
+    await this.offer([{ ref: { book: called.book, chapter: called.chapter, verse: top.verse }, confidence: Math.min(0.9, 0.55 + 0.1 * (top.n - (next?.n ?? 0))) }], heard);
+    return true;
+  }
+
   /** "Help me find it", acted on once per sentence (as soon as the partial has it). */
   private askedToFind(text: string, isFinal: boolean): boolean {
     const heard = ASKED_TO_FIND.test(text);
@@ -753,10 +861,45 @@ export class VerseDetectionController {
     this.askAssistant(told, { force: true, remember: false });
   }
 
-  /** Offers verses to the operator with how sure each is; the same verse again only when surer, or a while later. */
+  /** Scripture planned in today's service: offered verses from it (or its chapters) are more likely. */
+  setPlanned(verses: { book: string; chapter: number; verse: number }[]): void {
+    this.planned = {
+      verses: new Set(verses.map((v) => `${v.book}|${v.chapter}|${v.verse}`)),
+      chapters: new Set(verses.map((v) => `${v.book}|${v.chapter}`)),
+    };
+  }
+
+  /**
+   * How much likelier a verse is from what is going on: the chapter called or
+   * being read (+0.15) or its book (+0.05), today's plan (+0.12 for the verse,
+   * +0.06 for its chapter), a book hinted at in the last minute (+0.1).
+   */
+  private contextBoost(ref: { book: string; chapter: number; verse: number }): number {
+    let boost = 0;
+    const here = this.calledChapter ?? this.passage ?? this.currentVerse;
+    if (here && here.book === ref.book) boost += here.chapter === ref.chapter ? 0.15 : 0.05;
+    if (this.planned.verses.has(`${ref.book}|${ref.chapter}|${ref.verse}`)) boost += 0.12;
+    else if (this.planned.chapters.has(`${ref.book}|${ref.chapter}`)) boost += 0.06;
+    if (this.hinted && Date.now() - this.hinted.at < 60_000 && this.hinted.books.has(ref.book)) boost += 0.1;
+    return boost;
+  }
+
+  /**
+   * Offers verses to the operator with how sure each is, best first. Context
+   * (the chapter called, today's plan, a book just mentioned) makes a verse
+   * surer, though never sure enough to go up by itself. Only the best, and
+   * any nearly as good, are offered; very faint guesses (under 20%) are not.
+   * The same verse again only when surer, or a while later.
+   */
   private async offer(candidates: { ref: { book: string; chapter: number; verse: number }; confidence: number }[], heard: string): Promise<void> {
+    const boosted = candidates
+      .map((c) => ({ ...c, confidence: Math.round(Math.min(0.98, c.confidence + this.contextBoost(c.ref)) * 100) / 100 }))
+      .sort((a, b) => b.confidence - a.confidence);
+    const top = boosted[0]?.confidence ?? 0;
+    const kept = boosted.filter((c, i) => c.confidence >= MIN_OFFER && (i === 0 || c.confidence >= top - 0.2));
+    const batch = ++this.batch;
     const now = Date.now();
-    for (const candidate of candidates) {
+    for (const candidate of kept) {
       const verse = await BibleParser.getVerse(candidate.ref.book, candidate.ref.chapter, candidate.ref.verse);
       if (!verse) continue;
       const key = `${verse.book}:${verse.chapter}:${verse.verse}`;
@@ -774,6 +917,8 @@ export class VerseDetectionController {
         confidence: candidate.confidence >= 0.75 ? 'high' : candidate.confidence >= 0.45 ? 'medium' : 'low',
         engine: this.currentEngine,
         score: candidate.confidence,
+        utterance: this.utterance,
+        batch,
       });
     }
   }

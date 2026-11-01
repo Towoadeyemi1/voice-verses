@@ -141,6 +141,11 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Decision:** A second offline index of single words, weighted by rarity, finds the story from its names and telling words, searched while the sentence is still being spoken. "Help me find it" searches everything said since the screen changed, at once. A story is never shown by itself (at most 90%).
 - **Why:** Offline and fast (about 3 ms a search) on the owner's iMac, and works without an AI key. A paraphrase can't be checked word for word, so a person must choose it: rule 1 still holds, and the right verse is in front of the operator seconds earlier.
 
+### D24. A chapter alone is not a verse
+- **Context:** The owner: "somewhere in Isaiah 53… the app is always pushing verse 1 to live, which is wrong."
+- **Decision:** A chapter named without a verse puts nothing on screen. It is loaded for the operator (verse 1 waiting in Next) and the verse goes up when it is read, quoted or named; a paraphrase is offered.
+- **Why:** Rule 1: a verse goes up by itself only when said outright or certain. "Isaiah 53" names twelve verses; guessing the first is usually wrong, and a wrong verse on the big screen is the worst failure. Reading the verse is following, which was already trusted.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

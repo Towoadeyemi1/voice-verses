@@ -3,7 +3,7 @@
 //
 // Voice activity detection (Silero) cuts the audio into utterances, each of
 // which is transcribed by NVIDIA Parakeet TDT (via sherpa-onnx). While someone
-// is speaking, the utterance so far is transcribed about once a second as a
+// is speaking, the utterance so far is transcribed every half second as a
 // partial result. Settings come from tools/speech-eval (docs/speech-engine-evaluation.md).
 const sherpa = require('sherpa-onnx-node');
 const os = require('os');
@@ -12,7 +12,9 @@ const path = require('path');
 const SAMPLE_RATE = 16000;
 const WINDOW = 512; // Silero VAD frame size at 16 kHz
 const PRE_ROLL = Math.round(0.3 * SAMPLE_RATE); // VAD reacts late; keep the start of the first word
-const PARTIAL_INTERVAL = SAMPLE_RATE; // audio between partial results
+// Audio between partial results: half a second (1.11.0; was 1 s), so a reference or the next verse
+// is seen sooner. The guard in emitPartial() still keeps partials under about a third of the CPU.
+const PARTIAL_INTERVAL = SAMPLE_RATE / 2;
 const HISTORY = 12 * SAMPLE_RATE; // longest utterance (8 s) + pre-roll, with margin
 // Partial results are skipped while the recogniser is this far behind the live audio,
 // so on a busy computer (e.g. running Logic too) it catches up instead of falling further behind
@@ -160,7 +162,7 @@ class Session {
     const text = transcribe(this.recent(this.speechStart));
     // Partials never take more than about a third of the computer's time
     const took = ((Date.now() - started) / 1000) * SAMPLE_RATE;
-    this.partialInterval = Math.max(PARTIAL_INTERVAL / 2, Math.min(3 * PARTIAL_INTERVAL, 3 * took));
+    this.partialInterval = Math.max(0.8 * PARTIAL_INTERVAL, Math.min(6 * PARTIAL_INTERVAL, 3 * took));
     if (text) post({ type: 'partial', session: this.id, text });
   }
 
