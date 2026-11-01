@@ -143,7 +143,7 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
 - **Transitions** (`src/lib/transitions.ts`, `components/Transition.tsx`):
   - Kinds: dissolve, through black, lift, zoom, push and cut, each with a length from 0.2 to 3 s.
   - A look has one; a slide in a service can choose its own (Slide settings). The incoming slide's transition is used.
-  - Layers: the background, the look's own shapes and logo, and the words each change separately. When only the words change, the background and shapes carry on untouched (no flicker, a video keeps playing).
+  - Layers: the background, the look's own shapes and logo, and the words each change separately. When only the words change, the background and shapes carry on untouched (no flicker, a video keeps playing). Through black is the exception: it takes the whole screen down to black and up again.
   - A leaving background stays fully visible under the new one until covered, so a dissolve never dips darker. Through black fades out, then in.
   - Changing between a look, a full-screen video, a picture and a countdown also plays the transition (`OutputContent`).
   - Nothing animates when a screen first opens. A timer removes the old slide even if the window was hidden and the animation never ran.

@@ -123,11 +123,13 @@ export const TemplateRenderer = ({
     'bottom-right': { bottom: 40, right: 48 },
   };
 
+  const spec = cleanTransition(overrides?.transition ?? look.transition);
+  // Through black takes the whole screen down and up again, not just the words
+  const dip = spec.kind === 'black' ? `|${content?.key ?? ''}` : '';
   // What the background is; while it stays the same, only the words move when the slide changes
   const backgroundId = transparent
     ? 'none'
-    : JSON.stringify([background.type, background.color, background.gradient, backgroundUrl, isVideo, blur, dim, motion]);
-  const spec = cleanTransition(overrides?.transition ?? look.transition);
+    : JSON.stringify([background.type, background.color, background.gradient, backgroundUrl, isVideo, blur, dim, motion]) + dip;
 
   const backdrop = transparent ? null : (
     <div className="absolute inset-0" style={{ backgroundColor: background.color, backgroundImage: fill }}>
@@ -212,7 +214,7 @@ export const TemplateRenderer = ({
       )}
     </>,
   );
-  const lookId = `${look.id}|${middle}`;
+  const lookId = `${look.id}|${middle}${dip}`;
 
   return (
     <div

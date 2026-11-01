@@ -104,6 +104,29 @@ const running = (page) =>
   }
   check('all nine backgrounds drawn', true);
 
+  // Through black: the whole screen (background too) goes down and up
+  await win.evaluate(() => {
+    const t = JSON.parse(localStorage.getItem('voice-verses-templates'));
+    t.find((x) => x.id === 'scripture-full').transition = { kind: 'black', duration: 1 };
+    localStorage.setItem('voice-verses-templates', JSON.stringify(t));
+    location.hash = '#/projection';
+  });
+  await win.waitForTimeout(1200);
+  await showVerse(win, verse(20, 'For every one that doeth evil hateth the light.'));
+  await win.waitForTimeout(150);
+  const dipped = await win.evaluate(() => [...document.querySelectorAll('[data-motion]')].length);
+  const black = await running(win);
+  check('through black dips the background too', dipped === 2 && black.filter((a) => a === 'vv-out-fade:running').length >= 2, `${dipped} backgrounds; ${black.filter((a) => /vv-(in|out)-/.test(a)).join(', ')}`);
+  await win.waitForTimeout(1300);
+  check('one background after the dip', (await win.locator('[data-motion]').count()) === 1);
+  await win.evaluate(() => {
+    const t = JSON.parse(localStorage.getItem('voice-verses-templates'));
+    t.find((x) => x.id === 'scripture-full').transition = { kind: 'cut', duration: 0.5 };
+    localStorage.setItem('voice-verses-templates', JSON.stringify(t));
+    location.hash = '#/templates';
+  });
+  await win.waitForTimeout(500);
+
   // Cut: nothing leaves, nothing arrives
   await win.evaluate(() => (location.hash = '#/projection'));
   await win.waitForTimeout(1200);
