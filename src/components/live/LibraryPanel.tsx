@@ -3,7 +3,6 @@ import { BookOpen, ChevronLeft, ChevronRight, ListMusic, Music, Search } from 'l
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BibleVerse } from '@/types/bible';
 import { MediaItem, Service, ServiceSubsection } from '@/types/service';
 import { plainVerseText } from '@/lib/verseText';
@@ -40,9 +39,16 @@ export const LibraryPanel = ({
   const [serviceId, setServiceId] = useState<string>('');
   const searchRef = useRef<HTMLInputElement>(null);
 
+  // Opens on today's service the first time; after that, "back" shows the list
+  const picked = useRef(false);
   useEffect(() => {
-    if (!serviceId && services[0]) setServiceId(services[0].id);
-  }, [services, serviceId]);
+    if (picked.current || !services.length) return;
+    picked.current = true;
+    const today = new Date().toDateString();
+    const own = services.filter((x) => !x.sample);
+    const pool = own.length ? own : services;
+    setServiceId((pool.find((x) => new Date(x.date).toDateString() === today) ?? pool[0]).id);
+  }, [services]);
 
   const filteredSongs = useMemo(
     () => songs.filter((s) => s.name.toLowerCase().includes(songFilter.toLowerCase()) || (s.lyrics ?? '').toLowerCase().includes(songFilter.toLowerCase())),
@@ -115,16 +121,30 @@ export const LibraryPanel = ({
       </TabsContent>
 
       <TabsContent value="service" className="flex-1 min-h-0 flex flex-col mt-0 px-2 pb-2 gap-2 data-[state=inactive]:hidden">
-        <Select value={serviceId} onValueChange={setServiceId}>
-          <SelectTrigger className="h-9"><SelectValue placeholder="Choose a service" /></SelectTrigger>
-          <SelectContent>
-            {services.map((s) => (
-              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* The services as a list to pick from (no dropdown squeezed into this narrow panel) */}
+        {service ? (
+          <button type="button" onClick={() => setServiceId('')} className="flex items-center gap-1.5 h-9 px-2 rounded-lg text-sm font-semibold hover:bg-muted/60 text-left min-w-0">
+            <ChevronLeft className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">{service.name.replace(/^Sample: /, '')}</span>
+          </button>
+        ) : null}
         <div className="flex-1 overflow-y-auto min-h-0">
-          {!service && <p className="text-xs text-muted-foreground px-1">No services yet. Plan one in Service.</p>}
+          {!services.length && <p className="text-[13px] text-muted-foreground px-1">No services yet. Plan one on the Services page.</p>}
+          {!service &&
+            [...services]
+              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              .map((s) => (
+                <button key={s.id} type="button" onClick={() => setServiceId(s.id)} className="w-full text-left rounded-lg px-2.5 py-2 hover:bg-muted/60 flex items-center gap-2 min-h-[44px]">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold truncate">{s.name.replace(/^Sample: /, '')}</span>
+                    <span className="block text-[12px] text-muted-foreground">
+                      {new Date(s.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })} · {s.startTime}
+                      {s.sample ? ' · Sample' : ''}
+                    </span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </button>
+              ))}
           {service?.sections.map((section) => (
             <div key={section.id} className="mb-2">
               <p className="text-[11px] uppercase tracking-wide text-muted-foreground px-1 py-1">{section.name}</p>

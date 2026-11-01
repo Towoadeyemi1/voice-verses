@@ -44,6 +44,7 @@ export const NowPane = ({
   heard,
   children,
   onSearch,
+  empty,
 }: {
   title: string | null;
   sub?: string;
@@ -56,6 +57,8 @@ export const NowPane = ({
   text?: string | null;
   next?: { label: string; text: string } | null;
   heard?: string;
+  /** Shown instead of the empty message when nothing is loaded */
+  empty?: ReactNode;
   /** The suggestion bar */
   children?: ReactNode;
   onSearch: () => void;
@@ -98,6 +101,8 @@ export const NowPane = ({
         <ReadAlong verse={verse} word={word ?? -1} />
       ) : text ? (
         <p className="font-scripture text-[clamp(30px,3vw,54px)] leading-[1.3] m-0 whitespace-pre-line max-w-[30ch]">{text}</p>
+      ) : empty ? (
+        empty
       ) : (
         <div className="space-y-4 max-w-xl">
           <p className="font-scripture text-[clamp(30px,3vw,48px)] leading-tight text-muted-foreground m-0">Say a verse, or find one.</p>

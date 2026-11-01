@@ -113,7 +113,7 @@ export const ServiceTimeline = ({
               onClick={() => onPick(p.item)}
               title={`${clock(begins + p.start)} · ${p.section}: ${p.item.name}`}
               className={`relative flex-shrink-0 h-11 rounded-[10px] px-3 flex items-center gap-2 overflow-hidden whitespace-nowrap text-[13px] font-semibold transition ${past ? 'opacity-40' : ''} ${on ? 'text-white' : 'text-foreground hover:brightness-110'}`}
-              style={{ width: Math.max(72, p.minutes * PX_PER_MINUTE), background: on ? p.color : `color-mix(in oklab, ${p.color} 16%, transparent)` }}
+              style={{ width: Math.max(on ? 220 : 132, p.minutes * PX_PER_MINUTE), background: on ? p.color : `color-mix(in oklab, ${p.color} 16%, transparent)` }}
             >
               {progress > 0 && (
                 <span className="absolute inset-y-0 left-0 bg-black/15 pointer-events-none" style={{ width: `${progress * 100}%` }}>

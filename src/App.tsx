@@ -18,6 +18,7 @@ import MediaLibrary from "./pages/MediaLibrary";
 import Templates from "./pages/Templates";
 import NetworkHome from "./pages/NetworkHome";
 import { isNetworkViewer } from "./lib/networkView";
+import { seedSamplesOnce } from "./lib/samples/seed";
 import { startNetworkPublisher } from "./lib/networkPublisher";
 import NotFound from "./pages/NotFound";
 import { librarySync } from "./lib/library/librarySync";
@@ -34,6 +35,8 @@ const App = () => {
     if (isDisplayWindow() || isNetworkViewer) return;
     librarySync.start();
     startNetworkPublisher();
+    // The first time the app opens: sample services and songs, so it shows what it does
+    void seedSamplesOnce();
     return desktop?.onUpdateAvailable(({ version, url }) => {
       toast(`Voice Verses ${version} is available`, {
         description: 'Download it and replace the app in Applications when convenient.',

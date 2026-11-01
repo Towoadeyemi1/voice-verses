@@ -118,6 +118,8 @@ export interface Service {
   startTime: string;
   sections: ServiceSection[];
   isTemplate: boolean;
+  /** One of the sample services the app comes with (can be removed in one click) */
+  sample?: boolean;
   templateName?: string;
   serviceLogo?: string; // URL or base64 data of service logo
   updatedAt?: string; // ISO time of the last local edit, used to sync the library folder

@@ -128,8 +128,9 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 ## "It should come with full sample services… the landing page of the app is just blank, why? It looks like nothing is happening. Most of the dropdown options are hidden when clicked."
 
 (Said with a photo of the live screen in Safari, 1 Nov 2026.)
-- ⏳ Full sample services, songs and looks installed at first opening, so the app shows what it can do and how it looks.
-- ⏳ The live screen never opens blank: today's service, its parts with pictures, and clear first steps, plus a demo that shows listening in action.
+- ✅ 1.7.0 Sample services added the first time the app opens: Sunday Celebration (today), Christmas Carols by Candlelight and Midweek Bible Study, with 9 public-domain hymns and carols, KJV readings, a sermon with its outline, and notices. They are marked Sample, never chosen over the church's own services, and removed or added again in one click on the Services page.
+- ✅ 1.7.0 The live screen never opens blank: "Sunday Celebration is ready", a picture of every part, Start listening, a 1-minute demo through the real listening engine, quick verses, and the first slide already waiting in Next.
+- ✅ 1.7.0 "Choose a service dropdown seems to drop inside instead of outside": the Library's Service tab is now a list of services (no dropdown).
 - ✅ 1.6.1 Dropdowns and pop-up windows always on top and fully visible: menus fit the window, and tall windows scroll instead of being cut off (Safari included).
 
 ## "I cannot get sound signal saved or working in the new version, also channel selection does not seem to be working"

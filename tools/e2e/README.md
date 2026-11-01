@@ -9,6 +9,7 @@ xvfb-run -a -s "-screen 0 3840x1600x24" node tools/e2e/screens.cjs   # Settings 
 xvfb-run -a node tools/e2e/transitions.cjs   # moving backgrounds, transitions, the designer and the backgrounds gallery
 xvfb-run -a node tools/e2e/starters.cjs      # starter looks, themes, colour teams, orders of service, countdowns
 xvfb-run -a node tools/e2e/microphone.cjs [/tmp/vv-e2e/worship.wav]   # Settings → Listening: sound check, channel, input found again by name
+xvfb-run -a node tools/e2e/samples.cjs        # fresh install: samples, welcome view, the demo, every page photographed
 xvfb-run -a node tools/e2e/pages.cjs         # every page renders without errors (screenshots)
 # Spoken sermon through the built-in engine (needs `npm run models` and Piper TTS):
 python3 tools/e2e/make-sermon-audio.py path/to/en_US-lessac-medium.onnx /tmp/vv-e2e/sermon.wav
