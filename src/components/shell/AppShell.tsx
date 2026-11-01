@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CalendarDays, Images, MonitorUp, Palette, Radio, Settings } from 'lucide-react';
 import { CountdownControl } from '../CountdownControl';
+import { AlertControl } from '../AlertControl';
 import { showLogo } from '@/lib/showLogo';
 
 const PAGES = [
@@ -65,6 +66,7 @@ export const AppShell = ({
         </nav>
 
         <div className="flex items-center justify-end gap-1.5">
+          <AlertControl className="h-9 hidden md:flex" />
           <CountdownControl className="h-9 hidden md:flex" />
           <button type="button" onClick={() => showLogo()} className="h-9 px-3 rounded-[10px] text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground" title="Show the church logo on every screen">
             Logo

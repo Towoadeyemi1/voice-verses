@@ -37,6 +37,7 @@ function snapshot(): NetworkSnapshot {
   return {
     live: syncService.current(),
     countdown: syncService.currentCountdown(),
+    alert: syncService.currentAlert(),
     templates: loadTemplates(),
     assignments: loadAssignments(),
     logo: localStorage.getItem('global-service-logo') || '',

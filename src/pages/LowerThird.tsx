@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ScaledStage } from '@/components/ScaledStage';
 import { OutputContent } from '@/components/OutputContent';
+import { AlertBanner } from '@/components/AlertBanner';
 import { useLive } from '@/hooks/use-live';
 import { useOutputStage } from '@/hooks/use-screen-shape';
 import { useCountdown } from '@/hooks/use-countdown';
@@ -32,6 +33,7 @@ const LowerThird = () => {
     <div className="fixed inset-0" style={{ backgroundColor: keyColor, cursor: pointerActive ? 'auto' : 'none' }}>
       <ScaledStage stage={stage} className="absolute inset-0">
         <OutputContent live={logo !== null ? null : live} output="stream" countdown={countdown} remaining={remaining} transparent={transparent} />
+        <AlertBanner output="stream" />
       </ScaledStage>
       {pointerActive && !live && !countdown?.stream && !transparent && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

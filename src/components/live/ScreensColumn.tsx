@@ -1,6 +1,7 @@
 import { ArrowUp } from 'lucide-react';
 import { ScaledStage } from '../ScaledStage';
 import { OutputContent, Live } from '../OutputContent';
+import { AlertBanner } from '../AlertBanner';
 import { ConfidenceScreen, loadConfidenceSettings } from '../ConfidenceScreen';
 import { Countdown } from '@/lib/countdown';
 import { usePreviewStage } from '@/hooks/use-screen-shape';
@@ -68,6 +69,7 @@ export const ScreensColumn = ({
           ) : (
             <OutputContent live={live} output="projection" countdown={countdown} remaining={remaining} preview />
           )}
+          <AlertBanner output="projection" />
         </ScaledStage>
         {progress > 0 && <div className="absolute bottom-0 left-0 h-1 bg-[hsl(var(--live))] transition-all duration-300" style={{ width: `${Math.min(100, progress * 100)}%` }} />}
       </div>
@@ -108,6 +110,7 @@ export const ScreensColumn = ({
             <p className="m-0 mb-1.5 flex items-center gap-1.5 text-[12.5px] text-muted-foreground"><i className="w-[7px] h-[7px] rounded-full bg-[hsl(var(--live))]" />Stream lower third</p>
             <ScaledStage stage={stream} fitShape className="rounded-[10px]">
               <OutputContent live={logoUp ? null : live} output="stream" countdown={countdown} remaining={remaining} />
+              <AlertBanner output="stream" />
             </ScaledStage>
           </div>
           <div>

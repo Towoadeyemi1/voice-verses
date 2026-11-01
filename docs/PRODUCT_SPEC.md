@@ -256,6 +256,16 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   A bar shows each step with Stop the demo. Starting to listen stops it.
 - The overrun ("N min over") shows only on the service's day, for the church's own services, and up to 90 minutes.
 
+## 8c. Alerts (1.8.0, `src/lib/alerts.ts`)
+
+- An alert is a short message over whatever is on screen, without changing it: `{ text, projector, stream, stage, position: bottom|top, urgent, until? }`. It is sent like the countdown (sync message `ALERT`, kept in `voice-verses-alert` so reopened windows show it, and included in the network snapshot).
+- **Projector and stream** (`components/AlertBanner.tsx`): a dark rounded bar 5% from the bottom (or top), 54 px bold Figtree, with the team colour along its left edge and a glowing dot. Urgent alerts are amber. It is drawn on the stage canvas over everything, the logo included, and on the operator's Live monitor and stream preview.
+- **Stage monitor:** a full-width bar across the top (blue, or amber when urgent) at 90% of the verse size.
+- **Operator** (`components/AlertControl.tsx`): an "Alert" button beside Countdown on the live screen, every page and Presenter. It turns amber ("Alert on") with a × to clear while one is up.
+  - Presets for the room: nursery, children's church, car lights, move a car, seats at the front. Presets for the stage only: five minutes, please wrap up, a little louder, microphone off.
+  - The number or number plate is typed in; any message can be written instead.
+  - Options: which screens, where, normal or amber, and hide after 15 s, 30 s, 1 min, 2 min or until cleared. A preview shows the projector.
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:
@@ -316,6 +326,7 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `voice-verses-color-teams`, `voice-verses-color-team`, `voice-verses-color-team-by-month` | Colour teams, the chosen team, follow the month |
 | `voice-verses-look-themes` | Saved themes |
 | `voice-verses-screen-shapes`, `voice-verses-screen-measured` | Shape for each output; the ratio measured by "Match the screen" |
+| `voice-verses-alert` | The alert on screen, if any (see §8c) |
 | `voice-verses-samples` | When the sample services were first added (they are never added again by themselves) |
 | `voice-verses-motion`, `voice-verses-motion-slow` | Moving backgrounds on this computer (`auto`/`full`/`still`); when and how slowly this computer drew them, if it was too slow |
 | `voice-verses-network`, `voice-verses-propresenter` | Network outputs and ProPresenter connection |

@@ -101,5 +101,6 @@ Settings live in `localStorage`, which every window shares, so outputs update th
 - Native DeckLink SDI output. It needs the Blackmagic Desktop Video SDK and testing on the owner's ProPresenter computer through Remote Control.
 - Worship leader cues, spontaneous worship capture and Predictive Next shipped in 1.6.0. Remaining signature features are in `docs/ROADMAP.md` (moment autopilot first).
 - Moving backgrounds and transitions shipped in 1.5.0 (17 styles, 40 samples and the speed guard in 1.5.1). Phase 1 still needs light mode and the designer inspector restyle.
-- Props/messages layers, multiple timers, a stage layout editor, live captions and translation, verses on phones (QR), PowerPoint and Planning Center import, Stream Deck/remote control, NDI, CCLI reporting.
+- Alerts (messages over any slide) shipped in 1.8.0.
+- Props layers, multiple timers, a stage layout editor, live captions and translation, verses on phones (QR), PowerPoint and Planning Center import, Stream Deck/remote control, NDI, CCLI reporting.
 - Signed and notarised installers, which need the owner's Apple Developer account and a Windows certificate.

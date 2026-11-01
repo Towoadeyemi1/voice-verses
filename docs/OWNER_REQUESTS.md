@@ -141,6 +141,14 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - Starting to listen with no sound for 10 seconds now shows a warning with a button to the Listening settings.
 - If the desk's channels don't all reach the computer (only 2 shown), Settings explains how to route the preacher's channel.
 
+## "What [about] putting alerts and countdown on the screens?"
+
+- 💬 Countdowns were already on every screen: the projector (full screen, or small in the corner), the stage monitor (amber near the end, red when over) and the stream lower third.
+- ✅ 1.8.0 Alerts: an Alert button beside Countdown (live screen, every page, Presenter) puts a message over whatever is on screen without changing it.
+  - For the room: nursery and children's church (with the child's number), car lights and moving a car (with the number plate), seats at the front, or any words typed.
+  - For the stage only: "Five minutes", "Please wrap up", "A little louder, please", "Your microphone is off".
+  - Choose the projector, stream and stage monitor; bottom or top; normal or amber; hide after 15 s to 2 min, or stay until cleared. A preview shows how the projector will look, and the Live monitor shows it too.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

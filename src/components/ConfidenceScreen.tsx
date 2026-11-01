@@ -6,6 +6,7 @@ import { plainVerseText } from '@/lib/verseText';
 import { BibleParser } from '@/lib/bibleParser';
 import { formatRemaining } from '@/lib/countdown';
 import { useCountdown } from '@/hooks/use-countdown';
+import { useAlert } from '@/hooks/use-alert';
 import { VerseText } from './VerseText';
 import { FitText } from './FitText';
 import { SlideDisplay } from './SlideDisplay';
@@ -58,6 +59,8 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
   const [nextItems, setNextItems] = useState<{ ref: string; snippet: string }[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const { countdown, remaining } = useCountdown();
+  const alert = useAlert();
+  const stageAlert = alert?.stage ? alert : null;
 
   useEffect(() => {
     const snippetOf = (slide: Slide) => {
@@ -131,9 +134,26 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
 
   return (
       <div
-        className={`flex overflow-hidden ${className ?? ''}`}
+        className={`relative flex overflow-hidden ${className ?? ''}`}
         style={{ ...style, backgroundColor: settings.backgroundColor, color: settings.textColor }}
       >
+        {/* A note for the people on stage: big, across the top, over everything */}
+        {stageAlert && (
+          <div
+            key={stageAlert.id}
+            data-stage-alert={stageAlert.text}
+            className="absolute left-0 right-0 top-0 z-10 flex items-center justify-center gap-4 px-8 py-6 font-bold text-center"
+            style={{
+              fontSize: `${Math.round(settings.currentVerseFontSize * 0.9)}px`,
+              lineHeight: 1.15,
+              background: stageAlert.urgent ? '#b45309' : '#1d4ed8',
+              color: '#ffffff',
+              animation: 'vv-in-lift 0.4s cubic-bezier(0.4, 0, 0.2, 1) both',
+            }}
+          >
+            {stageAlert.text}
+          </div>
+        )}
         {/* Main content area */}
         <div className="flex-1 p-8 flex flex-col">
           {/* Header with context and clock */}

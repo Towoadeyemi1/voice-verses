@@ -101,7 +101,7 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 
 **Phase 2: layers, messages, timers, stage (1.6.x)**
 - Layers: slide, media, announcements, props and messages, with clear groups.
-- Messages and props over any slide.
+- ✅ 1.8.0 Messages (alerts) over any slide, for the room, the stream or the stage. ⏳ Props.
 - Several timers at once, counting up or down.
 - A stage layout editor, including the preacher's outline and notes.
 
