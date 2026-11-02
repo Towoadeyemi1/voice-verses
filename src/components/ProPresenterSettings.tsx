@@ -210,7 +210,15 @@ export function ProPresenterSettings() {
               {status.hasMessage && !status.messageReady && (
                 <p className="text-amber-500">
                   The “Voice Verses” message needs both a <code>{'{Verse}'}</code> and a <code>{'{Reference}'}</code>{' '}
-                  token. Edit it in ProPresenter's Messages.
+                  token. Edit it in ProPresenter's Messages: type each name in <strong>Add Token</strong> and click the tick.
+                  {status.tokens && status.tokens.length > 0 && <> ProPresenter reports these tokens: {status.tokens.join(', ')}.</>}
+                </p>
+              )}
+
+              {status.messageReady && status.tokensUnconfirmed && (
+                <p className="text-muted-foreground">
+                  ProPresenter didn't say which tokens the message has. Send a test verse: if it shows on ProPresenter's output, it's
+                  set up.
                 </p>
               )}
 

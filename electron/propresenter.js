@@ -50,18 +50,61 @@ async function request(connection, method, path, body) {
 
 const messagePath = (suffix) => `/v1/message/${encodeURIComponent(MESSAGE_NAME)}/${suffix}`;
 
+/** A message's name and tokens, however this ProPresenter version reports them. */
+const messageName = (m) => String(m?.id?.name ?? m?.name ?? '').trim();
+export function tokenNames(message) {
+  const list = Array.isArray(message?.tokens) ? message.tokens : Array.isArray(message?.message?.tokens) ? message.message.tokens : [];
+  return list
+    .map((t) => (typeof t === 'string' ? t : t?.name ?? t?.id?.name ?? t?.token?.name ?? t?.text?.name ?? ''))
+    .map((n) => String(n).replace(/[{}]/g, '').trim())
+    .filter(Boolean);
+}
+const messageText = (m) => String((typeof m?.message === 'string' ? m.message : m?.message?.text) ?? m?.text ?? '');
+
+/**
+ * Whether the Voice Verses message can show a verse: it has Verse and Reference
+ * tokens. ProPresenter 21 may leave tokens out of the list of messages, so the
+ * message itself is read too; when ProPresenter doesn't say, the operator can
+ * still send a test verse and look.
+ */
+export function messageReadiness(message) {
+  const names = tokenNames(message).map((n) => n.toLowerCase());
+  const text = messageText(message);
+  const has = (token) => names.includes(token) || new RegExp(`\\{\\s*${token}\\s*\\}`, 'i').test(text);
+  const known = names.length > 0 || /\{[^}]+\}/.test(text);
+  return { ready: has('verse') && has('reference'), known, tokens: tokenNames(message) };
+}
+
 /** Connection check: which ProPresenter is this, and is the Voice Verses message set up? */
 export async function status(connection) {
   const version = await request(connection, 'GET', '/version');
   const answer = await request(connection, 'GET', '/v1/messages');
   const messages = Array.isArray(answer) ? answer : Array.isArray(answer?.messages) ? answer.messages : [];
-  const message = messages.find((m) => m?.id?.name === MESSAGE_NAME);
-  const tokens = new Set((message?.tokens ?? []).map((t) => t?.name));
+  let message = messages.find((m) => messageName(m).toLowerCase() === MESSAGE_NAME.toLowerCase());
+  let check = messageReadiness(message);
+  if (message && !check.ready) {
+    // The message on its own may say more than the list does
+    try {
+      const id = message?.id?.uuid || MESSAGE_NAME;
+      const detail = await request(connection, 'GET', `/v1/message/${encodeURIComponent(id)}`);
+      const full = detail?.message && typeof detail.message === 'object' && !Array.isArray(detail.message) ? { ...detail, ...detail.message } : detail;
+      const better = messageReadiness(full);
+      if (better.ready || better.known) {
+        message = full;
+        check = better;
+      }
+    } catch {
+      // Not available in this version; go by the list
+    }
+  }
   return {
     name: version?.name ?? '',
     version: version?.host_description ?? '',
     hasMessage: Boolean(message),
-    messageReady: Boolean(message) && tokens.has('Verse') && tokens.has('Reference'),
+    // Ready when both tokens are seen, or when ProPresenter doesn't list tokens at all (send a test verse to check)
+    messageReady: Boolean(message) && (check.ready || !check.known),
+    tokensUnconfirmed: Boolean(message) && !check.known,
+    tokens: check.tokens,
   };
 }
 

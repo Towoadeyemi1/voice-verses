@@ -34,8 +34,12 @@ export interface ProPresenterStatus {
   name: string;
   version: string;
   hasMessage: boolean;
-  /** The message exists and has {Verse} and {Reference} tokens */
+  /** The message exists and has {Verse} and {Reference} tokens (or ProPresenter doesn't list its tokens) */
   messageReady: boolean;
+  /** ProPresenter didn't say which tokens the message has: send a test verse to check */
+  tokensUnconfirmed?: boolean;
+  /** The token names ProPresenter reports for the message */
+  tokens?: string[];
 }
 
 export interface ProPresenterThemeSlide {
