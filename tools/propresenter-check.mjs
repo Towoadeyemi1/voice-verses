@@ -75,7 +75,7 @@ try {
 
   // First connection: no message yet
   let status = await pp.status(connection);
-  assert.deepEqual(status, { name: 'Booth iMac', version: 'ProPresenter 21.2', hasMessage: false, messageReady: false });
+  assert.deepEqual(status, { name: 'Booth iMac', version: 'ProPresenter 21.2', hasMessage: false, messageReady: false, tokensUnconfirmed: false, tokens: [] });
 
   // Sending before the message exists explains what is missing
   await assert.rejects(pp.showVerse(connection, { reference: 'John 3:16', text: 'x', stage: false }), /no message named "Voice Verses"/);

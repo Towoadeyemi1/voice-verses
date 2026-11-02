@@ -244,6 +244,11 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 (Photo, 2 Nov 2026.)
 - ✅ 1.11.3 ProPresenter 21 answers the theme list as an object (system themes and theme groups) where 7.x answered with a list; Voice Verses now reads both, however the themes are nested, so the themes appear and "Create the Voice Verses message" works.
 
+## The "Voice Verses" message made by hand in ProPresenter 21.4 (Verse and Reference tokens, theme chosen), yet Settings → ProPresenter still says it "needs both a {Verse} and a {Reference} token"
+
+(Three photos, 2 Nov 2026.)
+- ✅ 1.12.1 The message's tokens are read however ProPresenter reports them: from the list of messages, or from the message itself (ProPresenter 21 may leave them out of the list), with or without braces. If ProPresenter doesn't say at all, "Send a test verse" is offered anyway, with a note to check that it shows. When a token really is missing, the message lists the tokens ProPresenter reports and says how to add one (Add Token, then the tick).
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
