@@ -33,6 +33,7 @@ jobs:
           grep -q 'src="./assets/' dist/index.html || { echo "❌ FAIL: desktop build must use relative ./ asset paths"; exit 1; }
           test ! -f dist/sw.js || { echo "❌ FAIL: desktop build must not register a service worker"; exit 1; }
           for f in electron/*.js electron/*.cjs electron/speech/*; do node --check "$f"; done
+          node tools/checks/propresenter-themes.mjs
           echo "✅ Web and desktop builds OK"
 
       - name: "CHECK 2b: DeckLink addon compiles"

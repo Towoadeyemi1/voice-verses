@@ -239,6 +239,11 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.12.0 Settings → Screens lists the DeckLink's SDI ports with the displays ("DeckLink Duo (3) — SDI out"). Choose one for the projector, confidence monitor or lower third, and its video format (to match the switcher). It shows whether it is sending, why not if it can't (another app using that port, the port set to input, the wrong format), and "Show test colours" to find it on the switcher. Mac; needs Blackmagic Desktop Video, which ProPresenter already uses.
 - ⏳ To be confirmed on the owner's ProPresenter computer with the real card (built and tested here with a pretend card).
 
+## Settings → ProPresenter on the ProPresenter computer: "Connected to ProPresenter 21.4 on Mac-mini", then "TypeError: groups.forEach is not a function" and "No themes found"
+
+(Photo, 2 Nov 2026.)
+- ✅ 1.11.3 ProPresenter 21 answers the theme list as an object (system themes and theme groups) where 7.x answered with a list; Voice Verses now reads both, however the themes are nested, so the themes appear and "Create the Voice Verses message" works.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
