@@ -80,6 +80,22 @@ export function ScreenSettings() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        {displays.length <= 1 && (
+          <Alert data-one-display>
+            <MonitorSmartphone className="h-4 w-4" />
+            <AlertDescription className="space-y-1.5">
+              <span className="block font-semibold text-foreground">Only this computer's own screen is connected</span>
+              <span className="block">
+                Another display appears here as soon as something is plugged into a video output and switched on: a TV or projector, or an
+                HDMI-to-SDI converter on the eGPU's free HDMI port for the switcher.
+              </span>
+              <span className="block">
+                A Blackmagic DeckLink card isn't a display to the computer, so it won't appear in this list. Use an HDMI-to-SDI converter for now.
+              </span>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {OUTPUTS.map(({ output, label, hint }) => {
           const chosen = config?.[output] ?? null;
           const missing = chosen !== null && !displays.some((d) => d.id === chosen);
@@ -127,8 +143,8 @@ export function ScreenSettings() {
             any output in a browser instead (Settings → Network).
           </p>
           <p>
-            <strong className="text-foreground">DeckLink:</strong> sending straight out of a DeckLink card's SDI ports is
-            coming; when it is, the DeckLink outputs will be listed here too.
+            <strong className="text-foreground">DeckLink:</strong> a DeckLink card is a video card, not a display, so the
+            computer doesn't list it. Sending straight out of its SDI ports is being built; until then, use an HDMI-to-SDI converter.
           </p>
         </div>
       </CardContent>

@@ -111,3 +111,9 @@ Check this list before debugging. Add every new mistake that cost time.
 - **shadcn's `--accent` is a hover surface, not a brand colour.** Setting it to the colour team made every menu item, outline button and hover turn yellow. Only `--primary` follows the team.
 - **Calendar: when today is also the selected day, the "today" text colour won over the selected text colour** and the date vanished (white on white). Mark selected styles `!important`, and don't set a text colour for today.
 - **The header didn't line up with the body:** use one container width or padding for the header and the content.
+
+## Hardware
+
+- **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).
+- **A DeckLink never appears in Settings → Screens:** it is a video card, not a display; macOS lists only displays plugged into a video output. Until native DeckLink output exists, an HDMI-to-SDI converter on a spare HDMI port is the way.
+

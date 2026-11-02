@@ -12,6 +12,7 @@ import { loadScriptureIndex } from '@/speech/scriptureIndex';
 import { plainVerseText } from '@/lib/verseText';
 import { readingPosition, readingTokens, wordsAhead } from '@/speech/readingTracker';
 import { words as stems } from '@/speech/scriptureMatcher';
+import { isVideoCardInput } from '@/speech/audioInput';
 import { parseRich, wrapSelection } from '@/lib/richText';
 import { BibleParser } from '@/lib/bibleParser';
 import { setApiBibleKey, setChosenApiBibles, versesFromApiBibleJson, versesFromBracketed, versesFromNltHtml } from '@/lib/onlineBibles';
@@ -552,6 +553,16 @@ const check = (label: string, got: string | null, want: string | null) => {
     await e.onTranscript('and Paul says the same thing in Romans', false);
     check('a writer named mid-sentence waits for the book', early.join(', '), 'Romans');
   }
+
+  // Inputs that belong to a video card are recognised (they are silent without sound in their SDI cable)
+  for (const [label, want] of [
+    ['Blackmagic DeckLink Duo (1) (Virtual)', true],
+    ['UltraStudio Recorder 3G', true],
+    ['MacBook Pro Microphone', false],
+    ['iMac Microphone', false],
+    ['Scarlett 4i4 USB', false],
+    ['Behringer X32 (64 in)', false],
+  ] as [string, boolean][]) check(`video card input: ${label}`, String(isVideoCardInput(label)), String(want));
 
   // Verse text on screen: KJV supplied words kept (shown in italics), margin notes never shown
   const text: [string, string][] = [
