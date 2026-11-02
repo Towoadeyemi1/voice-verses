@@ -53,7 +53,8 @@ const messagePath = (suffix) => `/v1/message/${encodeURIComponent(MESSAGE_NAME)}
 /** Connection check: which ProPresenter is this, and is the Voice Verses message set up? */
 export async function status(connection) {
   const version = await request(connection, 'GET', '/version');
-  const messages = (await request(connection, 'GET', '/v1/messages')) ?? [];
+  const answer = await request(connection, 'GET', '/v1/messages');
+  const messages = Array.isArray(answer) ? answer : Array.isArray(answer?.messages) ? answer.messages : [];
   const message = messages.find((m) => m?.id?.name === MESSAGE_NAME);
   const tokens = new Set((message?.tokens ?? []).map((t) => t?.name));
   return {
@@ -64,19 +65,38 @@ export async function status(connection) {
   };
 }
 
-/** Theme slides the Voice Verses message can use, as "Theme › Slide" choices. */
+/**
+ * Theme slides the Voice Verses message can use, as "Theme › Slide" choices.
+ * ProPresenter 7.9–7.x answers /v1/themes with a list of theme groups; later
+ * versions (ProPresenter 21) with an object ({ system: [themes], groups: [...] }).
+ * Either way, every theme (anything with slides) is found however it is nested.
+ */
 export async function themeSlides(connection) {
-  const groups = (await request(connection, 'GET', '/v1/themes')) ?? [];
+  return themeSlidesFrom(await request(connection, 'GET', '/v1/themes'));
+}
+
+export function themeSlidesFrom(answer) {
   const slides = [];
-  const walk = (group) => {
-    for (const theme of group?.themes ?? []) {
-      for (const slide of theme?.slides ?? []) {
-        if (slide?.id?.uuid) slides.push({ id: slide.id, label: `${theme.id?.name ?? 'Theme'} › ${slide.id.name}` });
+  const seen = new Set();
+  const visit = (node, depth) => {
+    if (!node || typeof node !== 'object' || depth > 8) return;
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item, depth + 1);
+      return;
+    }
+    if (Array.isArray(node.slides)) {
+      const themeName = node.id?.name ?? node.name ?? 'Theme';
+      for (const slide of node.slides) {
+        const id = slide?.id;
+        if (id?.uuid && !seen.has(id.uuid)) {
+          seen.add(id.uuid);
+          slides.push({ id, label: `${themeName} › ${id.name || 'Slide'}` });
+        }
       }
     }
-    for (const child of group?.groups ?? []) walk(child);
+    for (const key of ['system', 'themes', 'groups']) if (node[key]) visit(node[key], depth + 1);
   };
-  groups.forEach(walk);
+  visit(answer, 0);
   return slides;
 }
 

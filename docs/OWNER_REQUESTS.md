@@ -234,6 +234,11 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.11.2 Settings → Screens, when only the computer's own screen is connected, says so at the top: other displays appear once plugged in, and a DeckLink isn't a display (use an HDMI-to-SDI converter for now).
 - ⏳ Native DeckLink SDI output (straight out of the DeckLink's SDI ports, no converter): next to build, tested on the owner's ProPresenter computer through Remote Control.
 
+## Settings → ProPresenter on the ProPresenter computer: "Connected to ProPresenter 21.4 on Mac-mini", then "TypeError: groups.forEach is not a function" and "No themes found"
+
+(Photo, 2 Nov 2026.)
+- ✅ 1.11.3 ProPresenter 21 answers the theme list as an object (system themes and theme groups) where 7.x answered with a list; Voice Verses now reads both, however the themes are nested, so the themes appear and "Create the Voice Verses message" works.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
