@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { loadSpeechSettings, saveSpeechSettings } from '@/speech';
-import { channelCountOf, explainMicrophoneError, listMicrophones, MAX_CHANNELS, openMicrophone } from '@/speech/audioInput';
+import { channelCountOf, defaultMicrophoneName, explainMicrophoneError, isVideoCardInput, listMicrophones, MAX_CHANNELS, openMicrophone } from '@/speech/audioInput';
 import { desktop } from '@/lib/desktop';
 
 const NOT_ALLOWED = new Set(['denied', 'restricted']);
@@ -25,6 +25,8 @@ export function MicrophoneSettings({ onChange }: { onChange?: () => void }) {
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [access, setAccess] = useState<string>('granted');
+  /** The real input behind "Default input" */
+  const [defaultName, setDefaultName] = useState<string | null>(null);
   const stopMeters = useRef<(() => void) | null>(null);
   /** When sound last came in on what Voice Verses listens to (so the message doesn't flicker between words) */
   const lastSound = useRef(0);
@@ -41,6 +43,7 @@ export function MicrophoneSettings({ onChange }: { onChange?: () => void }) {
     await checkAccess();
     const list = await listMicrophones().catch(() => [] as MediaDeviceInfo[]);
     setDevices(list);
+    setDefaultName(await defaultMicrophoneName().catch(() => null));
     // The same input with a new id (after an update or replugging): find it by its name
     const current = loadSpeechSettings();
     if (current.audioDevice && current.audioDevice !== 'default' && !list.some((d) => d.deviceId === current.audioDevice)) {
@@ -130,7 +133,12 @@ export function MicrophoneSettings({ onChange }: { onChange?: () => void }) {
   };
 
   const known = deviceId === 'default' || devices.some((d) => d.deviceId === deviceId);
-  const deviceLabel = (id: string) => devices.find((d) => d.deviceId === id)?.label || (id === 'default' ? 'Default input' : deviceName || 'The chosen input');
+  const deviceLabel = (id: string) =>
+    devices.find((d) => d.deviceId === id)?.label || (id === 'default' ? (defaultName ? `Default input (${defaultName})` : 'Default input') : deviceName || 'The chosen input');
+  // What is really being listened to, and whether it is a video card's input (silent without sound in its SDI cable)
+  const listeningTo = deviceId === 'default' ? defaultName ?? '' : devices.find((d) => d.deviceId === deviceId)?.label ?? deviceName ?? '';
+  const onVideoCard = isVideoCardInput(listeningTo);
+  const noMicrophone = devices.length > 0 && devices.every((d) => isVideoCardInput(d.label));
   const heard = levels ? (channel === null ? Math.max(...levels.slice(0, 2)) : levels[channel] ?? 0) : 0;
 
   return (
@@ -168,7 +176,7 @@ export function MicrophoneSettings({ onChange }: { onChange?: () => void }) {
             <SelectValue placeholder="Choose the input" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="default">Default input</SelectItem>
+            <SelectItem value="default">{defaultName ? `Default input (${defaultName})` : 'Default input'}</SelectItem>
             {devices.map((d) => (
               <SelectItem key={d.deviceId} value={d.deviceId}>
                 {d.label || `Input ${d.deviceId.slice(0, 8)}`}
@@ -178,6 +186,28 @@ export function MicrophoneSettings({ onChange }: { onChange?: () => void }) {
           </SelectContent>
         </Select>
       </div>
+
+      {/* A video card's input (DeckLink…) only carries sound sent down its SDI cable: say so, and what to do instead */}
+      {(onVideoCard || noMicrophone) && (
+        <div className="rounded-xl bg-amber-500/15 p-4 space-y-2" role="note" data-video-card-input>
+          <p className="m-0 text-[15px] font-semibold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            {noMicrophone ? 'This computer has no microphone input of its own' : `${listeningTo} is a video card, not a microphone`}
+          </p>
+          <p className="m-0 text-sm text-muted-foreground">
+            {noMicrophone ? 'The only inputs here belong to a video card (such as a Blackmagic DeckLink). ' : ''}A video card's input only
+            carries the sound inside the SDI cable plugged into that port, so it stays silent otherwise. To hear the preacher, do one of these:
+          </p>
+          <ul className="m-0 pl-5 text-sm text-muted-foreground list-disc space-y-1">
+            <li>
+              <b className="text-foreground">Easiest:</b> run Voice Verses on the computer that already gets the sound desk (the one with Logic)
+              and choose the preacher's channel there. Show its screens on this computer through Settings → Network.
+            </li>
+            <li>Plug a USB audio interface, or the desk's USB, into this computer, then choose it here.</li>
+            <li>Send SDI with the sound in it (for example the switcher's output) into a DeckLink input, then choose that input here.</li>
+          </ul>
+        </div>
+      )}
 
       {/* Sound check: is anything arriving on what Voice Verses listens to? */}
       <div className="rounded-xl bg-muted/50 p-4 space-y-2.5">

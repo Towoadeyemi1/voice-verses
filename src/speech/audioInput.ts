@@ -62,6 +62,20 @@ export async function listMicrophones(): Promise<MediaDeviceInfo[]> {
   return devices.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications');
 }
 
+/** The real input behind "Default input" ("Blackmagic DeckLink Duo (1)"), or null if the computer doesn't say. */
+export async function defaultMicrophoneName(): Promise<string | null> {
+  const devices = await navigator.mediaDevices.enumerateDevices().catch(() => [] as MediaDeviceInfo[]);
+  const label = devices.find((d) => d.kind === 'audioinput' && d.deviceId === 'default')?.label ?? '';
+  return label.replace(/^Default\s*-\s*/i, '').trim() || null;
+}
+
+/**
+ * An input that belongs to a video card or capture box (Blackmagic DeckLink,
+ * UltraStudio, Intensity, AJA…) or a virtual device: it carries only the sound
+ * embedded in the video cable plugged into that port, so it is usually silent.
+ */
+export const isVideoCardInput = (label: string) => /decklink|ultrastudio|intensity|blackmagic|\baja\b|kona|\(virtual\)|virtual audio/i.test(label);
+
 /**
  * AudioWorklet that copies one channel of the input out of the audio thread.
  * Created with channelCountMode 'explicit' and 'discrete' interpretation so the

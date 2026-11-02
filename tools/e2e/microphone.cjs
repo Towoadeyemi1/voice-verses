@@ -31,7 +31,7 @@ const audio = process.argv[2] || path.join(OUT, 'worship.wav');
   await win.getByRole('combobox', { name: 'Input to listen to' }).click();
   await win.waitForTimeout(400);
   const options = await win.getByRole('option').allTextContents();
-  const named = options.find((o) => o !== 'Default input');
+  const named = options.find((o) => !o.startsWith('Default input'));
   if (named) {
     await win.getByRole('option', { name: named }).click();
     await win.waitForTimeout(1500);

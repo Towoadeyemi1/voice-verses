@@ -225,6 +225,15 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.11.1 The suggestion bar and list say the strength in words ("Strong match" 90%+, "Likely" 60%+, "Possible" 35%+, "Faint match") and why it is offered, in plain words: "most of it quoted", "part of it quoted", "a few of its words said", "the story: Zacchaeus, sycamore", "told in his words, in Isaiah 53 he named", "in today's plan", "Romans was just mentioned", "the AI helper's answer". The ring keeps the number.
 - 💬 Design: answered honestly with screenshots (what is strong, and the rough edges still to polish).
 
+## "The input does not give me the computer's microphone, but DeckLink; even on Default I get no signal. And the screen options don't give me the DeckLink as an option to send the app's screens to"
+
+(Two photos from the ProPresenter computer, 2 Nov 2026: Listening shows Default input and Blackmagic DeckLink Duo (1)–(4) (Virtual); Screens lists only "LG FHD — 1920×1080 (this computer's main screen)".)
+- 💬 Not a fault in the app. That computer has no microphone of its own: its only sound inputs are the DeckLink's, which carry only the sound inside an SDI cable plugged into that port, so "Default input" (a DeckLink) is silent. And a DeckLink card is a video card, not a display, so macOS doesn't list it; displays appear only when something is plugged into a video output (nothing is on the eGPU's HDMI port yet).
+- 💬 Ways forward: listen on the iMac (it has the desk and the APOSTLE channel) and show the screens on the ProPresenter computer over the network; or feed sound into this computer (USB interface, or SDI with embedded sound into a DeckLink input); for SDI out today, an HDMI-to-SDI converter on the eGPU's HDMI port.
+- ✅ 1.11.2 Settings → Listening names the device behind "Default input" ("Default input (Blackmagic DeckLink Duo (1) (Virtual))"), and when the input is a video card, or the computer has no microphone at all, says so and lists the three ways to get the preacher's sound.
+- ✅ 1.11.2 Settings → Screens, when only the computer's own screen is connected, says so at the top: other displays appear once plugged in, and a DeckLink isn't a display (use an HDMI-to-SDI converter for now).
+- ⏳ Native DeckLink SDI output (straight out of the DeckLink's SDI ports, no converter): next to build, tested on the owner's ProPresenter computer through Remote Control.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
