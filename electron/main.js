@@ -7,6 +7,7 @@ import * as proPresenter from './propresenter.js';
 import { keepAwake, outputWindowOptions, trackOutputWindow } from './outputs.js';
 import * as network from './network.js';
 import * as screens from './screens.js';
+import * as decklink from './decklink.js';
 import * as speech from './speech/index.js';
 import { initUpdates } from './updates.js';
 
@@ -94,6 +95,7 @@ function createWindow() {
     mainWindow = null;
     // The outputs go with the window that controls them (they come back when it reopens)
     screens.suspendScreens();
+    decklink.suspendDeckLink();
   });
 }
 
@@ -143,6 +145,11 @@ listen('network:publish', (state) => network.publish(state));
 handle('screens:displays', () => screens.listDisplays());
 handle('screens:get', () => screens.getConfig());
 handle('screens:set', (config) => screens.setConfig(config));
+handle('decklink:devices', () => decklink.listDevices());
+handle('decklink:get', () => decklink.getConfig());
+handle('decklink:set', (config) => decklink.setConfig(config));
+handle('decklink:status', () => decklink.getStatus());
+handle('decklink:test', (output) => decklink.showTestPattern(output));
 
 handle('app:version', () => app.getVersion());
 // While listening, the computer must not sleep (it would stop hearing the preacher)
@@ -171,7 +178,8 @@ listen('speech:stop', (session) => speech.stop(session));
 
 /** An app window showing one route (used for the outputs chosen in Settings → Screens). */
 function createAppWindow(route, options) {
-  const win = new BrowserWindow({ ...options, webPreferences });
+  // An output sent to a DeckLink port is drawn offscreen (options.webPreferences.offscreen)
+  const win = new BrowserWindow({ ...options, webPreferences: { ...webPreferences, ...(options?.webPreferences ?? {}) } });
   hardenWindow(win);
   if (isDev) win.loadURL(`${DEV_URL}/#${route}`);
   else win.loadFile(join(__dirname, '../dist/index.html'), { hash: route });
@@ -186,6 +194,7 @@ app.whenReady().then(async () => {
   }
   createWindow();
   screens.initScreens(createAppWindow);
+  decklink.initDeckLink(createAppWindow);
   initUpdates();
 });
 
@@ -199,5 +208,6 @@ app.on('activate', () => {
   if (!mainWindow) {
     createWindow();
     screens.resumeScreens();
+    decklink.resumeDeckLink();
   }
 });

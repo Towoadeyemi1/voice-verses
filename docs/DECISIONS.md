@@ -146,6 +146,11 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Decision:** A chapter named without a verse puts nothing on screen. It is loaded for the operator (verse 1 waiting in Next) and the verse goes up when it is read, quoted or named; a paraphrase is offered.
 - **Why:** Rule 1: a verse goes up by itself only when said outright or certain. "Isaiah 53" names twelve verses; guessing the first is usually wrong, and a wrong verse on the big screen is the worst failure. Reading the verse is following, which was already trusted.
 
+### D25. DeckLink output through an offscreen window and a tiny native addon
+- **Context:** The owner's switcher is fed by ProPresenter through a DeckLink Duo. "Why can't I send one of Voice Verses' screens through that?" A DeckLink is not a display, so Settings → Screens could not offer it.
+- **Decision:** A Node-API addon (`native/decklink`, using the DeckLink SDK headers, which may be redistributed) opens a port and shows frames with `DisplayVideoFrameSync`. Each output is drawn in an offscreen Electron window by the same renderer as every other screen, and its frames are converted to YUV in the addon. Mac first; built in CI for both architectures; a pretend card (`VOICE_VERSES_DECKLINK_MOCK`) tests the whole path without hardware.
+- **Why:** Rule 5 (one renderer for every output) still holds, nothing new to install beyond the driver that comes with the card, and Node-API means one build works across Electron versions. Synchronous display is simpler than scheduled playback and right for slides, where the picture changes only now and then.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

@@ -1,1 +1,0 @@
-cmd_Release/obj.target/decklink.node := g++ -o Release/obj.target/decklink.node -shared -pthread -rdynamic -m64  -Wl,-soname=decklink.node -Wl,--start-group Release/obj.target/decklink/src/decklink.o Release/obj.target/decklink/sdk/linux/DeckLinkAPIDispatch.o -Wl,--end-group -ldl -lpthread

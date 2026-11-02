@@ -1,1 +1,0 @@
-cmd_Release/decklink.node := ln -f "Release/obj.target/decklink.node" "Release/decklink.node" 2>/dev/null || (rm -rf "Release/decklink.node" && cp -af "Release/obj.target/decklink.node" "Release/decklink.node")

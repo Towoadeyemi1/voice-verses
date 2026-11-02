@@ -4,7 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { desktop, DisplayInfo, ScreenConfig, ScreenOutput } from '@/lib/desktop';
+import { DeckLinkConfig, DeckLinkDevices, DeckLinkStatus, desktop, DisplayInfo, ScreenConfig, ScreenOutput } from '@/lib/desktop';
+import { DECKLINK_MODES, DEFAULT_DECKLINK_MODE, decklinkModeLabel } from '@/lib/decklinkModes';
+import { Button } from '@/components/ui/button';
 import type { Output } from '@/lib/templates';
 import { ScreenShapePicker } from './ScreenShapePicker';
 
@@ -30,12 +32,22 @@ const describe = (d: DisplayInfo) =>
 export function ScreenSettings() {
   const [displays, setDisplays] = useState<DisplayInfo[]>([]);
   const [config, setConfig] = useState<ScreenConfig | null>(null);
+  /** DeckLink ports (SDI out), what each output sends there, and how it is going */
+  const [decklink, setDeckLink] = useState<DeckLinkDevices | null>(null);
+  const [dlConfig, setDlConfig] = useState<DeckLinkConfig | null>(null);
+  const [dlStatus, setDlStatus] = useState<DeckLinkStatus | null>(null);
 
   useEffect(() => {
     if (!desktop) return;
-    const refresh = () => desktop!.screens.displays().then(setDisplays).catch(() => {});
+    const dl = desktop.decklink;
+    const refresh = () => {
+      desktop!.screens.displays().then(setDisplays).catch(() => {});
+      dl?.devices().then(setDeckLink).catch(() => {});
+      dl?.status().then(setDlStatus).catch(() => {});
+    };
     refresh();
     desktop.screens.get().then(setConfig).catch(() => {});
+    dl?.get().then(setDlConfig).catch(() => {});
     // Displays come and go (an HDMI-to-SDI converter switched on later, a cable moved)
     const timer = setInterval(refresh, 3000);
     return () => clearInterval(timer);
@@ -59,10 +71,32 @@ export function ScreenSettings() {
 
   const choose = async (output: ScreenOutput, value: string) => {
     if (!config) return;
-    const next = { ...config, [output]: value === OFF ? null : Number(value) };
+    const dl = desktop!.decklink;
+    // A DeckLink port ("dl:<name>") or a display: an output goes to one place at a time
+    const port = value.startsWith('dl:') ? value.slice(3) : null;
+    if (dl && dlConfig && (port || dlConfig[output])) {
+      const nextDl = { ...dlConfig, [output]: port ? { device: port, mode: dlConfig[output]?.mode ?? DEFAULT_DECKLINK_MODE } : null };
+      setDlConfig(nextDl);
+      setDlConfig(await dl.set(nextDl));
+      window.setTimeout(() => dl.status().then(setDlStatus).catch(() => {}), 1200);
+    }
+    const next = { ...config, [output]: port || value === OFF ? null : Number(value) };
     setConfig(next);
     setConfig(await desktop!.screens.set(next));
   };
+
+  const chooseFormat = async (output: ScreenOutput, mode: string) => {
+    const dl = desktop!.decklink;
+    const current = dlConfig?.[output];
+    if (!dl || !dlConfig || !current) return;
+    const nextDl = { ...dlConfig, [output]: { ...current, mode } };
+    setDlConfig(nextDl);
+    setDlConfig(await dl.set(nextDl));
+    window.setTimeout(() => dl.status().then(setDlStatus).catch(() => {}), 1200);
+  };
+
+  const ports = decklink?.available ? decklink.devices.filter((d) => d.canOutput) : [];
+  const usedBy = (name: string, except: ScreenOutput) => OUTPUTS.find(({ output }) => output !== except && dlConfig?.[output]?.device === name)?.label;
 
   const onMain = config ? OUTPUTS.filter(({ output }) => displays.find((d) => d.id === config[output])?.primary) : [];
 
@@ -90,7 +124,11 @@ export function ScreenSettings() {
                 HDMI-to-SDI converter on the eGPU's free HDMI port for the switcher.
               </span>
               <span className="block">
-                A Blackmagic DeckLink card isn't a display to the computer, so it won't appear in this list. Use an HDMI-to-SDI converter for now.
+                {decklink?.available
+                  ? 'Your Blackmagic DeckLink ports are listed under each output too: choose one to send that output out of its SDI port.'
+                  : decklink?.reason === 'drivers'
+                    ? 'To send through a Blackmagic DeckLink card, install Blackmagic Desktop Video (it comes with the card); its SDI ports are then listed here.'
+                    : "A Blackmagic DeckLink card isn't a display to the computer. Sending through its SDI ports works in the Mac app."}
               </span>
             </AlertDescription>
           </Alert>
@@ -99,10 +137,13 @@ export function ScreenSettings() {
         {OUTPUTS.map(({ output, label, hint }) => {
           const chosen = config?.[output] ?? null;
           const missing = chosen !== null && !displays.some((d) => d.id === chosen);
+          const sdi = dlConfig?.[output] ?? null;
+          const sdiMissing = !!sdi && !ports.some((p) => p.name === sdi.device);
+          const status = dlStatus?.[output];
           return (
             <div key={output} className="space-y-1.5">
               <Label htmlFor={`screen-${output}`}>{label}</Label>
-              <Select value={chosen === null ? OFF : String(chosen)} onValueChange={(v) => choose(output, v)} disabled={!config}>
+              <Select value={sdi ? `dl:${sdi.device}` : chosen === null ? OFF : String(chosen)} onValueChange={(v) => choose(output, v)} disabled={!config}>
                 <SelectTrigger id={`screen-${output}`}>
                   <SelectValue />
                 </SelectTrigger>
@@ -114,8 +155,64 @@ export function ScreenSettings() {
                     </SelectItem>
                   ))}
                   {missing && <SelectItem value={String(chosen)}>Not connected now — opens when it is</SelectItem>}
+                  {ports.map((p) => {
+                    const other = usedBy(p.name, output);
+                    return (
+                      <SelectItem key={`dl:${p.name}`} value={`dl:${p.name}`} disabled={!!other}>
+                        {p.name} — SDI out (Blackmagic DeckLink){other ? ` · used by ${other}` : ''}
+                      </SelectItem>
+                    );
+                  })}
+                  {sdiMissing && sdi && <SelectItem value={`dl:${sdi.device}`}>{sdi.device} — not connected now</SelectItem>}
                 </SelectContent>
               </Select>
+              {sdi && (
+                <div className="rounded-lg bg-muted/50 p-3 space-y-2" data-decklink-output={output}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Label htmlFor={`format-${output}`} className="text-[13px]">
+                      Video format
+                    </Label>
+                    <Select value={sdi.mode} onValueChange={(m) => chooseFormat(output, m)}>
+                      <SelectTrigger id={`format-${output}`} className="w-44 h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DECKLINK_MODES.map((m) => (
+                          <SelectItem key={m.key} value={m.key}>
+                            {m.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-9"
+                      disabled={status?.state !== 'sending'}
+                      onClick={() => desktop!.decklink?.test(output)}
+                      title="Colour bars on this port for 8 seconds, to find it on the switcher"
+                    >
+                      Show test colours
+                    </Button>
+                  </div>
+                  <p className="m-0 text-[13px] text-muted-foreground">
+                    Choose the format your switcher runs at (on an ATEM: Settings → Video standard), or its input stays black.
+                  </p>
+                  {status?.state === 'sending' && (
+                    <p className="m-0 text-[13px] flex items-center gap-1.5" role="status">
+                      <i className="w-2 h-2 rounded-full bg-[hsl(var(--live))]" aria-hidden />
+                      Sending to {status.device} · {decklinkModeLabel(status.mode)} · {status.framesPerSecond} pictures a second
+                    </p>
+                  )}
+                  {status?.state === 'error' && (
+                    <p className="m-0 text-[13px] text-amber-400 flex items-start gap-1.5" role="alert">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-px" />
+                      {status.message}
+                    </p>
+                  )}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">{hint}</p>
               {SHAPED[output] && <ScreenShapePicker output={SHAPED[output]!} />}
             </div>
@@ -143,8 +240,9 @@ export function ScreenSettings() {
             any output in a browser instead (Settings → Network).
           </p>
           <p>
-            <strong className="text-foreground">DeckLink:</strong> a DeckLink card is a video card, not a display, so the
-            computer doesn't list it. Sending straight out of its SDI ports is being built; until then, use an HDMI-to-SDI converter.
+            <strong className="text-foreground">DeckLink:</strong> each free SDI port of a Blackmagic DeckLink card is listed
+            under the outputs (Mac, with Blackmagic Desktop Video installed). A port another app uses, such as ProPresenter,
+            can't be shared; choose a free one, set to output in Blackmagic Desktop Video Setup.
           </p>
         </div>
       </CardContent>

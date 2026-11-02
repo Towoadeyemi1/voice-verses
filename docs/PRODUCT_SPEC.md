@@ -153,6 +153,9 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
   - Host and port are validated, and requests time out after 3 s.
   - A simple "ProPresenter companion" screen exists for churches that only want that.
 
+
+**DeckLink SDI out** (1.12.0, macOS, `electron/decklink.js`, `native/decklink`): in Settings → Screens, each output can go to a Blackmagic DeckLink port instead of a display ("DeckLink Duo (3) — SDI out"). The output is drawn in an offscreen window at the port's size (1920×1080, or 1280×720 for 720p) and each changed frame goes to the card (BGRA → 8-bit YUV Rec. 709, `DisplayVideoFrameSync`, two frames in turn); the card repeats the last frame. Video format per output (key `mode`, default 1080i 59.94; also 1080i 50, 1080p 29.97/30/25/59.94/50/60, 720p 59.94/50), which must match the switcher. A port is used by one output at a time; a port another app uses (ProPresenter) reports "Another app is using this DeckLink port". Status shows "Sending to … · format · n pictures a second", or the reason it couldn't start; "Show test colours" sends bars for 8 seconds. Saved in `decklink.json` in the app's data folder. Needs Blackmagic Desktop Video (comes with the card). `VOICE_VERSES_DECKLINK_MOCK=1` gives a pretend two-port card for tests.
+
 ## 6. Looks (templates), the designer, colour teams, themes
 
 - **Template** (`src/lib/templates.ts`):

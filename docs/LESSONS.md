@@ -117,4 +117,5 @@ Check this list before debugging. Add every new mistake that cost time.
 - **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).
 - **A DeckLink never appears in Settings → Screens:** it is a video card, not a display; macOS lists only displays plugged into a video output. Until native DeckLink output exists, an HDMI-to-SDI converter on a spare HDMI port is the way.
 - **"groups.forEach is not a function" with ProPresenter 21:** `/v1/themes` became an object (`{ system, groups }`) instead of a list. Read API answers by what they contain (any object with `slides` is a theme), not by one version's shape (`themeSlidesFrom`, checked in QA by `tools/checks/propresenter-themes.mjs`).
+- **Build output reached main:** `git add -A` on another branch (whose `.gitignore` didn't list `native/decklink/build/`) committed node-gyp output. Ignore build folders on `main` first, and look at `git status` before `git add -A`.
 

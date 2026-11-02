@@ -232,7 +232,12 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - 💬 Ways forward: listen on the iMac (it has the desk and the APOSTLE channel) and show the screens on the ProPresenter computer over the network; or feed sound into this computer (USB interface, or SDI with embedded sound into a DeckLink input); for SDI out today, an HDMI-to-SDI converter on the eGPU's HDMI port.
 - ✅ 1.11.2 Settings → Listening names the device behind "Default input" ("Default input (Blackmagic DeckLink Duo (1) (Virtual))"), and when the input is a video card, or the computer has no microphone at all, says so and lists the three ways to get the preacher's sound.
 - ✅ 1.11.2 Settings → Screens, when only the computer's own screen is connected, says so at the top: other displays appear once plugged in, and a DeckLink isn't a display (use an HDMI-to-SDI converter for now).
-- ⏳ Native DeckLink SDI output (straight out of the DeckLink's SDI ports, no converter): next to build, tested on the owner's ProPresenter computer through Remote Control.
+- ✅ 1.12.0 Native DeckLink SDI output (see the next request).
+
+## "The way we send ProPresenter to the switcher is through the DeckLink, why can't I do the same? I added an SDI line to one of the free SDI ports"
+
+- ✅ 1.12.0 Settings → Screens lists the DeckLink's SDI ports with the displays ("DeckLink Duo (3) — SDI out"). Choose one for the projector, confidence monitor or lower third, and its video format (to match the switcher). It shows whether it is sending, why not if it can't (another app using that port, the port set to input, the wrong format), and "Show test colours" to find it on the switcher. Mac; needs Blackmagic Desktop Video, which ProPresenter already uses.
+- ⏳ To be confirmed on the owner's ProPresenter computer with the real card (built and tested here with a pretend card).
 
 ## Settings → ProPresenter on the ProPresenter computer: "Connected to ProPresenter 21.4 on Mac-mini", then "TypeError: groups.forEach is not a function" and "No themes found"
 
