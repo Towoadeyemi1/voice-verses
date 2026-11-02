@@ -2,7 +2,7 @@
   "name": "voice-verses",
   "productName": "Voice Verses",
   "private": true,
-  "version": "1.11.2",
+  "version": "1.12.0",
   "description": "Voice-activated Bible verse projection system for church services",
   "author": "Voice Verses Team",
   "main": "electron/main.js",
@@ -124,6 +124,7 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
+      "native/decklink/prebuilt/**/*",
       "package.json"
     ],
     "extraResources": [
@@ -133,7 +134,8 @@
       }
     ],
     "asarUnpack": [
-      "node_modules/sherpa-onnx-*/**"
+      "node_modules/sherpa-onnx-*/**",
+      "native/decklink/prebuilt/**"
     ],
     "mac": {
       "category": "public.app-category.productivity",

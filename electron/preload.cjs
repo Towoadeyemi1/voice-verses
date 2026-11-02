@@ -52,6 +52,13 @@ contextBridge.exposeInMainWorld('voiceVerses', {
     get: () => invoke('screens:get'),
     set: (config) => invoke('screens:set', config),
   },
+  decklink: {
+    devices: () => invoke('decklink:devices'),
+    get: () => invoke('decklink:get'),
+    set: (config) => invoke('decklink:set', config),
+    status: () => invoke('decklink:status'),
+    test: (output) => invoke('decklink:test', output),
+  },
   network: {
     configure: (options) => invoke('network:configure', options),
     status: () => invoke('network:status'),

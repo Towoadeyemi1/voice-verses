@@ -26,3 +26,7 @@ dist-ssr
 # Speech models, downloaded by scripts/fetch-models.mjs
 resources/models/
 dist-electron/
+
+# DeckLink addon builds (made by node-gyp; the Mac ones in CI)
+native/decklink/build/
+native/decklink/prebuilt/

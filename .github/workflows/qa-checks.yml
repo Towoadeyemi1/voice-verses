@@ -35,6 +35,10 @@ jobs:
           for f in electron/*.js electron/*.cjs electron/speech/*; do node --check "$f"; done
           echo "✅ Web and desktop builds OK"
 
+      - name: "CHECK 2b: DeckLink addon compiles"
+        # Built against the Linux SDK headers here (the Mac build runs in build-electron.yml)
+        run: npx --yes node-gyp@12 rebuild --directory native/decklink
+
       - name: "CHECK 3: Electron build scripts include ELECTRON_BUILD=true"
         run: |
           if grep -q "cross-env ELECTRON_BUILD=true" package.json; then

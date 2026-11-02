@@ -20,6 +20,7 @@ xvfb-run -a node tools/e2e/worship.cjs     # Predictive Next, the leader's cues,
 xvfb-run -a node tools/e2e/live-slides.cjs # slides strip and grid, Goes live / Waits in Next, Quick edit, part countdowns, translation switch, two services, Move on by time
 python tools/e2e/make-sermon-audio.py /path/to/en_US-lessac-medium.onnx /tmp/vv-e2e/chapter.wav chapter
 xvfb-run -a node tools/e2e/chapter.cjs     # a chapter alone waits for its verse, "verse 6", a story offered, the suggestion list
+xvfb-run -a node tools/e2e/decklink.cjs    # DeckLink SDI out with a pretend card: frames reach the port, formats, test colours (build the addon or it uses the pretend card only)
 node tools/e2e/mock-ollama.cjs &                                           # fake Ollama for AI slide tests
 ```
 

@@ -64,6 +64,24 @@ export type ScreenOutput = 'projection' | 'confidence' | 'lowerThird';
 /** Which display each output is shown on; null for off */
 export type ScreenConfig = Record<ScreenOutput, number | null>;
 
+/** A Blackmagic DeckLink port (each connector of a card is listed by the driver as a device) */
+export interface DeckLinkDevice {
+  name: string;
+  canOutput: boolean;
+}
+export interface DeckLinkDevices {
+  available: boolean;
+  /** Why not: 'drivers' (Desktop Video not installed), 'not-built' or 'platform' (not on this system yet) */
+  reason?: 'drivers' | 'not-built' | 'platform';
+  devices: DeckLinkDevice[];
+}
+/** The DeckLink port and video format for each output sent out over SDI */
+export type DeckLinkConfig = Record<ScreenOutput, { device: string; mode: string } | null>;
+export type DeckLinkStatus = Record<
+  ScreenOutput,
+  { state: 'sending'; device: string; mode: string; framesPerSecond: number } | { state: 'error'; message: string } | { state: 'off' }
+>;
+
 export interface DesktopBridge {
   platform: string;
   getVersion(): Promise<string>;
@@ -111,6 +129,14 @@ export interface DesktopBridge {
     displays(): Promise<DisplayInfo[]>;
     get(): Promise<ScreenConfig>;
     set(config: ScreenConfig): Promise<ScreenConfig>;
+  };
+  /** Outputs sent straight out of a DeckLink card's SDI ports (older desktop versions don't have it) */
+  decklink?: {
+    devices(): Promise<DeckLinkDevices>;
+    get(): Promise<DeckLinkConfig>;
+    set(config: DeckLinkConfig): Promise<DeckLinkConfig>;
+    status(): Promise<DeckLinkStatus>;
+    test(output: ScreenOutput): Promise<boolean>;
   };
   network: {
     configure(options: { enabled: boolean; port?: number }): Promise<NetworkStatus>;

@@ -98,7 +98,7 @@ Settings live in `localStorage`, which every window shares, so outputs update th
 ## Open work (keep this list current)
 
 - Design 4 is in the live screen (1.4.0), and every other page uses `AppShell` with the same design (1.4.2). The old redesign PR #8 is obsolete and can be closed.
-- Native DeckLink SDI output. It needs the Blackmagic Desktop Video SDK and testing on the owner's ProPresenter computer through Remote Control.
+- DeckLink SDI output shipped in 1.12.0 (Mac, `native/decklink`); still to confirm on the owner's real card, then Windows, and key-and-fill for the lower third.
 - Worship leader cues, spontaneous worship capture and Predictive Next shipped in 1.6.0. Remaining signature features are in `docs/ROADMAP.md` (moment autopilot first).
 - Moving backgrounds and transitions shipped in 1.5.0 (17 styles, 40 samples and the speed guard in 1.5.1). Phase 1 still needs light mode and the designer inspector restyle.
 - Alerts (messages over any slide) shipped in 1.8.0.

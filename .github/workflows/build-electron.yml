@@ -36,6 +36,18 @@ jobs:
         # npm only installs the native package for the runner's own CPU
         run: npm install --no-save --force sherpa-onnx-darwin-x64@2.0.0 sherpa-onnx-darwin-arm64@2.0.0
 
+      - name: Build the DeckLink addon for both Mac architectures
+        if: runner.os == 'macOS'
+        # Sends outputs straight out of a Blackmagic DeckLink card's SDI ports (native/decklink).
+        # Node-API, so one build works in every Electron version.
+        run: |
+          for arch in x64 arm64; do
+            npx --yes node-gyp@12 rebuild --directory native/decklink --arch=$arch
+            mkdir -p native/decklink/prebuilt/darwin-$arch
+            cp native/decklink/build/Release/decklink.node native/decklink/prebuilt/darwin-$arch/decklink.node
+            lipo -info native/decklink/prebuilt/darwin-$arch/decklink.node
+          done
+
       - name: Use the tag as the app version
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
