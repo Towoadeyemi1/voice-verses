@@ -93,6 +93,11 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 
 ## Plan (each phase ships as releases; record each in OWNER_REQUESTS.md)
 
+**Next (owner, 4 Nov 2026: "most features optional; ProPresenter and screens simpler")**
+- ✅ 1.13.0 Settings → Features (presets), the booth check and warnings during the service, Find and set up ProPresenter, screen tiles and Identify screens.
+- ⏳ 1.14.0 Moment autopilot and sermon points on cue, off by default.
+- ⏳ 1.15.0 A local control API on the network server (show a verse, clear, next, logo, countdown, status) for a Stream Deck, a phone or another app (D27).
+
 **Phase 1: make it beautiful and smooth (1.5.x)**
 - ✅ 1.5.0 Built-in motion and still backgrounds, generated in the app so they work offline with no copyright issues: soft gradients, light rays, bokeh, aurora and paper textures in the colour team's colours.
 - ✅ 1.5.0 Built-in looks rebuilt on them, so the app looks rich from the first launch.

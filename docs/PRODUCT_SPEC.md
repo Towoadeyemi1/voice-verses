@@ -147,8 +147,10 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
   - `/live` is a Server-Sent Events stream of the live state, templates, assignments, logo, Bible version, colour team and screen shapes.
   - `/media/:id` serves media with Range support.
   - Viewer pages are flagged with `window.__VOICE_VERSES_NETWORK__`.
-- **SDI today:** use an HDMI-to-SDI converter on a spare video output, assigned in Settings → Screens. Native DeckLink output is planned.
+- **SDI:** a DeckLink port directly (below), or an HDMI-to-SDI converter on a spare video output.
+- **Screens as tiles** (1.13.0): Settings → Screens starts with "Your screens", a tile for each display and DeckLink port (number, name, size, "where you work"), saying what it shows, with one chip per output (Projector, Stage monitor, Lower third) and Nothing. **Identify screens** shows a big number and name on every display for 4 seconds (`screens:identify`). The per-output lists below stay for shapes and DeckLink formats.
 - **ProPresenter (optional, 7.9+ API):**
+  - **Find and set up ProPresenter** (1.13.0, `propresenter:find`, `propresenter:set-up`): finds ProPresenter on this computer from its listening ports (`lsof` on Mac, `tasklist` + `netstat` on Windows) and checks each with `/version`; then connects, and creates the "Voice Verses" message with the best-suited theme if it is missing. Each step is shown as it happens. Another computer: type its address under "Or enter it yourself".
   - Creates a message named "Voice Verses" (`{Verse} — {Reference}`) and triggers it with token values; can also show a stage message.
   - Host and port are validated, and requests time out after 3 s.
   - A simple "ProPresenter companion" screen exists for churches that only want that.
@@ -297,6 +299,25 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   - The number or number plate is typed in; any message can be written instead.
   - Options: which screens, where, normal or amber, and hide after 15 s, 30 s, 1 min, 2 min or until cleared. A preview shows the projector.
 
+## 8d. Features, booth check and warnings (1.13.0)
+
+- **Settings → Features** (`lib/features.ts`, `components/FeatureSettings.tsx`, key `voice-verses-features`): a switch for each smart feature, grouped:
+  - Scripture: follow the reading, a chapter alone waits for its verse, verses quoted without a reference, stories told in the preacher's own words, "help me find it", Predictive Next.
+  - Worship: recognise songs from the library, worship leader's cues, singing something new.
+  - The service: a part's own countdown starts with it; moment autopilot and sermon points on cue (shown as Coming, can't be switched on yet).
+  - Safety: booth check, warnings during the service.
+  - Presets: Essentials (follow the reading, chapter waits, part countdowns, booth check, warnings), Recommended (everything built except bold new features; a new install), Everything. "Your own choice" when the switches match no preset. A feature added later starts as Recommended says. A reference said outright always works.
+  - The listening engine gets plain flags (`VerseDetectionController.setFeatures`, `DetectionFeatures`); it never reads storage. Changes apply at once, in every window (`voice-verses-features-changed` and `storage` events).
+- **Booth check** (`lib/boothCheck.ts`, `components/live/BoothCheck.tsx`): a light on the live top bar, "Ready" (grey tick) or "n to check" (amber; never red or green, which mean On Air and Next). Checks again every minute, on opening, on a settings change and when the internet comes or goes. Its list:
+  - Microphone: access allowed; an input connected; the chosen input present (else the default is used).
+  - Speech recognition: the on-device models installed, or OpenAI's key and the internet.
+  - Each output on a display (connected?) or DeckLink port (sending?); "Only this computer's own screen is connected" when none.
+  - ProPresenter, when switched on: reachable, and the message ready.
+  - Bible: an online translation while offline (verses come from a Bible on the computer).
+  - Today's service: planned and loaded.
+  - Each problem has a Fix button: the right Settings page, the computer's microphone settings, or Plan a service.
+- **Warnings during the service** (`Guardian`): every 5 seconds, screens, DeckLink ports and ProPresenter are checked again, and the microphone is watched while listening (no sound for 20 seconds, unless muted). A problem shows as an amber warning below the top bar with its Fix button. A warning can be closed; it comes back only if it clears and happens again.
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:
@@ -343,7 +364,7 @@ The pages:
   - Pictures and videos as a thumbnail grid.
 - **Looks:** three tabs: Design a look (every look as a picture, with where it is used, and the designer), Which screen uses what (with previews), and Colour teams and themes.
 - **Screens:** what each screen shows now; Screens and Network settings side by side; setting-up notes.
-- **Settings** (`/settings`, also a panel over the live screen): a sidebar like System Settings, with Bible, Listening (microphone, channel, language, speech engine, AI), Screens, Network, Songs and CCLI, Logo, Library and backup, ProPresenter, and Desktop app. Everything saves as it is changed.
+- **Settings** (`/settings`, also a panel over the live screen): a sidebar like System Settings, with Features, Bible, Listening (microphone, channel, language, speech engine, AI), Screens, Network, Songs and CCLI, Logo, Library and backup, ProPresenter, and Desktop app. Everything saves as it is changed.
 
 Base components: buttons default to white on graphite, with neutral hovers; delete is soft red. Cards are soft rounded surfaces. shadcn's `--accent` is a neutral hover colour, and only `--primary` follows the colour team.
 
@@ -354,6 +375,7 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `voice-verses-live`, `voice-verses-countdown` | What is on screen, and the running countdown (for late-opened windows) |
 | `voice-verses-send-mode` | `auto` or `preview` |
 | `voice-verses-click-mode` | `live` or `next`: what picking a slide does (1.9.0) |
+| `voice-verses-features` | Each smart feature on or off, e.g. `{"quotes": true, "stories": false}` (1.13.0); missing ones follow Recommended |
 | `voice-verses-auto-advance` | `on` or `off`: the service moves on by time (1.9.0) |
 | `voice-verses-templates`, `voice-verses-template-assignments` | Looks and which look each output and kind uses |
 | `voice-verses-color-teams`, `voice-verses-color-team`, `voice-verses-color-team-by-month` | Colour teams, the chosen team, follow the month |

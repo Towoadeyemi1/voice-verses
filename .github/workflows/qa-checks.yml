@@ -34,6 +34,7 @@ jobs:
           test ! -f dist/sw.js || { echo "❌ FAIL: desktop build must not register a service worker"; exit 1; }
           for f in electron/*.js electron/*.cjs electron/speech/*; do node --check "$f"; done
           node tools/checks/propresenter-themes.mjs
+          node tools/checks/propresenter-find.mjs
           node tools/checks/propresenter-messages.mjs
           echo "✅ Web and desktop builds OK"
 

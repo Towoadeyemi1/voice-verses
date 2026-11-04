@@ -128,11 +128,17 @@ export interface DesktopBridge {
     createMessage(connection: ProPresenterConnection, theme: ProPresenterThemeSlide['id']): Promise<ProPresenterStatus>;
     show(connection: ProPresenterConnection, verse: { reference: string; text: string; stage: boolean }): Promise<void>;
     clear(connection: ProPresenterConnection, options: { stage: boolean }): Promise<void>;
+    /** ProPresenter running on this computer, found without typing a port (older desktop versions don't have it) */
+    find?(): Promise<{ host: string; port: number; version: string; name: string } | null>;
+    /** Makes sure the "Voice Verses" message exists (best-suited theme), and says what is ready */
+    setUp?(connection: ProPresenterConnection): Promise<ProPresenterStatus & { theme: string | null }>;
   };
   screens: {
     displays(): Promise<DisplayInfo[]>;
     get(): Promise<ScreenConfig>;
     set(config: ScreenConfig): Promise<ScreenConfig>;
+    /** A big number and name on every display for a few seconds (older desktop versions don't have it) */
+    identify?(): Promise<number>;
   };
   /** Outputs sent straight out of a DeckLink card's SDI ports (older desktop versions don't have it) */
   decklink?: {

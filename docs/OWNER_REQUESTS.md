@@ -249,6 +249,17 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 (Three photos, 2 Nov 2026.)
 - ✅ 1.12.1 The message's tokens are read however ProPresenter reports them: from the list of messages, or from the message itself (ProPresenter 21 may leave them out of the list), with or without braces. If ProPresenter doesn't say at all, "Send a test verse" is offered anyway, with a note to check that it shows. When a token really is missing, the message lists the tokens ProPresenter reports and says how to add one (Add Token, then the tick).
 
+## "I want most features configurable and optional; they shouldn't all be on by default. The connection to ProPresenter and other screens seems so cumbersome: no way to make it simpler? Are you building API first, decoupled modules, microservices if needed?"
+
+(4 Nov 2026.)
+- ✅ 1.13.0 **Settings → Features** (first in Settings): every smart feature has its own switch, grouped Scripture, Worship, The service and Safety, each saying what it does. Presets: **Essentials** (follow the reading, a chapter waits for its verse, part countdowns, booth check, warnings; nothing else happens by itself), **Recommended** (a new install), **Everything**. Bold new features (moment autopilot, sermon points) arrive switched off. A verse said outright always works.
+- ✅ 1.13.0 **Booth check**: a light on the live top bar, "Ready" or "2 to check". Click it for microphone, speech, each screen and DeckLink port, ProPresenter, Bible and today's service, each with a Fix button that opens the right setting.
+- ✅ 1.13.0 **Warnings during the service**: if the microphone goes silent for 20 seconds while listening, or a screen, DeckLink port or ProPresenter stops, a warning appears on the live screen with its Fix button.
+- ✅ 1.13.0 **ProPresenter in one click**: "Find and set up ProPresenter" finds it on this computer (no port to type), connects, and creates the "Voice Verses" message with a suitable theme. Typing the address is still there for another computer.
+- ✅ 1.13.0 **Screens as tiles**: Settings → Screens shows each display and DeckLink port as a tile, with one click for what it shows, and **Identify screens** puts a big number on every display.
+- 💬 Architecture: no microservices. The app must work offline, install as one download and run on older Macs; separate services would add things to install, start and break during a service. Instead: separate modules with clear edges (detection gets plain flags and never reads settings; outputs, DeckLink and ProPresenter are each their own module), and next a **local control API** (1.15.0) so a Stream Deck, phone or another app can drive it. See D26 and D27.
+- ⏳ 1.14.0 Moment autopilot and sermon points on cue (off by default). 1.15.0 the local control API.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

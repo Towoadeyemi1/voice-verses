@@ -80,6 +80,41 @@ export function ProPresenterSettings() {
       toast.success('Created the "Voice Verses" message in ProPresenter');
     });
 
+  /**
+   * One button: find ProPresenter on this computer, connect, make the
+   * "Voice Verses" message if it isn't there, and send a test verse.
+   */
+  const [steps, setSteps] = useState<string[]>([]);
+  const findAndSetUp = () =>
+    run(async () => {
+      setError(null);
+      setSteps(['Looking for ProPresenter on this computer…']);
+      const found = await desktop!.proPresenter.find?.();
+      if (!found) {
+        setSteps([]);
+        throw new Error(
+          "ProPresenter isn't answering on this computer. Open ProPresenter, turn on Settings → Network → Enable Network, then try again. If it runs on another computer, enter its address below.",
+        );
+      }
+      const connection = { host: found.host, port: found.port };
+      const next = { ...settings, ...connection, enabled: true };
+      setSettings(next);
+      saveProPresenterSettings(next);
+      const done = [`Found ${found.version || 'ProPresenter'}${found.name ? ` on “${found.name}”` : ''} (port ${found.port}).`];
+      setSteps(done);
+      const ready = await desktop!.proPresenter.setUp!(connection);
+      if (ready.theme) done.push(`Created the “Voice Verses” message with the theme “${ready.theme}”.`);
+      else if (ready.hasMessage) done.push('The “Voice Verses” message is there.');
+      setSteps([...done]);
+      setStatus(ready);
+      if (ready.messageReady) {
+        await desktop!.proPresenter.show(connection, { ...TEST_VERSE, stage: next.stage });
+        done.push('Sent John 3:16 as a test: look at ProPresenter’s output. (Its Look needs the Messages layer on.)');
+        setSteps([...done]);
+        toast.success('ProPresenter is set up');
+      }
+    });
+
   const sendTest = () =>
     run(async () => {
       await desktop!.proPresenter.show(connectionOf(settings), { ...TEST_VERSE, stage: settings.stage });
@@ -125,6 +160,32 @@ export function ProPresenterSettings() {
             <Switch id="pp-enabled" checked={settings.enabled} onCheckedChange={(enabled) => update({ enabled })} />
           </div>
 
+          {desktop.proPresenter.find && (
+            <div className="rounded-xl bg-muted/50 p-4 space-y-3" data-propresenter-setup>
+              <div>
+                <p className="m-0 text-[15px] font-semibold">ProPresenter on this computer?</p>
+                <p className="m-0 text-[13px] text-muted-foreground">
+                  One click finds it, connects, makes the “Voice Verses” message if it isn’t there, and sends a test verse.
+                </p>
+              </div>
+              <Button onClick={findAndSetUp} disabled={busy} className="w-full h-11">
+                {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Find and set up ProPresenter
+              </Button>
+              {steps.length > 0 && (
+                <ul className="m-0 pl-0 list-none space-y-1 text-[13px]" role="status">
+                  {steps.map((step) => (
+                    <li key={step} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-px" />
+                      {step}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <p className="m-0 text-[13px] font-semibold text-muted-foreground">Or enter it yourself (ProPresenter on another computer)</p>
           <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1">
             <li>
               In ProPresenter, open <strong>Settings → Network</strong> and turn on <strong>Enable Network</strong>.
