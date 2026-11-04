@@ -46,11 +46,14 @@ contextBridge.exposeInMainWorld('voiceVerses', {
     createMessage: (connection, theme) => invoke('propresenter:create-message', connection, theme),
     show: (connection, verse) => invoke('propresenter:show', connection, verse),
     clear: (connection, options) => invoke('propresenter:clear', connection, options),
+    find: () => invoke('propresenter:find'),
+    setUp: (connection) => invoke('propresenter:set-up', connection),
   },
   screens: {
     displays: () => invoke('screens:displays'),
     get: () => invoke('screens:get'),
     set: (config) => invoke('screens:set', config),
+    identify: () => invoke('screens:identify'),
   },
   decklink: {
     devices: () => invoke('decklink:devices'),

@@ -24,6 +24,7 @@ import { hasSecret } from '@/lib/secrets';
 import { desktop } from '@/lib/desktop';
 import { loadSendMode, saveSendMode, SendMode } from '@/lib/sendMode';
 import { ClickMode, loadAutoAdvance, loadClickMode, saveAutoAdvance, saveClickMode } from '@/lib/clickMode';
+import { detectionFeatures, FEATURES_CHANGED, loadFeatures } from '@/lib/features';
 import { Countdown, countdownFromConfig, startCountdown, stopCountdown } from '@/lib/countdown';
 import type { BibleVersionType } from '@/types/bibleVersion';
 import { showLogo } from '@/lib/showLogo';
@@ -45,7 +46,8 @@ import {
 import type { Passage } from '@/speech/VerseDetectionController';
 import { readingTokens } from '@/speech/readingTracker';
 import type { Live } from './OutputContent';
-import { SettingsPanel } from './SettingsPanel';
+import { SettingsPanel, type Pane } from './SettingsPanel';
+import { BoothCheckLight, Guardian, type BoothFix } from './live/BoothCheck';
 import { ApiKeyDialog } from './ApiKeyDialog';
 import { CountdownControl } from './CountdownControl';
 import { AlertControl } from './AlertControl';
@@ -301,7 +303,7 @@ export const LiveWorkspace = () => {
       stopCountdown(partCountdown.current.id);
       partCountdown.current = null;
     }
-    if (part?.countdown?.enabled && part.autoStartCountdown !== false && partCountdown.current?.itemId !== part.id) {
+    if (part?.countdown?.enabled && part.autoStartCountdown !== false && loadFeatures().partCountdowns && partCountdown.current?.itemId !== part.id) {
       const started = startCountdown(countdownFromConfig(part.countdown, part.name));
       partCountdown.current = { itemId: part.id, id: started.id };
     }
@@ -554,6 +556,21 @@ export const LiveWorkspace = () => {
     setPrediction({ key: verseKey(verse), reason: best.reason, heard: hint.heard });
   };
 
+  // Settings → Features: the listening engine follows the switches at once
+  const [features, setFeatures] = useState(loadFeatures);
+  useEffect(() => {
+    const apply = () => {
+      controller.current?.setFeatures(detectionFeatures());
+      setFeatures(loadFeatures());
+    };
+    window.addEventListener(FEATURES_CHANGED, apply);
+    window.addEventListener('storage', apply);
+    return () => {
+      window.removeEventListener(FEATURES_CHANGED, apply);
+      window.removeEventListener('storage', apply);
+    };
+  }, []);
+
   // Singing is over (song mode off): keep what was sung
   useEffect(() => {
     if (!songMode && captureRef.current) void stopCapture();
@@ -670,6 +687,7 @@ export const LiveWorkspace = () => {
       ),
     });
     controller.current = detector;
+    detector.setFeatures(detectionFeatures());
     detector.setPlanned(plannedVerses());
     detector.setSongMode(songMode);
     detector.setSongLibrary(songs.map((m) => ({ id: m.id, title: m.name, lyrics: m.lyrics ?? '' })));
@@ -694,6 +712,7 @@ export const LiveWorkspace = () => {
         onVolumeUpdate: (v) => {
           setVolume(v);
           loudest.current = Math.max(loudest.current, v);
+          if (v >= 2) lastSound.current = Date.now();
         },
         onError: (error) => toast.error('Speech recognition error', { description: error.message }),
       });
@@ -719,17 +738,28 @@ export const LiveWorkspace = () => {
     }
   };
 
-  const [settingsPane, setSettingsPane] = useState<'bible' | 'listening'>('bible');
+  const [settingsPane, setSettingsPane] = useState<Pane>('bible');
   const openListeningSettings = () => {
     setSettingsPane('listening');
     setShowSettings(true);
   };
+  /** A Fix button in the booth check or a warning */
+  const fixBooth = (fix: BoothFix) => {
+    if (fix.action === 'microphone') void desktop?.microphone?.openSettings();
+    else if (fix.action === 'plan') navigate('/service-planner');
+    else if (fix.pane) {
+      setSettingsPane(fix.pane);
+      setShowSettings(true);
+    }
+  };
 
   // No sound at all for 10 seconds after listening starts: say so, rather than seeming to work
   const loudest = useRef(0);
+  const lastSound = useRef(0);
   useEffect(() => {
     if (!listening) return;
     loudest.current = 0;
+    lastSound.current = Date.now();
     const timer = window.setTimeout(() => {
       if (loudest.current < 2 && !muted) {
         toast.warning('No sound is reaching Voice Verses', {
@@ -1152,6 +1182,7 @@ export const LiveWorkspace = () => {
         />
 
         <div className="flex items-center justify-end gap-1.5">
+          {features.boothCheck && <BoothCheckLight service={service} serviceIsToday={!!service && todays.some((s) => s.id === service.id)} onFix={fixBooth} />}
           <button type="button" onClick={() => setShowPalette(true)} className="w-10 h-10 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" title="Find a verse, song or action (⌘K)" aria-label="Search">
             <Search className="w-5 h-5" />
           </button>
@@ -1166,6 +1197,7 @@ export const LiveWorkspace = () => {
           </div>
         </div>
       </header>
+      {features.guardian && <Guardian listening={listening} muted={muted} lastSound={() => lastSound.current} onFix={fixBooth} />}
 
       <nav className="relative px-6 pt-1 pb-4 flex items-center gap-3" aria-label="Order of service">
         {todays.length > 1 && <ServicePicker services={todays} currentId={service?.id} onPick={switchService} />}

@@ -135,6 +135,8 @@ handle('propresenter:themes', (connection) => proPresenter.themeSlides(connectio
 handle('propresenter:create-message', (connection, theme) => proPresenter.createMessage(connection, theme));
 handle('propresenter:show', (connection, verse) => proPresenter.showVerse(connection, verse));
 handle('propresenter:clear', (connection, options) => proPresenter.clear(connection, options));
+handle('propresenter:find', () => proPresenter.findLocal());
+handle('propresenter:set-up', (connection) => proPresenter.setUp(connection));
 
 handle('network:configure', (options) => network.configure(options ?? {}));
 handle('network:status', () => network.status());
@@ -145,6 +147,7 @@ listen('network:publish', (state) => network.publish(state));
 handle('screens:displays', () => screens.listDisplays());
 handle('screens:get', () => screens.getConfig());
 handle('screens:set', (config) => screens.setConfig(config));
+handle('screens:identify', () => screens.identifyDisplays());
 handle('decklink:devices', () => decklink.listDevices());
 handle('decklink:get', () => decklink.getConfig());
 handle('decklink:set', (config) => decklink.setConfig(config));

@@ -9,6 +9,7 @@ import { DECKLINK_MODES, DEFAULT_DECKLINK_MODE, decklinkModeLabel } from '@/lib/
 import { Button } from '@/components/ui/button';
 import type { Output } from '@/lib/templates';
 import { ScreenShapePicker } from './ScreenShapePicker';
+import { chipClass } from './ScreenPicker';
 
 const OUTPUTS: { output: ScreenOutput; label: string; hint: string }[] = [
   { output: 'projection', label: 'Projector', hint: 'Scripture, songs, pictures, videos, countdown and logo for the room' },
@@ -96,6 +97,18 @@ export function ScreenSettings() {
   };
 
   const ports = decklink?.available ? decklink.devices.filter((d) => d.canOutput) : [];
+
+  // Per screen: what it shows now, and one click to change it
+  const SHORT: Record<ScreenOutput, string> = { projection: 'Projector', confidence: 'Stage monitor', lowerThird: 'Lower third' };
+  const showsOn = (value: string) =>
+    OUTPUTS.filter(({ output }) => (value.startsWith('dl:') ? dlConfig?.[output]?.device === value.slice(3) : !dlConfig?.[output] && config?.[output] === Number(value)));
+  const clearScreen = async (value: string) => {
+    for (const { output } of showsOn(value)) await choose(output, OFF);
+  };
+  const tiles = [
+    ...displays.map((d, i) => ({ value: String(d.id), number: String(i + 1), name: d.label, detail: `${d.width}×${d.height}`, main: d.primary, sdi: false })),
+    ...ports.map((p) => ({ value: `dl:${p.name}`, number: 'SDI', name: p.name, detail: 'Blackmagic DeckLink, SDI out', main: false, sdi: true })),
+  ];
   const usedBy = (name: string, except: ScreenOutput) => OUTPUTS.find(({ output }) => output !== except && dlConfig?.[output]?.device === name)?.label;
 
   const onMain = config ? OUTPUTS.filter(({ output }) => displays.find((d) => d.id === config[output])?.primary) : [];
@@ -114,6 +127,56 @@ export function ScreenSettings() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        {tiles.length > 0 && (
+          <div className="space-y-2" data-screen-tiles>
+            <div className="flex items-center gap-2">
+              <p className="m-0 text-sm font-semibold flex-1">Your screens</p>
+              {desktop.screens.identify && (
+                <Button type="button" variant="outline" size="sm" className="h-9" onClick={() => desktop!.screens.identify?.()} title="Shows a big number on every display for a few seconds">
+                  Identify screens
+                </Button>
+              )}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {tiles.map((t) => {
+                const shows = showsOn(t.value);
+                return (
+                  <div key={t.value} className="rounded-xl bg-muted/50 p-3 space-y-2" data-screen-tile={t.name}>
+                    <div className="flex items-center gap-3">
+                      <span className={`min-w-10 h-10 px-2 rounded-lg grid place-items-center font-bold ${t.sdi ? 'text-[12px] bg-primary/20' : 'text-lg bg-card'}`}>{t.number}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold truncate">{t.name}</span>
+                        <span className="block text-[13px] text-muted-foreground truncate">
+                          {t.detail}
+                          {t.main ? ' · where you work' : ''}
+                        </span>
+                      </span>
+                    </div>
+                    <p className="m-0 text-[13px]">
+                      Shows: <b>{shows.length ? shows.map((o) => SHORT[o.output]).join(' and ') : 'nothing'}</b>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5" role="group" aria-label={`What ${t.name} shows`}>
+                      {OUTPUTS.map(({ output }) => {
+                        const on = shows.some((o) => o.output === output);
+                        return (
+                          <button key={output} type="button" aria-pressed={on} className={chipClass(on)} onClick={() => (on ? choose(output, OFF) : choose(output, t.value))} title={on ? `Stop showing the ${SHORT[output].toLowerCase()} here` : `Show the ${SHORT[output].toLowerCase()} on ${t.name}`}>
+                            {SHORT[output]}
+                          </button>
+                        );
+                      })}
+                      {shows.length > 0 && (
+                        <button type="button" className={chipClass(false)} onClick={() => clearScreen(t.value)}>
+                          Nothing
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {displays.length <= 1 && (
           <Alert data-one-display>
             <MonitorSmartphone className="h-4 w-4" />

@@ -157,3 +157,37 @@ export function resumeScreens() {
   suspended = false;
   apply();
 }
+
+/**
+ * Shows a big number and name on every display for a few seconds (like
+ * macOS's "Identify Displays"), so the operator knows which is which.
+ */
+export function identifyDisplays(seconds = 4) {
+  const displays = screen.getAllDisplays();
+  const primary = screen.getPrimaryDisplay().id;
+  displays.forEach((d, i) => {
+    const label = d.label || `Display ${i + 1}`;
+    const html = `<!doctype html><html><body style="margin:0;height:100vh;display:grid;place-items:center;background:rgba(0,0,0,.72);color:#fff;font-family:-apple-system,system-ui,sans-serif;text-align:center">
+      <div><div style="font-size:${Math.round(d.bounds.height / 3)}px;font-weight:800;line-height:1">${i + 1}</div>
+      <div style="font-size:${Math.max(24, Math.round(d.bounds.height / 22))}px;font-weight:600;opacity:.9">${label.replace(/[<>&]/g, '')}${d.id === primary ? ' · where you work' : ''}</div>
+      <div style="font-size:${Math.max(18, Math.round(d.bounds.height / 34))}px;opacity:.7;margin-top:.4em">${d.size.width}×${d.size.height}</div></div></body></html>`;
+    const win = new BrowserWindow({
+      ...d.bounds,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: true,
+      focusable: false,
+      skipTaskbar: true,
+      show: false,
+      hasShadow: false,
+      webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false },
+    });
+    win.setIgnoreMouseEvents(true);
+    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    win.once('ready-to-show', () => win.showInactive());
+    setTimeout(() => {
+      if (!win.isDestroyed()) win.destroy();
+    }, seconds * 1000);
+  });
+  return displays.length;
+}

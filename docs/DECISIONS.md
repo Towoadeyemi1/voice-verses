@@ -151,6 +151,16 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Decision:** A Node-API addon (`native/decklink`, using the DeckLink SDK headers, which may be redistributed) opens a port and shows frames with `DisplayVideoFrameSync`. Each output is drawn in an offscreen Electron window by the same renderer as every other screen, and its frames are converted to YUV in the addon. Mac first; built in CI for both architectures; a pretend card (`VOICE_VERSES_DECKLINK_MOCK`) tests the whole path without hardware.
 - **Why:** Rule 5 (one renderer for every output) still holds, nothing new to install beyond the driver that comes with the card, and Node-API means one build works across Electron versions. Synchronous display is simpler than scheduled playback and right for slides, where the picture changes only now and then.
 
+### D26. Every smart feature is optional, and bold ones start off
+- **Context:** The owner: "most features should be configurable and optional… not locked down by default to all of these." Churches differ: some want only verses said outright, some want everything.
+- **Decision:** Settings → Features has a switch for each smart feature and three presets (Essentials, Recommended, Everything). A new install is Recommended; features that act on their own in new ways (moment autopilot, sermon points) start off. A reference said outright always works. The detection engine receives plain flags and never reads settings itself.
+- **Why:** A volunteer should never be surprised by the app. Presets keep it to one click for most churches; single switches serve the rest. Flags passed in keep detection testable on its own (the detector checks run each feature off).
+
+### D27. Decoupled modules and a local API, not microservices
+- **Context:** The owner asked whether the app is built API first, from decoupled modules, with microservices if needed.
+- **Decision:** One app, separate modules with narrow edges: detection (`src/speech/`, plain inputs and callbacks), outputs (one renderer, rule 5), screens, DeckLink and ProPresenter each in their own main-process module behind IPC, features as flags. Remote control comes as a **local HTTP API** on the existing network server (1.15.0), not as separate services.
+- **Why:** Rule 2 (offline) and the one-download install: microservices would mean more processes to install, start, update and fail on a Sunday morning, on older Macs. A local API gives the benefits that matter here (Stream Deck, phones, other apps) without the cost.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

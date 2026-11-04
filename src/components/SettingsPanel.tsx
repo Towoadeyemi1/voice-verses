@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { BookOpen, Download, HardDrive, Image as ImageIcon, Mic, MonitorUp, Music2, Network, Radio, X } from 'lucide-react';
+import { BookOpen, Download, HardDrive, Image as ImageIcon, Mic, MonitorUp, Music2, Network, Radio, SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,12 @@ import { MicrophoneSettings } from './MicrophoneSettings';
 import { NetworkOutputSettings } from './NetworkOutputSettings';
 import { ScreenSettings } from './ScreenSettings';
 import { MotionSettings } from './MotionSettings';
+import { FeatureSettings } from './FeatureSettings';
 
-type Pane = 'bible' | 'listening' | 'screens' | 'network' | 'songs' | 'logo' | 'library' | 'propresenter' | 'app';
+export type Pane = 'features' | 'bible' | 'listening' | 'screens' | 'network' | 'songs' | 'logo' | 'library' | 'propresenter' | 'app';
 
 const PANES: { id: Pane; label: string; hint: string; icon: typeof Mic }[] = [
+  { id: 'features', label: 'Features', hint: 'Choose what Voice Verses does by itself', icon: SlidersHorizontal },
   { id: 'bible', label: 'Bible', hint: 'Translation, and more translations online', icon: BookOpen },
   { id: 'listening', label: 'Listening', hint: 'Microphone, channel, language, speech engine, AI', icon: Mic },
   { id: 'screens', label: 'Screens', hint: 'Which display each output goes to, and its shape', icon: MonitorUp },
@@ -113,6 +115,8 @@ export const SettingsPanel = ({ onClose, initial = 'bible', framed = true }: { o
         </div>
 
         <div className="px-7 pb-8 space-y-8">
+          {pane === 'features' && <FeatureSettings />}
+
           {pane === 'bible' && (
             <>
               <BibleVersionSettings currentVersion={bibleVersion} onVersionChange={setBibleVersion} />

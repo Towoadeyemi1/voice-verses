@@ -554,6 +554,35 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('a writer named mid-sentence waits for the book', early.join(', '), 'Romans');
   }
 
+  // Features switched off (Settings → Features) really are off; a reference said outright always works
+  {
+    const run = async (features: Record<string, boolean>, lines: string[]) => {
+      const shown: string[] = [];
+      const offered: string[] = [];
+      const hints: string[] = [];
+      const d = new VerseDetectionController({
+        onVerseDetected: (v) => shown.push(`${v.book} ${v.chapter}:${v.verse}`),
+        onVerseSuggested: (v) => offered.push(`${v.book} ${v.chapter}:${v.verse}`),
+        onScriptureHint: (h) => hints.push(h.books[0]),
+      });
+      d.setFeatures(features);
+      for (const line of lines) {
+        await d.onTranscript(line, true);
+        await pause();
+      }
+      return { shown: shown.join(', ') || null, offered: offered.join(', ') || null, hints: hints.join(', ') || null };
+    };
+    {
+      const r = await run({ quotes: false }, ['As David said, the Lord is my shepherd, I shall not want.']);
+      check('quotes off: a quote neither shows nor is offered', `${r.shown} / ${r.offered}`, 'null / null');
+    }
+    check('stories off: a story is not offered', (await run({ stories: false }, ['Zacchaeus the tax collector was too short to see over the crowd so he climbed up a sycamore tree'])).offered, null);
+    check('chapter wait off: verse 1 goes up at once', (await run({ chapterWait: false }, ['Turn to Isaiah 53'])).shown, 'Isaiah 53:1');
+    check('read-along off (quotes off too): the next verse does not follow', (await run({ readAlong: false, quotes: false }, ['John 3:16', 'For God sent not his Son into the world to condemn the world, but that the world through him might be saved.'])).shown, 'John 3:16');
+    check('predictive off: no hint is passed on', (await run({ predictiveNext: false }, ['and Paul says the same thing in Romans'])).hints, null);
+    check('everything off: a reference said outright still shows', (await run({ readAlong: false, chapterWait: false, quotes: false, stories: false, helpFind: false, predictiveNext: false }, ['Please turn to Romans 8:28 with me'])).shown, 'Romans 8:28');
+  }
+
   // Inputs that belong to a video card are recognised (they are silent without sound in their SDI cable)
   for (const [label, want] of [
     ['Blackmagic DeckLink Duo (1) (Virtual)', true],

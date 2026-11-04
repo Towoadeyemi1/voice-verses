@@ -179,3 +179,92 @@ export async function clear(connection, { stage }) {
     await request(connection, 'DELETE', '/v1/stage/message');
   }
 }
+
+// ---- Finding ProPresenter and setting it up in one step ------------------------------
+
+/** "ProPresen 812 user 31u IPv4 … TCP *:52739 (LISTEN)" lines from lsof → the ports ProPresenter listens on. */
+export function portsFromLsof(output) {
+  const ports = new Set();
+  for (const line of String(output).split('\n')) {
+    if (!/^ProPresen/i.test(line) || !/\(LISTEN\)/.test(line)) continue;
+    const m = line.match(/:(\d{2,5})\s+\(LISTEN\)/);
+    if (m) ports.add(Number(m[1]));
+  }
+  return [...ports];
+}
+
+/** "TCP 0.0.0.0:52739 0.0.0.0:0 LISTENING 4321" lines from netstat, for the given process ids → ports. */
+export function portsFromNetstat(output, pids) {
+  const ports = new Set();
+  for (const line of String(output).split('\n')) {
+    const m = line.trim().match(/^TCP\s+\S+:(\d{2,5})\s+\S+\s+LISTENING\s+(\d+)/i);
+    if (m && pids.has(m[2])) ports.add(Number(m[1]));
+  }
+  return [...ports];
+}
+
+function run(file, args) {
+  return import('node:child_process').then(
+    ({ execFile }) =>
+      new Promise((resolve) => execFile(file, args, { timeout: 4000, windowsHide: true }, (error, stdout) => resolve(error && !stdout ? '' : String(stdout)))),
+  );
+}
+
+/** The ports ProPresenter listens on, on this computer (none if it isn't running). */
+async function localPorts() {
+  if (process.platform === 'darwin') return portsFromLsof(await run('/usr/sbin/lsof', ['-nP', '-iTCP', '-sTCP:LISTEN']));
+  if (process.platform === 'win32') {
+    const tasks = await run('tasklist', ['/FO', 'CSV', '/NH']);
+    const pids = new Set([...tasks.matchAll(/^"ProPresenter[^"]*","(\d+)"/gim)].map((m) => m[1]));
+    if (!pids.size) return [];
+    return portsFromNetstat(await run('netstat', ['-ano', '-p', 'tcp']), pids);
+  }
+  return [];
+}
+
+/** Of these ports, the first where ProPresenter's network API answers. */
+export async function probe(host, ports) {
+  for (const port of ports) {
+    try {
+      const response = await fetch(`http://${host}:${port}/version`, { signal: AbortSignal.timeout(800) });
+      if (!response.ok) continue;
+      const version = await response.json().catch(() => null);
+      if (version && (version.host_description || version.name)) return { host, port, version: version.host_description ?? '', name: version.name ?? '' };
+    } catch {
+      // Not this one
+    }
+  }
+  return null;
+}
+
+/**
+ * Finds ProPresenter running on this computer, without typing a port: the
+ * ports it listens on, then the one its network API answers on. Null when
+ * it isn't running, or its network is off (Settings → Network → Enable Network).
+ */
+export async function findLocal() {
+  const ports = await localPorts().catch(() => []);
+  return ports.length ? probe('127.0.0.1', ports) : null;
+}
+
+/** The theme slide that suits verses best: one named for scripture, else a lower third, else the first. */
+export function pickTheme(slides) {
+  const score = (s) => (/scripture|bible|verse|word/i.test(s.label) ? 2 : /lower|third|message/i.test(s.label) ? 1 : 0);
+  return [...slides].sort((a, b) => score(b) - score(a))[0] ?? null;
+}
+
+/**
+ * One step: make sure the "Voice Verses" message exists (created with the
+ * best-suited theme if not) and say what is ready. Returns the status and the
+ * theme used, if one was chosen.
+ */
+export async function setUp(connection) {
+  let current = await status(connection);
+  let theme = null;
+  if (!current.hasMessage) {
+    theme = pickTheme(await themeSlides(connection));
+    if (!theme) throw new Error('ProPresenter has no themes to show the verse in. Add a theme in ProPresenter, then try again.');
+    current = await createMessage(connection, theme.id);
+  }
+  return { ...current, theme: theme?.label ?? null };
+}

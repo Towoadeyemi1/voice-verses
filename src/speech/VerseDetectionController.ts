@@ -73,6 +73,43 @@ export interface VerseDetectionOptions {
   requireStablePartials?: boolean; // Require reference in 2 consecutive partials (default: true)
 }
 
+/**
+ * The listening features that can be switched off (Settings → Features).
+ * References said outright always work; these are the extras.
+ */
+export interface DetectionFeatures {
+  /** Follow a passage being read, verse by verse */
+  readAlong: boolean;
+  /** A chapter alone waits for its verse; off: verse 1 goes up at once */
+  chapterWait: boolean;
+  /** Verses quoted without a reference */
+  quotes: boolean;
+  /** Stories told in the preacher's own words */
+  stories: boolean;
+  /** "Help me find it" */
+  helpFind: boolean;
+  /** Hints for Predictive Next ("Paul says…") */
+  predictiveNext: boolean;
+  /** Library songs recognised from the singing */
+  songRecognition: boolean;
+  /** "One more time", "go to the bridge" */
+  worshipCues: boolean;
+  /** Singing that is in no song, offered to capture */
+  newSongs: boolean;
+}
+
+export const ALL_DETECTION_FEATURES: DetectionFeatures = {
+  readAlong: true,
+  chapterWait: true,
+  quotes: true,
+  stories: true,
+  helpFind: true,
+  predictiveNext: true,
+  songRecognition: true,
+  worshipCues: true,
+  newSongs: true,
+};
+
 export interface ReadingProgress {
   verse: BibleVerse;
   /** Index of the last word read, in readingTokens(verse.text); -1 before the first */
@@ -179,6 +216,7 @@ export class VerseDetectionController {
   private hinted: { books: Set<string>; at: number } | null = null;
   /** Scripture planned in today's service, by verse and by chapter */
   private planned = { verses: new Set<string>(), chapters: new Set<string>() };
+  private features: DetectionFeatures = { ...ALL_DETECTION_FEATURES };
   /** A chapter named without a verse, waiting to learn which verse */
   private calledChapter: { book: string; chapter: number } | null = null;
   
@@ -231,6 +269,11 @@ export class VerseDetectionController {
       this.lyricsMovedAt = Date.now();
     }
     this.liveLyrics = slides?.length ? { slides, index, labels } : null;
+  }
+
+  /** Which listening features are on (Settings → Features). */
+  setFeatures(features: Partial<DetectionFeatures>): void {
+    this.features = { ...this.features, ...features };
   }
 
   /** Capture each sung line (a new song the operator chose to show), or stop. */
@@ -328,9 +371,9 @@ export class VerseDetectionController {
       const recent = this.hear(cleanText, isFinal);
       if (await this.verseOfPassage(cleanText, isFinal)) return;
       if (this.calledChapter && (await this.findInCalledChapter(recent, cleanText, isFinal))) return;
-      if (await this.trackReading()) return;
-      if (await this.followReading(recent)) return;
-      if (this.askedToFind(cleanText, isFinal)) {
+      if (this.features.readAlong && (await this.trackReading())) return;
+      if (this.features.readAlong && (await this.followReading(recent))) return;
+      if (this.features.helpFind && this.askedToFind(cleanText, isFinal)) {
         await this.findForPreacher(cleanText);
         return;
       }
@@ -374,7 +417,7 @@ export class VerseDetectionController {
     }
 
     // A chapter alone ("somewhere in Isaiah 53") is not a verse: wait to learn which one
-    if (reference.wholeChapter && !reference.fromVerse) {
+    if (reference.wholeChapter && !reference.fromVerse && this.features.chapterWait) {
       await this.callChapter(reference.book, reference.chapter);
       return;
     }
@@ -439,9 +482,9 @@ export class VerseDetectionController {
    */
   private handleSinging(text: string, isFinal: boolean): boolean {
     if (!this.lyrics.size && !this.liveLyrics && !this.songMode) return false;
-    if (this.liveLyrics && this.followCue(text, isFinal)) return true;
+    if (this.liveLyrics && this.features.worshipCues && this.followCue(text, isFinal)) return true;
     const sung = this.hearLyrics(text, isFinal);
-    if (isFinal && (this.songMode || this.capturing)) this.noticeNewSinging(text);
+    if (isFinal && (this.capturing || (this.songMode && this.features.newSongs))) this.noticeNewSinging(text);
     if (this.liveLyrics) {
       const next = this.lyrics.follow(this.liveLyrics.slides, this.liveLyrics.index, sung);
       if (next !== null && next !== this.liveLyrics.index) {
@@ -452,7 +495,7 @@ export class VerseDetectionController {
       }
       return true;
     }
-    const match = this.lyrics.identify(sung);
+    const match = this.features.songRecognition ? this.lyrics.identify(sung) : null;
     if (match) {
       const repeated = this.lastSongSuggestion?.title === match.song.title && Date.now() - this.lastSongSuggestion.at < 60_000;
       if (!repeated) {
@@ -496,7 +539,7 @@ export class VerseDetectionController {
     const hint = scriptureHint(text);
     if (!hint || (!isFinal && hint.books.length > 1)) return;
     this.hinted = { books: new Set(hint.books), at: Date.now() };
-    if (!this.options.onScriptureHint) return;
+    if (!this.options.onScriptureHint || !this.features.predictiveNext) return;
     const books = hint.books.join('|');
     if (this.lastHint?.books === books && Date.now() - this.lastHint.at < 15_000) return;
     this.lastHint = { books, at: Date.now() };
@@ -735,6 +778,7 @@ export class VerseDetectionController {
     const spoken = recent.slice(-18);
     // Still reading the verse on screen: not a new quote (and not a question for the AI)
     if (this.currentVerse && index.wordsFrom(this.currentVerse, spoken) >= 2) return 'reading';
+    if (!this.features.quotes) return 0;
     const candidates = index.findQuotes(spoken, this.currentVerse, 3, recent);
     if (!candidates.length) return 0;
     const [best] = candidates;
@@ -756,6 +800,8 @@ export class VerseDetectionController {
    * best is (0 for none).
    */
   private async findStory(recent: string[], heard: string, quote = 0, eager = false): Promise<number> {
+    // Asked for help: search stories even if they are not offered unasked
+    if (!this.features.stories && !eager) return 0;
     const index = scriptureIndex();
     if (!index) return 0;
     const candidates = index.findStory(recent.slice(eager ? -80 : -30), this.currentVerse, 2, { eager });
