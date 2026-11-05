@@ -86,6 +86,20 @@ export type DeckLinkStatus = Record<
   { state: 'sending'; device: string; mode: string; framesPerSecond: number } | { state: 'error'; message: string } | { state: 'off' }
 >;
 
+/** Whether NDI® can be sent from here; reason 'runtime' when the free NDI Runtime isn't installed */
+export interface NdiAvailability {
+  available: boolean;
+  reason?: 'runtime' | 'error';
+  message?: string | null;
+  version?: string;
+  /** Each output's source name, e.g. "Voice Verses Projector"; receivers show "MACHINE (name)" */
+  names: Record<ScreenOutput, string>;
+  machine: string;
+}
+/** Which outputs are sent as NDI sources */
+export type NdiConfig = Record<ScreenOutput, boolean>;
+export type NdiStatus = Record<ScreenOutput, { state: 'sending'; name: string; receivers: number; framesPerSecond: number; seeThrough: boolean } | { state: 'off' }>;
+
 export interface DesktopBridge {
   platform: string;
   getVersion(): Promise<string>;
@@ -149,6 +163,13 @@ export interface DesktopBridge {
     set(config: DeckLinkConfig): Promise<DeckLinkConfig>;
     status(): Promise<DeckLinkStatus>;
     test(output: ScreenOutput): Promise<boolean>;
+  };
+  /** Outputs sent as NDI® sources, through the NDI Runtime if the computer has it (older desktop versions don't have it) */
+  ndi?: {
+    availability(): Promise<NdiAvailability>;
+    get(): Promise<NdiConfig>;
+    set(config: NdiConfig): Promise<NdiConfig>;
+    status(): Promise<NdiStatus>;
   };
   network: {
     configure(options: { enabled: boolean; port?: number }): Promise<NetworkStatus>;

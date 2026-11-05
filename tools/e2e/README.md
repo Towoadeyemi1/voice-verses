@@ -21,6 +21,7 @@ xvfb-run -a node tools/e2e/live-slides.cjs # slides strip and grid, Goes live / 
 python tools/e2e/make-sermon-audio.py /path/to/en_US-lessac-medium.onnx /tmp/vv-e2e/chapter.wav chapter
 xvfb-run -a node tools/e2e/chapter.cjs     # a chapter alone waits for its verse, "verse 6", a story offered, the suggestion list
 xvfb-run -a node tools/e2e/decklink.cjs    # DeckLink SDI out with a pretend card, through the picture of the room: frames reach the port, formats, where each output goes, test colours
+xvfb-run -a node tools/e2e/ndi.cjs         # NDI® out: a receiver gets the projector (full HD) and the lower third (see-through); needs VOICE_VERSES_NDI_LIB=/path/to/libndi (from NDI's SDK, never committed), else checks the runtime message
 xvfb-run -a node tools/e2e/features-booth.cjs # Settings: Features presets and switches, the booth check light, page and Fix buttons, a screen chosen in the room, ProPresenter searched for, a warning when a screen is unplugged
 node tools/e2e/mock-ollama.cjs &                                           # fake Ollama for AI slide tests
 ```

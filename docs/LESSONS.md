@@ -113,6 +113,14 @@ Check this list before debugging. Add every new mistake that cost time.
 - **Owner on 1.13.0's Settings pages (Features, booth check, ProPresenter set-up, screen tiles):** "I am very disappointed with the aesthetics, design standards and usability, ease and intuitiveness approach. It seems these few pages or sections you added are devoid of the aesthetic standards we have discussed over and over again. Every part of the app must have that excellence." They were built straight into the old Settings panel: shadcn Cards inside a pane (boxes inside boxes), long paragraphs, plain forms, a stark white full-width button, no picture of the real thing. **Every new page or section, however small, gets a mock-up and the design checklist first**, and is screenshotted in both themes before it ships. Settings is redesigned in `design/settings-redesign.html`.
 - **The header didn't line up with the body:** use one container width or padding for the header and the content.
 
+## NDI (1.15.0)
+
+- **Strings handed to NDI must outlive the call.** koffi passes a JS string as a temporary C string for one call; NDI keeps the source name it is given (`NDIlib_recv_create_v3`, and possibly `NDIlib_send_create`), so the receiver crashed later. Pass names as Buffers ending in `\0`, typed `void *`, and keep them as long as the sender or receiver.
+- **A function returning a struct pointer** declared as `const T *` is decoded by koffi into one object; declare it `void *` and `koffi.decode(ptr, koffi.array(T, n))` for lists (`NDIlib_find_get_current_sources`).
+- **Copying an 8 MB frame out** with `koffi.array('uint8_t', n)` builds a JS array and seems to hang; add the `'Typed'` hint for a Uint8Array.
+- **NDI calls block,** so a test receiver in the same process as a sender starves it: receive in another process (`tools/e2e/ndi.cjs` runs `ndi-receiver.cjs` with `execFileSync`).
+- **Chromium's offscreen bitmaps are premultiplied; NDI's BGRA is not.** Unpremultiply partly see-through pixels before sending, or edges of the lower third darken.
+
 ## Hardware
 
 - **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).

@@ -6,7 +6,7 @@ import { List, Mark, Ring, Row, Section } from './kit';
 
 const GROUPS: { title: string; ids: (id: string) => boolean }[] = [
   { title: 'Sound', ids: (id) => id.startsWith('mic') || id === 'speech' },
-  { title: 'Screens', ids: (id) => id.startsWith('screen') || id.startsWith('sdi-') },
+  { title: 'Screens', ids: (id) => id.startsWith('screen') || id.startsWith('sdi-') || id.startsWith('ndi-') },
   { title: 'Connections and today', ids: (id) => ['propresenter', 'bible', 'service'].includes(id) },
 ];
 

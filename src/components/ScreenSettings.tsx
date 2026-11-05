@@ -3,7 +3,7 @@ import { Cable, Copy, Layers, MonitorUp, Plus, Radio, Share2, TvMinimal, Wifi } 
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { DeckLinkConfig, DeckLinkDevices, DeckLinkStatus, desktop, DisplayInfo, NetworkStatus, ScreenConfig, ScreenOutput } from '@/lib/desktop';
+import { DeckLinkConfig, DeckLinkDevices, DeckLinkStatus, desktop, DisplayInfo, NdiAvailability, NdiConfig, NdiStatus, NetworkStatus, ScreenConfig, ScreenOutput } from '@/lib/desktop';
 import { DECKLINK_MODES, DEFAULT_DECKLINK_MODE, decklinkModeLabel } from '@/lib/decklinkModes';
 import { configureNetwork, loadNetworkSettings } from '@/lib/networkPublisher';
 import { loadProPresenterSettings } from '@/lib/proPresenter';
@@ -28,6 +28,7 @@ type Device =
   | { kind: 'display'; key: string; display: DisplayInfo; number: number; missing?: false }
   | { kind: 'missing'; key: string; id: number }
   | { kind: 'sdi'; key: string; name: string }
+  | { kind: 'ndi'; key: 'ndi' }
   | { kind: 'net'; key: 'net' };
 
 /**
@@ -42,6 +43,10 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
   const [dlConfig, setDlConfig] = useState<DeckLinkConfig | null>(null);
   const [dlStatus, setDlStatus] = useState<DeckLinkStatus | null>(null);
   const [network, setNetwork] = useState(loadNetworkSettings);
+  /** NDI®: whether the NDI Runtime is here, which outputs are sent, and how they are doing */
+  const [ndiAvail, setNdiAvail] = useState<NdiAvailability | null>(null);
+  const [ndiConfig, setNdiConfig] = useState<NdiConfig | null>(null);
+  const [ndiStatus, setNdiStatus] = useState<NdiStatus | null>(null);
   const [netStatus, setNetStatus] = useState<NetworkStatus | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -53,10 +58,13 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
       dl?.devices().then(setDeckLink).catch(() => {});
       dl?.status().then(setDlStatus).catch(() => {});
       desktop!.network.status().then(setNetStatus).catch(() => {});
+      desktop!.ndi?.status().then(setNdiStatus).catch(() => {});
     };
     refresh();
     desktop.screens.get().then(setConfig).catch(() => {});
     dl?.get().then(setDlConfig).catch(() => {});
+    desktop.ndi?.availability().then(setNdiAvail).catch(() => {});
+    desktop.ndi?.get().then(setNdiConfig).catch(() => {});
     // Displays come and go (a converter switched on later, a cable moved)
     const timer = setInterval(refresh, 3000);
     return () => clearInterval(timer);
@@ -84,6 +92,7 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
     ...[...displays].sort((a, b) => Number(b.primary) - Number(a.primary)).map((d, i) => ({ kind: 'display' as const, key: `d:${d.id}`, display: d, number: i + 1 })),
     ...[...new Set(OUTPUTS.map(({ output }) => config?.[output]).filter((id): id is number => id != null && !displays.some((d) => d.id === id)))].map((id) => ({ kind: 'missing' as const, key: `d:${id}`, id })),
     ...ports.map((p) => ({ kind: 'sdi' as const, key: `dl:${p.name}`, name: p.name })),
+    ...(desktop.ndi ? [{ kind: 'ndi' as const, key: 'ndi' as const }] : []),
     { kind: 'net' as const, key: 'net' as const },
   ];
   const firstExternal = devices.find((d) => d.kind === 'display' && !d.display.primary) ?? devices.find((d) => d.kind === 'sdi') ?? devices[0];
@@ -92,7 +101,7 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
   /** The outputs a device shows now */
   const showsOn = (d: Device): ScreenOutput[] =>
     OUTPUTS.map(({ output }) => output).filter((o) =>
-      d.kind === 'display' ? config?.[o] === d.display.id : d.kind === 'missing' ? config?.[o] === d.id : d.kind === 'sdi' ? dlConfig?.[o]?.device === d.name : network.enabled,
+      d.kind === 'display' ? config?.[o] === d.display.id : d.kind === 'missing' ? config?.[o] === d.id : d.kind === 'sdi' ? dlConfig?.[o]?.device === d.name : d.kind === 'ndi' ? !!ndiConfig?.[o] : network.enabled,
     );
 
   const setDisplay = async (displayId: number, output: ScreenOutput | null) => {
@@ -130,6 +139,14 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
       toast.error('Could not share the screens on the network', { description: e instanceof Error ? e.message : String(e) });
     }
   };
+  const setNdi = async (output: ScreenOutput, on: boolean) => {
+    if (!desktop!.ndi || !ndiConfig) return;
+    const next = { ...ndiConfig, [output]: on };
+    setNdiConfig(next);
+    setNdiConfig(await desktop!.ndi.set(next));
+    window.setTimeout(() => desktop!.ndi?.status().then(setNdiStatus).catch(() => {}), 1200);
+  };
+  const ndiSource = (o: ScreenOutput) => (ndiAvail ? `${ndiAvail.machine} (${ndiAvail.names[o]})` : NAME[o]);
   const copy = (url: string) => navigator.clipboard.writeText(url).then(() => toast.success('Address copied'));
   const base = netStatus?.running ? netStatus.urls[0] : undefined;
 
@@ -227,6 +244,26 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
         </button>
       );
     }
+    if (d.kind === 'ndi') {
+      const out = shows[0];
+      return (
+        <button key={d.key} className="st-dev sdi" {...common}>
+          <span className="st-bezel">
+            <OutputPreview output={out ?? null} />
+            <span className="bnc">
+              <i />
+              <i />
+              <em>NDI®</em>
+            </span>
+          </span>
+          <span className="label">
+            <b>NDI on the network</b>
+            <span>{!ndiAvail?.available ? 'Needs the free NDI Runtime' : shows.length ? `${shows.length} source${shows.length > 1 ? 's' : ''} for vMix, OBS and more` : 'For vMix, OBS and more'}</span>
+          </span>
+          <span className="shows">{tags}</span>
+        </button>
+      );
+    }
     return (
       <button key={d.key} className="st-dev net" {...common}>
         <span className="st-bezel">
@@ -249,6 +286,7 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
   function inspector(d: Device) {
     const shows = showsOn(d);
     if (d.kind === 'net') return networkInspector();
+    if (d.kind === 'ndi') return ndiInspector();
     const name = d.kind === 'display' ? (d.display.primary ? 'This computer' : d.display.label) : d.kind === 'missing' ? 'A display that isn’t connected' : d.name;
     const meta =
       d.kind === 'display'
@@ -335,6 +373,72 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
     );
   }
 
+  function ndiInspector() {
+    const sent = OUTPUTS.map(({ output }) => output).filter((o) => ndiConfig?.[o]);
+    return (
+      <div className="st-inspector" data-inspector="ndi">
+        <OutputPreview output={sent[0] ?? null} className="rounded-lg" />
+        <div style={{ minWidth: 0 }}>
+          <h4>NDI® on the network</h4>
+          <p className="meta">
+            Each output can be an NDI source for vMix, OBS, TriCaster, NDI converters and NDI Studio Monitor, over the church network. The lower third arrives see-through: nothing to key out.
+          </p>
+          {!ndiAvail ? null : !ndiAvail.available ? (
+            <div className="st-field">
+              <Note warn>
+                {ndiAvail.reason === 'runtime' ? (
+                  <>
+                    NDI needs the free <b>NDI Runtime</b> on this computer. vMix and NDI Tools install it; otherwise get NDI Tools from{' '}
+                    <a href="https://ndi.video/tools/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                      ndi.video/tools
+                    </a>
+                    , then open Voice Verses again.
+                  </>
+                ) : (
+                  ndiAvail.message
+                )}
+              </Note>
+            </div>
+          ) : (
+            OUTPUTS.map(({ output }) => {
+              const st = ndiStatus?.[output];
+              return (
+                <div key={output} className="st-field" data-ndi-output={output}>
+                  <span className="lbl">{NAME[output]}</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={!!ndiConfig?.[output]}
+                    aria-label={`Send the ${NAME[output]} as an NDI source`}
+                    className="st-switch"
+                    onClick={() => void setNdi(output, !ndiConfig?.[output])}
+                  />
+                  <span className="flex-1 min-w-[200px] text-[13px]" style={{ color: 'var(--s-ink-2)' }} role="status">
+                    {st?.state === 'sending' ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="st-dot" />
+                        Sending as <b style={{ color: 'var(--s-ink)' }}>{ndiSource(output)}</b> · {st.receivers ? `${st.receivers} watching` : 'no one watching yet'}
+                        {st.seeThrough ? ' · see-through' : ''}
+                      </span>
+                    ) : (
+                      'Off'
+                    )}
+                  </span>
+                </div>
+              );
+            })
+          )}
+          <p className="st-hint mt-2">
+            NDI® is a registered trademark of Vizrt NDI AB.{' '}
+            <a href="https://ndi.video/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+              ndi.video
+            </a>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   function networkInspector() {
     const screens = [...OUTPUTS.map((o) => ({ label: NAME[o.output], path: o.path })), { label: 'Lower third, see-through (OBS, vMix)', path: '#/lower-third?transparent=1' }];
     return (
@@ -398,7 +502,7 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
             const st = dlStatus?.[output];
             const freeDisplays = displays.filter((x) => config && config[output] !== x.id);
             const freePorts = ports.filter((p) => !OUTPUTS.some(({ output: o }) => dlConfig?.[o]?.device === p.name));
-            const none = display == null && !sdi && !network.enabled;
+            const none = display == null && !sdi && !network.enabled && !ndiConfig?.[output];
             return (
               <div key={output} className="st-out" data-output={output}>
                 <OutputPreview output={output} className="rounded-lg" />
@@ -422,6 +526,15 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
                         {sdi.device} <em>SDI · {decklinkModeLabel(sdi.mode)}</em>
                       </span>
                       <span className={`st-dot ${st?.state === 'sending' ? '' : 'warn'}`} title={st?.state === 'sending' ? 'Sending' : 'Not sending'} />
+                    </div>
+                  )}
+                  {ndiConfig?.[output] && (
+                    <div className="st-dest">
+                      <Sq tint="violet" icon={Share2} size="sm" />
+                      <span className="text">
+                        NDI <em>{ndiSource(output)}</em>
+                      </span>
+                      <span className={`st-dot ${ndiStatus?.[output]?.state === 'sending' ? '' : 'warn'}`} title={ndiStatus?.[output]?.state === 'sending' ? 'Sending' : 'Not sending'} />
                     </div>
                   )}
                   {network.enabled && (
@@ -459,17 +572,24 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
                           {p.name}
                         </DropdownMenuItem>
                       ))}
+                      {ndiAvail?.available && !ndiConfig?.[output] && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => void setNdi(output, true).then(() => setSelected('ndi'))}>As an NDI source</DropdownMenuItem>
+                        </>
+                      )}
                       {!network.enabled && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onSelect={() => void setSharing(true).then(() => setSelected('net'))}>Any browser on the network</DropdownMenuItem>
                         </>
                       )}
-                      {(display != null || sdi) && (
+                      {(display != null || sdi || ndiConfig?.[output]) && (
                         <>
                           <DropdownMenuSeparator />
                           {display != null && <DropdownMenuItem onSelect={() => void setDisplay(display, null)}>Take it off its screen</DropdownMenuItem>}
                           {sdi && <DropdownMenuItem onSelect={() => void setPort(sdi.device, null)}>Stop sending to {sdi.device}</DropdownMenuItem>}
+                          {ndiConfig?.[output] && <DropdownMenuItem onSelect={() => void setNdi(output, false)}>Stop the NDI source</DropdownMenuItem>}
                         </>
                       )}
                     </DropdownMenuContent>
@@ -498,7 +618,26 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
       { key: 'sdi', icon: TvMinimal, tint: 'orange' as const, title: 'Blackmagic DeckLink', state: dlState, body: decklink?.reason === 'drivers' ? 'SDI straight into the switcher. Install Blackmagic Desktop Video (it comes with the card) and its ports appear above.' : 'SDI straight into the switcher, with no converter. On Mac now, Windows next.' },
       { key: 'net', icon: Wifi, tint: 'teal' as const, title: 'The network', state: { cls: network.enabled ? 'on' : 'off', text: network.enabled ? 'On' : 'Off' }, body: 'Any browser on the church network: a smart TV, a tablet on stage, OBS or vMix.', go: () => setSelected('net') },
       { key: 'pp', icon: Radio, tint: 'orange' as const, title: 'ProPresenter', state: { cls: pp.enabled ? 'on' : 'off', text: pp.enabled ? 'On' : 'Off' }, body: 'Verses go into your ProPresenter looks, on this computer or another one.', go: onGo ? () => onGo('propresenter') : undefined },
-      { key: 'ndi', icon: Share2, tint: 'violet' as const, title: 'NDI', state: { cls: 'soon', text: 'Coming next' }, body: 'Each output as an NDI source for vMix, OBS, TriCaster and NDI converters, over a network cable.' },
+      {
+        key: 'ndi',
+        icon: Share2,
+        tint: 'violet' as const,
+        title: 'NDI®',
+        state: !desktop!.ndi
+          ? { cls: 'off', text: 'Desktop app' }
+          : !ndiAvail
+            ? { cls: 'off', text: '…' }
+            : !ndiAvail.available
+              ? { cls: 'warn', text: 'Needs NDI Runtime' }
+              : OUTPUTS.some(({ output }) => ndiConfig?.[output])
+                ? { cls: 'on', text: 'On' }
+                : { cls: 'off', text: 'Ready' },
+        body:
+          ndiAvail && !ndiAvail.available && ndiAvail.reason === 'runtime'
+            ? 'Each output as an NDI source for vMix, OBS, TriCaster and NDI converters. Needs the free NDI Runtime (in NDI Tools, or with vMix).'
+            : 'Each output as an NDI source for vMix, OBS, TriCaster and NDI converters, over the church network. The lower third is see-through.',
+        go: desktop!.ndi ? () => setSelected('ndi') : undefined,
+      },
       { key: 'syphon', icon: Layers, tint: 'slate' as const, title: 'Syphon and Spout', state: { cls: 'soon', text: 'Planned' }, body: 'Share the outputs with other apps on this computer, such as OBS or Resolume.' },
     ];
     return (
@@ -515,12 +654,18 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
               {t.key === 'net' && base && <span className="st-addr">{base}</span>}
               {t.go && (
                 <button type="button" className="st-btn link self-start" onClick={t.go}>
-                  {t.key === 'pp' ? 'ProPresenter settings' : 'Show the addresses'}
+                  {t.key === 'pp' ? 'ProPresenter settings' : t.key === 'ndi' ? (ndiAvail && !ndiAvail.available ? 'How to get it' : 'Choose what it sends') : 'Show the addresses'}
                 </button>
               )}
             </div>
           ))}
         </div>
+        <p className="st-hint">
+          NDI® is a registered trademark of Vizrt NDI AB.{' '}
+          <a href="https://ndi.video/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+            ndi.video
+          </a>
+        </p>
       </Section>
     );
   }

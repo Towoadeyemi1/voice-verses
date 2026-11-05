@@ -72,7 +72,7 @@ const saveSetting = (change: Record<string, unknown>) => {
 
 /** Which sidebar item a booth check problem belongs to */
 const paneOf = (id: string): Pane | null =>
-  id.startsWith('mic') || id === 'speech' ? 'listening' : id.startsWith('screen') || id.startsWith('sdi-') ? 'screens' : id === 'propresenter' ? 'propresenter' : id === 'bible' ? 'bible' : null;
+  id.startsWith('mic') || id === 'speech' ? 'listening' : id.startsWith('screen') || id.startsWith('sdi-') || id.startsWith('ndi-') ? 'screens' : id === 'propresenter' ? 'propresenter' : id === 'bible' ? 'bible' : null;
 
 /**
  * Settings (docs/design/settings-redesign.html): the booth check at the top, the
@@ -268,7 +268,11 @@ export const SettingsPanel = ({
               <a href="https://github.com/Towoadeyemi1/voice-verses" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
                 GitHub
               </a>
-              .
+              . NDI® is a registered trademark of Vizrt NDI AB (
+              <a href="https://ndi.video/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                ndi.video
+              </a>
+              ).
             </p>
           </div>
         )}

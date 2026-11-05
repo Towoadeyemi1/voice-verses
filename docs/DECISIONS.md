@@ -161,6 +161,11 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Decision:** One app, separate modules with narrow edges: detection (`src/speech/`, plain inputs and callbacks), outputs (one renderer, rule 5), screens, DeckLink and ProPresenter each in their own main-process module behind IPC, features as flags. Remote control comes as a **local HTTP API** on the existing network server (1.15.0), not as separate services.
 - **Why:** Rule 2 (offline) and the one-download install: microservices would mean more processes to install, start, update and fail on a Sunday morning, on older Macs. A local API gives the benefits that matter here (Stream Deck, phones, other apps) without the cost.
 
+### D28. NDI through the computer's NDI Runtime, not bundled
+- **Context:** The owner chose NDI output next. NDI's library may only be redistributed under its SDK licence, which would require Voice Verses' own licence to carry NDI's terms (no reverse engineering, warranty disclaimers, NDI's copyright notice) and to track NDI's latest SDK. The SDK is also confidential.
+- **Decision:** Use the free NDI Runtime when the computer has it (NDI Tools, vMix and OBS's NDI plugin install it), loaded with `koffi` (a foreign-function library, prebuilt, nothing to compile) from NDI's public documentation. Nothing from the SDK is in the repository; the SDK was used only in the build environment to test, with the owner's agreement. Show NDI's trademark note and a link to ndi.video wherever NDI appears.
+- **Why:** The owner's choice: no change to Voice Verses' licence, the same approach OBS's NDI plugin takes, and churches using NDI already have the runtime. The rest of "one download" is kept: without the runtime, everything else works and Settings says where to get it.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.
