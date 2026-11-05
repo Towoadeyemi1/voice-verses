@@ -27,7 +27,7 @@ async function listen(name, features) {
     if (next && next !== seen[seen.length - 1]?.next) {
       seen.push({ at: ((Date.now() - t0) / 1000).toFixed(1), next });
       console.log(`${seen[seen.length - 1].at}s Next: ${next}`);
-      if (/Prayer(: [^·]+)? · ready because/.test(next)) await win.screenshot({ path: `${OUT}/${name}-prayer.png` });
+      if (/Prayer(: [^·]+)? · Spirit heard/.test(next)) await win.screenshot({ path: `${OUT}/${name}-prayer.png` });
       if (/Point 3/.test(next)) {
         await win.screenshot({ path: `${OUT}/${name}-point.png` });
         break;
@@ -46,14 +46,14 @@ async function listen(name, features) {
 (async () => {
   const on = await listen('moments-on', { momentAutopilot: true, sermonPoints: true });
   const labels = on.seen.map((s) => s.next).join(' | ');
-  check('"let us pray" puts the Prayer part in Next', /Prayer(: [^·]+)? · ready because the preacher said “[^”]*(pray|bow)[^”]*”/i.test(labels), labels.slice(0, 200));
-  check('"point number two …" becomes Point 2 in Next', /Point 2 · ready because the preacher said point 2/.test(labels), labels.slice(0, 260));
-  check('"my third point." then its words become Point 3', /Point 3 · ready because/.test(labels));
+  check('"let us pray" puts the Prayer part in Next', /Prayer(: [^·]+)? · Spirit heard “[^”]*(pray|bow)[^”]*”/i.test(labels), labels.slice(0, 200));
+  check('"point number two …" becomes Point 2 in Next', /Point 2 · Spirit heard point 2/.test(labels), labels.slice(0, 260));
+  check('"my third point." then its words become Point 3', /Point 3 · Spirit heard/.test(labels));
   check('nothing went on screen by itself', !/Point|Prayer/.test(on.live), `live: ${on.live || 'nothing'}`);
   check('no page errors', on.errors.length === 0, on.errors.join(' | '));
 
   const off = await listen('moments-off', { momentAutopilot: false, sermonPoints: false });
-  check('switched off: nothing moves', !off.seen.some((s) => /ready because/.test(s.next)), off.seen.map((s) => s.next).join(' | ').slice(0, 160));
+  check('switched off: nothing moves', !off.seen.some((s) => /Spirit heard/.test(s.next)), off.seen.map((s) => s.next).join(' | ').slice(0, 160));
   done();
 })().catch((e) => {
   console.error(e);

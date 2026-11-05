@@ -23,6 +23,8 @@ xvfb-run -a node tools/e2e/chapter.cjs     # a chapter alone waits for its verse
 xvfb-run -a node tools/e2e/decklink.cjs    # DeckLink SDI out with a pretend card, through the picture of the room: frames reach the port, formats, where each output goes, test colours
 python tools/e2e/make-sermon-audio.py /path/to/en_US-lessac-medium.onnx /tmp/vv-e2e/moments.wav moments
 xvfb-run -a node tools/e2e/moments.cjs     # "let us pray" puts Prayer in Next, sermon points become slides in Next, nothing on screen by itself; off: nothing moves
+python tools/e2e/make-sermon-audio.py /path/to/en_US-lessac-medium.onnx /tmp/vv-e2e/spirit.wav spirit
+xvfb-run -a node tools/e2e/spirit.cjs      # VoiceVerses Spirit: a taught cue gets its part ready in Next, Not this → Wrong part remembered, a Hands-free cue goes live after its countdown, a manual pick observed, Spirit noticed → Make it a cue
 xvfb-run -a node tools/e2e/ndi.cjs         # NDI® out: a receiver gets the projector (full HD) and the lower third (see-through); needs VOICE_VERSES_NDI_LIB=/path/to/libndi (from NDI's SDK, never committed), else checks the runtime message
 xvfb-run -a node tools/e2e/features-booth.cjs # Settings: Features presets and switches, the booth check light, page and Fix buttons, a screen chosen in the room, ProPresenter searched for, a warning when a screen is unplugged
 node tools/e2e/mock-ollama.cjs &                                           # fake Ollama for AI slide tests

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Download, FolderSync, Image as ImageIcon, Mic, MonitorUp, Music2, Radio, SlidersHorizontal, X, type LucideIcon } from 'lucide-react';
+import { AudioLines, BookOpen, Download, FolderSync, Image as ImageIcon, Mic, MonitorUp, Music2, Radio, SlidersHorizontal, Sparkles, X, type LucideIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BibleVersionSettings } from './BibleVersionSettings';
 import { StorageSettings } from './StorageSettings';
@@ -15,14 +15,25 @@ import { MicrophoneSettings } from './MicrophoneSettings';
 import { ScreenSettings } from './ScreenSettings';
 import { FeatureSettings } from './FeatureSettings';
 import { BoothCheckPage } from './settings/BoothCheckPage';
+import { SpiritPage, useSpirit } from './settings/SpiritPage';
+import { CuesPage } from './settings/CuesPage';
+import { noticed } from '@/lib/spirit';
 import { List, Ring, Row, Section, Sq, Tint } from './settings/kit';
 import { BoothCheckItem, needsAttention, runBoothCheck } from '@/lib/boothCheck';
 import { desktop } from '@/lib/desktop';
 import type { BoothFix } from './live/BoothCheck';
+import type { Service } from '@/types/service';
 
-export type Pane = 'booth' | 'features' | 'bible' | 'listening' | 'screens' | 'network' | 'songs' | 'logo' | 'library' | 'propresenter' | 'app';
+export type Pane = 'booth' | 'spirit' | 'cues' | 'features' | 'bible' | 'listening' | 'screens' | 'network' | 'songs' | 'logo' | 'library' | 'propresenter' | 'app';
 
 const GROUPS: { label: string; panes: { id: Pane; label: string; hint: string; icon: LucideIcon; tint: Tint }[] }[] = [
+  {
+    label: 'VoiceVerses Spirit',
+    panes: [
+      { id: 'spirit', label: 'How Spirit runs', hint: 'Spirit gets each part of the service ready, and learns how your church runs.', icon: Sparkles, tint: 'spirit' },
+      { id: 'cues', label: 'Cues', hint: 'What the preacher says that gets the next part ready.', icon: AudioLines, tint: 'teal' },
+    ],
+  },
   {
     label: 'This service',
     panes: [
@@ -89,9 +100,11 @@ export const SettingsPanel = ({
   onClose?: () => void;
   initial?: Pane;
   framed?: boolean;
-  service?: { name: string } | null;
+  service?: Service | null;
   serviceIsToday?: boolean;
 }) => {
+  const spirit = useSpirit();
+  const newNoticed = noticed(spirit).length;
   const navigate = useNavigate();
   const [pane, setPane] = useState<Pane>(initial === 'network' ? 'screens' : initial);
   const [bibleVersion, setBibleVersion] = useState<BibleVersionType>('kjv');
@@ -151,6 +164,7 @@ export const SettingsPanel = ({
                   <Sq tint={p.tint} icon={p.icon} />
                   <span className="name">{p.label}</span>
                   {badge(p.id) > 0 && <span className="st-badge" aria-label={`${badge(p.id)} to check`}>{badge(p.id)}</span>}
+                  {p.id === 'cues' && newNoticed > 0 && <span className="st-badge" style={{ color: 'var(--s-accent)', background: 'var(--s-accent-soft)' }}>{newNoticed} new</span>}
                 </button>
               ))}
             </div>
@@ -172,6 +186,8 @@ export const SettingsPanel = ({
         </div>
 
         {pane === 'booth' && <BoothCheckPage service={service} serviceIsToday={serviceIsToday} onFix={fix} />}
+        {pane === 'spirit' && <SpiritPage onCues={() => setPane('cues')} />}
+        {pane === 'cues' && <CuesPage service={service} />}
         {pane === 'features' && <FeatureSettings />}
         {pane === 'screens' && <ScreenSettings onGo={setPane} />}
         {pane === 'propresenter' && <ProPresenterSettings />}

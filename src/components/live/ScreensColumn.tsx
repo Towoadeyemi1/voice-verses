@@ -1,6 +1,10 @@
 import { ArrowUp, Pencil } from 'lucide-react';
 import { ClickMode } from '@/lib/clickMode';
 import { ScaledStage } from '../ScaledStage';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { SpiritOrb } from '@/components/spirit/SpiritOrb';
+import type { Correction } from '@/lib/spirit';
+import '@/components/settings/settings.css';
 import { OutputContent, Live } from '../OutputContent';
 import { AlertBanner } from '../AlertBanner';
 import { ConfidenceScreen, loadConfidenceSettings } from '../ConfidenceScreen';
@@ -42,6 +46,7 @@ export const ScreensColumn = ({
   onEditLive,
   onEditNext,
   nextCountdown,
+  onNotThis,
 }: {
   live: Live;
   logo: string | null;
@@ -63,6 +68,8 @@ export const ScreensColumn = ({
   onEditNext?: () => void;
   /** The countdown Next will start (a part with its own countdown), shown in its picture */
   nextCountdown?: { countdown: Countdown; remaining: number } | null;
+  /** When VoiceVerses Spirit got Next ready: "Not this", with why (Spirit learns from it) */
+  onNotThis?: (correction: Correction) => void;
 }) => {
   const projector = usePreviewStage('projection');
   const stream = usePreviewStage('stream');
@@ -132,6 +139,31 @@ export const ScreensColumn = ({
       </button>
 
       <Label tone="next" title="Next" detail={nextLabel}>
+        {onNotThis && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5 whitespace-nowrap flex-shrink-0" data-not-this title="Spirit got this ready: tell it what was wrong">
+                <SpiritOrb size={14} /> Not this
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="vvs w-[340px] p-3.5 rounded-[14px] border-0 space-y-2.5" style={{ background: 'var(--s-raised)', boxShadow: 'var(--s-lift), 0 0 0 1px rgba(255,245,255,.07)' }}>
+              <p className="m-0 text-[14px] font-semibold">What was wrong? Spirit will remember.</p>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="What was wrong">
+                {(
+                  [
+                    ['wrong-part', 'Wrong part'],
+                    ['not-now', 'Not now'],
+                    ['never', 'Never for these words'],
+                  ] as [Correction, string][]
+                ).map(([c, text]) => (
+                  <button key={c} type="button" className="st-btn" style={{ borderRadius: 999 }} onClick={() => onNotThis(c)}>
+                    {text}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
         {onEditNext && (
           <button type="button" onClick={onEditNext} className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5" title="Quick edit: change the words or the look of the slide in Next">
             <Pencil className="w-3.5 h-3.5" /> Edit

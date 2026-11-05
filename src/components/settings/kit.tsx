@@ -8,7 +8,7 @@ import './settings.css';
  * segmented choices and status marks. Styles are in settings.css, under `.vvs`.
  */
 
-export type Tint = 'gold' | 'blue' | 'violet' | 'teal' | 'indigo' | 'orange' | 'rose' | 'slate' | 'pink';
+export type Tint = 'gold' | 'blue' | 'violet' | 'teal' | 'indigo' | 'orange' | 'rose' | 'slate' | 'pink' | 'spirit';
 
 export const Sq = ({ tint, icon: Icon, size }: { tint: Tint; icon: LucideIcon; size?: 'sm' | 'lg' }) => (
   <span className={`st-sq ${size ?? ''}`} style={{ background: `var(--i-${tint})` }} aria-hidden="true">

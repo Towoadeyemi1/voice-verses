@@ -126,6 +126,15 @@ Approved mock-up: [`design/settings-redesign.html`](design/settings-redesign.htm
 - Status: a grey tick when fine, amber when it needs looking at, with words. Red and green stay reserved for On Air and Next.
 - Older components shown inside a page are brought into line by `settings.css` (fields fill, cards become surfaces, the white default button becomes quiet); rewrite them with the kit when touched.
 
+## VoiceVerses Spirit (1.17.0)
+
+Approved mock-up: [`design/spirit.html`](design/spirit.html). Parts: `components/spirit/SpiritOrb.tsx`, `settings/SpiritPage.tsx`, `settings/CuesPage.tsx`, `sp-` classes in `settings.css`.
+- Spirit has one sign: a small warm orb (gold to rose) that breathes slowly (still with reduced motion). It marks everything Spirit did or suggests: the sidebar group, the "Not this" button beside Next, the noticed cards, toasts. It never uses red or green.
+- How much Spirit does is three cards (Off, Ready in Next, Hands-free) with a row of steps; a cue's trust is a small segmented control, with Hands-free locked ("6 of 10") until earned.
+- Teaching is a sentence with slots to fill ("When the preacher says ___ get ___ ready."), not a form.
+- A cue's record is 10 small dots: filled right, amber-striped corrected, empty not yet. The last service is one bar of the service from start to end, with a legend in words.
+- Corrections are one tap, in the volunteer's words: Wrong part, Not now, Never for these words.
+
 ## Building it into the app
 
 - Put the tokens in `src/index.css` as CSS variables, keeping shadcn's names mapped: `--background` = `--win`, `--card` = `--surface`, `--primary` = `--accent`. Dark should be the default, with a light option.
