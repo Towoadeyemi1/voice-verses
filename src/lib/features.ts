@@ -29,7 +29,7 @@ export interface FeatureInfo {
   title: string;
   /** What it does, from the operator's side */
   description: string;
-  /** On for a new install ("Recommended") */
+  /** On for a new install ("Recommended"); bolder features (acting on their own in new ways) start off */
   recommended: boolean;
   /** Part of "Essentials": the least the app does by itself */
   essential?: boolean;
@@ -81,7 +81,7 @@ export const FEATURES: FeatureInfo[] = [
     group: 'Scripture',
     title: 'Predictive Next',
     description: '"Paul says the same thing in Romans" puts the likely verse in Next. Never shown by itself.',
-    recommended: true,
+    recommended: false,
   },
   {
     id: 'songRecognition',
@@ -102,7 +102,7 @@ export const FEATURES: FeatureInfo[] = [
     group: 'Worship',
     title: 'Singing something new',
     description: 'Singing that is in no song is offered; you can show the words as they are sung and keep them as a draft song.',
-    recommended: true,
+    recommended: false,
   },
   {
     id: 'partCountdowns',

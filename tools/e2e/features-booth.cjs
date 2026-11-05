@@ -24,33 +24,47 @@ const features = (win) => win.evaluate(() => JSON.parse(localStorage.getItem('vo
   await win.screenshot({ path: `${OUT}/features-1-booth-check.png` });
   await list.locator('[data-check="screens"] button').click();
   await win.waitForTimeout(800);
-  check('Fix opens Settings → Screens', (await win.locator('[role="dialog"]').getByText('Your screens').count()) >= 1);
+  check('Fix opens Settings → Screens and outputs', (await win.locator('[role="dialog"] [data-screens-page]').count()) === 1);
 
   // Settings → Screens tiles: put the projector on a second display
   await plugInSecondDisplay(app);
-  const tile = win.locator('[data-screen-tile="HDMI-SDI"]');
+  const tile = win.locator('[data-device="d:4242"]');
   await tile.waitFor({ timeout: 10000 });
-  await tile.getByRole('button', { name: 'Projector' }).click();
+  await tile.click();
+  await win.locator('[data-inspector="d:4242"]').getByRole('radio', { name: 'Projector', exact: true }).click();
   await win.waitForTimeout(1500);
   const screens = await win.evaluate(() => window.voiceVerses.screens.get());
-  check('a screen tile puts the projector on that display', screens.projection === 4242, JSON.stringify(screens));
+  check('a screen in the picture of the room puts the projector on that display', screens.projection === 4242, JSON.stringify(screens));
   await win.screenshot({ path: `${OUT}/features-2-screen-tiles.png` });
 
   // Settings → Features
-  await win.locator('[role="dialog"] button', { hasText: /^Features/ }).first().click();
+  await win.locator('[data-pane="features"]').click();
   await win.waitForTimeout(600);
   const pane = win.locator('[data-feature-settings]');
-  check('Recommended is the preset on a new install', (await pane.locator('[role="radio"][aria-checked="true"]').textContent()) === 'Recommended');
+  check('Recommended is the preset on a new install', (await pane.locator('[role="radio"][aria-checked="true"] b').textContent()) === 'Recommended');
+  check('Recommended leaves the bolder features off', (await pane.getByRole('switch', { name: 'Predictive Next' }).getAttribute('aria-checked')) === 'false');
   check('features not built yet say Coming and can’t be switched on', (await pane.getByRole('switch', { name: 'Moment autopilot' }).isDisabled()) === true);
   await win.screenshot({ path: `${OUT}/features-3-pane.png` });
-  await pane.getByRole('radio', { name: 'Essentials' }).click();
+  await pane.getByRole('radio', { name: /^Essentials/ }).click();
   await win.waitForTimeout(400);
   let saved = await features(win);
   check('Essentials keeps reading and safety, and switches off the rest', saved.readAlong && saved.guardian && saved.boothCheck && !saved.quotes && !saved.stories && !saved.worshipCues, JSON.stringify(saved).slice(0, 160));
   await pane.getByRole('switch', { name: /Verses quoted without a reference/ }).click();
   await win.waitForTimeout(400);
   check('one switch changed shows “Your own choice”', (await pane.getByText('Your own choice').count()) === 1 && (await features(win)).quotes === true);
-  await pane.getByRole('radio', { name: 'Recommended' }).click();
+  await pane.getByRole('radio', { name: /^Recommended/ }).click();
+  // The booth check as a page, and ProPresenter searched for on the network
+  await win.locator('[data-settings-booth]').click();
+  await win.waitForTimeout(1500);
+  check('Settings opens the booth check as a page', (await win.locator('[data-booth-page] [data-check]').count()) >= 5);
+  await win.screenshot({ path: `${OUT}/features-5-booth-page.png` });
+  await win.locator('[data-pane="propresenter"]').click();
+  await win.waitForTimeout(5000);
+  const pp = (await win.locator('[data-propresenter-page]').textContent()) || '';
+  check('ProPresenter is searched for on this computer and the network', /None found|Found \d/.test(pp), pp.slice(0, 120));
+  await win.screenshot({ path: `${OUT}/features-6-propresenter.png` });
+  await win.locator('[data-pane="features"]').click();
+  await win.waitForTimeout(500);
   await pane.getByRole('switch', { name: 'Booth check' }).click();
   await win.waitForTimeout(400);
   await win.keyboard.press('Escape');

@@ -10,7 +10,7 @@ import type { Output } from '@/lib/templates';
  * screen wider than 16:9, whether the design spreads across it or stays in
  * the middle with the background filling the sides.
  */
-export const ScreenShapePicker = ({ output, label = 'Screen shape' }: { output: Output; label?: string }) => {
+export const ScreenShapePicker = ({ output, label = 'Screen shape', ariaLabel }: { output: Output; label?: string; ariaLabel?: string }) => {
   const shape = useScreenShape(output);
   const wide = shapeRatio(shape, undefined, output) > 16 / 9 + 0.02;
   const id = `shape-${output}`;
@@ -18,9 +18,9 @@ export const ScreenShapePicker = ({ output, label = 'Screen shape' }: { output: 
   return (
     <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] items-end">
       <div className="space-y-1">
-        <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
+        {label && <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>}
         <Select value={shape.id} onValueChange={(v) => setShape(output, { ...shape, id: v as ShapeId, width: shape.width ?? 3440, height: shape.height ?? 1440 })}>
-          <SelectTrigger id={id} className="h-9">
+          <SelectTrigger id={id} className="st-select-trigger w-auto max-w-full" aria-label={ariaLabel ?? (label || 'Screen shape')}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -38,7 +38,7 @@ export const ScreenShapePicker = ({ output, label = 'Screen shape' }: { output: 
             aria-label="Width"
             type="number"
             min={100}
-            className="h-9 w-24"
+            className="st-input w-24"
             value={shape.width ?? ''}
             onChange={(e) => setShape(output, { ...shape, width: Number(e.target.value) || undefined })}
           />
@@ -47,25 +47,25 @@ export const ScreenShapePicker = ({ output, label = 'Screen shape' }: { output: 
             aria-label="Height"
             type="number"
             min={100}
-            className="h-9 w-24"
+            className="st-input w-24"
             value={shape.height ?? ''}
             onChange={(e) => setShape(output, { ...shape, height: Number(e.target.value) || undefined })}
           />
         </div>
       )}
       {wide && (
-        <div className="sm:col-span-2 flex rounded-lg bg-muted p-0.5 text-xs">
+        <div className="sm:col-span-2 st-seg" role="group" aria-label="On a screen wider than 16:9">
           {(
             [
-              ['spread', 'Spread the design across the screen'],
-              ['middle', 'Keep it in the middle (background fills the sides)'],
+              ['spread', 'Spread across the screen'],
+              ['middle', 'Keep it in the middle'],
             ] as const
           ).map(([value, text]) => (
             <button
               key={value}
               type="button"
               onClick={() => setShape(output, { ...shape, layout: value })}
-              className={`flex-1 rounded-md px-2 py-1.5 transition ${(shape.layout ?? 'spread') === value ? 'bg-background shadow font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+              aria-pressed={(shape.layout ?? 'spread') === value}
             >
               {text}
             </button>

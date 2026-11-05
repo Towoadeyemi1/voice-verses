@@ -268,3 +268,194 @@ export async function setUp(connection) {
   }
   return { ...current, theme: theme?.label ?? null };
 }
+
+// ---- Finding ProPresenter on other computers on the network ----------------------------------
+//
+// Two ways, at the same time: ProPresenter announces itself with Bonjour (mDNS), which is
+// instant where the network passes it; and, because some church networks block that, every
+// address on this computer's local network is tried on ProPresenter's usual ports. Anything
+// found is confirmed by asking it for /version, so only a real ProPresenter is listed.
+
+/** Bonjour names ProPresenter (and its remote) are known to announce. */
+const BONJOUR_SERVICES = ['_pro7proremote._tcp.local', '_propresenter._tcp.local', '_pro7stagedsply._tcp.local', '_services._dns-sd._udp.local'];
+/** The ports ProPresenter uses unless changed in its Settings → Network. */
+export const USUAL_PORTS = [50001, 1025, 20652];
+
+function encodeName(name) {
+  const parts = name.split('.').filter(Boolean).map((label) => {
+    const bytes = Buffer.from(label, 'utf8');
+    return Buffer.concat([Buffer.from([bytes.length]), bytes]);
+  });
+  return Buffer.concat([...parts, Buffer.from([0])]);
+}
+
+/** A DNS query packet asking for PTR records for each name. */
+export function bonjourQuery(names) {
+  const header = Buffer.alloc(12);
+  header.writeUInt16BE(names.length, 4);
+  const questions = names.map((n) => Buffer.concat([encodeName(n), Buffer.from([0, 12, 0, 1])])); // PTR, IN
+  return Buffer.concat([header, ...questions]);
+}
+
+function readName(buf, offset, depth = 0) {
+  const labels = [];
+  let pos = offset;
+  let end = -1;
+  while (pos < buf.length && depth < 20) {
+    const len = buf[pos];
+    if (len === 0) {
+      pos += 1;
+      break;
+    }
+    if ((len & 0xc0) === 0xc0) {
+      if (end < 0) end = pos + 2;
+      pos = ((len & 0x3f) << 8) | buf[pos + 1];
+      depth++;
+      continue;
+    }
+    labels.push(buf.toString('utf8', pos + 1, pos + 1 + len));
+    pos += 1 + len;
+  }
+  return { name: labels.join('.'), next: end >= 0 ? end : pos };
+}
+
+/** The records in a DNS answer: PTR (to), SRV (target, port), A (address). */
+export function parseBonjour(buf) {
+  const records = [];
+  if (buf.length < 12) return records;
+  const qd = buf.readUInt16BE(4);
+  const total = buf.readUInt16BE(6) + buf.readUInt16BE(8) + buf.readUInt16BE(10);
+  let pos = 12;
+  try {
+    for (let i = 0; i < qd; i++) pos = readName(buf, pos).next + 4;
+    for (let i = 0; i < total && pos < buf.length; i++) {
+      const { name, next } = readName(buf, pos);
+      const type = buf.readUInt16BE(next);
+      const length = buf.readUInt16BE(next + 8);
+      const data = next + 10;
+      if (type === 12) records.push({ type: 'PTR', name, to: readName(buf, data).name });
+      else if (type === 33) records.push({ type: 'SRV', name, port: buf.readUInt16BE(data + 4), target: readName(buf, data + 6).name });
+      else if (type === 1 && length === 4) records.push({ type: 'A', name, address: [...buf.subarray(data, data + 4)].join('.') });
+      pos = data + length;
+    }
+  } catch {
+    // A cut-off packet: keep what was read
+  }
+  return records;
+}
+
+/** What Bonjour says about ProPresenter: [{ host, port, label }], within `ms`. */
+async function bonjour(ms) {
+  const dgram = await import('node:dgram');
+  return new Promise((resolve) => {
+    const records = [];
+    let socket;
+    try {
+      socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
+    } catch {
+      resolve([]);
+      return;
+    }
+    const finish = () => {
+      try {
+        socket.close();
+      } catch {
+        // Already closed
+      }
+      const addresses = new Map(records.filter((r) => r.type === 'A').map((r) => [r.name.toLowerCase(), r.address]));
+      const found = records
+        .filter((r) => r.type === 'SRV' && /pro7|propresenter/i.test(r.name))
+        .map((r) => ({ host: addresses.get(r.target.toLowerCase()) ?? r.target.replace(/\.$/, ''), port: r.port, label: r.name.split('._')[0] }));
+      resolve(found);
+    };
+    socket.on('error', finish);
+    socket.on('message', (msg, from) => {
+      for (const r of parseBonjour(msg)) {
+        // A host without an address record: the answer came from it
+        if (r.type === 'SRV' && !records.some((a) => a.type === 'A' && a.name === r.target)) records.push({ type: 'A', name: r.target, address: from.address });
+        records.push(r);
+        // Ask for the details of any ProPresenter service another answer pointed to
+        if (r.type === 'PTR' && /pro7|propresenter/i.test(r.to) && !/^_services\./.test(r.to)) socket.send(bonjourQuery([r.to]), 5353, '224.0.0.251');
+      }
+    });
+    socket.bind(0, () => {
+      socket.send(bonjourQuery(BONJOUR_SERVICES), 5353, '224.0.0.251', () => {});
+      setTimeout(finish, ms);
+    });
+  });
+}
+
+/** This computer's local networks (IPv4), as the 254 neighbours of each address; none for big or public networks. */
+export function neighbours(interfaces) {
+  const hosts = new Set();
+  for (const list of Object.values(interfaces)) {
+    for (const a of list ?? []) {
+      if (a.family !== 'IPv4' && a.family !== 4) continue;
+      if (a.internal || !/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(a.address)) continue;
+      const prefix = a.address.split('.').slice(0, 3).join('.');
+      for (let i = 1; i < 255; i++) if (`${prefix}.${i}` !== a.address) hosts.add(`${prefix}.${i}`);
+    }
+  }
+  return [...hosts].slice(0, 1024);
+}
+
+/** Whether something accepts a connection at host:port within `ms` (cheaper than an HTTP request). */
+async function isOpen(host, port, ms) {
+  const net = await import('node:net');
+  return new Promise((resolve) => {
+    const socket = net.connect({ host, port });
+    const done = (open) => {
+      socket.destroy();
+      resolve(open);
+    };
+    socket.setTimeout(ms, () => done(false));
+    socket.once('connect', () => done(true));
+    socket.once('error', () => done(false));
+  });
+}
+
+/** Runs `work` on each item, `limit` at a time. */
+async function eachLimited(items, limit, work) {
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) await work(items[next++]);
+    }),
+  );
+}
+
+/** Tries each host on each port; calls `onFound` for every ProPresenter that answers. */
+export async function scan(hosts, ports, onFound) {
+  const targets = hosts.flatMap((host) => ports.map((port) => ({ host, port })));
+  await eachLimited(targets, 128, async ({ host, port }) => {
+    if (await isOpen(host, port, 450)) {
+      const r = await probe(host, [port]);
+      if (r) onFound(r);
+    }
+  });
+}
+
+/**
+ * Every ProPresenter this computer can reach: on this computer, and on the
+ * local network (Bonjour, then each address on the usual ports and any extra
+ * ones, such as the port saved last time). [{ host, port, name, version, here }]
+ */
+export async function search({ ports = [], interfaces } = {}) {
+  const os = await import('node:os');
+  const own = new Set(['127.0.0.1', ...Object.values(interfaces ?? os.networkInterfaces()).flat().map((a) => a?.address).filter(Boolean)]);
+  const tryPorts = [...new Set([...ports.map(Number).filter((p) => Number.isInteger(p) && p > 0 && p < 65536), ...USUAL_PORTS])];
+  const found = new Map();
+  const add = (r, here = false) => {
+    if (!r) return;
+    const key = here || own.has(r.host) ? `local:${r.port}` : `${r.host}:${r.port}`;
+    if (!found.has(key)) found.set(key, { ...r, host: here || own.has(r.host) ? '127.0.0.1' : r.host, here: here || own.has(r.host) });
+  };
+
+  const local = findLocal().then((r) => add(r, true)).catch(() => {});
+  const viaBonjour = bonjour(1500)
+    .then((services) => Promise.all(services.map(async (s) => add(await probe(s.host, [s.port])))))
+    .catch(() => {});
+  const viaScan = scan(neighbours(interfaces ?? os.networkInterfaces()), tryPorts, (r) => add(r));
+  await Promise.all([local, viaBonjour, viaScan]);
+  return [...found.values()].sort((a, b) => Number(b.here) - Number(a.here) || a.host.localeCompare(b.host, undefined, { numeric: true }));
+}

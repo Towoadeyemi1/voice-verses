@@ -1,353 +1,357 @@
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, CheckCircle2, Loader2, MonitorPlay, Send } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { AlertCircle, Check, Laptop, Monitor, Radio, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { desktop, ProPresenterStatus, ProPresenterThemeSlide } from '@/lib/desktop';
-import {
-  connectionOf,
-  loadProPresenterSettings,
-  ProPresenterSettings as Settings,
-  saveProPresenterSettings,
-} from '@/lib/proPresenter';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { desktop, ProPresenterConnection, ProPresenterStatus, ProPresenterThemeSlide } from '@/lib/desktop';
+import { connectionOf, loadProPresenterSettings, ProPresenterSettings as Settings, saveProPresenterSettings } from '@/lib/proPresenter';
 import { DOWNLOAD_PAGE_URL } from '@/lib/releases';
 import { loadAppMode, saveAppMode } from '@/lib/appMode';
+import { List, Note, Row, Section, Toggle } from './settings/kit';
 
 const TEST_VERSE = {
   reference: 'John 3:16',
   text: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
 };
-
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
+type Found = { host: string; port: number; version: string; name: string; here: boolean };
+const isLocal = (host: string) => host === '127.0.0.1' || host === 'localhost';
+const same = (a: ProPresenterConnection, b: ProPresenterConnection) => a.port === b.port && (a.host === b.host || (isLocal(a.host) && isLocal(b.host)));
+
+/**
+ * Settings → ProPresenter: Voice Verses can also send its verses into
+ * ProPresenter. Every ProPresenter on this computer and the church network is
+ * listed; one click connects and makes the "Voice Verses" message.
+ */
 export function ProPresenterSettings() {
   const [settings, setSettings] = useState<Settings>(loadProPresenterSettings);
   const [status, setStatus] = useState<ProPresenterStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [found, setFound] = useState<Found[] | null>(null);
+  const [searchedAt, setSearchedAt] = useState<Date | null>(null);
   const [themes, setThemes] = useState<ProPresenterThemeSlide[]>([]);
-  const [theme, setTheme] = useState<string>('');
+  const [theme, setTheme] = useState('');
+  const [manual, setManual] = useState({ host: settings.host, port: String(settings.port || '') });
 
-  const update = (changes: Partial<Settings>) => {
+  const save = (changes: Partial<Settings>) => {
     const next = { ...settings, ...changes };
     setSettings(next);
     saveProPresenterSettings(next);
-    if ('host' in changes || 'port' in changes) {
-      setStatus(null);
-      setError(null);
-    }
+    return next;
   };
 
-  const run = async (action: () => Promise<void>) => {
-    setBusy(true);
+  const run = async (what: string, action: () => Promise<void>) => {
+    setBusy(what);
     try {
       await action();
     } catch (e) {
       setError(errorText(e));
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
-  const check = () =>
-    run(async () => {
-      setError(null);
-      const result = await desktop!.proPresenter.status(connectionOf(settings));
+  /** How the saved connection is doing; offers the themes when the message is missing. */
+  const check = useCallback(async (connection: ProPresenterConnection) => {
+    setError(null);
+    try {
+      const result = await desktop!.proPresenter.status(connection);
       setStatus(result);
       if (!result.hasMessage) {
-        const slides = await desktop!.proPresenter.themes(connectionOf(settings));
+        const slides = await desktop!.proPresenter.themes(connection).catch(() => []);
         setThemes(slides);
         setTheme(slides[0]?.id.uuid ?? '');
       }
-    });
-
-  // Check once on open when already set up
-  useEffect(() => {
-    if (desktop && settings.enabled) check();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch (e) {
+      setStatus(null);
+      setError(errorText(e));
+    }
   }, []);
 
-  const createMessage = () =>
-    run(async () => {
-      const slide = themes.find((t) => t.id.uuid === theme);
-      if (!slide) throw new Error('Choose a theme for the verse.');
-      setStatus(await desktop!.proPresenter.createMessage(connectionOf(settings), slide.id));
-      toast.success('Created the "Voice Verses" message in ProPresenter');
-    });
+  const search = useCallback(async () => {
+    setBusy('search');
+    try {
+      const saved = loadProPresenterSettings();
+      const list = desktop!.proPresenter.search
+        ? await desktop!.proPresenter.search({ ports: saved.port ? [saved.port] : [] })
+        : await desktop!.proPresenter.find?.().then((r) => (r ? [{ ...r, here: true }] : []));
+      setFound(list ?? []);
+      setSearchedAt(new Date());
+    } finally {
+      setBusy(null);
+    }
+  }, []);
 
-  /**
-   * One button: find ProPresenter on this computer, connect, make the
-   * "Voice Verses" message if it isn't there, and send a test verse.
-   */
-  const [steps, setSteps] = useState<string[]>([]);
-  const findAndSetUp = () =>
-    run(async () => {
+  useEffect(() => {
+    if (!desktop) return;
+    const saved = loadProPresenterSettings();
+    if (saved.enabled) void check(connectionOf(saved));
+    void search();
+  }, [check, search]);
+
+  /** Connect to one: save it, make the "Voice Verses" message if missing, say what is ready. */
+  const connect = (connection: ProPresenterConnection, label: string) =>
+    run(`connect:${connection.host}:${connection.port}`, async () => {
       setError(null);
-      setSteps(['Looking for ProPresenter on this computer…']);
-      const found = await desktop!.proPresenter.find?.();
-      if (!found) {
-        setSteps([]);
-        throw new Error(
-          "ProPresenter isn't answering on this computer. Open ProPresenter, turn on Settings → Network → Enable Network, then try again. If it runs on another computer, enter its address below.",
-        );
-      }
-      const connection = { host: found.host, port: found.port };
-      const next = { ...settings, ...connection, enabled: true };
-      setSettings(next);
-      saveProPresenterSettings(next);
-      const done = [`Found ${found.version || 'ProPresenter'}${found.name ? ` on “${found.name}”` : ''} (port ${found.port}).`];
-      setSteps(done);
-      const ready = await desktop!.proPresenter.setUp!(connection);
-      if (ready.theme) done.push(`Created the “Voice Verses” message with the theme “${ready.theme}”.`);
-      else if (ready.hasMessage) done.push('The “Voice Verses” message is there.');
-      setSteps([...done]);
+      save({ ...connection, enabled: true });
+      setManual({ host: connection.host, port: String(connection.port) });
+      const ready = desktop!.proPresenter.setUp ? await desktop!.proPresenter.setUp(connection) : await desktop!.proPresenter.status(connection);
       setStatus(ready);
-      if (ready.messageReady) {
-        await desktop!.proPresenter.show(connection, { ...TEST_VERSE, stage: next.stage });
-        done.push('Sent John 3:16 as a test: look at ProPresenter’s output. (Its Look needs the Messages layer on.)');
-        setSteps([...done]);
-        toast.success('ProPresenter is set up');
-      }
+      if (!ready.hasMessage) await check(connection);
+      toast.success(`Connected to ${label}`, {
+        description: 'theme' in ready && ready.theme ? `Made the “Voice Verses” message with the theme “${ready.theme}”.` : undefined,
+      });
     });
 
   const sendTest = () =>
-    run(async () => {
+    run('test', async () => {
       await desktop!.proPresenter.show(connectionOf(settings), { ...TEST_VERSE, stage: settings.stage });
-      toast.success('Sent John 3:16 to ProPresenter');
+      toast.success('Sent John 3:16 to ProPresenter', { description: 'Look at ProPresenter’s output. Its Look needs the Messages layer on.' });
     });
-
-  const clearTest = () =>
-    run(async () => {
-      await desktop!.proPresenter.clear(connectionOf(settings), { stage: settings.stage });
+  const clearTest = () => run('clear', () => desktop!.proPresenter.clear(connectionOf(settings), { stage: settings.stage }));
+  const createMessage = () =>
+    run('create', async () => {
+      const slide = themes.find((t) => t.id.uuid === theme);
+      if (!slide) throw new Error('Choose a look for the verse.');
+      setStatus(await desktop!.proPresenter.createMessage(connectionOf(settings), slide.id));
+      toast.success('Made the “Voice Verses” message in ProPresenter');
     });
 
   if (!desktop) {
     return (
-      <Alert>
-        <MonitorPlay className="h-4 w-4" />
-        <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
-          <span>Sending verses to ProPresenter needs the Voice Verses desktop app.</span>
-          <Button size="sm" variant="outline" onClick={() => window.open(DOWNLOAD_PAGE_URL, '_blank')}>
+      <div className="st-page">
+        <div className="st-hero plain">
+          <span className="st-glyph off">
+            <Radio />
+          </span>
+          <div>
+            <h4>ProPresenter needs the desktop app</h4>
+            <p className="sub">In a browser, Voice Verses can’t reach ProPresenter. The desktop app for Mac and Windows can.</p>
+          </div>
+          <a className="st-btn primary" href={DOWNLOAD_PAGE_URL} target="_blank" rel="noopener noreferrer">
             Download
-          </Button>
-        </AlertDescription>
-      </Alert>
+          </a>
+        </div>
+      </div>
     );
   }
 
+  const current = connectionOf(settings);
+  const connected = settings.enabled && !!status;
+  const where = isLocal(settings.host) ? 'this computer' : settings.host;
+  const searching = busy === 'search';
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MonitorPlay className="w-5 h-5" /> ProPresenter
-          </CardTitle>
-          <CardDescription>
-            Show the verses Voice Verses finds on your ProPresenter screens, in your own ProPresenter theme. Works with
-            ProPresenter 7.9 and later.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="flex items-center justify-between gap-4">
-            <Label htmlFor="pp-enabled" className="font-medium">
-              Send verses to ProPresenter
-            </Label>
-            <Switch id="pp-enabled" checked={settings.enabled} onCheckedChange={(enabled) => update({ enabled })} />
-          </div>
-
-          {desktop.proPresenter.find && (
-            <div className="rounded-xl bg-muted/50 p-4 space-y-3" data-propresenter-setup>
-              <div>
-                <p className="m-0 text-[15px] font-semibold">ProPresenter on this computer?</p>
-                <p className="m-0 text-[13px] text-muted-foreground">
-                  One click finds it, connects, makes the “Voice Verses” message if it isn’t there, and sends a test verse.
-                </p>
+    <div className="st-page" data-propresenter-page>
+      <div className={`st-hero ${connected ? '' : 'plain'}`} data-propresenter-status={connected ? 'connected' : error ? 'error' : 'off'}>
+        <span className={`st-glyph ${connected ? '' : 'off'}`}>
+          <Radio />
+        </span>
+        <div style={{ minWidth: 0 }}>
+          {connected ? (
+            <>
+              <h4>Connected to {status!.name || 'ProPresenter'}</h4>
+              <p className="sub">
+                <b>{status!.version || 'ProPresenter'}</b> · {where} · port {settings.port}
+              </p>
+              <div className="st-okline">
+                <span>
+                  <Check />
+                  Network is on
+                </span>
+                <span className={status!.messageReady ? '' : 'no'}>
+                  {status!.messageReady ? <Check /> : <AlertCircle />}
+                  {status!.messageReady ? '“Voice Verses” message ready' : status!.hasMessage ? 'The message needs {Verse} and {Reference}' : 'No “Voice Verses” message yet'}
+                </span>
               </div>
-              <Button onClick={findAndSetUp} disabled={busy} className="w-full h-11">
-                {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Find and set up ProPresenter
-              </Button>
-              {steps.length > 0 && (
-                <ul className="m-0 pl-0 list-none space-y-1 text-[13px]" role="status">
-                  {steps.map((step) => (
-                    <li key={step} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-px" />
-                      {step}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            </>
+          ) : settings.enabled && error ? (
+            <>
+              <h4>Can’t reach ProPresenter</h4>
+              <p className="sub">{error}</p>
+            </>
+          ) : (
+            <>
+              <h4>Not connected</h4>
+              <p className="sub">Voice Verses works on its own. Connect ProPresenter to send the verses into its looks as well.</p>
+            </>
           )}
-
-          <p className="m-0 text-[13px] font-semibold text-muted-foreground">Or enter it yourself (ProPresenter on another computer)</p>
-          <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1">
-            <li>
-              In ProPresenter, open <strong>Settings → Network</strong> and turn on <strong>Enable Network</strong>.
-            </li>
-            <li>
-              Enter the port shown there. If ProPresenter runs on a different computer from Voice Verses, also enter
-              the IP address shown there (both computers must be on the same network).
-            </li>
-          </ol>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2 space-y-1">
-              <Label htmlFor="pp-host">Computer</Label>
-              <Input
-                id="pp-host"
-                value={settings.host}
-                placeholder="127.0.0.1 (this computer)"
-                onChange={(e) => update({ host: e.target.value.trim() })}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="pp-port">Port</Label>
-              <Input
-                id="pp-port"
-                inputMode="numeric"
-                value={settings.port || ''}
-                onChange={(e) => update({ port: Number(e.target.value.replace(/\D/g, '')) })}
-              />
-            </div>
-          </div>
-
-          <Button onClick={check} disabled={busy} variant="outline" className="w-full">
-            {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            Test connection
-          </Button>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {status && (
-            <div className="rounded-lg border p-3 text-sm space-y-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                Connected to {status.version || 'ProPresenter'}
-                {status.name ? ` on “${status.name}”` : ''}
-              </div>
-
-              {!status.hasMessage && (
-                <div className="space-y-2">
-                  <p className="text-muted-foreground">
-                    Voice Verses shows verses through a ProPresenter message called “Voice Verses”. Choose the theme
-                    it should use, then create it:
-                  </p>
-                  {themes.length > 0 ? (
-                    <Select value={theme} onValueChange={setTheme}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Theme" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-72">
-                        {themes.map((t) => (
-                          <SelectItem key={t.id.uuid} value={t.id.uuid}>
-                            {t.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <p className="text-muted-foreground">No themes found in ProPresenter.</p>
-                  )}
-                  <Button onClick={createMessage} disabled={busy || !theme} className="w-full">
-                    Create the “Voice Verses” message
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Or create it yourself in ProPresenter's Messages with the text <code>{'{Verse} — {Reference}'}</code>.
-                  </p>
-                </div>
-              )}
-
-              {status.hasMessage && !status.messageReady && (
-                <p className="text-amber-500">
-                  The “Voice Verses” message needs both a <code>{'{Verse}'}</code> and a <code>{'{Reference}'}</code>{' '}
-                  token. Edit it in ProPresenter's Messages: type each name in <strong>Add Token</strong> and click the tick.
-                  {status.tokens && status.tokens.length > 0 && <> ProPresenter reports these tokens: {status.tokens.join(', ')}.</>}
-                </p>
-              )}
-
-              {status.messageReady && status.tokensUnconfirmed && (
-                <p className="text-muted-foreground">
-                  ProPresenter didn't say which tokens the message has. Send a test verse: if it shows on ProPresenter's output, it's
-                  set up.
-                </p>
-              )}
-
-              {status.messageReady && (
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={sendTest} disabled={busy} className="gap-2">
-                    <Send className="w-3.5 h-3.5" /> Send a test verse
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={clearTest} disabled={busy}>
-                    Clear it
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <Label htmlFor="pp-stage" className="font-medium">
-                Also show on stage screens
-              </Label>
-              <p className="text-xs text-muted-foreground">Sends the verse to ProPresenter's stage message too.</p>
-            </div>
-            <Switch id="pp-stage" checked={settings.stage} onCheckedChange={(stage) => update({ stage })} />
-          </div>
-        </CardContent>
-      </Card>
-
-      {loadAppMode() === 'screens' && (
-        <div className="rounded-lg border p-4 text-sm space-y-2">
-          <p className="font-medium">Optional: companion screen</p>
-          <p className="text-muted-foreground">
-            For a second operator whose only job is sending verses to ProPresenter, Voice Verses can open on a
-            stripped-down screen: listen, approve each verse, previous/next, clear. Everything else stays available.
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              update({ enabled: true });
-              saveAppMode('propresenter');
-            }}
-          >
-            Open the companion screen
-          </Button>
         </div>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[13.5px] font-semibold">Send verses</span>
+          <Toggle
+            label="Send verses to ProPresenter"
+            checked={settings.enabled}
+            onChange={(enabled) => {
+              save({ enabled });
+              if (enabled) void check(current);
+            }}
+          />
+        </div>
+      </div>
+
+      <Section
+        title="ProPresenter on your network"
+        aside={searching ? (
+          <span className="inline-flex items-center gap-2">
+            <span className="st-spin" />
+            Looking on this computer and the network…
+          </span>
+        ) : searchedAt ? (found?.length ? `Found ${found.length}` : 'None found') : null}
+        action={
+          <button type="button" className="st-btn ghost" onClick={() => void search()} disabled={searching}>
+            <RefreshCw />
+            Search again
+          </button>
+        }
+      >
+        <List label="ProPresenter found">
+          {(found ?? []).map((f) => {
+            const conn = { host: f.host, port: f.port };
+            const isCurrent = settings.enabled && same(conn, current) && !!status;
+            const label = f.here ? 'This computer' : f.name || f.host;
+            return (
+              <Row
+                key={`${f.host}:${f.port}`}
+                data-found={f.here ? 'here' : f.host}
+                lead={
+                  <span className="st-comp">
+                    {f.here ? <Laptop /> : <Monitor />}
+                  </span>
+                }
+                title={
+                  <>
+                    {label}
+                    {isCurrent && <span className="st-pill accent">Connected</span>}
+                  </>
+                }
+                desc={`${f.version || 'ProPresenter'}${f.here ? '' : ` · ${f.host}`} · port ${f.port}`}
+              >
+                {isCurrent ? (
+                  <button type="button" className="st-btn soft" onClick={sendTest} disabled={!!busy || !status?.messageReady}>
+                    Send a test verse
+                  </button>
+                ) : (
+                  <button type="button" className="st-btn" onClick={() => connect(conn, f.here ? 'ProPresenter on this computer' : label)} disabled={!!busy}>
+                    {busy === `connect:${f.host}:${f.port}` ? <span className="st-spin" /> : null}
+                    Connect
+                  </button>
+                )}
+              </Row>
+            );
+          })}
+          {found && found.length === 0 && !searching && (
+            <Row dim lead={<span className="st-comp"><Monitor /></span>} title="No ProPresenter found" desc="Not on this computer, and none answered on the church network." />
+          )}
+          {!found && <Row dim lead={<span className="st-spin" />} title="Looking…" desc="On this computer and the church network." />}
+        </List>
+      </Section>
+
+      {connected && !status!.hasMessage && (
+        <Section title="The “Voice Verses” message">
+          <List plain>
+            <Row title="Make the message" desc="ProPresenter shows verses through a message called “Voice Verses”. Choose the look it uses.">
+              {themes.length > 0 ? (
+                <Select value={theme} onValueChange={setTheme}>
+                  <SelectTrigger className="st-select-trigger max-w-[220px]" aria-label="Look for the verse">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {themes.map((t) => (
+                      <SelectItem key={t.id.uuid} value={t.id.uuid}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <span className="st-aside">No themes in ProPresenter</span>
+              )}
+              <button type="button" className="st-btn primary" onClick={createMessage} disabled={!!busy || !theme}>
+                Make it
+              </button>
+            </Row>
+          </List>
+        </Section>
+      )}
+      {connected && status!.hasMessage && !status!.messageReady && (
+        <Note warn>
+          The “Voice Verses” message needs a <b>{'{Verse}'}</b> and a <b>{'{Reference}'}</b> token. In ProPresenter’s Messages, type each name in Add Token and click the tick.
+          {status!.tokens?.length ? ` It has: ${status!.tokens.join(', ')}.` : ''}
+        </Note>
+      )}
+      {connected && status!.messageReady && status!.tokensUnconfirmed && (
+        <Note>ProPresenter didn’t say which tokens the message has. Send a test verse: if it shows on ProPresenter’s output, it’s set up.</Note>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">How it looks in ProPresenter</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>
-            Verses appear on ProPresenter's <strong>Messages</strong> layer, on the screens your Look sends messages to
-            (for example the audience screen and the livestream).
-          </p>
-          <p>
-            To change the wording, theme, size or position, edit the “Voice Verses” message in ProPresenter. Keep the{' '}
-            <code>{'{Verse}'}</code> and <code>{'{Reference}'}</code> tokens. Set the theme's text box to shrink
-            text to fit, so long verses fit.
-          </p>
-          <p>
-            Remove a verse with ProPresenter's clear Messages button, or with <strong>Clear to Logo</strong> in Voice
-            Verses.
-          </p>
-        </CardContent>
-      </Card>
+      <Section title="What ProPresenter shows">
+        <List plain>
+          <Row title="Its look" desc="Change the theme, size and position in ProPresenter’s message called “Voice Verses”. The Look on ProPresenter’s screens needs the Messages layer on." />
+          <Row title="Also on ProPresenter’s stage screens" desc="The verse appears as a stage message too.">
+            <Toggle id="pp-stage" label="Also on ProPresenter’s stage screens" checked={settings.stage} onChange={(stage) => save({ stage })} />
+          </Row>
+          <Row title="Try it" desc="Sends John 3:16 now, then clears it when you press Clear it.">
+            <button type="button" className="st-btn" onClick={sendTest} disabled={!connected || !!busy}>
+              Send a test verse
+            </button>
+            <button type="button" className="st-btn ghost" onClick={clearTest} disabled={!connected || !!busy}>
+              Clear it
+            </button>
+          </Row>
+          {loadAppMode() === 'screens' && (
+            <Row title="Companion screen" desc="For a second operator who only sends verses to ProPresenter: listen, approve each verse, clear.">
+              <button
+                type="button"
+                className="st-btn"
+                onClick={() => {
+                  save({ enabled: true });
+                  saveAppMode('propresenter');
+                }}
+              >
+                Open it
+              </button>
+            </Row>
+          )}
+        </List>
+      </Section>
+
+      <Section title="Not in the list?">
+        <ol className="st-steps">
+          <li>
+            <i>1</i>
+            <b>Open ProPresenter’s settings</b>ProPresenter → Settings → Network.
+          </li>
+          <li>
+            <i>2</i>
+            <b>Turn on Enable Network</b>Leave the port it shows as it is.
+          </li>
+          <li>
+            <i>3</i>
+            <b>Same network</b>Both computers on the church network, not guest Wi‑Fi. Then Search again.
+          </li>
+        </ol>
+        <details className="st-more">
+          <summary>Type the address yourself</summary>
+          <div className="inner">
+            <form
+              className="grid gap-2 grid-cols-[minmax(0,1fr)_110px_auto]"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const port = Number(manual.port.replace(/\D/g, ''));
+                connect({ host: manual.host.trim() || '127.0.0.1', port }, manual.host.trim() || 'this computer');
+              }}
+            >
+              <input id="pp-host" className="st-input" aria-label="Computer address" placeholder="192.168.1.24" value={manual.host} onChange={(e) => setManual({ ...manual, host: e.target.value })} />
+              <input id="pp-port" className="st-input" aria-label="Port" inputMode="numeric" placeholder="Port" value={manual.port} onChange={(e) => setManual({ ...manual, port: e.target.value })} />
+              <button type="submit" className="st-btn primary" disabled={!!busy}>
+                Connect
+              </button>
+            </form>
+            <p className="st-hint">The address and port are in ProPresenter → Settings → Network. On the same computer, use 127.0.0.1.</p>
+          </div>
+        </details>
+      </Section>
     </div>
   );
 }

@@ -3,8 +3,8 @@ import { DisplayMonitor } from '@/components/DisplayMonitor';
 import { Button } from '@/components/ui/button';
 import { appUrl } from '@/lib/appUrl';
 import { isDesktop } from '@/lib/desktop';
-import { NetworkOutputSettings } from '@/components/NetworkOutputSettings';
 import { ScreenSettings } from '@/components/ScreenSettings';
+import '@/components/settings/settings.css';
 import { AppShell, Section } from '@/components/shell/AppShell';
 
 const OUTPUTS = [
@@ -38,12 +38,12 @@ const DisplayManager = () => (
       </Section>
 
       {isDesktop && (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+        <div className="vvs rounded-2xl overflow-hidden" style={{ background: 'var(--s-win)' }}>
           <ScreenSettings />
-          <NetworkOutputSettings />
         </div>
       )}
 
+      {!isDesktop && (
       <Section title="Setting up" description="The usual ways churches connect Voice Verses to their screens.">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
           <div className="rounded-xl bg-muted/40 p-4">
@@ -60,6 +60,7 @@ const DisplayManager = () => (
           </div>
         </div>
       </Section>
+      )}
     </div>
   </AppShell>
 );

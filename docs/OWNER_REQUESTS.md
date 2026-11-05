@@ -258,7 +258,16 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.13.0 **ProPresenter in one click**: "Find and set up ProPresenter" finds it on this computer (no port to type), connects, and creates the "Voice Verses" message with a suitable theme. Typing the address is still there for another computer.
 - ✅ 1.13.0 **Screens as tiles**: Settings → Screens shows each display and DeckLink port as a tile, with one click for what it shows, and **Identify screens** puts a big number on every display.
 - 💬 Architecture: no microservices. The app must work offline, install as one download and run on older Macs; separate services would add things to install, start and break during a service. Instead: separate modules with clear edges (detection gets plain flags and never reads settings; outputs, DeckLink and ProPresenter are each their own module), and next a **local control API** (1.15.0) so a Stream Deck, phone or another app can drive it. See D26 and D27.
-- ⏳ 1.14.0 Moment autopilot and sermon points on cue (off by default). 1.15.0 the local control API.
+- ⏳ Moment autopilot and sermon points on cue (off by default), then the local control API: see the roadmap.
+
+## "Can't the ProPresenter search work if they are on the same network, even if not on the same computer? Is DeckLink and HDMI the only option, can't other churches use other methods? Is that tied in? I am very disappointed with the aesthetics… every part of the app must have that excellence."
+
+(5 Nov 2026, after 1.13.0.)
+- ✅ 1.14.0 ProPresenter is searched for on the whole local network too, not only this computer: Bonjour, and every address of the church network on ProPresenter's usual ports (plus the port saved last time), each confirmed by asking it for its version. `propresenter:search`.
+- 💬 Ways out today: any display the computer sees (HDMI, DisplayPort, USB‑C, Thunderbolt, adapters such as HDMI‑to‑SDI, AirPlay to an Apple TV), a DeckLink port (SDI), any browser on the network (smart TV, tablet, OBS/vMix browser source), and ProPresenter. All are fed by the one renderer, so a new way is a new destination, not a new screen: NDI next, then Syphon/Spout.
+- ✅ 1.14.0 Settings redesigned to the mock-up the owner approved (`docs/design/settings-redesign.html`): a sheet with coloured icons grouped This service / In the booth / This computer and the booth check at the top; every other Settings page (Bible as translation cards, Listening, Logo, Library, Desktop app) in the same look; Screens and outputs as a picture of the room with live previews, each output's destinations, and the ways to connect; ProPresenter with everything found on the network listed; Features with preset cards; the Booth check as a page.
+
+- Owner's choices (5 Nov 2026): build the mock-up as drawn; Recommended leaves Predictive Next and "Singing something new" off until switched on (✅ 1.14.0); NDI output comes straight after.
 
 ## Process
 

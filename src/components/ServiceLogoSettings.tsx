@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Image as ImageIcon, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ServiceStorage } from '@/lib/serviceStorage';
@@ -76,59 +75,38 @@ export const ServiceLogoSettings = ({ serviceId }: ServiceLogoSettingsProps) => 
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <ImageIcon className="w-5 h-5 text-primary" />
-        <h4 className="font-semibold text-foreground">
-          {serviceId ? 'Service Logo' : 'Default Service Logo'}
-        </h4>
-      </div>
-
-      <div className="space-y-4">
-        {logoUrl && (
-          <div className="border border-border rounded-lg p-4 bg-muted/50">
-            <img 
-              src={logoUrl} 
-              alt="Service Logo" 
-              className="max-h-32 mx-auto object-contain"
-            />
-          </div>
+    <div className="grid gap-5 sm:grid-cols-[260px_minmax(0,1fr)] items-center" data-logo-settings>
+      {/* As the screens show it: the logo on black */}
+      <div className="aspect-video rounded-xl bg-black grid place-items-center overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,.28)]">
+        {logoUrl ? (
+          <img src={logoUrl} alt="The logo" className="max-h-[70%] max-w-[70%] object-contain" />
+        ) : (
+          <span className="flex flex-col items-center gap-2 text-white/40 text-[13px] font-semibold">
+            <ImageIcon className="w-7 h-7" />
+            No logo yet
+          </span>
         )}
-
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => document.getElementById('logo-upload')?.click()}
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            {logoUrl ? 'Change Logo' : 'Upload Logo'}
+      </div>
+      <div className="space-y-3 min-w-0">
+        <p className="m-0 text-[15px] font-semibold">{serviceId ? 'This service’s logo' : 'The logo for every service'}</p>
+        <p className="m-0 text-[13px] text-muted-foreground max-w-[56ch]">
+          {serviceId
+            ? 'Shown when you press Logo during this service, instead of the church logo.'
+            : 'Shown on the screens when you press Logo. A service can have its own instead. A transparent PNG looks best.'}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => document.getElementById('logo-upload')?.click()}>
+            <Upload className="w-4 h-4" />
+            {logoUrl ? 'Choose another picture' : 'Choose a picture'}
           </Button>
-          
           {logoUrl && (
-            <Button
-              variant="outline"
-              onClick={handleRemoveLogo}
-            >
+            <Button variant="ghost" onClick={handleRemoveLogo}>
               <Trash2 className="w-4 h-4" />
+              Remove
             </Button>
           )}
         </div>
-
-        <input
-          id="logo-upload"
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileUpload}
-        />
-
-        <p className="text-xs text-muted-foreground">
-          {serviceId 
-            ? 'Upload a logo for this specific service. This will be displayed when you click "Show Logo".'
-            : 'Upload a default logo to use for all services unless a specific service logo is set.'
-          }
-        </p>
+        <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
       </div>
     </div>
   );
