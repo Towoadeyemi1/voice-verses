@@ -37,6 +37,7 @@
 .vvs .st-groups { display: flex; flex-direction: column; gap: 18px; }
 .vvs .st-group { display: flex; flex-direction: column; gap: 2px; }
 .vvs .st-group-label { margin: 0 10px 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--s-ink-3); }
+.vvs .st-group-label.as-named { text-transform: none; letter-spacing: .01em; font-size: 13px; }
 .vvs .st-nav { display: flex; align-items: center; gap: 11px; min-height: 40px; padding: 6px 10px; border-radius: 10px; border: 0; background: none; cursor: pointer; text-align: left; font-size: 14px; font-weight: 500; color: var(--s-ink); }
 .vvs .st-nav:hover { background: var(--s-fill); }
 .vvs .st-nav[aria-current="page"] { background: var(--s-accent-soft); font-weight: 650; }
@@ -270,7 +271,7 @@
 /* Embedded in a page of its own (Screens, the ProPresenter companion): use the full width */
 .vvs:not(.st-window) > .st-page { max-width: none; padding: 22px 24px 28px; }
 
-/* ---- Voice Verses spirit (docs/design/spirit.html) ---- */
+/* ---- spirit (docs/design/spirit.html) ---- */
 .vvs .sp-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; padding: 26px; border-radius: 18px;
   background: radial-gradient(60% 140% at 0% 0%, rgba(240,180,74,.16), transparent 60%), radial-gradient(50% 120% at 100% 100%, rgba(139,92,246,.14), transparent 60%), var(--s-surface); }
 .vvs .sp-hero h3 { margin: 0; font-size: 26px; line-height: 1.15; font-weight: 700; letter-spacing: -.02em; }

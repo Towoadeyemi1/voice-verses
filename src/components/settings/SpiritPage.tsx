@@ -72,7 +72,7 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
       <div className="sp-hero">
         <SpiritOrb size={84} />
         <div>
-          <h3>{last.day ? (last.right >= last.manual ? 'Voice Verses spirit ran most of your last service.' : 'Voice Verses spirit is learning your service.') : 'Voice Verses spirit is ready to learn your service.'}</h3>
+          <h3>{last.day ? (last.right >= last.manual ? 'spirit ran most of your last service.' : 'spirit is learning your service.') : 'spirit is ready to learn your service.'}</h3>
           <p>
             It listens, watches what you do, and gets the next thing ready. Every Take tells it it was right; every correction teaches it. It only goes live by itself where you have
             allowed it, and only once it has earned it.
@@ -138,7 +138,7 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
             )}
           </>
         ) : (
-          <Hint>Nothing yet. Voice Verses spirit starts learning the first time you press Start listening with a service loaded.</Hint>
+          <Hint>Nothing yet. spirit starts learning the first time you press Start listening with a service loaded.</Hint>
         )}
       </Section>
 
@@ -199,7 +199,7 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
         </div>
       </Section>
       <Hint>
-        Voice Verses spirit learns on this computer. With a library folder (Settings → Library and backup), what it has learned goes to the church’s other computers too. Hands-free is chosen for each
+        spirit learns on this computer. With a library folder (Settings → Library and backup), what it has learned goes to the church’s other computers too. Hands-free is chosen for each
         cue, in{' '}
         <button type="button" className="st-btn link" style={{ display: 'inline', minHeight: 0 }} onClick={onCues}>
           Cues

@@ -44,7 +44,7 @@ export function CuesPage({ service }: { service?: Service | null }) {
       return;
     }
     updateSpirit((s) => teachCue(s, words, targetOf(target)));
-    toast.success('Voice Verses spirit learned a new cue', { description: `When the preacher says “${words}”, ${targetName(target)} will be ready in Next.` });
+    toast.success('spirit learned a new cue', { description: `When the preacher says “${words}”, ${targetName(target)} will be ready in Next.` });
     setPhrase('');
   };
 
@@ -161,7 +161,7 @@ export function CuesPage({ service }: { service?: Service | null }) {
               </button>
             </span>
           ) : (
-            <span>Voice Verses spirit also learns by watching: when you move on yourself, it notes what was said just before.</span>
+            <span>spirit also learns by watching: when you move on yourself, it notes what was said just before.</span>
           )}
           <button type="button" className="st-btn primary" onClick={teach} disabled={!phrase.trim()}>
             Teach spirit

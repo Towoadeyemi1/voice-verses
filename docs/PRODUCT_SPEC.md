@@ -327,7 +327,7 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   - Each problem has a Fix button: the right Settings page, the computer's microphone settings, or Plan a service.
 - **Warnings during the service** (`Guardian`): every 5 seconds, screens, DeckLink ports and ProPresenter are checked again, and the microphone is watched while listening (no sound for 20 seconds, unless muted). A problem shows as an amber warning below the top bar with its Fix button. A warning can be closed; it comes back only if it clears and happens again.
 
-## 8e. Voice Verses spirit (1.17.0, `lib/spirit.ts`, D29)
+## 8e. spirit (1.17.0, `lib/spirit.ts`, D29)
 
 The autopilot that learns how a church runs its service. Approved mock-up: `docs/design/spirit.html`.
 - **Cues.** A cue is a phrase (whole words, at least two) that gets something ready: a part of the service by name, any part of a kind of moment (prayer, giving, welcome, notices, worship, the word, response, communion, close), or a sermon point (the words after it become the point). The built-in phrases of 1.16.0 come as cues (`builtin:<moment>:<phrase>`, `builtin:point:*`); the church teaches its own (`taught`), or accepts what spirit noticed (`noticed`). Taught cues are checked before built-in ones. A cue for a part goes by the part's name, so a duplicated service keeps it.
@@ -414,6 +414,6 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `ai-assistant-settings` | AI provider and options |
 | `global-service-logo` | The church logo (data URL) |
 | `library-sync-state`, `library-tombstones` | Library folder sync |
-| `voice-verses-spirit` | Voice Verses spirit (1.17.0): its level, every cue (phrase, target, source, trust, last 10 outcomes, streak, correction note), what it observed and was told were not cues, events and words heard (7 days). Shared as `spirit/learned.json` in the library folder |
+| `voice-verses-spirit` | spirit (1.17.0): its level, every cue (phrase, target, source, trust, last 10 outcomes, streak, correction note), what it observed and was told were not cues, events and words heard (7 days). Shared as `spirit/learned.json` in the library folder |
 
 Desktop-only files in `userData`: `screens.json` (display for each output), saved output window placement, and the encrypted secrets.

@@ -1,5 +1,5 @@
 /**
- * What Voice Verses spirit learns, shared by the church's computers through the
+ * What spirit learns, shared by the church's computers through the
  * library folder (spirit/learned.json, synced by iCloud Drive, Dropbox, OneDrive
  * or Google Drive). Desktop app only. Each computer merges what it finds there
  * with its own: per cue the newer change wins, and what was seen is added together.

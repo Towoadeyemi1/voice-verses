@@ -1,4 +1,4 @@
-// Voice Verses spirit with a spoken sermon (fake microphone):
+// spirit with a spoken sermon (fake microphone):
 //  - a taught cue ("as the ushers make their way" → Offering) gets Offering ready in Next; "Not this" →
 //    "Wrong part" puts it back and teaches spirit;
 //  - a point cue that has earned Hands-free ("point number two") goes live by itself after 3 s;

@@ -68,7 +68,7 @@ export const ScreensColumn = ({
   onEditNext?: () => void;
   /** The countdown Next will start (a part with its own countdown), shown in its picture */
   nextCountdown?: { countdown: Countdown; remaining: number } | null;
-  /** When Voice Verses spirit got Next ready: "Not this", with why (spirit learns from it) */
+  /** When spirit got Next ready: "Not this", with why (spirit learns from it) */
   onNotThis?: (correction: Correction) => void;
 }) => {
   const projector = usePreviewStage('projection');
@@ -142,7 +142,7 @@ export const ScreensColumn = ({
         {onNotThis && (
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5 whitespace-nowrap flex-shrink-0" data-not-this title="Voice Verses spirit got this ready: tell it what was wrong">
+              <button type="button" className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5 whitespace-nowrap flex-shrink-0" data-not-this title="spirit got this ready: tell it what was wrong">
                 <SpiritOrb size={14} /> Not this
               </button>
             </PopoverTrigger>

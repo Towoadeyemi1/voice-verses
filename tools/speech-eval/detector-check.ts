@@ -662,7 +662,7 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('a reference in a point still shows the verse', await run({ sermonPoints: true }, ['Point number three, Romans 8:28 says all things work together for good']), 'verse Romans 8:28');
   }
 
-  // Voice Verses spirit: taught cues, the trust ladder, corrections and learning by watching
+  // spirit: taught cues, the trust ladder, corrections and learning by watching
   {
     let st = emptySpirit();
     st = teachCue(st, 'as the ushers make their way', { part: 'Offering' });

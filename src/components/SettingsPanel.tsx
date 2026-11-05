@@ -28,7 +28,7 @@ export type Pane = 'booth' | 'spirit' | 'cues' | 'features' | 'bible' | 'listeni
 
 const GROUPS: { label: string; panes: { id: Pane; label: string; hint: string; icon: LucideIcon; tint: Tint }[] }[] = [
   {
-    label: 'Voice Verses spirit',
+    label: 'spirit',
     panes: [
       { id: 'spirit', label: 'How spirit runs', hint: 'Gets each part of the service ready, and learns how your church runs.', icon: Sparkles, tint: 'spirit' },
       { id: 'cues', label: 'Cues', hint: 'What the preacher says that gets the next part ready.', icon: AudioLines, tint: 'teal' },
@@ -158,7 +158,7 @@ export const SettingsPanel = ({
         <div className="st-groups">
           {GROUPS.map((g) => (
             <div key={g.label} className="st-group">
-              <p className="st-group-label">{g.label}</p>
+              <p className={`st-group-label ${g.label === 'spirit' ? 'as-named' : ''}`}>{g.label}</p>
               {g.panes.map((p) => (
                 <button key={p.id} type="button" className="st-nav" aria-current={pane === p.id ? 'page' : undefined} onClick={() => setPane(p.id)} data-pane={p.id}>
                   <Sq tint={p.tint} icon={p.icon} />

@@ -24,7 +24,7 @@ export interface Moment {
 }
 
 /**
- * A spoken cue (Voice Verses spirit): words that get a part of the service, or a
+ * A spoken cue (spirit): words that get a part of the service, or a
  * sermon point, ready. Built-in ones come with the app and can be switched off;
  * a church teaches its own. Plain data, so the listening engine never reads storage.
  */

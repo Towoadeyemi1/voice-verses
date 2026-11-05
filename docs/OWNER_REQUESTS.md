@@ -297,10 +297,18 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.17.0 Voice Verses spirit: Settings → spirit (how much spirit does, the last service, what it knows) and Settings → Cues ("When the preacher says ___ get ___ ready", words picked from what was said lately, what spirit noticed, every cue's record and trust). Every cue starts at Ready in Next: the operator Takes. "Not this" on Next asks why (wrong part, not now, never for these words) and spirit remembers. Hands-free unlocks per cue after 10 right in a row, only when chosen, with a 3-second countdown and Stop; a correction sends it back to Ready in Next. Learning is shared through the library folder.
 - ⏳ 1.18.0 Hands-free polish and spirit's summary after a service. 1.19.0 spirit runs the order of service (a part's time up, a song ended).
 
-## "Also call it Voice Verses spirit (with lower case “s”), not Spirit"
+## "Also call it Voices spirit (with lower case “s”) not Spirit. I meant Voice Verses spirit" … "Actually call it spirit, with small “s”. This is for the intelligence part of what we are building, not the bible or scriptures. Do not change Spirit in scriptures or bible!!"
 
 (5 Nov 2026.)
-- ✅ 1.17.0 The name is **Voice Verses spirit**, always with a small "s", in the app, its messages and the docs. Where it would start a sentence the full name is used ("Voice Verses spirit will remember"). "Spirit" with a capital stays only where scripture or a hymn means the Holy Spirit (the Bibles and sample hymns are untouched). Code names (`lib/spirit.ts`, `SpiritOrb`) are not shown to anyone and stay as they are.
+- ✅ 1.17.0 The intelligence (the learning autopilot) is called **spirit**, always with a small "s", in the app, its messages and the docs, even at the start of a sentence ("spirit will remember").
+- ✅ Scripture is never touched: the Bibles, sample hymns, test sentences and sermon keep "Spirit" exactly as written. Renames must never run over `src/data/`, `src/lib/samples/` or test sentences (see LESSONS).
+- Code names (`lib/spirit.ts`, `SpiritOrb`) are not shown to anyone and stay as they are.
+
+## "I want a demo for all features and setup in a way that users will see how to do everything that might need to be done in the app, maybe under something called training, which will show what to click where and steps using the actual interface. What do you think?"
+
+(5 Nov 2026.)
+- 💬 Proposed: **Training**, lessons that run on the real interface. A spotlight on the real control, one short step at a time, waiting for the volunteer to do it themselves. Lessons happen in a **practice room** (the sample service, a recorded sermon, the screens shown only on this computer) so nothing reaches the room by mistake. Lessons are grouped by role (First Sunday, Setting up the booth, Songs and slides, Teaching spirit), with progress ticks, and a "Show me" link from any Settings page or warning.
+- ⏳ Mock-up first, for the owner's yes.
 
 ## Process
 

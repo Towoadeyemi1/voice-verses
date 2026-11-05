@@ -565,7 +565,7 @@ export const LiveWorkspace = () => {
     setPrediction({ key: verseKey(verse), reason: best.reason, heard: hint.heard });
   };
 
-  // ---- Voice Verses spirit: moments and sermon points, learning, the trust ladder (lib/spirit.ts) ----
+  // ---- spirit: moments and sermon points, learning, the trust ladder (lib/spirit.ts) ----
 
   /** Why Next holds what it does, when spirit put it there ("spirit heard “let us pray”") */
   const [cue, setCue] = useState<{ id: string; note: string; part?: string } | null>(null);
@@ -609,7 +609,7 @@ export const LiveWorkspace = () => {
     if (pending.mode === 'handsfree' && item) {
       let stopped = false;
       const id = toast(`${title} goes live in 3 seconds`, {
-        description: `Voice Verses spirit heard “${pending.heard}”. Stop keeps it in Next.`,
+        description: `spirit heard “${pending.heard}”. Stop keeps it in Next.`,
         duration: 3200,
         action: {
           label: 'Stop',
@@ -617,7 +617,7 @@ export const LiveWorkspace = () => {
             stopped = true;
             window.clearTimeout(handsFreeTimer.current);
             settleSpirit('wrong', { correction: 'not-now' });
-            toast('Kept in Next', { description: 'Voice Verses spirit counts that as a correction.' });
+            toast('Kept in Next', { description: 'spirit counts that as a correction.' });
           },
         },
       });
@@ -627,7 +627,7 @@ export const LiveWorkspace = () => {
         void goLive(item);
       }, 3000);
     } else {
-      toast(`${title} is ready in Next`, { description: `Voice Verses spirit heard “${pending.heard}”. Take shows it; “Not this” teaches spirit.`, duration: 6000 });
+      toast(`${title} is ready in Next`, { description: `spirit heard “${pending.heard}”. Take shows it; “Not this” teaches spirit.`, duration: 6000 });
     }
   };
 
@@ -684,7 +684,7 @@ export const LiveWorkspace = () => {
     }
     setCue(null);
     settleSpirit('wrong', { correction });
-    toast('Voice Verses spirit will remember', {
+    toast('spirit will remember', {
       description:
         correction === 'never'
           ? `It won’t use “${p.heard}” again.`

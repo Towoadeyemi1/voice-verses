@@ -206,7 +206,7 @@ All colors MUST be HSL.
 @keyframes vv-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 .vv-blink { animation: vv-blink 1s ease-in-out infinite; }
 
-/* Voice Verses spirit's orb breathes slowly (a still light when motion is reduced) */
+/* spirit's orb breathes slowly (a still light when motion is reduced) */
 @keyframes vv-spirit-breathe { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.05) rotate(25deg); } }
 .vv-spirit-orb { animation: vv-spirit-breathe 6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .vv-spirit-orb { animation: none; } }

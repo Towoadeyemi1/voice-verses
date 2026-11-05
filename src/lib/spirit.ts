@@ -1,5 +1,5 @@
 /**
- * Voice Verses spirit: the autopilot that learns how a church runs its service
+ * spirit: the autopilot that learns how a church runs its service
  * (docs/design/spirit.html, D29).
  *
  * - Spoken cues get a part of the service, or a sermon point, ready. Built-in
