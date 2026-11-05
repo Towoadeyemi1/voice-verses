@@ -1,3 +1,4 @@
+import { StillMotion } from '../MotionBackground';
 import { ReactNode, useEffect, useRef } from 'react';
 import { LayoutGrid, Pencil, Rows3 } from 'lucide-react';
 import { ScaledStage } from '../ScaledStage';
@@ -66,6 +67,7 @@ export const SlideStrip = ({
   const verses = items.every((i) => i.text !== undefined);
 
   return (
+    <StillMotion>
     <section className={`min-w-0 flex flex-col gap-2 ${expanded ? 'min-h-0 h-full' : ''}`} aria-label={verses ? 'Verses' : 'Slides'}>
       <div className="flex items-center gap-3 min-h-9">
         <p className="m-0 text-[13px] font-semibold text-muted-foreground">
@@ -145,5 +147,6 @@ export const SlideStrip = ({
         })}
       </div>
     </section>
+    </StillMotion>
   );
 };

@@ -117,17 +117,15 @@ export const FEATURES: FeatureInfo[] = [
     group: 'The service',
     title: 'Moment autopilot',
     description:
-      '"Let us pray", "as the ushers come forward", "every head bowed": the order of service moves to that part, into Next.',
+      '"Let us pray", "as the ushers come forward", "every head bowed": that part of the order of service waits in Next for Take.',
     recommended: false,
-    coming: true,
   },
   {
     id: 'sermonPoints',
     group: 'The service',
     title: 'Sermon points on cue',
-    description: '"Point number two…", "write this down…": the preacher’s words become a point slide, ready in Next.',
+    description: '"Point number two…", "write this down…": the preacher’s words become a point slide, waiting in Next for Take.',
     recommended: false,
-    coming: true,
   },
   {
     id: 'boothCheck',
@@ -202,5 +200,7 @@ export function detectionFeatures(features: Features = loadFeatures()) {
     songRecognition: features.songRecognition,
     worshipCues: features.worshipCues,
     newSongs: features.newSongs,
+    momentAutopilot: features.momentAutopilot,
+    sermonPoints: features.sermonPoints,
   };
 }

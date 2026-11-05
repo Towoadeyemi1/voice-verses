@@ -1,8 +1,16 @@
-import { CSSProperties, ReactNode, useEffect, useMemo, useState } from 'react';
+import { createContext, CSSProperties, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { MOTION_CYCLE, MotionBackground as Motion, seeded } from '@/lib/backgrounds';
 import { useStageScale, useStageSize } from './ScaledStage';
 import { useMotionAllowed } from '@/hooks/use-motion-allowed';
 import { probeSmoothness } from '@/lib/motionQuality';
+
+/**
+ * Previews on the operator's screen that need not move (Next, the slide grid, Settings):
+ * wrap them in <StillMotion> and their backgrounds stand still, so only the Live monitor
+ * and the real screens spend the computer's effort on motion.
+ */
+const StillContext = createContext(false);
+export const StillMotion = ({ children }: { children: ReactNode }) => <StillContext.Provider value={true}>{children}</StillContext.Provider>;
 
 /** Below this width on screen (a thumbnail), backgrounds stand still to save the computer's effort. */
 const STILL_BELOW_PX = 240;
@@ -63,10 +71,11 @@ export const MotionBackground = ({
   const stage = useStageSize();
   const scale = useStageScale();
   const allowed = useMotionAllowed();
+  const previewStill = useContext(StillContext);
   const [t0] = useState(() => Date.now() / 1000);
   const [a, b] = motion.colors;
   const onScreen = stage.width * (scale || 0);
-  const still = paused === true || !allowed || motion.speed <= 0 || (paused === undefined && scale > 0 && onScreen < STILL_BELOW_PX);
+  const still = paused === true || (previewStill && paused !== false) || !allowed || motion.speed <= 0 || (paused === undefined && scale > 0 && onScreen < STILL_BELOW_PX);
   const cycle = MOTION_CYCLE[motion.style] / Math.max(0.1, motion.speed || 1);
 
   // On a big screen, check once that this computer keeps it smooth

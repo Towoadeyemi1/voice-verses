@@ -2,6 +2,7 @@ import { ArrowUp, Pencil } from 'lucide-react';
 import { ClickMode } from '@/lib/clickMode';
 import { ScaledStage } from '../ScaledStage';
 import { OutputContent, Live } from '../OutputContent';
+import { StillMotion } from '../MotionBackground';
 import { AlertBanner } from '../AlertBanner';
 import { ConfidenceScreen, loadConfidenceSettings } from '../ConfidenceScreen';
 import { Countdown } from '@/lib/countdown';
@@ -11,7 +12,11 @@ const Label = ({ tone, title, detail, children }: { tone: 'live' | 'next'; title
   <div className="flex items-center gap-2 text-sm font-semibold min-h-[30px]">
     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: `hsl(var(--${tone}))` }} />
     {title}
-    {detail && <span className="font-medium text-muted-foreground truncate">{detail}</span>}
+    {detail && (
+      <span className="font-medium text-muted-foreground truncate" data-label-detail={tone} title={detail}>
+        {detail}
+      </span>
+    )}
     <span className="ml-auto flex items-center gap-1">{children}</span>
   </div>
 );
@@ -136,7 +141,9 @@ export const ScreensColumn = ({
       </Label>
       <div className="monitor-fit relative rounded-[14px] overflow-hidden shadow-[0_0_0_2px_hsl(var(--next))] flex-shrink-0" style={{ ['--ratio' as string]: projector.width / projector.height }}>
         <ScaledStage stage={projector} fitShape className="bg-black">
-          <OutputContent live={next} output="projection" countdown={nextCountdown?.countdown} remaining={nextCountdown?.remaining ?? 0} preview />
+          <StillMotion>
+            <OutputContent live={next} output="projection" countdown={nextCountdown?.countdown} remaining={nextCountdown?.remaining ?? 0} preview />
+          </StillMotion>
         </ScaledStage>
         {!next && <div className="absolute inset-0 grid place-items-center text-sm text-white/45">The next verse or slide waits here</div>}
       </div>

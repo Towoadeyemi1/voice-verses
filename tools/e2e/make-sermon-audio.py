@@ -4,6 +4,7 @@
 #   python tools/e2e/make-sermon-audio.py path/to/en_US-lessac-medium.onnx  out.wav  [sermon|chapter]
 # 'chapter' (for chapter.cjs): a chapter called without a verse, a verse of it read, "verse 6", then a
 # story told in the preacher's own words and "help me find it".
+# 'moments' (for moments.cjs): "let us pray" and two sermon points, one with its words in the next sentence.
 # Text is KJV, a public-domain hymn, and words written for the test only.
 import subprocess, sys, wave, tempfile, os
 
@@ -27,8 +28,17 @@ CHAPTER = [
     'Church, you know Zacchaeus. He was a tax collector, too short to see over the crowd, so he ran ahead and climbed up into a sycamore tree.',
     'Somebody help me find it.',
 ]
+MOMENTS = [
+    'Good morning church, it is good to be in the house of the Lord.',
+    'Before we go any further, would you bow your heads with me. Let us pray.',
+    'Point number two, God is faithful even when we are not.',
+    'My third point.',
+    'Grace is greater than all our sin.',
+]
 if script == 'chapter':
     LINES = CHAPTER
+elif script == 'moments':
+    LINES = MOMENTS
 frames, params = b'', None
 with tempfile.TemporaryDirectory() as tmp:
     for i, line in enumerate(LINES):

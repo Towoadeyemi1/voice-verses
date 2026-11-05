@@ -258,7 +258,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.13.0 **ProPresenter in one click**: "Find and set up ProPresenter" finds it on this computer (no port to type), connects, and creates the "Voice Verses" message with a suitable theme. Typing the address is still there for another computer.
 - ✅ 1.13.0 **Screens as tiles**: Settings → Screens shows each display and DeckLink port as a tile, with one click for what it shows, and **Identify screens** puts a big number on every display.
 - 💬 Architecture: no microservices. The app must work offline, install as one download and run on older Macs; separate services would add things to install, start and break during a service. Instead: separate modules with clear edges (detection gets plain flags and never reads settings; outputs, DeckLink and ProPresenter are each their own module), and next a **local control API** (1.15.0) so a Stream Deck, phone or another app can drive it. See D26 and D27.
-- ⏳ Moment autopilot and sermon points on cue (off by default), then the local control API: see the roadmap.
+- ✅ 1.16.0 Moment autopilot and sermon points on cue (off by default, Settings → Features): "let us pray" puts the Prayer part in Next; "point number two…" makes a point slide in Next; Take shows them, Undo puts things back. Then the local control API: see the roadmap.
 
 ## "Can't the ProPresenter search work if they are on the same network, even if not on the same computer? Is DeckLink and HDMI the only option, can't other churches use other methods? Is that tied in? I am very disappointed with the aesthetics… every part of the app must have that excellence."
 
@@ -274,6 +274,12 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - Owner's choices: use the free NDI Runtime rather than bundling NDI's library (bundling would put NDI's SDK terms into Voice Verses' own licence); accept NDI's SDK licence only for testing in the build environment (nothing from the SDK is in the repository).
 - ✅ 1.15.0 Each output (Projector, Lower third, Stage monitor) can be sent as an NDI® source, named "COMPUTER (Voice Verses Projector)" and so on, for vMix, OBS, TriCaster, NDI converters and NDI Studio Monitor. The lower third arrives see-through (nothing to key out). Settings → Screens and outputs: "NDI on the network" in the picture of the room, a switch per output with "Sending · n watching", NDI among each output's destinations, the NDI tile in Ways to connect; the booth check and the warnings watch NDI too. Without the NDI Runtime, it says to get NDI Tools (free) from ndi.video/tools.
 - ⏳ To confirm in the owner's booth (for example into vMix or the switcher through an NDI converter).
+
+## "Please resolve the next thing, moment… Will all these make the app slow and heavy?"
+
+(5 Nov 2026.)
+- ✅ 1.16.0 Moment autopilot and sermon points (see above).
+- 💬 Measured in the desktop app (test computer without a graphics chip, so motion costs show high): idle 0.2% of one processor core with still backgrounds, 2% with the projector on, about 25% while listening (the speech engine); memory about 700 MB, 1.3–1.5 GB while listening (the speech model). Features that are switched off don't run; moments and points take about 4 µs a sentence. The real cost is moving backgrounds, drawn by the graphics chip: ✅ 1.16.0 only the Live monitor and the real screens move now (Next, the slide strip and grid, and Settings previews stand still), and the automatic speed guard already stills them on a slow computer.
 
 ## Process
 

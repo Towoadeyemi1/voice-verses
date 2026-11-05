@@ -43,7 +43,7 @@ const features = (win) => win.evaluate(() => JSON.parse(localStorage.getItem('vo
   const pane = win.locator('[data-feature-settings]');
   check('Recommended is the preset on a new install', (await pane.locator('[role="radio"][aria-checked="true"] b').textContent()) === 'Recommended');
   check('Recommended leaves the bolder features off', (await pane.getByRole('switch', { name: 'Predictive Next' }).getAttribute('aria-checked')) === 'false');
-  check('features not built yet say Coming and can’t be switched on', (await pane.getByRole('switch', { name: 'Moment autopilot' }).isDisabled()) === true);
+  check('moment autopilot starts off and can be switched on', (await pane.getByRole('switch', { name: 'Moment autopilot' }).getAttribute('aria-checked')) === 'false' && !(await pane.getByRole('switch', { name: 'Moment autopilot' }).isDisabled()));
   await win.screenshot({ path: `${OUT}/features-3-pane.png` });
   await pane.getByRole('radio', { name: /^Essentials/ }).click();
   await win.waitForTimeout(400);
