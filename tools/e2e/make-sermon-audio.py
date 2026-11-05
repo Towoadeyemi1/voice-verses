@@ -4,7 +4,7 @@
 #   python tools/e2e/make-sermon-audio.py path/to/en_US-lessac-medium.onnx  out.wav  [sermon|chapter]
 # 'chapter' (for chapter.cjs): a chapter called without a verse, a verse of it read, "verse 6", then a
 # story told in the preacher's own words and "help me find it".
-# 'spirit' (for spirit.cjs): a taught cue, a point Spirit takes live by itself, and words before the operator moves on.
+# 'spirit' (for spirit.cjs): a taught cue, a point spirit takes live by itself, and words before the operator moves on.
 # 'moments' (for moments.cjs): "let us pray" and two sermon points, one with its words in the next sentence.
 # Text is KJV, a public-domain hymn, and words written for the test only.
 import subprocess, sys, wave, tempfile, os

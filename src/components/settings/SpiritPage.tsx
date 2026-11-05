@@ -5,7 +5,7 @@ import { FEATURES_CHANGED, loadFeatures, saveFeatures } from '@/lib/features';
 import { SpiritOrb } from '@/components/spirit/SpiritOrb';
 import { Hint, Section, Sq, Toggle } from './kit';
 
-/** The current Spirit state, kept up to date across windows. */
+/** The current spirit state, kept up to date across windows. */
 export function useSpirit(): SpiritState {
   const [state, setState] = useState(loadSpirit);
   useEffect(() => {
@@ -32,11 +32,11 @@ function useFeatures() {
 
 const LEVELS: { id: SpiritLevel; label: string; hint: string; steps: number }[] = [
   { id: 'off', label: 'Off', hint: 'You run everything. Verses said outright still go up.', steps: 0 },
-  { id: 'next', label: 'Ready in Next', hint: 'Spirit gets each part, point or verse ready. You press Take.', steps: 2 },
+  { id: 'next', label: 'Ready in Next', hint: 'Each part, point or verse waits in Next until you press Take.', steps: 2 },
   { id: 'handsfree', label: 'Hands-free', hint: 'Cues that have earned it go live by themselves after a 3-second countdown you can stop. The rest waits in Next.', steps: 3 },
 ];
 
-/** Settings → Spirit: how much Spirit does, how the last service went, and what it knows. */
+/** Settings → spirit: how much spirit does, how the last service went, and what it knows. */
 export function SpiritPage({ onCues }: { onCues: () => void }) {
   const spirit = useSpirit();
   const features = useFeatures();
@@ -72,7 +72,7 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
       <div className="sp-hero">
         <SpiritOrb size={84} />
         <div>
-          <h3>{last.day ? (last.right >= last.manual ? 'Spirit ran most of your last service.' : 'Spirit is learning your service.') : 'Spirit is ready to learn your service.'}</h3>
+          <h3>{last.day ? (last.right >= last.manual ? 'Voice Verses spirit ran most of your last service.' : 'Voice Verses spirit is learning your service.') : 'Voice Verses spirit is ready to learn your service.'}</h3>
           <p>
             It listens, watches what you do, and gets the next thing ready. Every Take tells it it was right; every correction teaches it. It only goes live by itself where you have
             allowed it, and only once it has earned it.
@@ -80,8 +80,8 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
         </div>
       </div>
 
-      <Section title="How much Spirit does" aside="You can change this in the middle of a service">
-        <div className="sp-levels" role="radiogroup" aria-label="How much Spirit does">
+      <Section title="How much spirit does" aside="You can change this in the middle of a service">
+        <div className="sp-levels" role="radiogroup" aria-label="How much spirit does">
           {LEVELS.map((l) => (
             <button key={l.id} type="button" role="radio" aria-checked={spirit.level === l.id} className="sp-level" onClick={() => updateSpirit((s) => ({ ...s, level: l.id }))}>
               <b>{l.label}</b>
@@ -102,7 +102,7 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
             <div className="sp-stats">
               <div className="sp-stat">
                 <b>{last.ready}</b>
-                <span>times Spirit got the next thing ready</span>
+                <span>times spirit got the next thing ready</span>
               </div>
               <div className="sp-stat">
                 <b>{last.right}</b>
@@ -110,7 +110,7 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
               </div>
               <div className="sp-stat">
                 <b>{last.wrong}</b>
-                <span>you corrected, and Spirit learned from</span>
+                <span>you corrected, and spirit learned from</span>
               </div>
             </div>
             {last.runs.length > 0 && (
@@ -123,7 +123,7 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
                 <div className="sp-legend">
                   <span>
                     <i style={{ background: 'linear-gradient(135deg, rgba(240,180,74,.85), rgba(244,114,182,.75))' }} />
-                    Spirit got it right
+                    Right by spirit
                   </span>
                   <span>
                     <i style={{ background: 'var(--s-fill-2)' }} />
@@ -138,11 +138,11 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
             )}
           </>
         ) : (
-          <Hint>Nothing yet. Spirit starts learning the first time you press Start listening with a service loaded.</Hint>
+          <Hint>Nothing yet. Voice Verses spirit starts learning the first time you press Start listening with a service loaded.</Hint>
         )}
       </Section>
 
-      <Section title="What Spirit knows" aside="Each can go as far as you allow">
+      <Section title="What spirit knows" aside="Each can go as far as you allow">
         <div className="sp-knows">
           <div className="sp-know">
             <div className="head">
@@ -199,7 +199,7 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
         </div>
       </Section>
       <Hint>
-        Spirit learns on this computer. With a library folder (Settings → Library and backup), what it has learned goes to the church’s other computers too. Hands-free is chosen for each
+        Voice Verses spirit learns on this computer. With a library folder (Settings → Library and backup), what it has learned goes to the church’s other computers too. Hands-free is chosen for each
         cue, in{' '}
         <button type="button" className="st-btn link" style={{ display: 'inline', minHeight: 0 }} onClick={onCues}>
           Cues

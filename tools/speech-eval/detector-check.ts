@@ -221,7 +221,7 @@ const check = (label: string, got: string | null, want: string | null) => {
       'We are going to have lunch after the service in the fellowship hall, everyone is welcome',
       'God is faithful and he loves you more than you could ever know',
       'Paul was a great apostle and we can all learn something from his life',
-      'Turn off your phones and let us open our hearts to what the Spirit is saying this morning',
+      'Turn off your phones and let us open our hearts to what the spirit is saying this morning',
     ]) {
       const r = await story([text]);
       // (a short phrase from a verse may still be offered faintly by the quote search, below 45%)
@@ -662,7 +662,7 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('a reference in a point still shows the verse', await run({ sermonPoints: true }, ['Point number three, Romans 8:28 says all things work together for good']), 'verse Romans 8:28');
   }
 
-  // VoiceVerses Spirit: taught cues, the trust ladder, corrections and learning by watching
+  // Voice Verses spirit: taught cues, the trust ladder, corrections and learning by watching
   {
     let st = emptySpirit();
     st = teachCue(st, 'as the ushers make their way', { part: 'Offering' });

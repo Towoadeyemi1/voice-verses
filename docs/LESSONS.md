@@ -121,12 +121,12 @@ Check this list before debugging. Add every new mistake that cost time.
 - **NDI calls block,** so a test receiver in the same process as a sender starves it: receive in another process (`tools/e2e/ndi.cjs` runs `ndi-receiver.cjs` with `execFileSync`).
 - **Chromium's offscreen bitmaps are premultiplied; NDI's BGRA is not.** Unpremultiply partly see-through pixels before sending, or edges of the lower third darken.
 
-## Spirit (1.17.0)
+## Voice Verses spirit (1.17.0)
 
 - **"Before we go any further" was taken as the close of the service.** Moment phrases must be narrow ("as we close this service", "go in peace"); and no two moments within 8 s.
 - **Learning by watching first suggested several overlapping pieces of one sentence** ("as the ushers make", "the ushers make their way"). Keep only the last 3 sentences within 15 s of the operator's pick, and join overlapping phrases that came from the same occasions into one.
-- **Two computers sharing what Spirit learned can rewrite each other for ever** when every save stamps a new time. Compare what is in the file without the times before writing it.
-- **The first spoken e2e run timed out** while the speech models warmed up; give spoken checks a generous wait (spirit.cjs waits up to 100 s).
+- **Two computers sharing what spirit learned can rewrite each other for ever** when every save stamps a new time. Compare what is in the file without the times before writing it.
+- **The first spoken e2e run timed out** while the speech models warmed up; give spoken checks a generous wait (spirit.cjs waits up to a minute for the first cue).
 
 ## Hardware
 

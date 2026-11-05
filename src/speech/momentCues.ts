@@ -17,14 +17,14 @@ export interface Moment {
   kind?: MomentKind;
   /** A taught cue's part, by name ("Offering") */
   part?: string;
-  /** The words that were heard, for "Spirit heard “let us pray”" */
+  /** The words that were heard, for "spirit heard “let us pray”" */
   heard: string;
-  /** Which cue it was (Spirit keeps each cue's record) */
+  /** Which cue it was (spirit keeps each cue's record) */
   cueId?: string;
 }
 
 /**
- * A spoken cue (VoiceVerses Spirit): words that get a part of the service, or a
+ * A spoken cue (Voice Verses spirit): words that get a part of the service, or a
  * sermon point, ready. Built-in ones come with the app and can be switched off;
  * a church teaches its own. Plain data, so the listening engine never reads storage.
  */
@@ -219,7 +219,7 @@ export function phraseCandidates(sentence: string): string[] {
 }
 
 /**
- * What Spirit noticed: words said just before the operator went to the same part
+ * What spirit noticed: words said just before the operator went to the same part
  * on at least two occasions, and never before going anywhere else. The longest run
  * that is said each time wins ("as the ushers make their way" over "the ushers make").
  */

@@ -68,7 +68,7 @@ export const ScreensColumn = ({
   onEditNext?: () => void;
   /** The countdown Next will start (a part with its own countdown), shown in its picture */
   nextCountdown?: { countdown: Countdown; remaining: number } | null;
-  /** When VoiceVerses Spirit got Next ready: "Not this", with why (Spirit learns from it) */
+  /** When Voice Verses spirit got Next ready: "Not this", with why (spirit learns from it) */
   onNotThis?: (correction: Correction) => void;
 }) => {
   const projector = usePreviewStage('projection');
@@ -142,12 +142,12 @@ export const ScreensColumn = ({
         {onNotThis && (
           <Popover>
             <PopoverTrigger asChild>
-              <button type="button" className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5 whitespace-nowrap flex-shrink-0" data-not-this title="Spirit got this ready: tell it what was wrong">
+              <button type="button" className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5 whitespace-nowrap flex-shrink-0" data-not-this title="Voice Verses spirit got this ready: tell it what was wrong">
                 <SpiritOrb size={14} /> Not this
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="vvs w-[340px] p-3.5 rounded-[14px] border-0 space-y-2.5" style={{ background: 'var(--s-raised)', boxShadow: 'var(--s-lift), 0 0 0 1px rgba(255,245,255,.07)' }}>
-              <p className="m-0 text-[14px] font-semibold">What was wrong? Spirit will remember.</p>
+              <p className="m-0 text-[14px] font-semibold">Tell spirit what was wrong. It will remember.</p>
               <div className="flex flex-wrap gap-2" role="group" aria-label="What was wrong">
                 {(
                   [

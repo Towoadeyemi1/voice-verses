@@ -1,4 +1,4 @@
-/** VoiceVerses Spirit's mark: a soft living light (still when motion is reduced). */
+/** Voice Verses spirit's mark: a soft living light (still when motion is reduced). */
 export const SpiritOrb = ({ size = 26, className = '' }: { size?: number; className?: string }) => (
   <span
     aria-hidden="true"

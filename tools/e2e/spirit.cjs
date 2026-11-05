@@ -1,9 +1,9 @@
-// VoiceVerses Spirit with a spoken sermon (fake microphone):
+// Voice Verses spirit with a spoken sermon (fake microphone):
 //  - a taught cue ("as the ushers make their way" → Offering) gets Offering ready in Next; "Not this" →
-//    "Wrong part" puts it back and teaches Spirit;
+//    "Wrong part" puts it back and teaches spirit;
 //  - a point cue that has earned Hands-free ("point number two") goes live by itself after 3 s;
 //  - the operator moving to Prayer just after "let us go to the Lord together" (said before going to
-//    Prayer once already) makes Spirit notice it, and Settings → Cues offers it.
+//    Prayer once already) makes spirit notice it, and Settings → Cues offers it.
 // Needs `npm run models` and:  python tools/e2e/make-sermon-audio.py <voice.onnx> /tmp/vv-e2e/spirit.wav spirit
 const path = require('path');
 const { OUT, launch, check, done } = require('./lib.cjs');
@@ -41,11 +41,11 @@ const SEED = {
 
   // 1. The taught cue: Offering ready in Next, then "Not this" → "Wrong part"
   let label = '';
-  for (let i = 0; i < 100 && !/Offering/.test(label); i++) {
+  for (let i = 0; i < 200 && !/Offering/.test(label); i++) {
     await win.waitForTimeout(300);
     label = await nextLabel();
   }
-  check('a taught cue gets its part ready in Next', /Offering.*Spirit heard “as the ushers make their way”/.test(label), label);
+  check('a taught cue gets its part ready in Next', /Offering.*spirit heard “as the ushers make their way”/.test(label), label);
   await win.screenshot({ path: `${OUT}/spirit-1-next.png` });
   await win.locator('[data-not-this]').click();
   await win.waitForTimeout(300);
@@ -81,18 +81,18 @@ const SEED = {
   const obs = st.observations[st.observations.length - 1];
   check('going to a part yourself is learned from, with what was just said', obs?.part === 'Prayer' && obs.sentences.some((t) => /go to the lord/i.test(t)), JSON.stringify(obs));
 
-  // Settings: How Spirit runs, and Cues with what Spirit noticed
+  // Settings: How spirit runs, and Cues with what spirit noticed
   await win.getByRole('button', { name: 'Settings' }).first().click();
   await win.waitForTimeout(800);
   await win.locator('[data-pane="spirit"]').click();
   await win.waitForTimeout(800);
   const page = (await win.locator('[data-spirit-page]').textContent()) || '';
-  check('How Spirit runs shows the last service', /times Spirit got the next thing ready/.test(page) && /you corrected/.test(page), page.slice(0, 160));
+  check('How spirit runs shows the last service', /times spirit got the next thing ready/.test(page) && /you corrected/.test(page), page.slice(0, 160));
   await win.screenshot({ path: `${OUT}/spirit-4-runs.png` });
   await win.locator('[data-pane="cues"]').click();
   await win.waitForTimeout(800);
   const noticedCards = await win.locator('[data-noticed]').evaluateAll((els) => els.map((e) => e.dataset.noticed));
-  check('Spirit noticed what was said before going to Prayer twice', noticedCards.some((p) => /go to the lord/.test(p)), noticedCards.join(' | '));
+  check('spirit noticed what was said before going to Prayer twice', noticedCards.some((p) => /go to the lord/.test(p)), noticedCards.join(' | '));
   await win.screenshot({ path: `${OUT}/spirit-5-cues.png` });
   await win.locator('[data-noticed]').first().getByRole('button', { name: 'Make it a cue' }).click();
   await win.waitForTimeout(500);

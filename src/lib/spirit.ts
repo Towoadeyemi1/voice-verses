@@ -1,14 +1,14 @@
 /**
- * VoiceVerses Spirit: the autopilot that learns how a church runs its service
+ * Voice Verses spirit: the autopilot that learns how a church runs its service
  * (docs/design/spirit.html, D29).
  *
  * - Spoken cues get a part of the service, or a sermon point, ready. Built-in
- *   ones come with the app; a church teaches its own, or accepts what Spirit noticed.
+ *   ones come with the app; a church teaches its own, or accepts what spirit noticed.
  * - Every cue climbs a trust ladder: Learning (only watches) → Ready in Next
  *   (the operator Takes) → Hands-free (goes live after a countdown that can be
  *   stopped). Hands-free unlocks after 10 right in a row, and only when chosen;
  *   a correction sends it back to Ready in Next.
- * - Spirit learns by watching: words said just before the operator went to a part,
+ * - spirit learns by watching: words said just before the operator went to a part,
  *   on two or more occasions, become a suggestion.
  *
  * Saved in localStorage (every window shares it) and, with a library folder, in
@@ -149,7 +149,7 @@ export const canBeHandsFree = (c: Cue) => c.streak >= HANDS_FREE_AFTER;
 export const setCueLevel = (state: SpiritState, id: string, level: CueLevel): SpiritState =>
   mapCue(state, id, (c) => (level === 'handsfree' && !canBeHandsFree(c) ? c : touch(c, { level })));
 
-/** What the operator did with what Spirit got ready: Take (right) or a correction (wrong, and why). */
+/** What the operator did with what spirit got ready: Take (right) or a correction (wrong, and why). */
 export function recordOutcome(state: SpiritState, id: string, outcome: Outcome, why?: { correction?: Correction; singing?: boolean }): SpiritState {
   let next = mapCue(state, id, (c) => {
     const record = [...c.record, outcome].slice(-RECORD);
@@ -185,7 +185,7 @@ export function observe(state: SpiritState, part: string, at = Date.now()): Spir
   return { ...state, events, observations: [...state.observations, { id, at: new Date(at).toISOString(), part, sentences }].slice(-300) };
 }
 
-/** What Spirit noticed and hasn't asked about yet (not already a cue, not dismissed). */
+/** What spirit noticed and hasn't asked about yet (not already a cue, not dismissed). */
 export function noticed(state: SpiritState): { phrase: string; part: string; times: number }[] {
   const known = new Set(state.cues.map((c) => c.phrase.toLowerCase()));
   const dismissed = new Set(state.dismissed);

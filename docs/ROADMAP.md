@@ -98,9 +98,9 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 - ✅ 1.14.0 Settings redesigned (owner approved the mock-up): screens and outputs as a picture of the room, ProPresenter found on the network, preset cards, the Booth check page, every page in the same look.
 - ✅ 1.15.0 NDI output: each output as an NDI source, the lower third see-through, through the free NDI Runtime (D28).
 - ✅ 1.16.0 Moment autopilot and sermon points on cue, off by default: into Next, never on screen by itself. Still to come: per-moment looks (a calm look for prayer) and editing the phrases.
-- ✅ 1.17.0 VoiceVerses Spirit (D29, owner approved `design/spirit.html`): Settings → Spirit and Cues, cues the church teaches or Spirit notices by watching, a trust ladder per cue (Learning, Ready in Next, Hands-free after 10 right in a row), "Not this" with why, learning shared through the library folder.
-- ⏳ 1.18.0 Spirit: Hands-free polish and a summary after the service ("Spirit ran 14 of 18 moves").
-- ⏳ 1.19.0 Spirit runs the order of service: moving on when a part's time is up, and to the part after a song ends, on the same trust ladder.
+- ✅ 1.17.0 Voice Verses spirit (D29, owner approved `design/spirit.html`): Settings → spirit and Cues, cues the church teaches or spirit notices by watching, a trust ladder per cue (Learning, Ready in Next, Hands-free after 10 right in a row), "Not this" with why, learning shared through the library folder.
+- ⏳ 1.18.0 Voice Verses spirit: Hands-free polish and a summary after the service ("Voice Verses spirit ran 14 of 18 moves").
+- ⏳ 1.19.0 Voice Verses spirit runs the order of service: moving on when a part's time is up, and to the part after a song ends, on the same trust ladder.
 - ⏳ 1.20.0 A local control API on the network server (show a verse, clear, next, logo, countdown, status) for a Stream Deck, a phone or another app (D27).
 
 **Phase 1: make it beautiful and smooth (1.5.x)**

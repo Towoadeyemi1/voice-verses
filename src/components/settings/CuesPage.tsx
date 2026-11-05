@@ -25,7 +25,7 @@ const label = (m?: MomentKind) => MOMENTS.find((x) => x.id === m)?.label ?? '';
 
 type Group = { key: string; title: string; color: string; cues: Cue[] };
 
-/** Settings → Cues: teach Spirit in one sentence, see what it noticed, and how far each cue is trusted. */
+/** Settings → Cues: teach spirit in one sentence, see what it noticed, and how far each cue is trusted. */
 export function CuesPage({ service }: { service?: Service | null }) {
   const spirit = useSpirit();
   const [phrase, setPhrase] = useState('');
@@ -44,7 +44,7 @@ export function CuesPage({ service }: { service?: Service | null }) {
       return;
     }
     updateSpirit((s) => teachCue(s, words, targetOf(target)));
-    toast.success('Spirit learned a new cue', { description: `When the preacher says “${words}”, ${targetName(target)} will be ready in Next.` });
+    toast.success('Voice Verses spirit learned a new cue', { description: `When the preacher says “${words}”, ${targetName(target)} will be ready in Next.` });
     setPhrase('');
   };
 
@@ -60,7 +60,7 @@ export function CuesPage({ service }: { service?: Service | null }) {
   const row = (c: Cue) => {
     const record = [...Array(10 - c.record.length).fill('none'), ...c.record];
     const earned = canBeHandsFree(c);
-    const source = c.source === 'builtin' ? 'Built in' : c.source === 'noticed' ? 'Noticed by Spirit' : 'Taught by you';
+    const source = c.source === 'builtin' ? 'Built in' : c.source === 'noticed' ? 'Noticed by spirit' : 'Taught by you';
     const detail = [source, c.note ? `corrected: “${c.note}”` : null, c.streak >= 2 ? `right ${c.streak} times in a row` : null].filter(Boolean).join(' · ');
     return (
       <div key={c.id} className={`sp-cue ${c.off ? 'off' : ''}`} data-cue={c.phrase}>
@@ -88,7 +88,7 @@ export function CuesPage({ service }: { service?: Service | null }) {
               className="hf"
               aria-checked={c.level === 'handsfree'}
               disabled={!earned}
-              title={earned ? 'Goes live by itself when Spirit is Hands-free, after a 3-second countdown' : `Unlocks after ${HANDS_FREE_AFTER} right in a row`}
+              title={earned ? 'Goes live by itself when spirit is Hands-free, after a 3-second countdown' : `Unlocks after ${HANDS_FREE_AFTER} right in a row`}
               onClick={() => updateSpirit((s) => setCueLevel(s, c.id, 'handsfree'))}
             >
               {earned ? <Zap /> : <Lock />}
@@ -112,7 +112,7 @@ export function CuesPage({ service }: { service?: Service | null }) {
   return (
     <div className="st-page" data-cues-page>
       <div className="sp-teach">
-        <div className="sp-sentence" aria-label="Teach Spirit a cue">
+        <div className="sp-sentence" aria-label="Teach spirit a cue">
           <span>When the preacher says</span>
           <input
             id="cue-phrase"
@@ -161,10 +161,10 @@ export function CuesPage({ service }: { service?: Service | null }) {
               </button>
             </span>
           ) : (
-            <span>Spirit also learns by watching: when you move on yourself, it notes what was said just before.</span>
+            <span>Voice Verses spirit also learns by watching: when you move on yourself, it notes what was said just before.</span>
           )}
           <button type="button" className="st-btn primary" onClick={teach} disabled={!phrase.trim()}>
-            Teach Spirit
+            Teach spirit
           </button>
         </div>
         {picking && (
@@ -189,7 +189,7 @@ export function CuesPage({ service }: { service?: Service | null }) {
       </div>
 
       {suggestions.length > 0 && (
-        <Section title="Spirit noticed" aside="From what you did, and what was said just before">
+        <Section title="What spirit noticed" aside="From what you did, and what was said just before">
           <div className="sp-noticed">
             {suggestions.map((n) => (
               <div key={`${n.phrase}|${n.part}`} className="sp-card" data-noticed={n.phrase}>

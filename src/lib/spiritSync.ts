@@ -1,5 +1,5 @@
 /**
- * What VoiceVerses Spirit learns, shared by the church's computers through the
+ * What Voice Verses spirit learns, shared by the church's computers through the
  * library folder (spirit/learned.json, synced by iCloud Drive, Dropbox, OneDrive
  * or Google Drive). Desktop app only. Each computer merges what it finds there
  * with its own: per cue the newer change wins, and what was seen is added together.
@@ -9,7 +9,7 @@ import { loadSpirit, normalizeSpirit, saveSpirit, SPIRIT_CHANGED, SpiritState } 
 
 const FILE = 'spirit/learned.json';
 
-/** Two computers' Spirit, merged: cues by newest change, observations, events and words heard together. */
+/** Two computers' spirit, merged: cues by newest change, observations, events and words heard together. */
 export function mergeSpirit(a: SpiritState, b: SpiritState): SpiritState {
   const cues = new Map(a.cues.map((c) => [c.id, c]));
   for (const c of b.cues) {
@@ -64,7 +64,7 @@ function push(): void {
   }, 5000);
 }
 
-/** Starts sharing Spirit through the library folder (once per window; does nothing without one). */
+/** Starts sharing spirit through the library folder (once per window; does nothing without one). */
 export function startSpiritSync(): void {
   if (started || !desktop?.library) return;
   started = true;

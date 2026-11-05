@@ -270,7 +270,7 @@
 /* Embedded in a page of its own (Screens, the ProPresenter companion): use the full width */
 .vvs:not(.st-window) > .st-page { max-width: none; padding: 22px 24px 28px; }
 
-/* ---- VoiceVerses Spirit (docs/design/spirit.html) ---- */
+/* ---- Voice Verses spirit (docs/design/spirit.html) ---- */
 .vvs .sp-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; padding: 26px; border-radius: 18px;
   background: radial-gradient(60% 140% at 0% 0%, rgba(240,180,74,.16), transparent 60%), radial-gradient(50% 120% at 100% 100%, rgba(139,92,246,.14), transparent 60%), var(--s-surface); }
 .vvs .sp-hero h3 { margin: 0; font-size: 26px; line-height: 1.15; font-weight: 700; letter-spacing: -.02em; }

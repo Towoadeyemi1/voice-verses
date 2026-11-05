@@ -69,7 +69,7 @@ export interface VerseDetectionOptions {
   onMoment?: (moment: Moment) => void;
   /** Sermon points on cue: "point number two…" with its words (the live screen makes a point slide in Next) */
   onSermonPoint?: (point: SermonPoint & { cueId?: string }) => void;
-  /** Every finished sentence (VoiceVerses Spirit learns from what was said before the operator moved on) */
+  /** Every finished sentence (Voice Verses spirit learns from what was said before the operator moved on) */
   onSentence?: (sentence: string) => void;
   /** The preacher asked for help finding a scripture ("help me find it"): the app is looking now */
   onFindRequested?: (heard: string) => void;
@@ -345,7 +345,7 @@ export class VerseDetectionController {
    * Main entry point - process incoming transcript
    */
   private lastMoment: { kind: string; at: number } | null = null;
-  /** The church's spoken cues with the built-in ones (VoiceVerses Spirit; Settings → Cues) */
+  /** The church's spoken cues with the built-in ones (Voice Verses spirit; Settings → Cues) */
   private cues: SpokenCue[] = BUILTIN_MOMENT_CUES;
 
   /** The spoken cues to listen for: built-in ones (some maybe switched off) and the church's own. */

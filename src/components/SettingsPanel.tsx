@@ -28,9 +28,9 @@ export type Pane = 'booth' | 'spirit' | 'cues' | 'features' | 'bible' | 'listeni
 
 const GROUPS: { label: string; panes: { id: Pane; label: string; hint: string; icon: LucideIcon; tint: Tint }[] }[] = [
   {
-    label: 'VoiceVerses Spirit',
+    label: 'Voice Verses spirit',
     panes: [
-      { id: 'spirit', label: 'How Spirit runs', hint: 'Spirit gets each part of the service ready, and learns how your church runs.', icon: Sparkles, tint: 'spirit' },
+      { id: 'spirit', label: 'How spirit runs', hint: 'Gets each part of the service ready, and learns how your church runs.', icon: Sparkles, tint: 'spirit' },
       { id: 'cues', label: 'Cues', hint: 'What the preacher says that gets the next part ready.', icon: AudioLines, tint: 'teal' },
     ],
   },

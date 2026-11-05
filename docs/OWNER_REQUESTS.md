@@ -285,17 +285,22 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 (5 Nov 2026.)
 - 💬 Nothing was removed: every preview stays. Only the drifting background inside small previews stood still. ✅ 1.16.0 Next keeps its motion (a true preview); the slide strip, grid and Settings previews keep a still background.
-- ✅ 1.17.0 (as Settings → Cues, in VoiceVerses Spirit below) Cues set up by the church (first mock-up `docs/design/cues-setup.html`, replaced by `docs/design/spirit.html`): a Cues page in Settings (every moment's phrases, add and switch off, sermon point cues, try a sentence); a part's own cues in the service plan; and "make this a cue" from what was heard, during the service or from the last service's words afterwards.
+- ✅ 1.17.0 (as Settings → Cues, in Voice Verses spirit below) Cues set up by the church (first mock-up `docs/design/cues-setup.html`, replaced by `docs/design/spirit.html`): a Cues page in Settings (every moment's phrases, add and switch off, sermon point cues, try a sentence); a part's own cues in the service plan; and "make this a cue" from what was heard, during the service or from the last service's words afterwards.
 
 ## "Does the cue idea from transcript even make sense? … Make the cue set-up absolutely easy, intuitive and aesthetically stunning. Cues must first be on preview for approval before going live. It must learn from corrections … before the user becomes confident and allows it to go live directly. The end goal: the app learns from how users use it and can mostly run the whole service on an autopilot called VoiceVerses Spirit"
 
 (5 Nov 2026.)
-- 💬 Picking cues from a transcript is a chore, so it is only a fallback. Better: **Spirit learns by watching**. The operator's own actions (going to Offering just after the pastor said "as the ushers make their way") show which words matter; Spirit asks once to make it a cue.
-- 💬 Trust ladder for every cue and kind of action: Learning (only notices) → Ready in Next (the operator Takes) → Hands-free (Spirit takes it live, with a short countdown and Stop). Hands-free unlocks per cue only after a run of correct calls, and only when the church allows it. Scripture keeps its own rule (said outright or ≥99%).
-- 💬 Corrections teach: Undo or "Not this" asks why in one tap (wrong part, not now, never for this phrase) and Spirit doesn't repeat it.
+- 💬 Picking cues from a transcript is a chore, so it is only a fallback. Better: **spirit learns by watching**. The operator's own actions (going to Offering just after the pastor said "as the ushers make their way") show which words matter; spirit asks once to make it a cue.
+- 💬 Trust ladder for every cue and kind of action: Learning (only notices) → Ready in Next (the operator Takes) → Hands-free (spirit takes it live, with a short countdown and Stop). Hands-free unlocks per cue only after a run of correct calls, and only when the church allows it. Scripture keeps its own rule (said outright or ≥99%).
+- 💬 Corrections teach: Undo or "Not this" asks why in one tap (wrong part, not now, never for this phrase) and spirit doesn't repeat it.
 - ✅ Mock-up `docs/design/spirit.html` approved ("Yes, build it"; Hands-free after **10 in a row**; learning **shared through the library folder**). Replaces `docs/design/cues-setup.html`.
-- ✅ 1.17.0 VoiceVerses Spirit: Settings → Spirit (how much Spirit does, the last service, what it knows) and Settings → Cues ("When the preacher says ___ get ___ ready", words picked from what was said lately, what Spirit noticed, every cue's record and trust). Every cue starts at Ready in Next: the operator Takes. "Not this" on Next asks why (wrong part, not now, never for these words) and Spirit remembers. Hands-free unlocks per cue after 10 right in a row, only when chosen, with a 3-second countdown and Stop; a correction sends it back to Ready in Next. Learning is shared through the library folder.
-- ⏳ 1.18.0 Hands-free polish and Spirit's summary after a service. 1.19.0 Spirit runs the order of service (a part's time up, a song ended).
+- ✅ 1.17.0 Voice Verses spirit: Settings → spirit (how much spirit does, the last service, what it knows) and Settings → Cues ("When the preacher says ___ get ___ ready", words picked from what was said lately, what spirit noticed, every cue's record and trust). Every cue starts at Ready in Next: the operator Takes. "Not this" on Next asks why (wrong part, not now, never for these words) and spirit remembers. Hands-free unlocks per cue after 10 right in a row, only when chosen, with a 3-second countdown and Stop; a correction sends it back to Ready in Next. Learning is shared through the library folder.
+- ⏳ 1.18.0 Hands-free polish and spirit's summary after a service. 1.19.0 spirit runs the order of service (a part's time up, a song ended).
+
+## "Also call it Voice Verses spirit (with lower case “s”), not Spirit"
+
+(5 Nov 2026.)
+- ✅ 1.17.0 The name is **Voice Verses spirit**, always with a small "s", in the app, its messages and the docs. Where it would start a sentence the full name is used ("Voice Verses spirit will remember"). "Spirit" with a capital stays only where scripture or a hymn means the Holy Spirit (the Bibles and sample hymns are untouched). Code names (`lib/spirit.ts`, `SpiritOrb`) are not shown to anyone and stay as they are.
 
 ## Process
 
