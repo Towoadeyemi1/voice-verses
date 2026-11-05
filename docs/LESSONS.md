@@ -129,6 +129,9 @@ Check this list before debugging. Add every new mistake that cost time.
 - **A find-and-replace of "Spirit" also changed the Bibles** (the Holy Spirit in KJV, WEB and ASV) and the test sentences. They were put back at once. Rename only in the files that name the feature, and check `git diff --stat` shows nothing under `src/data/`, `src/lib/samples/` or `tools/speech-eval/sentences.json`.
 - **The first spoken e2e run timed out** while the speech models warmed up; give spoken checks a generous wait (spirit.cjs waits up to a minute for the first cue).
 
+- **A service named "Sunday Celebration" was guessed as a Midweek service** because the sample is dated today (a Thursday in the test). The name decides before the day.
+- **spirit's next song replaced the slides in the middle** while the last slide was still being sung, which would have broken following the singers. What spirit gets ready now waits in Next only; its part comes into the middle when it is taken (`goLive`).
+
 ## Hardware
 
 - **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).

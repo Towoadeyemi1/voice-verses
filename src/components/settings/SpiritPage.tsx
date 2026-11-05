@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { BookOpen, BookOpenCheck, ListOrdered, Lock, Music, Sparkles, Timer } from 'lucide-react';
-import { accuracy, CueLevel, lastService, loadSpirit, SPIRIT_CHANGED, SpiritLevel, SpiritState, updateSpirit } from '@/lib/spirit';
+import { accuracy, CueLevel, serviceSummary, loadSpirit, SPIRIT_CHANGED, SpiritLevel, SpiritState, updateSpirit } from '@/lib/spirit';
 import { FEATURES_CHANGED, loadFeatures, saveFeatures } from '@/lib/features';
 import { SpiritOrb } from '@/components/spirit/SpiritOrb';
 import { Hint, Section, Sq, Toggle } from './kit';
+import { SpiritSummary } from './SpiritSummary';
 
 /** The current spirit state, kept up to date across windows. */
 export function useSpirit(): SpiritState {
@@ -40,7 +41,7 @@ const LEVELS: { id: SpiritLevel; label: string; hint: string; steps: number }[] 
 export function SpiritPage({ onCues }: { onCues: () => void }) {
   const spirit = useSpirit();
   const features = useFeatures();
-  const last = lastService(spirit);
+  const last = serviceSummary(spirit);
   const moments = spirit.cues.filter((c) => (c.moment || c.part) && !c.off);
   const points = spirit.cues.filter((c) => c.point && !c.off);
   const momentsRight = accuracy(moments);
@@ -72,7 +73,7 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
       <div className="sp-hero">
         <SpiritOrb size={84} />
         <div>
-          <h3>{last.day ? (last.right >= last.manual ? 'spirit ran most of your last service.' : 'spirit is learning your service.') : 'spirit is ready to learn your service.'}</h3>
+          <h3>{last.day ? (last.right >= last.manual + last.wrong ? 'spirit ran most of your last service.' : 'spirit is learning your service.') : 'spirit is ready to learn your service.'}</h3>
           <p>
             It listens, watches what you do, and gets the next thing ready. Every Take tells it it was right; every correction teaches it. It only goes live by itself where you have
             allowed it, and only once it has earned it.
@@ -96,51 +97,13 @@ export function SpiritPage({ onCues }: { onCues: () => void }) {
         </div>
       </Section>
 
-      <Section title={last.day ? `Your last service, ${new Date(last.day).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}` : 'Your last service'} aside="Who moved the service on">
-        {last.day ? (
-          <>
-            <div className="sp-stats">
-              <div className="sp-stat">
-                <b>{last.ready}</b>
-                <span>times spirit got the next thing ready</span>
-              </div>
-              <div className="sp-stat">
-                <b>{last.right}</b>
-                <span>you took as they were</span>
-              </div>
-              <div className="sp-stat">
-                <b>{last.wrong}</b>
-                <span>you corrected, and spirit learned from</span>
-              </div>
-            </div>
-            {last.runs.length > 0 && (
-              <>
-                <div className="sp-run" aria-label="The service from start to end">
-                  {last.runs.map((k, i) => (
-                    <i key={i} className={k} />
-                  ))}
-                </div>
-                <div className="sp-legend">
-                  <span>
-                    <i style={{ background: 'linear-gradient(135deg, rgba(240,180,74,.85), rgba(244,114,182,.75))' }} />
-                    Right by spirit
-                  </span>
-                  <span>
-                    <i style={{ background: 'var(--s-fill-2)' }} />
-                    You chose
-                  </span>
-                  <span>
-                    <i style={{ background: 'repeating-linear-gradient(135deg, var(--s-warn) 0 3px, transparent 3px 6px)' }} />
-                    Corrected
-                  </span>
-                </div>
-              </>
-            )}
-          </>
-        ) : (
+      {last.day ? (
+        <SpiritSummary summary={last} spirit={spirit} title={`Your last service, ${new Date(last.day).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}`} />
+      ) : (
+        <Section title="Your last service">
           <Hint>Nothing yet. spirit starts learning the first time you press Start listening with a service loaded.</Hint>
-        )}
-      </Section>
+        </Section>
+      )}
 
       <Section title="What spirit knows" aside="Each can go as far as you allow">
         <div className="sp-knows">

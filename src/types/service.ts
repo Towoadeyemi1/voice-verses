@@ -118,6 +118,8 @@ export interface Service {
   startTime: string;
   sections: ServiceSection[];
   isTemplate: boolean;
+  /** The type of service, e.g. "Sunday service", "Friday Night Prayers" (lib/serviceTypes.ts); spirit learns each type separately */
+  type?: string;
   /** One of the sample services the app comes with (can be removed in one click) */
   sample?: boolean;
   templateName?: string;

@@ -87,7 +87,7 @@ const SEED = {
   await win.locator('[data-pane="spirit"]').click();
   await win.waitForTimeout(800);
   const page = (await win.locator('[data-spirit-page]').textContent()) || '';
-  check('How spirit runs shows the last service', /times spirit got the next thing ready/.test(page) && /you corrected/.test(page), page.slice(0, 160));
+  check('How spirit runs shows the last service', /you took as they were/.test(page) && /corrected/.test(page), page.slice(0, 160));
   await win.screenshot({ path: `${OUT}/spirit-4-runs.png` });
   await win.locator('[data-pane="cues"]').click();
   await win.waitForTimeout(800);

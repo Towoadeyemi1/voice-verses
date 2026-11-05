@@ -333,6 +333,9 @@
 .vvs .sp-cue .p { font-family: Newsreader, "New York", "Iowan Old Style", Georgia, serif; font-size: 17px; line-height: 1.35; min-width: 0; }
 .vvs .sp-cue .p small { display: block; font-family: inherit; font: 500 12.5px -apple-system, BlinkMacSystemFont, "SF Pro Text", Figtree, system-ui, sans-serif; color: var(--s-ink-3); margin-top: 2px; }
 .vvs .sp-cue.off .p { text-decoration: line-through; color: var(--s-ink-3); }
+.vvs .sp-cue.move .p { font: 600 14.5px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", Figtree, system-ui, sans-serif; }
+.vvs .sp-cue.move .p small { color: var(--s-ink-2); font-weight: 500; font-size: 13px; }
+.vvs .sp-cue.soon .p, .vvs .sp-cue.soon .sp-record { opacity: .55; }
 .vvs .sp-parthead { display: flex; align-items: center; gap: 10px; }
 .vvs .sp-parthead h3 { margin: 0; font-size: 15px; font-weight: 650; flex: 1; }
 .vvs .sp-heard { max-height: 360px; overflow-y: auto; }

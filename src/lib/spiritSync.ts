@@ -19,13 +19,23 @@ export function mergeSpirit(a: SpiritState, b: SpiritState): SpiritState {
   const unique = <T,>(items: T[], key: (t: T) => string) => [...new Map(items.map((t) => [key(t), t])).values()];
   const byTime = <T extends { at: string }>(items: T[]) => [...items].sort((x, y) => Date.parse(x.at) - Date.parse(y.at));
   const newer = Date.parse(b.updatedAt) > Date.parse(a.updatedAt) ? b : a;
+  const eventKey = (e: SpiritState['events'][number]) => `${e.at}|${e.kind}|${e.cueId ?? e.move ?? ''}`;
+  const forgiven = new Set([...a.events, ...b.events].filter((e) => e.forgiven).map(eventKey));
+  const moves = { ...a.moves };
+  for (const [k, t] of Object.entries(b.moves ?? {}) as [keyof SpiritState['moves'], NonNullable<SpiritState['moves'][keyof SpiritState['moves']]>][]) {
+    const mine = moves[k];
+    if (!mine || Date.parse(t.updatedAt) > Date.parse(mine.updatedAt)) moves[k] = t;
+  }
   return normalizeSpirit({
     level: newer.level,
     cues: [...cues.values()],
     observations: byTime(unique([...a.observations, ...b.observations], (o) => o.id)),
     dismissed: [...new Set([...a.dismissed, ...b.dismissed])],
-    events: byTime(unique([...a.events, ...b.events], (e) => `${e.at}|${e.kind}|${e.cueId ?? ''}`)),
+    // A correction forgiven on either computer stays forgiven
+    events: byTime(unique([...a.events, ...b.events], eventKey)).map((e) => (!e.forgiven && forgiven.has(eventKey(e)) ? { ...e, forgiven: true } : e)),
     heard: byTime(unique([...a.heard, ...b.heard], (h) => `${h.at}|${h.text}`)),
+    moves,
+    timings: byTime(unique([...(a.timings ?? []), ...(b.timings ?? [])], (t) => `${t.at}|${t.part}`)),
     updatedAt: newer.updatedAt,
   });
 }

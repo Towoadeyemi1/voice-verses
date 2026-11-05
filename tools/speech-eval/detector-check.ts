@@ -26,7 +26,8 @@ import { crossReferences, setCrossReferenceData } from '@/lib/crossReferences';
 import crossReferenceData from '@/data/cross-references.json';
 import { duplicateService, nextSunday } from '@/lib/duplicateService';
 import { findMoment, findSermonPoint, partByName, partForMoment } from '@/speech/momentCues';
-import { canBeHandsFree, cuesForListening, emptySpirit, hear, noticed, observe, recordOutcome, setCueLevel, teachCue } from '@/lib/spirit';
+import { canBeHandsFree, cuesForListening, emptySpirit, forgive, hear, moveCanBeHandsFree, moveTrust, noticed, observe, recordMove, recordOutcome, recordTiming, serviceSummary, setCueLevel, setCueTypes, setMoveLevel, teachCue, usualMinutes } from '@/lib/spirit';
+import { serviceType } from '@/lib/serviceTypes';
 import { mergeSpirit } from '@/lib/spiritSync';
 
 const single: [string, string | null][] = [
@@ -725,6 +726,72 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('spirit: a church\'s own point cue takes the words after it', own ? `${own.number ?? '-'}|${own.text}` : null, '-|Grace is greater than our sin.');
     pt = { ...pt, cues: pt.cues.map((c) => (c.id === 'builtin:point:write' ? { ...c, off: true } : c)) };
     check('spirit: a built-in point cue switched off', String(findSermonPoint('Write this down, you are never alone in the valley', cuesForListening(pt))), 'null');
+
+    // 1.18.0: moves on their own ladders
+    let mv = emptySpirit();
+    check('moves: start at Ready in Next', moveTrust(mv, 'countdown-end').level, 'next');
+    for (let i = 0; i < 9; i++) mv = recordMove(mv, 'countdown-end', 'right', { serviceId: 's1', type: 'Sunday service' });
+    check('moves: 9 right does not unlock Hands-free', String(moveCanBeHandsFree(mv, 'countdown-end')), 'false');
+    mv = recordMove(mv, 'countdown-end', 'right', { serviceId: 's1', type: 'Sunday service' });
+    mv = setMoveLevel(mv, 'countdown-end', 'handsfree');
+    check('moves: 10 right unlocks it, and it can be chosen', moveTrust(mv, 'countdown-end').level, 'handsfree');
+    for (let i = 0; i < 12; i++) mv = recordMove(mv, 'next-song', 'right');
+    check('moves: the next song cannot be Hands-free yet (1.19.0)', `${moveCanBeHandsFree(mv, 'next-song')} ${moveTrust(setMoveLevel(mv, 'next-song', 'handsfree'), 'next-song').level}`, 'false next');
+    mv = recordMove(mv, 'countdown-end', 'wrong', { serviceId: 's1', type: 'Sunday service', what: 'Welcome' }, 'not now');
+    check('moves: a correction sends it back to Ready in Next', `${moveTrust(mv, 'countdown-end').level} ${moveTrust(mv, 'countdown-end').streak}`, 'next 0');
+    const slip = mv.events.filter((e) => e.kind === 'wrong').pop()!;
+    mv = forgive(mv, slip.at);
+    check('moves: "Just this once" puts it back as it was', `${moveTrust(mv, 'countdown-end').level} ${moveTrust(mv, 'countdown-end').streak}`, 'handsfree 10');
+
+    // A correction to a cue undone; a taught cue removed by "never" comes back
+    let fx = teachCue(emptySpirit(), 'as the ushers make their way', { part: 'Offering' });
+    const fid = fx.cues.find((c) => c.source === 'taught')!.id;
+    for (let i = 0; i < 4; i++) fx = recordOutcome(fx, fid, 'right');
+    fx = recordOutcome(fx, fid, 'wrong', { correction: 'never' }, { serviceId: 's2' });
+    check('cues: "never" removes a taught cue', String(fx.cues.some((c) => c.id === fid)), 'false');
+    fx = forgive(fx, fx.events[fx.events.length - 1].at);
+    check('cues: "Just this once" brings it back with its record', `${fx.cues.find((c) => c.id === fid)?.streak}`, '4');
+
+    // Types of service: a cue kept for one type; guessing a type from the name
+    let ty = teachCue(emptySpirit(), 'let us go to the altar of prayer', { part: 'Prayer' });
+    ty = setCueTypes(ty, ty.cues.find((c) => c.source === 'taught')!.id, ['Friday Night Prayers']);
+    check('types: a cue only for Friday Night Prayers is not heard on a Sunday', `${cuesForListening(ty, 'Sunday service').some((c) => c.phrase.includes('altar of prayer'))} ${cuesForListening(ty, 'Friday Night Prayers').some((c) => c.phrase.includes('altar of prayer'))}`, 'false true');
+    for (const [name, day, want] of [
+      ['Sunday Celebration', '2026-11-08', 'Sunday service'],
+      ['Friday Night Prayers', '2026-11-06', 'Friday Night Prayers'],
+      ['Crossover Night', '2026-12-31', 'New Year'],
+      ['Communion Service', '2026-11-01', 'Communion Sunday'],
+      ['Wedding of A and B', '2026-11-14', 'Wedding'],
+      ['Youth Day Celebration', '2026-11-15', 'Youth Day'],
+      ['Wednesday Bible Study', '2026-11-11', 'Bible study'],
+      ['Sunday Celebration', '2026-11-05', 'Sunday service'],
+      ['Evening Service', '2026-11-05', 'Midweek service'],
+    ] as const) check(`types: "${name}" is a ${want}`, serviceType({ name, date: new Date(`${day}T10:00:00`) }), want);
+    check('types: a type chosen for the service wins', serviceType({ name: 'Sunday Celebration', date: new Date('2026-11-08T10:00:00'), type: 'Thanksgiving Sunday' }), 'Thanksgiving Sunday');
+
+    // Timings per type, and How it went per service
+    let tm = emptySpirit();
+    for (const m of [7, 9, 8]) tm = recordTiming(tm, 'Sunday service', 'Close', m);
+    tm = recordTiming(tm, 'Friday Night Prayers', 'Close', 30);
+    check('timings: how long a part usually runs, per type', `${usualMinutes(tm, 'Sunday service', 'close')} ${usualMinutes(tm, 'Friday Night Prayers', 'Close')}`, '8 null');
+    let sv = emptySpirit();
+    sv = recordMove(sv, 'countdown-end', 'right', { serviceId: 'a', type: 'Sunday service' });
+    sv = observe(sv, 'Prayer', Date.now(), { serviceId: 'a', type: 'Sunday service' });
+    sv = recordMove(sv, 'next-song', 'wrong', { serviceId: 'a', type: 'Sunday service' }, 'wrong part');
+    sv = recordMove(sv, 'next-song', 'right', { serviceId: 'b', type: 'Midweek service' });
+    const sa = serviceSummary(sv, 'a');
+    check('How it went: one service\'s moves only', `${sa.right} ${sa.manual} ${sa.wrong} ${sa.type}`, '1 1 1 Sunday service');
+    check('How it went: the latest service by default', `${serviceSummary(sv).serviceId} ${serviceSummary(sv).right}`, 'b 1');
+
+    // Two computers: the newer change to a move wins; a correction forgiven on one stays forgiven
+    {
+      const base = recordMove(emptySpirit(), 'countdown-end', 'wrong', { serviceId: 'x' });
+      const at = base.events[base.events.length - 1].at;
+      const one = forgive(base, at);
+      const two = recordMove(base, 'next-song', 'right');
+      const m = mergeSpirit(one, two);
+      check('merge: moves and forgiven corrections', `${m.events.find((e) => e.at === at)?.forgiven} ${moveTrust(m, 'next-song').streak}`, 'true 1');
+    }
   }
 
   // Inputs that belong to a video card are recognised (they are silent without sound in their SDI cable)
