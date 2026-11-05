@@ -5,9 +5,9 @@ import { useMotionAllowed } from '@/hooks/use-motion-allowed';
 import { probeSmoothness } from '@/lib/motionQuality';
 
 /**
- * Previews on the operator's screen that need not move (Next, the slide grid, Settings):
- * wrap them in <StillMotion> and their backgrounds stand still, so only the Live monitor
- * and the real screens spend the computer's effort on motion.
+ * Small previews that need not move (the slide strip and grid, Settings): wrap them in
+ * <StillMotion> and their backgrounds stand still (the picture is the same). Live, Next
+ * and the real screens always move, so the operator sees what the room will see.
  */
 const StillContext = createContext(false);
 export const StillMotion = ({ children }: { children: ReactNode }) => <StillContext.Provider value={true}>{children}</StillContext.Provider>;

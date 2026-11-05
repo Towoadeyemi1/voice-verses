@@ -2,7 +2,6 @@ import { ArrowUp, Pencil } from 'lucide-react';
 import { ClickMode } from '@/lib/clickMode';
 import { ScaledStage } from '../ScaledStage';
 import { OutputContent, Live } from '../OutputContent';
-import { StillMotion } from '../MotionBackground';
 import { AlertBanner } from '../AlertBanner';
 import { ConfidenceScreen, loadConfidenceSettings } from '../ConfidenceScreen';
 import { Countdown } from '@/lib/countdown';
@@ -141,9 +140,7 @@ export const ScreensColumn = ({
       </Label>
       <div className="monitor-fit relative rounded-[14px] overflow-hidden shadow-[0_0_0_2px_hsl(var(--next))] flex-shrink-0" style={{ ['--ratio' as string]: projector.width / projector.height }}>
         <ScaledStage stage={projector} fitShape className="bg-black">
-          <StillMotion>
-            <OutputContent live={next} output="projection" countdown={nextCountdown?.countdown} remaining={nextCountdown?.remaining ?? 0} preview />
-          </StillMotion>
+          <OutputContent live={next} output="projection" countdown={nextCountdown?.countdown} remaining={nextCountdown?.remaining ?? 0} preview />
         </ScaledStage>
         {!next && <div className="absolute inset-0 grid place-items-center text-sm text-white/45">The next verse or slide waits here</div>}
       </div>

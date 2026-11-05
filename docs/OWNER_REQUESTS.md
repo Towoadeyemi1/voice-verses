@@ -279,7 +279,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 (5 Nov 2026.)
 - ✅ 1.16.0 Moment autopilot and sermon points (see above).
-- 💬 Measured in the desktop app (test computer without a graphics chip, so motion costs show high): idle 0.2% of one processor core with still backgrounds, 2% with the projector on, about 25% while listening (the speech engine); memory about 700 MB, 1.3–1.5 GB while listening (the speech model). Features that are switched off don't run; moments and points take about 4 µs a sentence. The real cost is moving backgrounds, drawn by the graphics chip: ✅ 1.16.0 only the Live monitor and the real screens move now (Next, the slide strip and grid, and Settings previews stand still), and the automatic speed guard already stills them on a slow computer.
+- 💬 Measured in the desktop app (test computer without a graphics chip, so motion costs show high): idle 0.2% of one processor core with still backgrounds, 2% with the projector on, about 25% while listening (the speech engine); memory about 700 MB, 1.3–1.5 GB while listening (the speech model). Features that are switched off don't run; moments and points take about 4 µs a sentence. The real cost is moving backgrounds, drawn by the graphics chip: ✅ 1.16.0 the slide strip and grid and the Settings previews stand still (same picture, no drifting background); Live, Next and the real screens move. (The owner first read this as removing previews: nothing was removed, and Next keeps its motion so it is a true preview.), and the automatic speed guard already stills them on a slow computer.
 
 ## Process
 
