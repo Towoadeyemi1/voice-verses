@@ -2,7 +2,7 @@
   "name": "voice-verses",
   "productName": "Voice Verses",
   "private": true,
-  "version": "1.14.0",
+  "version": "1.15.0",
   "description": "Voice-activated Bible verse projection system for church services",
   "author": "Voice Verses Team",
   "main": "electron/main.js",
@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "electron-updater": "^6.8.11",
+    "koffi": "2.9.1",
     "sherpa-onnx-node": "^2.0.0"
   },
   "devDependencies": {
@@ -125,7 +126,11 @@
       "dist/**/*",
       "electron/**/*",
       "native/decklink/prebuilt/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/koffi/src/**",
+      "!node_modules/koffi/vendor/**",
+      "!node_modules/koffi/doc/**",
+      "!node_modules/koffi/build/koffi/{freebsd_*,openbsd_*,musl_*,linux_*,win32_ia32,win32_arm64}/**"
     ],
     "extraResources": [
       {
@@ -135,7 +140,8 @@
     ],
     "asarUnpack": [
       "node_modules/sherpa-onnx-*/**",
-      "native/decklink/prebuilt/**"
+      "native/decklink/prebuilt/**",
+      "node_modules/koffi/build/**"
     ],
     "mac": {
       "category": "public.app-category.productivity",
@@ -164,7 +170,10 @@
       "darkModeSupport": true,
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Voice Verses listens to the sermon to detect and display Bible verses."
-      }
+      },
+      "files": [
+        "!node_modules/koffi/build/koffi/win32_*/**"
+      ]
     },
     "dmg": {
       "artifactName": "Voice-Verses-mac-${arch}.${ext}"
@@ -178,7 +187,10 @@
           ]
         }
       ],
-      "artifactName": "Voice-Verses-Setup-win-${arch}.${ext}"
+      "artifactName": "Voice-Verses-Setup-win-${arch}.${ext}",
+      "files": [
+        "!node_modules/koffi/build/koffi/darwin_*/**"
+      ]
     },
     "nsis": {
       "oneClick": false,

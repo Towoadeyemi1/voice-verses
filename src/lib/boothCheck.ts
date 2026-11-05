@@ -89,11 +89,14 @@ async function speechCheck(): Promise<BoothCheckItem> {
 
 async function screenChecks(): Promise<BoothCheckItem[]> {
   if (!desktop) return [];
-  const [displays, config, deckConfig, deckStatus] = await Promise.all([
+  const [displays, config, deckConfig, deckStatus, ndiConfig, ndiStatus, ndiAvail] = await Promise.all([
     desktop.screens.displays().catch(() => []),
     desktop.screens.get().catch(() => null),
     desktop.decklink?.get().catch(() => null) ?? Promise.resolve(null),
     desktop.decklink?.status().catch(() => null) ?? Promise.resolve(null),
+    desktop.ndi?.get().catch(() => null) ?? Promise.resolve(null),
+    desktop.ndi?.status().catch(() => null) ?? Promise.resolve(null),
+    desktop.ndi?.availability().catch(() => null) ?? Promise.resolve(null),
   ]);
   const items: BoothCheckItem[] = [];
   const fix = { label: 'Screens settings', pane: 'screens' as Pane };
@@ -102,6 +105,22 @@ async function screenChecks(): Promise<BoothCheckItem[]> {
     const display = config?.[output];
     const port = deckConfig?.[output];
     const sdi = deckStatus?.[output];
+    const ndi = ndiConfig?.[output];
+    if (ndi) {
+      const st = ndiStatus?.[output];
+      items.push(
+        st?.state === 'sending'
+          ? { id: `ndi-${output}`, label: `${label} (NDI)`, state: 'ok', detail: st.receivers ? `Sending; ${st.receivers} watching.` : 'Sending. No one is watching yet.', live: true }
+          : {
+              id: `ndi-${output}`,
+              label: `${label} (NDI)`,
+              state: 'problem',
+              detail: ndiAvail && !ndiAvail.available ? 'NDI is on, but the free NDI Runtime isn’t on this computer. Install NDI Tools from ndi.video.' : 'NDI is on, but it isn’t sending.',
+              fix,
+              live: true,
+            },
+      );
+    }
     if (display == null && !port) continue;
     if (display != null) {
       const found = displays.find((d) => d.id === display);

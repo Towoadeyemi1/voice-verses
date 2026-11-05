@@ -8,6 +8,7 @@ import { keepAwake, outputWindowOptions, trackOutputWindow } from './outputs.js'
 import * as network from './network.js';
 import * as screens from './screens.js';
 import * as decklink from './decklink.js';
+import * as ndi from './ndi.js';
 import * as speech from './speech/index.js';
 import { initUpdates } from './updates.js';
 
@@ -96,6 +97,7 @@ function createWindow() {
     // The outputs go with the window that controls them (they come back when it reopens)
     screens.suspendScreens();
     decklink.suspendDeckLink();
+    ndi.suspendNdi();
   });
 }
 
@@ -154,6 +156,10 @@ handle('decklink:get', () => decklink.getConfig());
 handle('decklink:set', (config) => decklink.setConfig(config));
 handle('decklink:status', () => decklink.getStatus());
 handle('decklink:test', (output) => decklink.showTestPattern(output));
+handle('ndi:availability', () => ndi.getAvailability());
+handle('ndi:get', () => ndi.getConfig());
+handle('ndi:set', (config) => ndi.setConfig(config));
+handle('ndi:status', () => ndi.getStatus());
 
 handle('app:version', () => app.getVersion());
 // While listening, the computer must not sleep (it would stop hearing the preacher)
@@ -199,6 +205,7 @@ app.whenReady().then(async () => {
   createWindow();
   screens.initScreens(createAppWindow);
   decklink.initDeckLink(createAppWindow);
+  ndi.initNdi(createAppWindow);
   initUpdates();
 });
 
@@ -213,5 +220,6 @@ app.on('activate', () => {
     createWindow();
     screens.resumeScreens();
     decklink.resumeDeckLink();
+    ndi.resumeNdi();
   }
 });

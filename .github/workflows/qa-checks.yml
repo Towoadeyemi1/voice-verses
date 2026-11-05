@@ -35,6 +35,7 @@ jobs:
           for f in electron/*.js electron/*.cjs electron/speech/*; do node --check "$f"; done
           node tools/checks/propresenter-themes.mjs
           node tools/checks/propresenter-find.mjs
+          node tools/checks/ndi.mjs
           node tools/checks/propresenter-messages.mjs
           echo "✅ Web and desktop builds OK"
 

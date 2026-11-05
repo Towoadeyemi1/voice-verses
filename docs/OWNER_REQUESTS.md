@@ -90,7 +90,7 @@ All promised, none built yet. Do them in this order after design 4:
 8. ⏳ Live captions and translation
 9. ⏳ Stream Deck and remote control
 10. ⏳ Planning Center import
-11. ⏳ NDI output
+11. ✅ 1.15.0 NDI output (see below)
 12. ⏳ Native DeckLink SDI output (see Screens)
 
 ## "Is this the best you can do… Is that all a presentation app can have?"
@@ -268,6 +268,12 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.14.0 Settings redesigned to the mock-up the owner approved (`docs/design/settings-redesign.html`): a sheet with coloured icons grouped This service / In the booth / This computer and the booth check at the top; every other Settings page (Bible as translation cards, Listening, Logo, Library, Desktop app) in the same look; Screens and outputs as a picture of the room with live previews, each output's destinations, and the ways to connect; ProPresenter with everything found on the network listed; Features with preset cards; the Booth check as a page.
 
 - Owner's choices (5 Nov 2026): build the mock-up as drawn; Recommended leaves Predictive Next and "Singing something new" off until switched on (✅ 1.14.0); NDI output comes straight after.
+
+## NDI output (owner's choice after the Settings redesign, 5 Nov 2026)
+
+- Owner's choices: use the free NDI Runtime rather than bundling NDI's library (bundling would put NDI's SDK terms into Voice Verses' own licence); accept NDI's SDK licence only for testing in the build environment (nothing from the SDK is in the repository).
+- ✅ 1.15.0 Each output (Projector, Lower third, Stage monitor) can be sent as an NDI® source, named "COMPUTER (Voice Verses Projector)" and so on, for vMix, OBS, TriCaster, NDI converters and NDI Studio Monitor. The lower third arrives see-through (nothing to key out). Settings → Screens and outputs: "NDI on the network" in the picture of the room, a switch per output with "Sending · n watching", NDI among each output's destinations, the NDI tile in Ways to connect; the booth check and the warnings watch NDI too. Without the NDI Runtime, it says to get NDI Tools (free) from ndi.video/tools.
+- ⏳ To confirm in the owner's booth (for example into vMix or the switcher through an NDI converter).
 
 ## Process
 

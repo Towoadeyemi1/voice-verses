@@ -63,6 +63,12 @@ contextBridge.exposeInMainWorld('voiceVerses', {
     status: () => invoke('decklink:status'),
     test: (output) => invoke('decklink:test', output),
   },
+  ndi: {
+    availability: () => invoke('ndi:availability'),
+    get: () => invoke('ndi:get'),
+    set: (config) => invoke('ndi:set', config),
+    status: () => invoke('ndi:status'),
+  },
   network: {
     configure: (options) => invoke('network:configure', options),
     status: () => invoke('network:status'),

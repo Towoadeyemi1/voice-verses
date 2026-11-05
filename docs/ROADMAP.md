@@ -96,7 +96,7 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 **Next (owner, 4 Nov 2026: "most features optional; ProPresenter and screens simpler")**
 - ✅ 1.13.0 Settings → Features (presets), the booth check and warnings during the service, Find and set up ProPresenter, screen tiles and Identify screens.
 - ✅ 1.14.0 Settings redesigned (owner approved the mock-up): screens and outputs as a picture of the room, ProPresenter found on the network, preset cards, the Booth check page, every page in the same look.
-- ⏳ 1.15.0 NDI output: each output as an NDI source (owner's choice, next).
+- ✅ 1.15.0 NDI output: each output as an NDI source, the lower third see-through, through the free NDI Runtime (D28).
 - ⏳ 1.16.0 Moment autopilot and sermon points on cue, off by default.
 - ⏳ 1.17.0 A local control API on the network server (show a verse, clear, next, logo, countdown, status) for a Stream Deck, a phone or another app (D27).
 
