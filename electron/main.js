@@ -136,6 +136,7 @@ handle('propresenter:create-message', (connection, theme) => proPresenter.create
 handle('propresenter:show', (connection, verse) => proPresenter.showVerse(connection, verse));
 handle('propresenter:clear', (connection, options) => proPresenter.clear(connection, options));
 handle('propresenter:find', () => proPresenter.findLocal());
+handle('propresenter:search', (options) => proPresenter.search({ ports: Array.isArray(options?.ports) ? options.ports.slice(0, 4) : [] }));
 handle('propresenter:set-up', (connection) => proPresenter.setUp(connection));
 
 handle('network:configure', (options) => network.configure(options ?? {}));

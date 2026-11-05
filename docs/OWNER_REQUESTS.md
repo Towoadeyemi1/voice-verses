@@ -260,6 +260,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - 💬 Architecture: no microservices. The app must work offline, install as one download and run on older Macs; separate services would add things to install, start and break during a service. Instead: separate modules with clear edges (detection gets plain flags and never reads settings; outputs, DeckLink and ProPresenter are each their own module), and next a **local control API** (1.15.0) so a Stream Deck, phone or another app can drive it. See D26 and D27.
 - ⏳ 1.14.0 Moment autopilot and sermon points on cue (off by default). 1.15.0 the local control API.
 
+## "Can't the ProPresenter search work if they are on the same network, even if not on the same computer? Is DeckLink and HDMI the only option, can't other churches use other methods? Is that tied in? I am very disappointed with the aesthetics… every part of the app must have that excellence."
+
+(5 Nov 2026, after 1.13.0.)
+- ✅ (next release) ProPresenter is searched for on the whole local network too, not only this computer: Bonjour, and every address of the church network on ProPresenter's usual ports (plus the port saved last time), each confirmed by asking it for its version. `propresenter:search`.
+- 💬 Ways out today: any display the computer sees (HDMI, DisplayPort, USB‑C, Thunderbolt, adapters such as HDMI‑to‑SDI, AirPlay to an Apple TV), a DeckLink port (SDI), any browser on the network (smart TV, tablet, OBS/vMix browser source), and ProPresenter. All are fed by the one renderer, so a new way is a new destination, not a new screen: NDI next, then Syphon/Spout.
+- ⏳ Settings redesigned (mock-up `docs/design/settings-redesign.html`, waiting for the owner's yes): a sheet with coloured icons grouped This service / In the booth / This computer and the booth check at the top; Screens and outputs as a picture of the room with live previews, each output's destinations, and the ways to connect; ProPresenter with everything found on the network listed; Features with preset cards; the Booth check as a page.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

@@ -130,6 +130,8 @@ export interface DesktopBridge {
     clear(connection: ProPresenterConnection, options: { stage: boolean }): Promise<void>;
     /** ProPresenter running on this computer, found without typing a port (older desktop versions don't have it) */
     find?(): Promise<{ host: string; port: number; version: string; name: string } | null>;
+    /** Every ProPresenter on this computer and the local network (Bonjour, then each address on the usual ports and `ports`) */
+    search?(options?: { ports?: number[] }): Promise<{ host: string; port: number; version: string; name: string; here: boolean }[]>;
     /** Makes sure the "Voice Verses" message exists (best-suited theme), and says what is ready */
     setUp?(connection: ProPresenterConnection): Promise<ProPresenterStatus & { theme: string | null }>;
   };
