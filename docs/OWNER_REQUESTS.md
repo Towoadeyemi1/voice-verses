@@ -287,6 +287,14 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - 💬 Nothing was removed: every preview stays. Only the drifting background inside small previews stood still. ✅ 1.16.0 Next keeps its motion (a true preview); the slide strip, grid and Settings previews keep a still background.
 - ⏳ Cues set up by the church (mock-up `docs/design/cues-setup.html`, waiting for the owner's yes): a Cues page in Settings (every moment's phrases, add and switch off, sermon point cues, try a sentence); a part's own cues in the service plan; and "make this a cue" from what was heard, during the service or from the last service's words afterwards.
 
+## "Does the cue idea from transcript even make sense? … Make the cue set-up absolutely easy, intuitive and aesthetically stunning. Cues must first be on preview for approval before going live. It must learn from corrections … before the user becomes confident and allows it to go live directly. The end goal: the app learns from how users use it and can mostly run the whole service on an autopilot called VoiceVerses Spirit"
+
+(5 Nov 2026.)
+- 💬 Picking cues from a transcript is a chore, so it is only a fallback. Better: **Spirit learns by watching**. The operator's own actions (going to Offering just after the pastor said "as the ushers make their way") show which words matter; Spirit asks once to make it a cue.
+- 💬 Trust ladder for every cue and kind of action: Learning (only notices) → Ready in Next (the operator Takes) → Hands-free (Spirit takes it live, with a short countdown and Stop). Hands-free unlocks per cue only after a run of correct calls, and only when the church allows it. Scripture keeps its own rule (said outright or ≥99%).
+- 💬 Corrections teach: Undo or "Not this" asks why in one tap (wrong part, not now, never for this phrase) and Spirit doesn't repeat it.
+- ⏳ Mock-up `docs/design/spirit.html` (Spirit home, Teach and cues, during the service), waiting for the owner's yes. Replaces `docs/design/cues-setup.html`.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
