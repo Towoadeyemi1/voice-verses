@@ -114,6 +114,18 @@ Monitors take the projector's shape (`usePreviewStage('projection')`). The outpu
 10. Glass only on the toolbar and the palette.
 11. **On the screens (outputs), motion serves the words.** Moving backgrounds are slow (cycles of 12–90 s), soft and dark enough under text, with a vignette; speed 0 makes them still. Transitions are short (0.5 s by default). Small thumbnails stand still. The operator's UI rule 9 (150–300 ms) is for the app itself, not the projector.
 
+## Settings and other settings-like pages (1.14.0)
+
+Approved mock-up: [`design/settings-redesign.html`](design/settings-redesign.html). Built from `src/components/settings/kit.tsx` and `settings.css` (scoped to `.vvs`); use these parts for any new setting.
+- A large sheet over the live screen (not a small dialog). Sidebar of 28px icon squares, each a two-colour gradient, grouped with 11px uppercase labels; the selected item is tinted in the team colour.
+- The booth check sits at the top of the sidebar as a ring and a sentence.
+- Each page opens with a picture of the real thing when there is one: the room of screens with live previews, ProPresenter's status card, the preset cards.
+- Settings are **grouped rows** on one soft surface: an icon square or status mark, a bold title, one plain sentence, the control on the right. Hairlines start after the icon. No cards inside cards, no borders.
+- Switches are the team colour when on. Choices of 2–4 are a segmented control; choices that need a sentence each are cards with a 2px team-colour ring when chosen.
+- Buttons: quiet fill by default; `soft` (team tint) for a row's fix or main action; `primary` (solid team colour) only for the one confirming action in a small form. **Never a full-width stark white button.**
+- Status: a grey tick when fine, amber when it needs looking at, with words. Red and green stay reserved for On Air and Next.
+- Older components shown inside a page are brought into line by `settings.css` (fields fill, cards become surfaces, the white default button becomes quiet); rewrite them with the kit when touched.
+
 ## Building it into the app
 
 - Put the tokens in `src/index.css` as CSS variables, keeping shadcn's names mapped: `--background` = `--win`, `--card` = `--surface`, `--primary` = `--accent`. Dark should be the default, with a light option.

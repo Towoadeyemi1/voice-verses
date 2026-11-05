@@ -1,8 +1,6 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { BookOpen, Download, HardDrive, Image as ImageIcon, Mic, MonitorUp, Music2, Network, Radio, SlidersHorizontal, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { BookOpen, Download, FolderSync, Image as ImageIcon, Mic, MonitorUp, Music2, Radio, SlidersHorizontal, X, type LucideIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BibleVersionSettings } from './BibleVersionSettings';
 import { StorageSettings } from './StorageSettings';
@@ -14,25 +12,43 @@ import { DesktopDownloads } from './DesktopDownloads';
 import { AiAssistantSettings } from './AiAssistantSettings';
 import { ProPresenterSettings } from './ProPresenterSettings';
 import { MicrophoneSettings } from './MicrophoneSettings';
-import { NetworkOutputSettings } from './NetworkOutputSettings';
 import { ScreenSettings } from './ScreenSettings';
-import { MotionSettings } from './MotionSettings';
 import { FeatureSettings } from './FeatureSettings';
+import { BoothCheckPage } from './settings/BoothCheckPage';
+import { List, Ring, Row, Section, Sq, Tint } from './settings/kit';
+import { BoothCheckItem, needsAttention, runBoothCheck } from '@/lib/boothCheck';
+import { desktop } from '@/lib/desktop';
+import type { BoothFix } from './live/BoothCheck';
 
-export type Pane = 'features' | 'bible' | 'listening' | 'screens' | 'network' | 'songs' | 'logo' | 'library' | 'propresenter' | 'app';
+export type Pane = 'booth' | 'features' | 'bible' | 'listening' | 'screens' | 'network' | 'songs' | 'logo' | 'library' | 'propresenter' | 'app';
 
-const PANES: { id: Pane; label: string; hint: string; icon: typeof Mic }[] = [
-  { id: 'features', label: 'Features', hint: 'Choose what Voice Verses does by itself', icon: SlidersHorizontal },
-  { id: 'bible', label: 'Bible', hint: 'Translation, and more translations online', icon: BookOpen },
-  { id: 'listening', label: 'Listening', hint: 'Microphone, channel, language, speech engine, AI', icon: Mic },
-  { id: 'screens', label: 'Screens', hint: 'Which display each output goes to, and its shape', icon: MonitorUp },
-  { id: 'network', label: 'Network', hint: 'Show any screen in a browser on another device', icon: Network },
-  { id: 'songs', label: 'Songs and CCLI', hint: 'Your CCLI licence number on song slides', icon: Music2 },
-  { id: 'logo', label: 'Logo', hint: 'The church logo for the screens', icon: ImageIcon },
-  { id: 'library', label: 'Library and backup', hint: 'Keep services and media in a shared folder', icon: HardDrive },
-  { id: 'propresenter', label: 'ProPresenter', hint: 'Optional: also send verses to ProPresenter', icon: Radio },
-  { id: 'app', label: 'Desktop app', hint: 'Download for Mac and Windows', icon: Download },
+const GROUPS: { label: string; panes: { id: Pane; label: string; hint: string; icon: LucideIcon; tint: Tint }[] }[] = [
+  {
+    label: 'This service',
+    panes: [
+      { id: 'features', label: 'Features', hint: 'Choose what Voice Verses does by itself.', icon: SlidersHorizontal, tint: 'gold' },
+      { id: 'bible', label: 'Bible', hint: 'The translation on the screens, and more translations online.', icon: BookOpen, tint: 'blue' },
+      { id: 'songs', label: 'Songs and CCLI', hint: 'Your CCLI licence on song slides.', icon: Music2, tint: 'violet' },
+      { id: 'logo', label: 'Logo', hint: 'The church logo for the screens.', icon: ImageIcon, tint: 'pink' },
+    ],
+  },
+  {
+    label: 'In the booth',
+    panes: [
+      { id: 'listening', label: 'Listening', hint: 'The microphone, the language, and how speech is heard.', icon: Mic, tint: 'rose' },
+      { id: 'screens', label: 'Screens and outputs', hint: 'What each screen in the room shows, and how it gets there.', icon: MonitorUp, tint: 'indigo' },
+      { id: 'propresenter', label: 'ProPresenter', hint: 'Optional. Also send the verses into ProPresenter, on this computer or another.', icon: Radio, tint: 'orange' },
+    ],
+  },
+  {
+    label: 'This computer',
+    panes: [
+      { id: 'library', label: 'Library and backup', hint: 'Keep services and media in a shared folder, and back them up.', icon: FolderSync, tint: 'slate' },
+      { id: 'app', label: 'Desktop app', hint: 'Voice Verses for Mac and Windows.', icon: Download, tint: 'teal' },
+    ],
+  },
 ];
+const PANES = GROUPS.flatMap((g) => g.panes);
 
 const LANGUAGES: [string, string][] = [
   ['en', 'English'], ['es', 'Spanish (Español)'], ['fr', 'French (Français)'], ['de', 'German (Deutsch)'], ['it', 'Italian (Italiano)'],
@@ -54,159 +70,209 @@ const saveSetting = (change: Record<string, unknown>) => {
   window.dispatchEvent(new CustomEvent('settings-updated', { detail: settings }));
 };
 
-const Group = ({ title, children }: { title?: string; children: ReactNode }) => (
-  <div className="space-y-3">
-    {title && <h3 className="m-0 text-[15px] font-semibold">{title}</h3>}
-    {children}
-  </div>
-);
+/** Which sidebar item a booth check problem belongs to */
+const paneOf = (id: string): Pane | null =>
+  id.startsWith('mic') || id === 'speech' ? 'listening' : id.startsWith('screen') || id.startsWith('sdi-') ? 'screens' : id === 'propresenter' ? 'propresenter' : id === 'bible' ? 'bible' : null;
 
 /**
- * Settings, arranged like a Mac's System Settings: the subjects on the left,
- * the chosen one on the right. Everything saves as it is changed.
+ * Settings (docs/design/settings-redesign.html): the booth check at the top, the
+ * subjects grouped down the side with coloured icons, one page at a time.
+ * Everything saves as it is changed.
  */
-export const SettingsPanel = ({ onClose, initial = 'bible', framed = true }: { onClose?: () => void; initial?: Pane; framed?: boolean }) => {
-  const [pane, setPane] = useState<Pane>(initial);
+export const SettingsPanel = ({
+  onClose,
+  initial = 'features',
+  framed = true,
+  service,
+  serviceIsToday,
+}: {
+  onClose?: () => void;
+  initial?: Pane;
+  framed?: boolean;
+  service?: { name: string } | null;
+  serviceIsToday?: boolean;
+}) => {
+  const navigate = useNavigate();
+  const [pane, setPane] = useState<Pane>(initial === 'network' ? 'screens' : initial);
   const [bibleVersion, setBibleVersion] = useState<BibleVersionType>('kjv');
   const [ccliLicense, setCcliLicense] = useState<string>(() => readSettings().ccliLicense || '');
   const [language, setLanguage] = useState<string>(() => localStorage.getItem('transcription_language') || 'en');
+  const [booth, setBooth] = useState<BoothCheckItem[] | null>(null);
 
   useEffect(() => {
     BibleParser.initializeVersion();
     setBibleVersion(BibleParser.getVersion());
   }, []);
+  useEffect(() => {
+    let stopped = false;
+    const check = () => runBoothCheck({ service, serviceIsToday }).then((items) => !stopped && setBooth(items)).catch(() => {});
+    void check();
+    const timer = window.setInterval(check, 30_000);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+    };
+  }, [service, serviceIsToday, pane]);
 
-  const current = PANES.find((p) => p.id === pane)!;
+  const fix = (f: BoothFix) => {
+    if (f.action === 'microphone') void desktop?.microphone?.openSettings();
+    else if (f.action === 'plan') {
+      onClose?.();
+      navigate('/service-planner');
+    } else if (f.pane) setPane(f.pane === 'network' ? 'screens' : f.pane);
+  };
+
+  const todo = booth ? needsAttention(booth) : [];
+  const badge = (id: Pane) => todo.filter((c) => paneOf(c.id) === id).length;
+  const current = pane === 'booth' ? { label: 'Booth check', hint: 'Everything the service needs, checked every minute.' } : PANES.find((p) => p.id === pane)!;
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)] ${framed ? 'h-[82vh] max-h-[860px]' : 'min-h-[640px] rounded-2xl bg-card shadow-[0_0_0_1px_hsl(var(--border))] overflow-hidden'}`}>
-      <nav className="bg-muted/30 md:border-r border-border p-3 space-y-0.5 overflow-y-auto" aria-label="Settings">
-        {framed && <p className="m-0 px-2.5 pt-2 pb-3 text-lg font-bold tracking-[-0.01em]">Settings</p>}
-        {PANES.map((p) => {
-          const Icon = p.icon;
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setPane(p.id)}
-              aria-current={pane === p.id ? 'page' : undefined}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] text-left text-sm font-medium transition ${pane === p.id ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'}`}
-            >
-              <span className={`w-7 h-7 rounded-lg grid place-items-center flex-shrink-0 ${pane === p.id ? 'bg-primary/20 text-foreground' : 'bg-muted'}`}>
-                <Icon className="w-4 h-4" />
-              </span>
-              {p.label}
-            </button>
-          );
-        })}
+    <div
+      className={`vvs st-window ${framed ? 'h-full' : 'min-h-[720px] rounded-[18px] shadow-[0_0_0_1px_rgba(255,245,255,.07)]'}`}
+      data-settings
+    >
+      <nav className="st-side" aria-label="Settings">
+        {framed && <h1>Settings</h1>}
+        <button type="button" className="st-ready" aria-current={pane === 'booth' ? 'page' : undefined} onClick={() => setPane('booth')} data-settings-booth>
+          <Ring done={booth ? booth.length - todo.length : 0} total={booth?.length || 1}>
+            <b style={{ color: todo.length ? 'var(--s-warn)' : 'var(--s-ink)' }}>{booth ? todo.length || '✓' : '…'}</b>
+          </Ring>
+          <span>
+            <strong>{!booth ? 'Checking the booth…' : todo.length ? `${todo.length} ${todo.length === 1 ? 'thing' : 'things'} to check` : 'Ready for the service'}</strong>
+            <span className="sub">Booth check</span>
+          </span>
+        </button>
+        <div className="st-groups">
+          {GROUPS.map((g) => (
+            <div key={g.label} className="st-group">
+              <p className="st-group-label">{g.label}</p>
+              {g.panes.map((p) => (
+                <button key={p.id} type="button" className="st-nav" aria-current={pane === p.id ? 'page' : undefined} onClick={() => setPane(p.id)} data-pane={p.id}>
+                  <Sq tint={p.tint} icon={p.icon} />
+                  <span className="name">{p.label}</span>
+                  {badge(p.id) > 0 && <span className="st-badge" aria-label={`${badge(p.id)} to check`}>{badge(p.id)}</span>}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
       </nav>
 
-      <div className="min-h-0 overflow-y-auto">
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 px-7 pt-6 pb-4 bg-card/95 backdrop-blur">
-          <div>
-            <h2 className="m-0 text-[22px] font-bold tracking-[-0.02em]">{current.label}</h2>
-            <p className="m-0 mt-1 text-sm text-muted-foreground">{current.hint}</p>
+      <main className="st-main" key={pane}>
+        <div className="st-top">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h2>{current.label}</h2>
+            <p>{current.hint}</p>
           </div>
           {onClose && (
-            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close settings">
-              <X className="w-5 h-5" />
-            </Button>
+            <button type="button" className="st-iconbtn" onClick={onClose} aria-label="Close settings" title="Close (Esc)">
+              <X />
+            </button>
           )}
         </div>
 
-        <div className="px-7 pb-8 space-y-8">
-          {pane === 'features' && <FeatureSettings />}
+        {pane === 'booth' && <BoothCheckPage service={service} serviceIsToday={serviceIsToday} onFix={fix} />}
+        {pane === 'features' && <FeatureSettings />}
+        {pane === 'screens' && <ScreenSettings onGo={setPane} />}
+        {pane === 'propresenter' && <ProPresenterSettings />}
 
-          {pane === 'bible' && (
-            <>
-              <BibleVersionSettings currentVersion={bibleVersion} onVersionChange={setBibleVersion} />
-              <p className="m-0 text-[13px] text-muted-foreground max-w-[70ch]">
-                Predictive Next uses cross-references from{' '}
-                <a href="https://www.openbible.info/labs/cross-references/" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-4">
-                  OpenBible.info
-                </a>{' '}
-                (CC BY), kept on this computer so they work offline.
-              </p>
-            </>
-          )}
+        {pane === 'bible' && (
+          <div className="st-page">
+            <BibleVersionSettings currentVersion={bibleVersion} onVersionChange={setBibleVersion} />
+            <p className="st-hint">
+              Predictive Next uses cross-references from{' '}
+              <a href="https://www.openbible.info/labs/cross-references/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                OpenBible.info
+              </a>{' '}
+              (CC BY), kept on this computer so they work offline.
+            </p>
+          </div>
+        )}
 
-          {pane === 'listening' && (
-            <>
-              <Group title="Microphone">
-                <MicrophoneSettings />
-              </Group>
-              <Group title="Language">
-                <Select
-                  value={language}
-                  onValueChange={(v) => {
-                    setLanguage(v);
-                    localStorage.setItem('transcription_language', v);
-                  }}
-                >
-                  <SelectTrigger id="transcription-language" className="max-w-sm" aria-label="Language the preacher speaks">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LANGUAGES.map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="m-0 text-xs text-muted-foreground">The language the preacher speaks. Takes effect the next time listening starts.</p>
-              </Group>
-              <SpeechEngineSettings />
-              <AiAssistantSettings />
-            </>
-          )}
+        {pane === 'listening' && (
+          <div className="st-page">
+            <Section title="Microphone">
+              <MicrophoneSettings />
+            </Section>
+            <Section title="Language">
+              <List plain>
+                <Row title="The language the preacher speaks" desc="Takes effect the next time listening starts.">
+                  <Select
+                    value={language}
+                    onValueChange={(v) => {
+                      setLanguage(v);
+                      localStorage.setItem('transcription_language', v);
+                    }}
+                  >
+                    <SelectTrigger id="transcription-language" className="st-select-trigger" aria-label="Language the preacher speaks">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Row>
+              </List>
+            </Section>
+            <SpeechEngineSettings />
+            <AiAssistantSettings />
+          </div>
+        )}
 
-          {pane === 'screens' && (
-            <>
-              <ScreenSettings />
-              <MotionSettings />
-            </>
-          )}
-          {pane === 'network' && <NetworkOutputSettings />}
+        {pane === 'songs' && (
+          <div className="st-page">
+            <Section title="CCLI">
+              <List plain>
+                <Row title="CCLI licence number" desc="Shown small on each song’s first slide with its title, writers and copyright, as your licence requires.">
+                  <input
+                    id="ccli-license"
+                    className="st-input w-40"
+                    placeholder="e.g. 1234567"
+                    aria-label="CCLI licence number"
+                    value={ccliLicense}
+                    onChange={(e) => {
+                      setCcliLicense(e.target.value);
+                      saveSetting({ ccliLicense: e.target.value.trim() });
+                    }}
+                  />
+                </Row>
+              </List>
+            </Section>
+          </div>
+        )}
 
-          {pane === 'songs' && (
-            <Group>
-              <Label htmlFor="ccli-license">CCLI licence number</Label>
-              <Input
-                id="ccli-license"
-                className="max-w-sm"
-                placeholder="e.g. 1234567"
-                value={ccliLicense}
-                onChange={(e) => {
-                  setCcliLicense(e.target.value);
-                  saveSetting({ ccliLicense: e.target.value.trim() });
-                }}
-              />
-              <p className="m-0 text-xs text-muted-foreground">Shown small on each song's first slide with its title, writers and copyright, as your licence requires.</p>
-            </Group>
-          )}
+        {pane === 'logo' && (
+          <div className="st-page">
+            <ServiceLogoSettings />
+          </div>
+        )}
+        {pane === 'library' && (
+          <div className="st-page">
+            <StorageSettings />
+          </div>
+        )}
 
-          {pane === 'logo' && <ServiceLogoSettings />}
-          {pane === 'library' && <StorageSettings />}
-          {pane === 'propresenter' && <ProPresenterSettings />}
-
-          {pane === 'app' && (
-            <Group>
-              <p className="m-0 text-sm text-muted-foreground max-w-[70ch]">
-                The desktop app is the way to run Voice Verses in church: listening runs on the computer with no internet or key
-                needed, keys stay in the system keychain, outputs open on their screens by themselves, and the library can be kept in a
-                folder. This website works too, with the browser's speech recognition.
-              </p>
-              <DesktopDownloads />
-              <p className="m-0 text-sm text-muted-foreground">
-                The source code is on{' '}
-                <a href="https://github.com/Towoadeyemi1/voice-verses" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-4">
-                  GitHub
-                </a>
-                .
-              </p>
-            </Group>
-          )}
-        </div>
-      </div>
+        {pane === 'app' && (
+          <div className="st-page">
+            <p className="st-hint">
+              The desktop app is the way to run Voice Verses in church: listening runs on the computer with no internet or key needed, keys stay in the system keychain,
+              outputs open on their screens by themselves, and the library can be kept in a folder. This website works too, with the browser’s speech recognition.
+            </p>
+            <DesktopDownloads />
+            <p className="st-hint">
+              The source code is on{' '}
+              <a href="https://github.com/Towoadeyemi1/voice-verses" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                GitHub
+              </a>
+              .
+            </p>
+          </div>
+        )}
+      </main>
     </div>
   );
 };

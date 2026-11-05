@@ -1,14 +1,11 @@
 import { useState } from 'react';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { BIBLE_VERSIONS, BibleVersionType } from '@/types/bibleVersion';
 import { BibleParser } from '@/lib/bibleParser';
 import { toast } from 'sonner';
 import { ApiBibleSettings } from './ApiBibleSettings';
 import { chosenApiBibles } from '@/lib/onlineBibles';
-import { Book, Upload, Key } from 'lucide-react';
+import { Upload } from 'lucide-react';
+import { List, Row, Section } from './settings/kit';
 
 interface BibleVersionSettingsProps {
   currentVersion: BibleVersionType;
@@ -204,170 +201,73 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
     }
   };
 
+  const offline = BIBLE_VERSIONS.filter((v) => v.isOffline && v.id !== 'custom');
+  const card = (id: BibleVersionType, name: string, detail: string) => (
+    <button key={id} type="button" role="radio" aria-checked={selectedVersion === id} className="st-choice" onClick={() => handleVersionChange(id)} data-version={id}>
+      <b>{name}</b>
+      <span>{detail}</span>
+    </button>
+  );
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Book className="w-5 h-5 text-primary" />
-        <h4 className="font-semibold text-foreground">Bible Version</h4>
-      </div>
-
-      <div className="space-y-4">
-        {/* Version Selector */}
-        <div className="space-y-2">
-          <Label htmlFor="bible-version">Translation</Label>
-          <Select value={selectedVersion} onValueChange={(value: BibleVersionType) => handleVersionChange(value)}>
-            <SelectTrigger id="bible-version">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {BIBLE_VERSIONS.map((version) => (
-                <SelectItem key={version.id} value={version.id}>
-                  <div className="flex items-center justify-between w-full">
-                    <span>{version.name} - {version.fullName}</span>
-                    {version.isOffline && (
-                      <span className="text-xs text-muted-foreground ml-2">Offline</span>
-                    )}
-                    {version.requiresApi && (
-                      <span className="text-xs text-muted-foreground ml-2">Requires API</span>
-                    )}
-                  </div>
-                </SelectItem>
-              ))}
-              {apiBibles.map((b) => (
-                <SelectItem key={b.id} value={`api:${b.id}`}>
-                  <div className="flex items-center justify-between w-full">
-                    <span>{b.abbreviation} - {b.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">API.Bible</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            Select your preferred Bible translation
-          </p>
-          
-          {/* Export Button for Offline Versions */}
-          {(selectedVersion === 'kjv' || selectedVersion === 'asv' || selectedVersion === 'web' || selectedVersion === 'custom') && (
-            <Button 
-              onClick={handleExportVersion} 
-              variant="outline" 
-              size="sm"
-              disabled={isExporting}
-              className="w-full mt-2"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {isExporting ? 'Exporting...' : `Export ${selectedVersion.toUpperCase()}`}
-            </Button>
-          )}
+    <>
+      <Section title="On this computer" aside="Always works, no internet needed">
+        <div className="st-choices" role="radiogroup" aria-label="Bible translation">
+          {offline.map((v) => card(v.id, v.name, v.fullName))}
+          {card('custom', 'Your own', 'A Bible file you add')}
         </div>
-
-        <ApiBibleSettings onChange={() => setApiBibles(chosenApiBibles())} />
-
-        {/* ESV API Key Section */}
-        {selectedVersion === 'esv' && (
-          <div className="space-y-2 p-4 border border-border rounded-lg bg-muted/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Key className="w-4 h-4 text-primary" />
-              <Label htmlFor="esv-api-key">ESV API Key</Label>
-            </div>
-            <div className="flex gap-2">
-              <Input
-                id="esv-api-key"
-                type="password"
-                placeholder="Enter your ESV API key"
-                value={esvApiKey}
-                onChange={(e) => setEsvApiKey(e.target.value)}
-              />
-              <Button 
-                onClick={handleTestEsvApiKey} 
-                size="sm" 
-                variant="outline"
-                disabled={isTestingEsv}
-              >
-                {isTestingEsv ? 'Testing...' : 'Test'}
-              </Button>
-              <Button onClick={handleSaveEsvApiKey} size="sm">
-                Save
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Get a free API key from{' '}
-              <a 
-                href="https://api.esv.org" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                api.esv.org
-              </a>
-              {' '}(free for non-commercial/church use)
-            </p>
-          </div>
-        )}
-
-        {/* NLT API Key Section */}
-        {selectedVersion === 'nlt' && (
-          <div className="space-y-2 p-4 border border-border rounded-lg bg-muted/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Key className="w-4 h-4 text-primary" />
-              <Label htmlFor="nlt-api-key">NLT API Key</Label>
-            </div>
-            <div className="flex gap-2">
-              <Input
-                id="nlt-api-key"
-                type="password"
-                placeholder="Enter your NLT API key"
-                value={nltApiKey}
-                onChange={(e) => setNltApiKey(e.target.value)}
-              />
-              <Button 
-                onClick={handleTestNltApiKey} 
-                size="sm" 
-                variant="outline"
-                disabled={isTestingNlt}
-              >
-                {isTestingNlt ? 'Testing...' : 'Test'}
-              </Button>
-              <Button onClick={handleSaveNltApiKey} size="sm">
-                Save
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Get a free API key from{' '}
-              <a 
-                href="https://api.nlt.to" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                api.nlt.to
-              </a>
-              {' '}(free for non-commercial/church use)
-            </p>
-          </div>
-        )}
-
-        {/* Custom Upload Section */}
         {selectedVersion === 'custom' && (
-          <div className="space-y-2 p-4 border border-border rounded-lg bg-muted/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Upload className="w-4 h-4 text-primary" />
-              <Label htmlFor="custom-bible">Upload Custom Bible</Label>
-            </div>
-            <Input
-              id="custom-bible"
-              type="file"
-              accept=".json"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-            />
-            <p className="text-xs text-muted-foreground">
-              Upload a Bible JSON file in the same format as kjv-complete.json
-            </p>
-          </div>
+          <List plain>
+            <Row title="Add a Bible file" desc="A JSON file in the same format as the built-in Bibles.">
+              <label className="st-btn">
+                <Upload />
+                {isUploading ? 'Adding…' : 'Choose file'}
+                <input id="custom-bible" type="file" accept=".json" onChange={handleFileUpload} disabled={isUploading} className="hidden" />
+              </label>
+            </Row>
+          </List>
         )}
-      </div>
-    </div>
+        {(selectedVersion === 'kjv' || selectedVersion === 'asv' || selectedVersion === 'web' || selectedVersion === 'custom') && (
+          <button type="button" className="st-btn ghost self-start" onClick={handleExportVersion} disabled={isExporting}>
+            <Upload />
+            {isExporting ? 'Saving…' : `Save ${selectedVersion === 'custom' ? 'this Bible' : selectedVersion.toUpperCase()} as a file`}
+          </button>
+        )}
+      </Section>
+
+      <Section title="Over the internet" aside="Licensed translations, read when shown and never stored">
+        <div className="st-choices" role="radiogroup" aria-label="Online Bible translation">
+          {BIBLE_VERSIONS.filter((v) => v.requiresApi).map((v) => card(v.id, v.name, v.fullName.replace(' (Online)', '') + ' · needs a free key'))}
+          {apiBibles.map((b) => card(`api:${b.id}` as BibleVersionType, b.abbreviation, `${b.name} · API.Bible`))}
+        </div>
+        {selectedVersion === 'esv' && (
+          <List plain>
+            <Row title="ESV key" desc={<>Free for church use from <a href="https://api.esv.org" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">api.esv.org</a>.</>}>
+              <input id="esv-api-key" className="st-input w-56" type="password" placeholder="Paste the key" value={esvApiKey} onChange={(e) => setEsvApiKey(e.target.value)} aria-label="ESV key" />
+              <button type="button" className="st-btn" onClick={handleTestEsvApiKey} disabled={isTestingEsv}>
+                {isTestingEsv ? 'Testing…' : 'Test'}
+              </button>
+              <button type="button" className="st-btn primary" onClick={handleSaveEsvApiKey}>
+                Save
+              </button>
+            </Row>
+          </List>
+        )}
+        {selectedVersion === 'nlt' && (
+          <List plain>
+            <Row title="NLT key" desc={<>Free for church use from <a href="https://api.nlt.to" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">api.nlt.to</a>.</>}>
+              <input id="nlt-api-key" className="st-input w-56" type="password" placeholder="Paste the key" value={nltApiKey} onChange={(e) => setNltApiKey(e.target.value)} aria-label="NLT key" />
+              <button type="button" className="st-btn" onClick={handleTestNltApiKey} disabled={isTestingNlt}>
+                {isTestingNlt ? 'Testing…' : 'Test'}
+              </button>
+              <button type="button" className="st-btn primary" onClick={handleSaveNltApiKey}>
+                Save
+              </button>
+            </Row>
+          </List>
+        )}
+        <ApiBibleSettings onChange={() => setApiBibles(chosenApiBibles())} />
+      </Section>
+    </>
   );
 };

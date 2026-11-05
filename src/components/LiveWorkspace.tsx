@@ -738,7 +738,7 @@ export const LiveWorkspace = () => {
     }
   };
 
-  const [settingsPane, setSettingsPane] = useState<Pane>('bible');
+  const [settingsPane, setSettingsPane] = useState<Pane>('features');
   const openListeningSettings = () => {
     setSettingsPane('listening');
     setShowSettings(true);
@@ -1353,9 +1353,15 @@ export const LiveWorkspace = () => {
       />
 
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-6xl p-0 overflow-hidden gap-0 [&>button.absolute]:hidden">
+        <DialogContent className="max-w-[1360px] w-[calc(100vw-48px)] h-[calc(100dvh-56px)] max-h-[960px] p-0 overflow-hidden gap-0 border-0 sm:rounded-[18px] shadow-[0_24px_64px_rgba(0,0,0,.5),0_0_0_1px_rgba(255,245,255,.07)] [&>button.absolute]:hidden">
           <DialogTitle className="sr-only">Settings</DialogTitle>
-          <SettingsPanel onClose={() => setShowSettings(false)} key={settingsPane} initial={settingsPane} />
+          <SettingsPanel
+            onClose={() => setShowSettings(false)}
+            key={settingsPane}
+            initial={settingsPane}
+            service={service}
+            serviceIsToday={!!service && todays.some((s) => s.id === service.id)}
+          />
         </DialogContent>
       </Dialog>
       <ApiKeyDialog

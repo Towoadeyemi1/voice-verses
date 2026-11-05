@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ManualSearch } from '@/components/ManualSearch';
 import { VerseText } from '@/components/VerseText';
 import { ProPresenterSettings } from '@/components/ProPresenterSettings';
+import '@/components/settings/settings.css';
 import { MicrophoneSettings } from '@/components/MicrophoneSettings';
 import { SpeechEngineSettings } from '@/components/SpeechEngineSettings';
 import { AiAssistantSettings } from '@/components/AiAssistantSettings';
@@ -356,7 +357,9 @@ const ProPresenterLive = () => {
               <TabsTrigger value="speech">Speech &amp; AI</TabsTrigger>
             </TabsList>
             <TabsContent value="propresenter" className="mt-4">
-              <ProPresenterSettings />
+              <div className="vvs rounded-2xl overflow-hidden" style={{ background: 'var(--s-win)' }}>
+                <ProPresenterSettings />
+              </div>
             </TabsContent>
             <TabsContent value="microphone" className="mt-4">
               <MicrophoneSettings onChange={() => setInput(inputLabel())} />
