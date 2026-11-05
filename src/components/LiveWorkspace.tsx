@@ -12,6 +12,7 @@ import { BibleParser } from '@/lib/bibleParser';
 import { LAST_SERVICE_KEY, ServiceStorage } from '@/lib/serviceStorage';
 import { buildSongSlides, ccliLicence } from '@/lib/songs';
 import { addLine, captureSlide, draftLyrics, draftTitle } from '@/lib/spontaneousSong';
+import { Moment, partForMoment, SermonPoint } from '@/speech/momentCues';
 import { SAMPLES_CHANGED } from '@/lib/samples/seed';
 import { DEMO_STEPS } from '@/lib/demoScript';
 import { WelcomePane } from './live/WelcomePane';
@@ -556,6 +557,56 @@ export const LiveWorkspace = () => {
     setPrediction({ key: verseKey(verse), reason: best.reason, heard: hint.heard });
   };
 
+  // ---- Moment autopilot and sermon points (Settings → Features; both off unless chosen) ----
+
+  /** Why Next holds what it does, when listening put it there ("the preacher said “let us pray”") */
+  const [cue, setCue] = useState<{ id: string; note: string; part?: string } | null>(null);
+
+  /** "Let us pray": that part of the order of service goes into Next (never on screen by itself), with Undo. */
+  const moment = (m: Moment) => {
+    const svc = service;
+    if (!svc) return;
+    const parts = svc.sections.flatMap((section) => section.subsections.map((item) => ({ item, name: item.name, section: section.name })));
+    const at = partForMoment(m.kind, parts, parts.findIndex((p) => p.item.id === currentItemId));
+    const target = at === null ? null : parts[at];
+    if (!target || !target.item.slides.length) return;
+    const before = { collection, preview, currentItemId };
+    loadServiceItem(svc, target.item, false);
+    setCue({ id: target.item.slides[0].id, note: `the preacher said “${m.heard}”`, part: target.item.name });
+    toast(`${target.item.name} is ready in Next`, {
+      description: `Heard “${m.heard}”. Press Take to show it.`,
+      duration: 8000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          setCollection(before.collection);
+          setPreview(before.preview);
+          setCurrentItemId(before.currentItemId);
+          setCue(null);
+        },
+      },
+    });
+  };
+
+  /** "Point number two…": the sermon's own point slide if it has one, else a point slide made from the words, in Next. */
+  const sermonPoint = (p: SermonPoint) => {
+    const slides = (service?.sections ?? []).flatMap((section) => section.subsections.flatMap((item) => item.slides));
+    const own =
+      p.number !== null
+        ? slides.find((sl) => sl.type === 'announcement' && (new RegExp(`\\bpoint\\s*${p.number}\\b`, 'i').test(sl.title) || new RegExp(`^\\s*${p.number}[.)]\\s`).test(sl.content)))
+        : undefined;
+    const title = p.number !== null ? `Point ${p.number}` : 'Write this down';
+    const slide: Slide = own ?? { id: `point-${p.number ?? 'note'}-${Date.now()}`, type: 'announcement', title, content: p.text };
+    const before = preview;
+    setPreview({ slide });
+    setCue({ id: slide.id, note: own ? `the preacher came to ${title.toLowerCase()}` : `the preacher said ${title.toLowerCase()}` });
+    toast(`${title} is ready in Next`, {
+      description: own ? 'Your point slide from the service. Press Take to show it.' : `“${p.text}” Press Take to show it.`,
+      duration: 8000,
+      action: { label: 'Undo', onClick: () => (setPreview(before), setCue(null)) },
+    });
+  };
+
   // Settings → Features: the listening engine follows the switches at once
   const [features, setFeatures] = useState(loadFeatures);
   useEffect(() => {
@@ -591,8 +642,8 @@ export const LiveWorkspace = () => {
     if (!previewSuggestionId && !prediction) setPreview(loaded.verses[0] ? { verse: loaded.verses[0] } : null);
   };
 
-  const handlers = useRef({ present, addSuggestion, collection, captureLine, predict, chapterCalled });
-  handlers.current = { present, addSuggestion, collection, captureLine, predict, chapterCalled };
+  const handlers = useRef({ present, addSuggestion, collection, captureLine, predict, chapterCalled, moment, sermonPoint });
+  handlers.current = { present, addSuggestion, collection, captureLine, predict, chapterCalled, moment, sermonPoint };
 
   // ---- The demo: a scripted sermon and worship set through the real detector ----------
 
@@ -670,6 +721,8 @@ export const LiveWorkspace = () => {
       onChapterCalled: (c) => void handlers.current.chapterCalled(c),
       onFindRequested: (heard) => toast.info('Asked to find a scripture', { description: `Heard “${heard.split(/\s+/).slice(-8).join(' ')}”. What it sounds like appears below, best first.`, duration: 5000 }),
       onCapturedLine: (line) => handlers.current.captureLine(line),
+      onMoment: (m) => handlers.current.moment(m),
+      onSermonPoint: (p) => handlers.current.sermonPoint(p),
       onLyricsMove: (index, cue) => {
         const c = handlers.current.collection;
         if (c?.kind !== 'slides' || !c.slides[index]) return;
@@ -1076,7 +1129,9 @@ export const LiveWorkspace = () => {
   const predicted = prediction && preview && 'verse' in preview && verseKey(preview.verse) === prediction.key;
   const nextLabel = !preview
     ? sendMode === 'auto' ? 'what comes next appears here' : 'waits here for Take'
-    : predicted
+    : cue && 'slide' in preview && preview.slide.id === cue.id
+      ? `${cue.part && cue.part !== describeLive(preview) ? `${cue.part}: ` : ''}${describeLive(preview)} · ready because ${cue.note} · Take to show it`
+      : predicted
       ? `${describeLive(preview)} · likely next (${prediction.reason.charAt(0).toLowerCase()}${prediction.reason.slice(1)}) · Take to show it`
       : `${describeLive(preview)} · ${sendMode === 'auto' && 'verse' in preview && liveVerse ? 'goes up when this verse ends' : 'waiting for Take'}`;
 

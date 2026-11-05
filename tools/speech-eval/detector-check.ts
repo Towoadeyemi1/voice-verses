@@ -25,6 +25,7 @@ import { predictNext } from '@/lib/predictNext';
 import { crossReferences, setCrossReferenceData } from '@/lib/crossReferences';
 import crossReferenceData from '@/data/cross-references.json';
 import { duplicateService, nextSunday } from '@/lib/duplicateService';
+import { findMoment, findSermonPoint, partForMoment } from '@/speech/momentCues';
 
 const single: [string, string | null][] = [
   ['Please turn with me to John chapter 3, verse 16.', 'John 3:16'],
@@ -581,6 +582,82 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('read-along off (quotes off too): the next verse does not follow', (await run({ readAlong: false, quotes: false }, ['John 3:16', 'For God sent not his Son into the world to condemn the world, but that the world through him might be saved.'])).shown, 'John 3:16');
     check('predictive off: no hint is passed on', (await run({ predictiveNext: false }, ['and Paul says the same thing in Romans'])).hints, null);
     check('everything off: a reference said outright still shows', (await run({ readAlong: false, chapterWait: false, quotes: false, stories: false, helpFind: false, predictiveNext: false }, ['Please turn to Romans 8:28 with me'])).shown, 'Romans 8:28');
+  }
+
+  // Moment autopilot: narrow phrases move the order of service (into Next), ordinary sermon words do not
+  {
+    const kind = (t: string) => findMoment(t)?.kind ?? null;
+    check('moment: "let us pray"', kind('So church, would you stand with me and let us pray.'), 'prayer');
+    check('moment: every head bowed', kind('Every head bowed, every eye closed'), 'prayer');
+    check('moment: the offering', kind('We are going to receive the offering now as the ushers come forward'), 'giving');
+    check('moment: tithes and offerings', kind("It's time for our tithes and offerings"), 'giving');
+    check('moment: turn to your neighbour', kind('Turn to your neighbour and tell them you are welcome'), 'welcome');
+    check('moment: announcements', kind('I have a few announcements for this week'), 'notices');
+    check('moment: the benediction', kind('Now may the grace of our Lord Jesus Christ be with you all'), 'close');
+    check('moment: the altar call', kind('If you would like to receive Christ today, come to the altar'), 'response');
+    check('moment: communion', kind('As we come to the Lord\'s table this morning'), 'communion');
+    check('no moment: learning to pray', kind('Jesus taught his disciples how they ought to pray always'), null);
+    check('no moment: Abraham\'s offering', kind('Abraham was ready to make the offering of Isaac'), null);
+    check('no moment: a story about announcing', kind('The angel announced the birth of the Saviour'), null);
+    check('no moment: a reference', kind('Turn to Romans 8:28'), null);
+    check('no moment: "before we go any further"', kind('Before we go any further.'), null);
+    check('moment: "as we close"', kind('As we close this service, stand with me'), 'close');
+    const parts = [
+      { section: 'Before', name: 'Countdown' },
+      { section: 'Welcome', name: 'Welcome' },
+      { section: 'Worship', name: 'Holy, Holy, Holy' },
+      { section: 'Prayer', name: 'Prayer' },
+      { section: 'Notices', name: 'Notices' },
+      { section: 'Giving', name: 'Offering' },
+      { section: 'The Word', name: 'Sermon' },
+      { section: 'Close', name: 'Benediction' },
+    ];
+    check('moment → the next Prayer part', String(partForMoment('prayer', parts, 2)), '3');
+    check('moment → Giving, a little ahead', String(partForMoment('giving', parts, 3)), '5');
+    check('moment: already there, nothing moves', String(partForMoment('prayer', parts, 3)), 'null');
+    check('moment: no such part, nothing moves', String(partForMoment('communion', parts, 2)), 'null');
+    check('moment: the benediction from the sermon', String(partForMoment('close', parts, 6)), '7');
+  }
+
+  // Sermon points on cue: the number and the words become a point slide in Next
+  {
+    const point = (t: string) => {
+      const p = findSermonPoint(t);
+      return p ? `${p.number ?? '-'}|${p.text}` : null;
+    };
+    check('point: "point number two" with its words', point('Point number two God is faithful even when we are not'), '2|God is faithful even when we are not.');
+    check('point: "my third point is"', point('My third point is this, grace is greater than our sin'), '3|Grace is greater than our sin.');
+    check('point: number alone, words follow', point('Point number one.'), '1|');
+    check('point: "number three" starting a sentence', point('Number three: prayer changes things in our lives'), '3|Prayer changes things in our lives.');
+    check('point: "write this down"', point('Write this down, you are never alone in the valley'), '-|You are never alone in the valley.');
+    check('no point: "number three of the apostles"', point('Peter was number three of the apostles to arrive'), null);
+    check('no point: "the point is"', point('The point is that God loves you'), null);
+    check('no point: a verse number', point('Look at verse number two'), null);
+  }
+
+  // Moments and points reach the live screen only when switched on (both are off unless chosen)
+  {
+    const run = async (features: Record<string, boolean>, lines: string[]) => {
+      const got: string[] = [];
+      const d = new VerseDetectionController({
+        onVerseDetected: (v) => got.push(`verse ${v.book} ${v.chapter}:${v.verse}`),
+        onMoment: (m) => got.push(`moment ${m.kind}`),
+        onSermonPoint: (p) => got.push(`point ${p.number ?? '-'} ${p.text}`),
+      });
+      d.setFeatures(features);
+      for (const line of lines) {
+        await d.onTranscript(line, true);
+        await pause();
+      }
+      return got.join(', ') || null;
+    };
+    check('moment autopilot on: "let us pray" is passed on', await run({ momentAutopilot: true }, ['And now let us pray.']), 'moment prayer');
+    check('moment autopilot off: nothing', await run({ momentAutopilot: false }, ['And now let us pray.']), null);
+    check('the same moment twice in a row moves once', await run({ momentAutopilot: true }, ['Let us pray.', 'Let us pray together.']), 'moment prayer');
+    check('sermon points on: point and words', await run({ sermonPoints: true }, ['Point number two God is faithful even when we are not']), 'point 2 God is faithful even when we are not.');
+    check('sermon points: the words in the next sentence', await run({ sermonPoints: true }, ['My second point.', 'Grace is greater than all our sin.']), 'point 2 Grace is greater than all our sin.');
+    check('sermon points off: nothing', await run({ sermonPoints: false }, ['Point number two God is faithful even when we are not']), null);
+    check('a reference in a point still shows the verse', await run({ sermonPoints: true }, ['Point number three, Romans 8:28 says all things work together for good']), 'verse Romans 8:28');
   }
 
   // Inputs that belong to a video card are recognised (they are silent without sound in their SDI cable)

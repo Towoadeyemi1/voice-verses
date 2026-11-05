@@ -1,4 +1,5 @@
 import { ScaledStage } from '@/components/ScaledStage';
+import { StillMotion } from '@/components/MotionBackground';
 import { Live, OutputContent } from '@/components/OutputContent';
 import { ConfidenceScreen, loadConfidenceSettings } from '@/components/ConfidenceScreen';
 import { useLive } from '@/hooks/use-live';
@@ -40,7 +41,9 @@ export function OutputPreview({ output, className = '' }: { output: ScreenOutput
     >
       {/* The lower third is keyed over the camera: shown over a dark stand-in, not its key colour */}
       {output === 'lowerThird' && <div className="absolute inset-0" style={{ background: 'radial-gradient(60% 80% at 30% 30%, #3a3f4a, #0d0f14 70%)' }} />}
-      <OutputContent live={shown} output={output === 'projection' ? 'projection' : 'stream'} preview transparent={output === 'lowerThird'} />
+      <StillMotion>
+        <OutputContent live={shown} output={output === 'projection' ? 'projection' : 'stream'} preview transparent={output === 'lowerThird'} />
+      </StillMotion>
     </ScaledStage>
   );
 }

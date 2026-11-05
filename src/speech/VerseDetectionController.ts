@@ -30,6 +30,7 @@ import {
 } from './referenceExtraction';
 import { DetectionInfo, SpeechEngineType } from './ISpeechProvider';
 import { VerseAssistant } from '@/ai/verseAssistant';
+import { findMoment, findSermonPoint, Moment, SermonPoint, tidyPoint } from './momentCues';
 
 export interface VerseDetectionOptions {
   onVerseDetected: (verse: BibleVerse, info: DetectionInfo) => void;
@@ -64,6 +65,10 @@ export interface VerseDetectionOptions {
    * loaded for the operator; the verse goes up when it is read or named ("verse 5"), or is offered when paraphrased.
    */
   onChapterCalled?: (chapter: { book: string; chapter: number }) => void;
+  /** Moment autopilot: "let us pray", "as the ushers come forward"… (the live screen puts that part in Next) */
+  onMoment?: (moment: Moment) => void;
+  /** Sermon points on cue: "point number two…" with its words (the live screen makes a point slide in Next) */
+  onSermonPoint?: (point: SermonPoint) => void;
   /** The preacher asked for help finding a scripture ("help me find it"): the app is looking now */
   onFindRequested?: (heard: string) => void;
   
@@ -96,6 +101,10 @@ export interface DetectionFeatures {
   worshipCues: boolean;
   /** Singing that is in no song, offered to capture */
   newSongs: boolean;
+  /** "Let us pray" moves the order of service to that part, in Next */
+  momentAutopilot: boolean;
+  /** "Point number two…" becomes a point slide, in Next */
+  sermonPoints: boolean;
 }
 
 export const ALL_DETECTION_FEATURES: DetectionFeatures = {
@@ -108,6 +117,8 @@ export const ALL_DETECTION_FEATURES: DetectionFeatures = {
   songRecognition: true,
   worshipCues: true,
   newSongs: true,
+  momentAutopilot: true,
+  sermonPoints: true,
 };
 
 export interface ReadingProgress {
@@ -331,6 +342,45 @@ export class VerseDetectionController {
   /**
    * Main entry point - process incoming transcript
    */
+  private lastMoment: { kind: string; at: number } | null = null;
+  private pendingPoint: { number: number | null; at: number } | null = null;
+  private lastPoint: { key: string; at: number } | null = null;
+
+  /** "Let us pray": passed on once (the same kind not again for 2 minutes, nothing within 8 s of the last). */
+  private noticeMoment(sentence: string): void {
+    if (!this.features.momentAutopilot || !this.options.onMoment) return;
+    const moment = findMoment(sentence);
+    if (!moment) return;
+    const now = Date.now();
+    const last = this.lastMoment;
+    if (last && (now - last.at < 8_000 || (last.kind === moment.kind && now - last.at < 120_000))) return;
+    this.lastMoment = { kind: moment.kind, at: now };
+    this.options.onMoment(moment);
+  }
+
+  /** "Point number two…": its words from the same sentence, or the next one (within 15 s). Not while singing. */
+  private noticePoint(sentence: string): void {
+    if (!this.features.sermonPoints || !this.options.onSermonPoint || this.songMode) return;
+    const now = Date.now();
+    const point = findSermonPoint(sentence);
+    if (!point && this.pendingPoint && now - this.pendingPoint.at < 15_000) {
+      const text = tidyPoint(sentence);
+      if (text) this.sendPoint({ number: this.pendingPoint.number, text });
+      this.pendingPoint = null;
+      return;
+    }
+    if (!point) return;
+    if (point.text) this.sendPoint(point);
+    else this.pendingPoint = { number: point.number, at: now };
+  }
+
+  private sendPoint(point: SermonPoint): void {
+    const key = `${point.number ?? '-'}|${point.text}`;
+    if (this.lastPoint?.key === key && Date.now() - this.lastPoint.at < 60_000) return;
+    this.lastPoint = { key, at: Date.now() };
+    this.options.onSermonPoint?.(point);
+  }
+
   async onTranscript(text: string, isFinal: boolean): Promise<void> {
     if (!text || typeof text !== 'string') {
       return;
@@ -364,6 +414,11 @@ export class VerseDetectionController {
     if (reference && this.songMode && reference.confidence === 'low') reference = null;
 
     if (!reference) {
+      // Moments and sermon points are noticed on finished sentences, and the rest goes on as usual
+      if (isFinal) {
+        this.noticeMoment(cleanText);
+        this.noticePoint(cleanText);
+      }
       // No reference: a navigation command, a song being sung, the passage being read on, a quoted verse, or a described one
       if (await this.handleNavigationCommands(cleanText, isFinal)) return;
       if (this.handleSinging(cleanText, isFinal)) return;

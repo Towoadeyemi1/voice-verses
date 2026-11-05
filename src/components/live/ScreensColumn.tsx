@@ -11,7 +11,11 @@ const Label = ({ tone, title, detail, children }: { tone: 'live' | 'next'; title
   <div className="flex items-center gap-2 text-sm font-semibold min-h-[30px]">
     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: `hsl(var(--${tone}))` }} />
     {title}
-    {detail && <span className="font-medium text-muted-foreground truncate">{detail}</span>}
+    {detail && (
+      <span className="font-medium text-muted-foreground truncate" data-label-detail={tone} title={detail}>
+        {detail}
+      </span>
+    )}
     <span className="ml-auto flex items-center gap-1">{children}</span>
   </div>
 );
