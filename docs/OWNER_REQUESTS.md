@@ -310,6 +310,14 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - 💬 Proposed: **Training**, lessons that run on the real interface. A spotlight on the real control, one short step at a time, waiting for the volunteer to do it themselves. Lessons happen in a **practice room** (the sample service, a recorded sermon, the screens shown only on this computer) so nothing reaches the room by mistake. Lessons are grouped by role (First Sunday, Setting up the booth, Songs and slides, Teaching spirit), with progress ticks, and a "Show me" link from any Settings page or warning.
 - ⏳ Mock-up first, for the owner's yes.
 
+## "Did you hear what I said about the goal of spirit running the whole service?" … "Do you think that is the best order?" … "Start please. Also, I want the option, if the user has an AI key, to add it and enhance the experience in a way that the app can learn better, perform more proficiently, and run spirit better. Is that even reasonable??"
+
+(5 Nov 2026.)
+- 💬 1.17.0 covers two kinds of move (moments on cue, sermon points). Running the whole service needs: one trust ladder for **every** move (getting the service ready, countdown into the welcome, following songs, next song, moments, moving on when time is up, clearing after a reading, the logo between parts, the end); the order of service as spirit's backbone; learning from every move the operator makes; a "What spirit will do next" strip with one Pause; a score after each service.
+- 💬 Order agreed: one real Sunday with 1.17.0 first (spirit learns from real services), the design meanwhile; then spirit for the whole service (1.18.0, 1.19.0); then Training (once the live screen settles). The owner also needs to try DeckLink, NDI and ProPresenter on the real hardware, and to sign the installers.
+- 💬 An AI key is reasonable and optional: spirit works fully without it; with Claude, OpenAI, an OpenAI-compatible server or Ollama on the computer (rule 3), spirit understands meaning not only phrases (asked only when unsure, on finished sentences), learns after each service (suggests cues and habits for a yes), prepares before Sunday (plan, songs, sermon notes), and can say why it got something wrong. AI never puts a verse up (rule 1); its ideas climb the same ladder; only written words, the plan and song titles are sent, never sound; offline, spirit carries on.
+- ⏳ Mock-up: `docs/design/spirit-whole-service/` (Sunday with spirit running it, everything spirit can learn to do, How Sunday went, Help from AI), waiting for the owner's yes.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

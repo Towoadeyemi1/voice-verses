@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>After the service</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#f0b44a}a:hover{color:#ffd28a}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; padding: 28px 40px; background: radial-gradient(60% 60% at 90% 0%, rgba(64,98,190,.35), transparent 70%), radial-gradient(50% 50% at 0% 100%, rgba(240,180,74,.18), transparent 70%), #0e0d10; color: #f4f1f6; font-family: Figtree, -apple-system, system-ui, sans-serif; font-size: 14px; display: flex">
+  <div style="flex: 1; min-width: 0; background: #161518; border-radius: 18px; border: 1px solid rgba(255,245,255,.07); box-shadow: 0 24px 64px rgba(0,0,0,.5); padding: 28px 34px; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+
+    <div style="display: flex; align-items: center; gap: 16px">
+      <i style="width: 44px; height: 44px; flex: none; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6dc, #f0b44a 40%, #f472b6 75%, #8b5cf6); box-shadow: 0 0 24px rgba(240,180,74,.45)"></i>
+      <div style="flex: 1">
+        <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.02em">How Sunday went</h1>
+        <p style="margin: 2px 0 0; color: #b2abb7">Sunday Celebration · 9 November · shown when you stop listening, and kept in Settings → How spirit runs</p>
+      </div>
+      <button type="button" style="height: 40px; padding: 0 16px; border: 0; border-radius: 12px; background: rgba(255,245,255,.09); color: #f4f1f6; font: 600 14px Figtree, system-ui, sans-serif">Done</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 22px; flex: 1; min-height: 0">
+
+      <section aria-label="The score" style="display: flex; flex-direction: column; gap: 16px">
+        <div style="background: #1f1d22; border-radius: 16px; padding: 22px; display: flex; align-items: center; gap: 22px">
+          <div role="img" aria-label="spirit ran 31 of 40 moves" style="width: 128px; height: 128px; flex: none; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#f0b44a 0 28%, #f472b6 78%, rgba(255,245,255,.08) 78% 100%)">
+            <div style="width: 104px; height: 104px; border-radius: 50%; background: #1f1d22; display: flex; flex-direction: column; align-items: center; justify-content: center">
+              <b style="font-size: 34px; font-weight: 800; letter-spacing: -.03em">31</b>
+              <span style="font-size: 13px; color: #b2abb7">of 40 moves</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <b style="font-size: 18px; line-height: 1.3">spirit ran most of this service.</b>
+            <span style="color: #b2abb7; font-size: 13.5px">22 went live by themselves, 9 waited in Next for you. You made 6 moves yourself and corrected 3.</span>
+          </div>
+        </div>
+
+        <div style="background: #1f1d22; border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <b style="font-size: 14px">The service, start to end</b>
+          <div role="img" aria-label="Who moved the service on, from start to end" style="display: flex; gap: 2px; height: 22px">
+            <sc-for list="{{runs}}" as="k" hint-placeholder-count="40"><i style="{{k.style}}"></i></sc-for>
+          </div>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: #b2abb7">
+            <span style="display: inline-flex; align-items: center; gap: 6px"><i style="width: 10px; height: 10px; border-radius: 3px; background: linear-gradient(135deg, #f0b44a, #f472b6)"></i>spirit</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px"><i style="width: 10px; height: 10px; border-radius: 3px; background: rgba(255,245,255,.3)"></i>You</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px"><i style="width: 10px; height: 10px; border-radius: 3px; background: repeating-linear-gradient(135deg, #f5a524 0 2px, transparent 2px 4px); box-shadow: inset 0 0 0 1px #f5a524"></i>Corrected</span>
+          </div>
+        </div>
+
+        <div style="background: #1f1d22; border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: baseline"><b style="flex: 1; font-size: 14px">Sunday by Sunday</b><span style="font-size: 13px; color: #b2abb7">moves spirit ran</span></div>
+          <div role="img" aria-label="12, 19, 26 and 31 moves on the last four Sundays" style="display: flex; align-items: flex-end; gap: 14px; height: 110px">
+            <sc-for list="{{weeks}}" as="w" hint-placeholder-count="4">
+              <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px">
+                <b style="font-size: 13px">{{w.n}}</b>
+                <i style="{{w.style}}"></i>
+                <span style="font-size: 13px; color: #b2abb7">{{w.day}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="What to look at" style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 700">Worth a look: 3 corrections</h2>
+          <sc-for list="{{fixes}}" as="f" hint-placeholder-count="3">
+            <div style="background: #1f1d22; border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 14px">
+              <time style="width: 46px; flex: none; font-size: 13px; color: #b2abb7; font-variant-numeric: tabular-nums">{{f.at}}</time>
+              <div style="flex: 1; min-width: 0">
+                <b style="display: block; font-size: 14.5px; font-weight: 650">{{f.what}}</b>
+                <span style="display: block; font-size: 13px; color: #b2abb7">{{f.why}}</span>
+              </div>
+              <button type="button" style="height: 36px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(240,180,74,.16); color: #f0b44a; font: 600 13.5px Figtree, system-ui, sans-serif; white-space: nowrap">{{f.keep}}</button>
+              <button type="button" style="height: 36px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: #b2abb7; font: 600 13.5px Figtree, system-ui, sans-serif; white-space: nowrap">Just this once</button>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 700">What spirit learned today</h2>
+          <div style="background: #1f1d22; border-radius: 14px; overflow: hidden">
+            <sc-for list="{{learned}}" as="l" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-top: 1px solid rgba(255,245,255,.06)">
+                <i style="width: 8px; height: 8px; flex: none; border-radius: 50%; background: linear-gradient(135deg, #f0b44a, #f472b6)"></i>
+                <span style="flex: 1; font-size: 14px">{{l.text}}</span>
+                <span style="font-size: 13px; color: #b2abb7; white-space: nowrap">{{l.from}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 14px; background: linear-gradient(135deg, rgba(240,180,74,.16), rgba(244,114,182,.10)); box-shadow: inset 0 0 0 1px rgba(240,180,74,.35)">
+          <div style="flex: 1">
+            <b style="font-size: 14.5px">Ready to go further</b>
+            <span style="display: block; font-size: 13.5px; color: #b2abb7">“Next song when one ends” has now been right 10 times in a row. Let it go live by itself next Sunday?</span>
+          </div>
+          <button type="button" style="height: 38px; padding: 0 14px; border: 0; border-radius: 10px; background: #f0b44a; color: #2a1d04; font: 700 13.5px Figtree, system-ui, sans-serif">Make it Hands-free</button>
+          <button type="button" style="height: 38px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: #b2abb7; font: 600 13.5px Figtree, system-ui, sans-serif">Not yet</button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 14px; background: #1f1d22">
+          <i style="width: 28px; height: 28px; flex: none; border-radius: 8px; background: linear-gradient(135deg, #60a5fa, #2563eb)"></i>
+          <div style="flex: 1">
+            <b style="font-size: 14.5px">With Help from AI</b>
+            <span style="display: block; font-size: 13.5px; color: #b2abb7">AI read this service’s words after it ended and suggests 2 new cues and 1 habit. They wait in Cues for your yes.</span>
+          </div>
+          <a href="#" style="font-weight: 600; font-size: 13.5px">See the suggestions</a>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var seq = 'ssssmsssssssssmsswssssssmssssssmsswsmsws';
+    var base = 'flex: 1; border-radius: 3px; ';
+    var runs = seq.split('').map(function (k) {
+      if (k === 's') return { style: base + 'background: linear-gradient(135deg, #f0b44a, #f472b6)' };
+      if (k === 'm') return { style: base + 'background: rgba(255,245,255,.3)' };
+      return { style: base + 'background: repeating-linear-gradient(135deg, #f5a524 0 2px, transparent 2px 4px); box-shadow: inset 0 0 0 1px #f5a524' };
+    });
+    var bar = function (n) { return 'width: 100%; max-width: 54px; height: ' + Math.round(n * 2.4) + 'px; border-radius: 8px 8px 3px 3px; background: linear-gradient(180deg, #f0b44a, #f472b6)'; };
+    var weeks = [
+      { n: '12', day: '19 Oct', style: bar(12) + '; opacity: .55' },
+      { n: '19', day: '26 Oct', style: bar(19) + '; opacity: .7' },
+      { n: '26', day: '2 Nov', style: bar(26) + '; opacity: .85' },
+      { n: '31', day: 'Today', style: bar(31) }
+    ];
+    var fixes = [
+      { at: '10:22', what: 'The word went to Next during the last song', why: 'You said Not now. spirit guesses: the worship leader said “turn to your neighbour” while singing.', keep: 'Right: not during songs' },
+      { at: '10:48', what: 'Logo after the reading', why: 'You put Philippians 4 back up. spirit guesses: the preacher was still on the passage.', keep: 'Right: wait for a new verse' },
+      { at: '11:41', what: 'The end of the service, too early', why: 'You picked the prayer again. The pastor prayed twice after “go in peace”.', keep: 'Right: wait for “amen”' }
+    ];
+    var learned = [
+      { text: '“As we prepare our hearts to give” gets the Offering ready', from: 'You went there 3 times after it' },
+      { text: 'The Close part runs about 8 minutes, not 5', from: 'From 4 Sundays' },
+      { text: 'After the reading, you leave the verse up until the next one', from: 'From today’s correction' }
+    ];
+    return { runs: runs, weeks: weeks, fixes: fixes, learned: learned };
+  }
+}
+</script>
+</body>
+</html>
