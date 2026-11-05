@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spirit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* Layout: Settings is a large sheet over the live screen. A quiet sidebar of coloured
+   icon squares (grouped: this service, the booth, this computer) and one page at a time.
+   Pages are documents: grouped rows on soft surfaces, no boxes inside boxes. The
+   hero of each page is a picture of the real thing (the screens, ProPresenter, the presets). */
+:root {
+  --page: #0e0d10; --win: #161518; --surface: #1f1d22; --raised: #26232a; --sunken: #121114;
+  --ink: #f4f1f6; --ink-2: #b2abb7; --ink-3: #78727e;
+  --line: rgba(255, 245, 255, .07); --fill: rgba(255, 245, 255, .05); --fill-2: rgba(255, 245, 255, .09);
+  --accent: #f0b44a; --accent-ink: #2a1d04; --accent-soft: rgba(240, 180, 74, .16);
+  --warn: #f5a524; --warn-soft: rgba(245, 165, 36, .14);
+  --air: #ff453a; --next: #30d158;
+  --screen-a: #1d2a4a; --screen-b: #0b0f1c;
+  --shadow: 0 1px 1px rgba(0,0,0,.3), 0 24px 64px rgba(0,0,0,.5);
+  --lift: 0 1px 1px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.28);
+  --scrim: rgba(8, 7, 10, .55);
+  --glow-a: rgba(64, 98, 190, .55); --glow-b: rgba(240, 180, 74, .30);
+  /* icon square colours: one per kind of setting */
+  --i-gold: linear-gradient(135deg, #fbbf24, #d97706);
+  --i-blue: linear-gradient(135deg, #60a5fa, #2563eb);
+  --i-violet: linear-gradient(135deg, #a78bfa, #7c3aed);
+  --i-teal: linear-gradient(135deg, #2dd4bf, #0d9488);
+  --i-indigo: linear-gradient(135deg, #818cf8, #4f46e5);
+  --i-orange: linear-gradient(135deg, #fb923c, #ea580c);
+  --i-rose: linear-gradient(135deg, #fb7185, #e11d48);
+  --i-slate: linear-gradient(135deg, #94a3b8, #475569);
+  --i-pink: linear-gradient(135deg, #f472b6, #db2777);
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Figtree", "Segoe UI Variable Text", system-ui, sans-serif;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Figtree", "Segoe UI Variable Display", system-ui, sans-serif;
+  --word: "Newsreader", "New York", "Iowan Old Style", Georgia, serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --page: #efebe5; --win: #f7f4ef; --surface: #fffdfa; --raised: #ffffff; --sunken: #ebe6de;
+    --ink: #1d1b20; --ink-2: #5d5862; --ink-3: #96909b;
+    --line: rgba(40, 30, 50, .08); --fill: rgba(40, 30, 50, .045); --fill-2: rgba(40, 30, 50, .08);
+    --accent: #c98410; --accent-ink: #fffaf0; --accent-soft: rgba(217, 150, 31, .15);
+    --warn: #c47a06; --warn-soft: rgba(217, 140, 20, .13);
+    --air: #ff3b30; --next: #1fa84b;
+    --shadow: 0 1px 2px rgba(20,15,30,.06), 0 24px 64px rgba(20,15,30,.16);
+    --lift: 0 1px 2px rgba(20,15,30,.05), 0 8px 24px rgba(20,15,30,.08);
+    --scrim: rgba(239, 235, 229, .5);
+    --glow-a: rgba(96, 140, 230, .35); --glow-b: rgba(240, 170, 60, .28);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --page: #efebe5; --win: #f7f4ef; --surface: #fffdfa; --raised: #ffffff; --sunken: #ebe6de;
+  --ink: #1d1b20; --ink-2: #5d5862; --ink-3: #96909b;
+  --line: rgba(40, 30, 50, .08); --fill: rgba(40, 30, 50, .045); --fill-2: rgba(40, 30, 50, .08);
+  --accent: #c98410; --accent-ink: #fffaf0; --accent-soft: rgba(217, 150, 31, .15);
+  --warn: #c47a06; --warn-soft: rgba(217, 140, 20, .13);
+  --air: #ff3b30; --next: #1fa84b;
+  --shadow: 0 1px 2px rgba(20,15,30,.06), 0 24px 64px rgba(20,15,30,.16);
+  --lift: 0 1px 2px rgba(20,15,30,.05), 0 8px 24px rgba(20,15,30,.08);
+  --scrim: rgba(239, 235, 229, .5);
+  --glow-a: rgba(96, 140, 230, .35); --glow-b: rgba(240, 170, 60, .28);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 var(--ui);
+  -webkit-font-smoothing: antialiased; overflow: hidden;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- The live screen behind the sheet (only a hint of it) ---- */
+.behind { position: fixed; inset: 0; overflow: hidden; }
+.behind::before, .behind::after { content: ""; position: absolute; border-radius: 50%; filter: blur(40px); }
+.behind::before { width: 60vw; height: 60vw; right: -10vw; top: -10vw; background: radial-gradient(closest-side, var(--glow-a), transparent); }
+.behind::after { width: 50vw; height: 50vw; left: -10vw; bottom: -20vw; background: radial-gradient(closest-side, var(--glow-b), transparent); }
+.behind .bar { position: absolute; left: 24px; right: 24px; top: 14px; height: 36px; display: flex; gap: 10px; align-items: center; opacity: .5; }
+.behind .bar i { display: block; height: 30px; border-radius: 999px; background: var(--fill-2); }
+.behind .tl { position: absolute; left: 24px; right: 24px; top: 66px; height: 40px; display: flex; gap: 6px; opacity: .45; }
+.behind .tl i { flex: 1; border-radius: 12px; }
+.behind .scrim { position: absolute; inset: 0; background: var(--scrim); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+
+/* ---- The sheet ---- */
+.sheet {
+  position: relative; z-index: 2; margin: 0 auto; height: 100%;
+  padding-block: 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  max-width: 1360px; display: flex;
+}
+.window {
+  flex: 1; min-width: 0; display: grid; grid-template-columns: 272px minmax(0, 1fr);
+  background: var(--win); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+/* Sidebar */
+.side { background: var(--sunken); padding: 18px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+.side h1 { margin: 4px 10px 0; font: 700 22px/1.2 var(--display); letter-spacing: -.02em; }
+.ready {
+  display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; border: 0; width: 100%; text-align: left;
+  background: var(--surface); box-shadow: var(--lift); cursor: pointer;
+}
+.ready .ring { width: 38px; height: 38px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--accent) 0 75%, var(--fill-2) 75% 100%); position: relative; }
+.ready .ring::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--surface); }
+.ready .ring b { position: relative; font: 700 14px var(--display); color: var(--warn); }
+.ready strong { display: block; font-size: 14px; }
+.ready span { display: block; font-size: 13px; color: var(--ink-2); }
+.groups { display: flex; flex-direction: column; gap: 18px; }
+.group { display: flex; flex-direction: column; gap: 2px; }
+.group-label { margin: 0 10px 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.nav {
+  display: flex; align-items: center; gap: 11px; min-height: 40px; padding: 6px 10px; border-radius: 10px; border: 0;
+  background: none; cursor: pointer; text-align: left; font-size: 14px; font-weight: 500; color: var(--ink);
+}
+.nav:hover { background: var(--fill); }
+.nav[aria-current="page"] { background: var(--accent-soft); }
+.nav[aria-current="page"] .name { font-weight: 650; }
+.nav .name { flex: 1; min-width: 0; }
+.nav .badge { font-size: 12px; font-weight: 700; color: var(--warn); background: var(--warn-soft); border-radius: 999px; padding: 1px 8px; }
+.sq { width: 28px; height: 28px; flex: none; border-radius: 8px; display: grid; place-items: center; color: #fff; box-shadow: inset 0 0 0 .5px rgba(255,255,255,.18); }
+.sq svg { width: 16px; height: 16px; }
+.sq.lg { width: 40px; height: 40px; border-radius: 11px; }
+.sq.lg svg { width: 22px; height: 22px; }
+
+/* Content */
+.main { overflow-y: auto; position: relative; }
+.top { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 12px; padding: 18px 28px 14px;
+  background: color-mix(in srgb, var(--win) 82%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.top h2 { margin: 0; font: 700 24px/1.15 var(--display); letter-spacing: -.02em; flex: 1; min-width: 0; text-wrap: balance; }
+.top p { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; }
+.iconbtn { width: 36px; height: 36px; border-radius: 10px; border: 0; background: var(--fill); display: grid; place-items: center; cursor: pointer; color: var(--ink-2); flex: none; }
+.iconbtn:hover { background: var(--fill-2); color: var(--ink); }
+.page { padding: 4px 28px 40px; display: flex; flex-direction: column; gap: 30px; max-width: 980px; }
+.page[hidden] { display: none !important; }
+.section { display: flex; flex-direction: column; gap: 10px; }
+.section > header { display: flex; align-items: baseline; gap: 12px; }
+.section > header h3 { margin: 0; font: 650 15px/1.3 var(--ui); flex: 1; }
+.section > header .aside { font-size: 13px; color: var(--ink-2); }
+.hint { margin: 0; font-size: 13px; color: var(--ink-2); max-width: 64ch; }
+
+/* Grouped rows: one soft surface, rows divided by a hairline that starts after the icon */
+.list { background: var(--surface); border-radius: 14px; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 60px; position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; right: 0; left: 58px; border-top: 1px solid var(--line); }
+.list.plain .row + .row::before { left: 16px; }
+.row .text { flex: 1; min-width: 0; }
+.row .t { display: block; font-size: 14.5px; font-weight: 600; }
+.row .d { display: block; font-size: 13px; color: var(--ink-2); margin-top: 1px; }
+.row.dim .t, .row.dim .d { opacity: .55; }
+.pill { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--fill-2); color: var(--ink-2); margin-left: 8px; vertical-align: 1px; }
+
+/* Switch */
+.switch { position: relative; width: 46px; height: 28px; flex: none; border-radius: 999px; border: 0; padding: 0; cursor: pointer;
+  background: var(--fill-2); transition: background .2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { transform: translateX(18px); }
+.switch:disabled { opacity: .4; cursor: default; }
+
+/* Buttons */
+.btn { min-height: 36px; padding: 0 14px; border-radius: 10px; border: 0; cursor: pointer; font-weight: 600; font-size: 13.5px;
+  display: inline-flex; align-items: center; gap: 7px; background: var(--fill-2); color: var(--ink); white-space: nowrap; }
+.btn:hover { filter: brightness(1.08); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.soft { background: var(--accent-soft); color: var(--accent); }
+.btn.ghost { background: none; color: var(--ink-2); }
+.btn.ghost:hover { background: var(--fill); color: var(--ink); }
+.btn svg { width: 16px; height: 16px; }
+
+/* Segmented choice */
+.seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 11px; background: var(--fill); flex-wrap: wrap; }
+.seg button { min-height: 32px; padding: 0 12px; border-radius: 8px; border: 0; background: none; cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: var(--lift); }
+
+/* ---- Screen previews (stand-ins for the real renderer) ---- */
+.shot { display: block; container-type: inline-size; position: relative; aspect-ratio: 16/9; border-radius: 6px; overflow: hidden; color: #fff; max-width: 100%;
+  background: radial-gradient(120% 90% at 70% 20%, #2c3f6e, transparent 60%), radial-gradient(90% 90% at 10% 100%, #3a2a12, transparent 60%), linear-gradient(160deg, var(--screen-a), var(--screen-b)); }
+.shot .verse { position: absolute; inset: 14% 10% 22%; display: grid; place-items: center; text-align: center; font: 400 6.4cqw/1.3 var(--word); }
+.shot .ref { position: absolute; left: 0; right: 0; bottom: 10%; text-align: center; font: 600 3.4cqw var(--ui); letter-spacing: .14em; text-transform: uppercase; color: #f0c674; }
+.shot.lt { background: linear-gradient(160deg, #233a25, #0f1a10); }
+.shot.lt .band { position: absolute; left: 5%; right: 5%; bottom: 8%; padding: 4% 4%; border-radius: 3px; background: rgba(8, 10, 22, .86); font: 400 4.4cqw/1.25 var(--word); }
+.shot.lt .band b { display: block; font: 700 3cqw var(--ui); letter-spacing: .12em; text-transform: uppercase; color: #f0c674; margin-bottom: 2px; }
+.shot.stage { background: #08080a; }
+.shot.stage .now { position: absolute; left: 6%; right: 36%; top: 10%; font: 400 5cqw/1.3 var(--word); }
+.shot.stage .clock { position: absolute; right: 6%; top: 10%; font: 700 8cqw var(--ui); font-variant-numeric: tabular-nums; }
+.shot.stage .next { position: absolute; left: 6%; right: 6%; bottom: 8%; padding-top: 4%; border-top: 1px solid rgba(255,255,255,.15); font: 500 3.4cqw var(--ui); color: rgba(255,255,255,.6); }
+.shot.off { background: #0b0b0d; }
+.shot.off::after { content: "Nothing"; position: absolute; inset: 0; display: grid; place-items: center; font: 600 5cqw var(--ui); color: rgba(255,255,255,.35); }
+.shot.bars { background: linear-gradient(90deg, #c0c0c0 0 14.3%, #c0c000 0 28.6%, #00c0c0 0 42.9%, #00c000 0 57.1%, #c000c0 0 71.4%, #c00000 0 85.7%, #0000c0 0); }
+</style>
+<style>
+/* ---- Screens: the room, drawn ---- */
+.room { position: relative; border-radius: 16px; padding: 28px 20px 18px; overflow-x: auto;
+  background: radial-gradient(80% 120% at 50% 0%, var(--fill-2), transparent 70%), var(--sunken); }
+.devices { display: flex; align-items: flex-end; justify-content: center; gap: 28px; min-width: max-content; padding: 0 8px; }
+.dev { border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 8px; border-radius: 14px; }
+.dev:hover { background: var(--fill); }
+.dev[aria-pressed="true"] { background: var(--fill); }
+.dev[aria-pressed="true"] .bezel { box-shadow: 0 0 0 2px var(--accent), var(--lift); }
+.dev .label { text-align: center; line-height: 1.3; }
+.dev .label b { display: block; font-size: 13.5px; }
+.dev .label span { display: block; font-size: 12.5px; color: var(--ink-2); }
+.dev .shows { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.tag.none { background: var(--fill-2); color: var(--ink-3); }
+.dev .stand, .dev .base, .dev .label, .net .phone, .laptop .ui { display: block; }
+.dev .laptop-ui { display: grid; }
+.bezel { display: block; position: relative; background: #050507; border-radius: 9px; padding: 5px; box-shadow: var(--lift); }
+.bezel .num { position: absolute; top: -10px; left: -10px; width: 24px; height: 24px; border-radius: 50%; background: var(--raised); color: var(--ink);
+  font: 700 12px var(--ui); display: grid; place-items: center; box-shadow: var(--lift); z-index: 1; }
+.monitor .bezel { width: 210px; }
+.monitor .stand { width: 46px; height: 18px; margin: 0 auto; background: linear-gradient(var(--ink-3), transparent); opacity: .5; clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }
+.laptop .bezel { width: 150px; border-radius: 8px 8px 2px 2px; }
+.laptop .base { width: 180px; height: 9px; margin: 0 auto; border-radius: 0 0 8px 8px; background: linear-gradient(var(--ink-3), var(--fill-2)); opacity: .55; }
+.laptop .ui { display: grid !important; aspect-ratio: 16/10; border-radius: 4px; background: var(--win); display: grid; grid-template-columns: 22% 1fr; gap: 3px; padding: 4px; }
+.laptop .ui i { border-radius: 2px; background: var(--fill-2); }
+.laptop .ui i:last-child { background: linear-gradient(160deg, rgba(255,69,58,.35), transparent 50%), var(--fill-2); }
+.sdi .bezel { width: 190px; border-radius: 6px; background: #121216; padding: 6px 6px 18px; }
+.sdi .bnc { position: absolute; bottom: 5px; left: 8px; right: 8px; display: flex; gap: 6px; align-items: center; }
+.sdi .bnc i { width: 7px; height: 7px; border-radius: 50%; background: #3a3a44; box-shadow: inset 0 0 0 2px #6c6c78; }
+.sdi .bnc em { margin-left: auto; font: 700 8px var(--ui); letter-spacing: .12em; color: #8d8d99; font-style: normal; }
+.net .bezel { width: 150px; border-radius: 12px; padding: 7px; }
+.net .phone { position: absolute; right: -26px; bottom: -6px; width: 38px; border-radius: 7px; padding: 3px; background: #050507; box-shadow: var(--lift); }
+.net .phone .shot { aspect-ratio: 9/16; border-radius: 4px; }
+.room-foot { display: flex; align-items: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.room-foot .hint { flex: 1; min-width: 220px; }
+
+.inspector { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; padding: 18px; border-radius: 14px; background: var(--surface); align-items: start; }
+.inspector .shot { border-radius: 8px; }
+.inspector h4 { margin: 0; font: 700 17px/1.25 var(--display); letter-spacing: -.01em; }
+.inspector .meta { margin: 2px 0 12px; font-size: 13px; color: var(--ink-2); }
+.field { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 0; }
+.field + .field { border-top: 1px solid var(--line); }
+.field > label, .field > .lbl { width: 92px; flex: none; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.select { min-height: 34px; padding: 0 30px 0 12px; border-radius: 9px; border: 0; background: var(--fill-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center; appearance: none; font: 600 13.5px var(--ui); color: var(--ink); }
+
+/* The three outputs, each with where it goes */
+.outputs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.out { background: var(--surface); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.out .shot { border-radius: 8px; }
+.out h4 { margin: 0; font: 650 14.5px var(--ui); display: flex; align-items: center; gap: 8px; }
+.out h4 small { font-weight: 500; color: var(--ink-3); font-size: 12.5px; margin-left: auto; }
+.dests { display: flex; flex-direction: column; gap: 6px; }
+.dest { display: flex; align-items: center; gap: 9px; font-size: 13px; min-height: 30px; }
+.dest .sq { width: 22px; height: 22px; border-radius: 6px; }
+.dest .sq svg { width: 13px; height: 13px; }
+.dest > span:not(.sq):not(.live) { flex: 1; min-width: 0; }
+.dest em { font-style: normal; font-size: 12px; color: var(--ink-3); }
+.dest .live { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); flex: none; }
+.add { justify-content: flex-start; color: var(--accent); background: none; padding: 0; min-height: 30px; }
+
+/* Ways to connect */
+.ways { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.way { background: var(--surface); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.way .head { display: flex; align-items: center; gap: 10px; }
+.way .head b { font-size: 14.5px; flex: 1; }
+.way p { margin: 0; font-size: 13px; color: var(--ink-2); }
+.state { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.state.on { background: var(--accent-soft); color: var(--accent); }
+.state.off { background: var(--fill-2); color: var(--ink-3); }
+.state.soon { background: transparent; color: var(--ink-3); box-shadow: inset 0 0 0 1px var(--fill-2); }
+.way .addr { font: 600 13px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink); background: var(--fill); border-radius: 8px; padding: 6px 9px; user-select: all; }
+
+/* ---- ProPresenter ---- */
+.pp-hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px; border-radius: 16px;
+  background: radial-gradient(70% 140% at 0% 0%, var(--accent-soft), transparent 60%), var(--surface); }
+.pp-hero .glyph { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: linear-gradient(135deg, #f6c35e, #c97a0a); color: #2a1d04; box-shadow: var(--lift); }
+.pp-hero .glyph svg { width: 34px; height: 34px; }
+.pp-hero h4 { margin: 0; font: 700 20px/1.2 var(--display); letter-spacing: -.02em; }
+.pp-hero .sub { margin: 3px 0 0; color: var(--ink-2); font-size: 13.5px; }
+.pp-hero .sub b { color: var(--ink); font-weight: 600; }
+.okline { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 13px; color: var(--ink-2); }
+.okline span { display: inline-flex; align-items: center; gap: 6px; }
+.okline svg { width: 15px; height: 15px; color: var(--accent); }
+.found .row { cursor: pointer; }
+.found .row:hover { background: var(--fill); }
+.found .row[aria-selected="true"] .t::after { content: "  ·  connected"; color: var(--accent); font-weight: 600; }
+.comp { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--fill-2); color: var(--ink-2); flex: none; }
+.comp svg { width: 22px; height: 22px; }
+.scan { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-2); }
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--fill-2); border-top-color: var(--accent); animation: spin .9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+details.more { border-radius: 14px; background: var(--surface); }
+details.more summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; min-height: 48px; }
+details.more summary::-webkit-details-marker { display: none; }
+details.more summary::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(-45deg); transition: transform .2s; }
+details.more[open] summary::after { transform: rotate(45deg); }
+details.more .inner { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.inputs { display: grid; grid-template-columns: minmax(0, 1fr) 120px auto; gap: 8px; }
+.input { min-height: 36px; border-radius: 9px; border: 0; background: var(--fill-2); padding: 0 12px; font: 500 14px var(--ui); color: var(--ink); min-width: 0; }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.steps li { background: var(--fill); border-radius: 12px; padding: 12px; font-size: 13px; color: var(--ink-2); }
+.steps li b { display: block; color: var(--ink); font-size: 13.5px; margin-bottom: 2px; }
+.steps li i { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 700 11.5px var(--ui); font-style: normal; margin-bottom: 6px; }
+
+/* ---- Features ---- */
+.presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.preset { border: 0; text-align: left; cursor: pointer; padding: 16px; border-radius: 16px; background: var(--surface); display: flex; flex-direction: column; gap: 6px; position: relative; }
+.preset:hover { background: var(--raised); }
+.preset[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--accent); background: radial-gradient(90% 120% at 100% 0%, var(--accent-soft), transparent 70%), var(--surface); }
+.preset .sq { margin-bottom: 4px; }
+.preset b { font: 700 16px var(--display); letter-spacing: -.01em; }
+.preset span { font-size: 13px; color: var(--ink-2); }
+.preset .count { margin-top: 6px; display: flex; gap: 3px; }
+.preset .count i { flex: 1; height: 4px; border-radius: 2px; background: var(--fill-2); }
+.preset .count i.on { background: var(--accent); }
+.preset .tick { position: absolute; top: 14px; right: 14px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: none; place-items: center; }
+.preset[aria-checked="true"] .tick { display: grid; }
+.preset .tick svg { width: 13px; height: 13px; }
+.always { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-radius: 14px; background: var(--fill); font-size: 13.5px; color: var(--ink-2); }
+.always b { color: var(--ink); }
+.always .ref { font: italic 400 16px var(--word); color: var(--ink); }
+
+/* ---- Booth check ---- */
+.bc-hero { display: flex; align-items: center; gap: 20px; padding: 20px; border-radius: 16px; background: var(--surface); flex-wrap: wrap; }
+.big-ring { width: 84px; height: 84px; border-radius: 50%; flex: none; position: relative; display: grid; place-items: center;
+  background: conic-gradient(var(--accent) 0 75%, var(--fill-2) 75% 100%); }
+.big-ring::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: var(--surface); }
+.big-ring b { position: relative; font: 800 26px var(--display); letter-spacing: -.02em; }
+.big-ring small { position: absolute; bottom: 18px; font-size: 10.5px; font-weight: 700; color: var(--ink-3); letter-spacing: .06em; }
+.bc-hero h4 { margin: 0; font: 700 21px/1.2 var(--display); letter-spacing: -.02em; }
+.bc-hero p { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; }
+.bc-hero .grow { flex: 1; min-width: 220px; }
+.st { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.st svg { width: 16px; height: 16px; }
+.st.ok { background: var(--fill-2); color: var(--ink-2); }
+.st.warn { background: var(--warn-soft); color: var(--warn); }
+.row.attention { background: linear-gradient(90deg, var(--warn-soft), transparent 55%); }
+.preview-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 14px; }
+.mini { border-radius: 14px; background: var(--sunken); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.mini .cap { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.chip-light { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 14px; border-radius: 999px; font-weight: 700; font-size: 13.5px; }
+.chip-light.ready { background: var(--fill-2); color: var(--ink-2); }
+.chip-light.todo { background: var(--warn-soft); color: var(--warn); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn) 40%, transparent); }
+.chip-light svg { width: 16px; height: 16px; }
+.banner { display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 14px; border-radius: 14px; background: var(--raised); box-shadow: var(--lift), inset 0 0 0 1px color-mix(in srgb, var(--warn) 45%, transparent); }
+.banner .st { background: var(--warn-soft); color: var(--warn); }
+.banner p { margin: 0; flex: 1; font-size: 13.5px; min-width: 0; }
+
+/* ---- Small screens ---- */
+@media (max-width: 860px) {
+  body { overflow: auto; }
+  .sheet { padding-block: 12px; height: auto; }
+  .window { grid-template-columns: 1fr; }
+  .side { flex-direction: column; gap: 10px; }
+  .side .groups { display: flex; gap: 6px; overflow-x: auto; }
+  .group-label { display: none; }
+  .group { flex-direction: row; }
+  .nav { white-space: nowrap; }
+  .main { overflow: visible; }
+  .top, .page { padding-left: 16px; padding-right: 16px; }
+  .outputs, .presets, .steps, .preview-pair { grid-template-columns: 1fr; }
+  .inspector { grid-template-columns: 1fr; }
+  .pp-hero { grid-template-columns: auto minmax(0, 1fr); }
+  .pp-hero > :last-child { grid-column: 1 / -1; }
+  .inputs { grid-template-columns: 1fr 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-1.5V19c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V4.5C17 4 14 4.5 12 6Z"/><path d="M12 6v14.5"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+    <symbol id="i-screens" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="14" height="10" rx="2"/><path d="M6 18h6M9 14v4"/><rect x="18" y="8" width="4" height="10" rx="1"/></symbol>
+    <symbol id="i-cast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="9"/></symbol>
+    <symbol id="i-cable" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="7" rx="1.5"/><path d="M10 9v3a2 2 0 0 0 4 0V9M12 14v7"/></symbol>
+    <symbol id="i-sdi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><circle cx="7" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><path d="M16 12h3"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5v.01"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 13l9 5 9-5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></symbol>
+    <symbol id="i-computer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></symbol>
+    <symbol id="i-reading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16M4 14h10"/><path d="m16 17 2 2 4-4"/></symbol>
+    <symbol id="i-quote" viewBox="0 0 24 24" fill="currentColor"><path d="M5 17c-1 0-2-1-2-2.5C3 10 6 7 9 6l.6 1.2C7.6 8.3 6.5 9.8 6.3 11.3 8 11 9.6 12.2 9.6 14c0 1.8-1.6 3-3.3 3Zm9 0c-1 0-2-1-2-2.5C12 10 15 7 18 6l.6 1.2c-2 1.1-3.1 2.6-3.3 4.1 1.7-.3 3.3.9 3.3 2.7 0 1.8-1.6 3-3.3 3Z"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3.2 3.2 0 0 1 0 6.3M18 14c2 .8 3 3 3 6"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.01"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h12m-5-5 5 5-5 5"/><path d="M20 5v14"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V11M14 10.5V6a1.5 1.5 0 0 1 3 0v8a7 7 0 0 1-7 7 6 6 0 0 1-5-3l-2.5-4.3a1.5 1.5 0 0 1 2.6-1.5L8 15"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16Z"/></symbol>
+    <symbol id="i-timer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></symbol>
+    <symbol id="i-pray" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8M9 6l3-3 3 3M5 21c2-3 4-5 7-5s5 2 7 5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  </defs>
+</svg>
+
+<div class="behind" aria-hidden="true">
+  <div class="bar"><i style="width:220px"></i><i style="flex:1;max-width:380px;margin:0 auto"></i><i style="width:120px"></i><i style="width:90px"></i></div>
+  <div class="tl">
+    <i style="background:linear-gradient(135deg,#64748b,#334155)"></i><i style="background:linear-gradient(135deg,#fb923c,#ea580c)"></i>
+    <i style="background:linear-gradient(135deg,#a78bfa,#7c3aed);flex:2"></i><i style="background:linear-gradient(135deg,#2dd4bf,#0d9488)"></i>
+    <i style="background:linear-gradient(135deg,#fbbf24,#d97706)"></i><i style="background:linear-gradient(135deg,#60a5fa,#2563eb);flex:3"></i>
+    <i style="background:linear-gradient(135deg,#fb7185,#e11d48)"></i>
+  </div>
+  <div class="scrim"></div>
+</div>
+<style>
+/* spirit: a soft living light in the team's colours is its mark; everything else stays quiet.
+   Trust is shown as a three-step ladder (Learning → Ready in Next → Hands-free), and each cue's
+   record as ten small marks (filled: right, hollow: corrected). Red and green stay On Air and Next. */
+.orb { position: relative; width: 84px; height: 84px; border-radius: 50%; flex: none;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), transparent 32%),
+              conic-gradient(from 0deg, #f0b44a, #f472b6, #8b5cf6, #2dd4bf, #f0b44a);
+  filter: saturate(1.1); box-shadow: 0 0 40px rgba(240,180,74,.35), 0 0 90px rgba(139,92,246,.25); animation: breathe 6s ease-in-out infinite; }
+.orb::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, rgba(255,255,255,.25), transparent 55%), radial-gradient(circle at 60% 70%, rgba(22,21,24,.35), transparent 60%); }
+.orb.sm { width: 26px; height: 26px; box-shadow: 0 0 14px rgba(240,180,74,.35); }
+.orb.sm::after { inset: 3px; }
+@keyframes breathe { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.05) rotate(25deg); } }
+.spirit-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; padding: 26px; border-radius: 18px;
+  background: radial-gradient(60% 140% at 0% 0%, rgba(240,180,74,.16), transparent 60%), radial-gradient(50% 120% at 100% 100%, rgba(139,92,246,.14), transparent 60%), var(--surface); }
+.spirit-hero h3 { margin: 0; font: 700 26px/1.15 var(--display); letter-spacing: -.02em; }
+.spirit-hero p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; max-width: 62ch; }
+.levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.level { border: 0; text-align: left; cursor: pointer; padding: 16px; border-radius: 16px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; color: var(--ink); position: relative; }
+.level:hover { background: var(--raised); }
+.level[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--accent); background: radial-gradient(90% 120% at 100% 0%, var(--accent-soft), transparent 70%), var(--surface); }
+.level b { font: 700 16px var(--display); }
+.level span { font-size: 13px; color: var(--ink-2); }
+.level .steps3 { display: flex; gap: 4px; margin-top: 4px; }
+.level .steps3 i { flex: 1; height: 4px; border-radius: 2px; background: var(--fill-2); }
+.level .steps3 i.on { background: var(--accent); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.stat { padding: 16px; border-radius: 16px; background: var(--surface); }
+.stat b { display: block; font: 700 30px/1 var(--display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat span { display: block; margin-top: 6px; font-size: 13px; color: var(--ink-2); }
+.runbar { display: flex; height: 34px; border-radius: 10px; overflow: hidden; gap: 2px; }
+.runbar i { display: block; height: 100%; }
+.runbar .sp { background: linear-gradient(135deg, rgba(240,180,74,.85), rgba(244,114,182,.75)); }
+.runbar .you { background: var(--fill-2); }
+.runbar .fix { background: repeating-linear-gradient(135deg, var(--warn) 0 4px, transparent 4px 8px); opacity: .7; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; }
+.knows { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.know { padding: 14px; border-radius: 14px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
+.know .head { display: flex; gap: 10px; align-items: center; }
+.know .head b { flex: 1; font-size: 14.5px; }
+.know p { margin: 0; font-size: 13px; color: var(--ink-2); flex: 1; }
+.know .trust { display: flex; } .know .trust button { flex: 1; justify-content: center; padding: 0 4px; }
+.trust { display: inline-flex; padding: 2px; gap: 2px; border-radius: 999px; background: var(--fill); }
+.trust button { white-space: nowrap; border: 0; background: none; border-radius: 999px; min-height: 30px; padding: 0 9px; font: 650 12.5px var(--ui); color: var(--ink-3); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.trust button[aria-checked="true"] { background: var(--raised); color: var(--ink); box-shadow: var(--lift); }
+.trust button[aria-checked="true"].hf { background: var(--accent); color: var(--accent-ink); }
+.trust button:disabled { cursor: default; opacity: .55; }
+.trust svg { width: 12px; height: 12px; }
+.record { display: inline-flex; gap: 3px; align-items: center; }
+.record i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.record i.miss { background: transparent; box-shadow: inset 0 0 0 1.5px var(--warn); }
+.record i.none { background: var(--fill-2); }
+/* Teach */
+.teach { padding: 20px; border-radius: 18px; background: radial-gradient(70% 140% at 0% 0%, var(--accent-soft), transparent 60%), var(--surface); display: flex; flex-direction: column; gap: 14px; }
+.sentence { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font: 600 20px/1.4 var(--display); letter-spacing: -.01em; }
+.slot { min-height: 46px; padding: 0 14px; border-radius: 12px; border: 0; background: var(--raised); box-shadow: var(--lift), inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 60%, transparent); font: 600 18px var(--display); color: var(--ink); }
+input.slot { min-width: 300px; flex: 1; }
+select.slot { padding-right: 36px; appearance: none; background: var(--raised) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; }
+.teach .foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+.teach .foot .btn { margin-left: auto; }
+.noticed { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.card { padding: 16px; border-radius: 16px; background: var(--surface); display: flex; flex-direction: column; gap: 10px; }
+.card .who { display: flex; gap: 10px; align-items: center; font-size: 12.5px; color: var(--ink-2); font-weight: 600; }
+.card q { font: 400 19px/1.35 var(--word); color: var(--ink); quotes: "“" "”"; }
+.card .to { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 650; }
+.card .acts { display: flex; gap: 8px; }
+.cue { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 16px; align-items: center; padding: 12px 16px; position: relative; min-height: 60px; }
+.cue + .cue::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: 1px solid var(--line); }
+.cue .p { font: 400 17px/1.35 var(--word); }
+.cue .p small { display: block; font: 500 12.5px var(--ui); color: var(--ink-3); margin-top: 2px; }
+.parthead { display: flex; align-items: center; gap: 10px; }
+.parthead .kind { width: 12px; height: 12px; border-radius: 4px; }
+.parthead h3 { margin: 0; font: 650 15px var(--ui); flex: 1; }
+/* During the service */
+.duo { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.panel { border-radius: 16px; background: var(--surface); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.panel .cap { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.mon { aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; display: grid; place-items: center; text-align: center; color: #fff; padding: 22px; font: 400 19px/1.3 var(--word);
+  background: radial-gradient(120% 90% at 70% 20%, #1f5e58, transparent 60%), linear-gradient(160deg, #10302d, #071211); }
+.mon small { display: block; margin-top: 10px; font: 700 11px var(--ui); letter-spacing: .14em; color: #f0c674; }
+.mon.next { box-shadow: 0 0 0 2px var(--next); }
+.mon.air { box-shadow: 0 0 0 2px var(--air), 0 0 30px rgba(255,69,58,.25); background: radial-gradient(120% 90% at 70% 20%, #2c3f6e, transparent 60%), linear-gradient(160deg, #1d2a4a, #0b0f1c); }
+.tag { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+.tag b { font-weight: 650; }
+.tag .why { color: var(--ink-2); }
+.lbl { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 650; }
+.lbl i { width: 8px; height: 8px; border-radius: 50%; }
+.take { min-height: 54px; border-radius: 14px; border: 0; background: var(--raised); box-shadow: var(--lift); color: var(--ink); font: 700 17px var(--display); display: flex; align-items: center; justify-content: center; gap: 10px; position: relative; overflow: hidden; }
+.take .ring { width: 26px; height: 26px; border-radius: 50%; background: conic-gradient(var(--accent) 0 66%, var(--fill-2) 66% 100%); display: grid; place-items: center; font: 700 12px var(--ui); }
+.take .ring span { width: 20px; height: 20px; border-radius: 50%; background: var(--raised); display: grid; place-items: center; }
+.row2 { display: flex; gap: 8px; flex-wrap: wrap; }
+.why-sheet { border-radius: 14px; background: var(--raised); box-shadow: var(--lift); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.why-sheet b { font-size: 14px; }
+.reasons { display: flex; gap: 8px; flex-wrap: wrap; }
+.reason { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: var(--fill-2); color: var(--ink); font: 600 13.5px var(--ui); cursor: pointer; }
+.reason[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.learned { display: flex; gap: 10px; align-items: center; font-size: 13px; color: var(--ink-2); }
+@media (max-width: 860px) { .levels, .stats, .duo { grid-template-columns: 1fr; } .spirit-hero { grid-template-columns: 1fr; } .cue { grid-template-columns: 1fr; } input.slot { min-width: 0; } }
+@media (prefers-reduced-motion: reduce) { .orb { animation: none; } }
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></symbol>
+</defs></svg>
+<div class="sheet">
+<div class="window" role="dialog" aria-label="Settings">
+  <aside class="side">
+    <h1>Settings</h1>
+    <button class="ready" type="button" data-go="home" aria-label="spirit">
+      <span class="orb sm" aria-hidden="true"></span>
+      <span><strong>spirit</strong><span>Ready in Next · learning</span></span>
+    </button>
+    <div class="groups">
+      <div class="group">
+        <p class="group-label">spirit</p>
+        <button class="nav" type="button" data-go="home" aria-current="page"><span class="sq" style="background:linear-gradient(135deg,#f0b44a,#8b5cf6)"><svg><use href="#i-spark"/></svg></span><span class="name">How spirit runs</span></button>
+        <button class="nav" type="button" data-go="teach"><span class="sq" style="background:var(--i-teal)"><svg><use href="#i-wave"/></svg></span><span class="name">Cues</span><span class="badge">2 new</span></button>
+        <button class="nav" type="button" data-go="live"><span class="sq" style="background:var(--i-rose)"><svg><use href="#i-eye"/></svg></span><span class="name">During the service</span></button>
+      </div>
+      <div class="group">
+        <p class="group-label">This service</p>
+        <button class="nav" type="button"><span class="sq" style="background:var(--i-gold)"><svg><use href="#i-sliders"/></svg></span><span class="name">Features</span></button>
+        <button class="nav" type="button"><span class="sq" style="background:var(--i-blue)"><svg><use href="#i-book"/></svg></span><span class="name">Bible</span></button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div style="flex:1;min-width:0">
+        <h2 id="title">spirit</h2>
+        <p id="subtitle">spirit gets each part of the service ready, and learns how your church runs.</p>
+      </div>
+      <button class="iconbtn" type="button" id="theme" title="Light or dark" aria-label="Switch between light and dark"><svg width="18" height="18"><use href="#i-sun"/></svg></button>
+    </div>
+
+    <!-- ================= HOW SPIRIT RUNS ================= -->
+    <section class="page" data-page="home" data-title="spirit" data-sub="spirit gets each part of the service ready, and learns how your church runs.">
+      <div class="spirit-hero">
+        <span class="orb" aria-hidden="true"></span>
+        <div>
+          <h3>spirit ran most of Sunday’s service.</h3>
+          <p>It listens, watches what you do, and gets the next thing ready. Every Take tells it it was right; every correction teaches it. It only goes live by itself where you have allowed it, and only once it has earned it.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <header><h3>How much spirit does</h3><span class="aside">You can change this in the middle of a service</span></header>
+        <div class="levels" role="radiogroup" aria-label="How much spirit does">
+          <button class="level" type="button" role="radio" aria-checked="false"><b>Off</b><span>You run everything. spirit still listens for verses said outright.</span><span class="steps3"><i></i><i></i><i></i></span></button>
+          <button class="level" type="button" role="radio" aria-checked="true"><b>Ready in Next</b><span>spirit gets each part, song, verse or point ready. You press Take.</span><span class="steps3"><i class="on"></i><i class="on"></i><i></i></span></button>
+          <button class="level" type="button" role="radio" aria-checked="false"><b>Hands-free</b><span>What spirit has earned goes live by itself, after a 3-second countdown you can stop. The rest waits in Next.</span><span class="steps3"><i class="on"></i><i class="on"></i><i class="on"></i></span></button>
+        </div>
+      </div>
+
+      <div class="section">
+        <header><h3>Sunday, 10:00 – 11:24</h3><span class="aside">Who moved the service on</span></header>
+        <div class="stats">
+          <div class="stat"><b>41</b><span>times spirit got the next thing ready</span></div>
+          <div class="stat"><b>37</b><span>you took as they were</span></div>
+          <div class="stat"><b>4</b><span>you corrected, and spirit learned from</span></div>
+        </div>
+        <div class="runbar" aria-label="The service from start to end">
+          <i class="sp" style="flex:8"></i><i class="you" style="flex:2"></i><i class="sp" style="flex:18"></i><i class="fix" style="flex:1"></i><i class="sp" style="flex:9"></i><i class="you" style="flex:3"></i><i class="sp" style="flex:30"></i><i class="fix" style="flex:1"></i><i class="sp" style="flex:12"></i>
+        </div>
+        <div class="legend"><span><i style="background:linear-gradient(135deg,rgba(240,180,74,.85),rgba(244,114,182,.75))"></i>spirit got it ready</span><span><i style="background:var(--fill-2)"></i>You chose</span><span><i style="background:repeating-linear-gradient(135deg,var(--warn) 0 3px,transparent 3px 6px)"></i>Corrected</span></div>
+      </div>
+
+      <div class="section">
+        <header><h3>What spirit knows</h3><span class="aside">Each can go as far as you allow</span></header>
+        <div class="knows">
+          <div class="know"><div class="head"><span class="sq" style="background:var(--i-blue)"><svg><use href="#i-book"/></svg></span><b>Verses said outright</b></div><p>“John 3:16”, and quotes it is 99% sure of. Always shown at once: the rule for scripture.</p><div class="trust"><button type="button" disabled>Learning</button><button type="button" disabled>Ready in Next</button><button type="button" class="hf" aria-checked="true" disabled>Hands-free</button></div></div>
+          <div class="know"><div class="head"><span class="sq" style="background:var(--i-blue)"><svg><use href="#i-reading"/></svg></span><b>Following the reading</b></div><p>Each verse as the reader reaches it. Right 98% of the time over 6 Sundays.</p><div class="trust"><button type="button">Learning</button><button type="button">Ready in Next</button><button type="button" class="hf" aria-checked="true">Hands-free</button></div></div>
+          <div class="know"><div class="head"><span class="sq" style="background:var(--i-violet)"><svg><use href="#i-music"/></svg></span><b>Following the singers</b></div><p>Each slide of the song as it is sung, and the leader’s “one more time”.</p><div class="trust"><button type="button">Learning</button><button type="button">Ready in Next</button><button type="button" class="hf" aria-checked="true">Hands-free</button></div></div>
+          <div class="know"><div class="head"><span class="sq" style="background:var(--i-orange)"><svg><use href="#i-pray"/></svg></span><b>Moments</b></div><p>12 cues. “Let us pray”, the offering, the benediction. 92% right.</p><div class="trust"><button type="button">Learning</button><button type="button" aria-checked="true">Ready in Next</button><button type="button" disabled title="Allowed per cue once it has earned it"><svg><use href="#i-lock"/></svg>Hands-free</button></div></div>
+          <div class="know"><div class="head"><span class="sq" style="background:var(--i-orange)"><svg><use href="#i-list"/></svg></span><b>Sermon points</b></div><p>“Point number two…” as a point slide. 3 of 3 right last Sunday.</p><div class="trust"><button type="button">Learning</button><button type="button" aria-checked="true">Ready in Next</button><button type="button" disabled><svg><use href="#i-lock"/></svg>Hands-free</button></div></div>
+          <div class="know"><div class="head"><span class="sq" style="background:var(--i-slate)"><svg><use href="#i-timer"/></svg></span><b>The order of service</b></div><p>Moving on when a part’s time is up, and the part after a song ends.</p><div class="trust"><button type="button" aria-checked="true">Learning</button><button type="button">Ready in Next</button><button type="button" disabled><svg><use href="#i-lock"/></svg>Hands-free</button></div></div>
+        </div>
+      </div>
+      <p class="hint">spirit learns on this computer only. With a library folder, what it has learned goes with your services to the church’s other computers.</p>
+    </section>
+    <!-- ================= CUES ================= -->
+    <section class="page" data-page="teach" data-title="Cues" data-sub="What the preacher says that gets the next part ready." hidden>
+      <div class="teach">
+        <div class="sentence" aria-label="Teach spirit a cue">
+          <span>When the preacher says</span>
+          <input class="slot" id="phrase" value="as the ushers make their way" aria-label="What the preacher says">
+          <span>get</span>
+          <select class="slot" aria-label="Which part"><option>Offering</option><option>Prayer</option><option>Notices</option><option>Benediction</option><option>Point slide</option></select>
+          <span>ready.</span>
+        </div>
+        <div class="foot">
+          <span>Or pick words from <button class="btn ghost" type="button" style="padding:0 6px;min-height:28px">what was said on Sunday</button></span>
+          <button class="btn primary" type="button">Teach spirit</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <header><h3>spirit noticed</h3><span class="aside">From what you did, and what was said just before</span></header>
+        <div class="noticed">
+          <div class="card">
+            <div class="who"><span class="orb sm" aria-hidden="true"></span>Each time you went to Offering · 3 Sundays</div>
+            <q>bring your giving forward</q>
+            <div class="to"><span class="kind" style="width:12px;height:12px;border-radius:4px;background:#22c55e"></span>Offering</div>
+            <div class="acts"><button class="btn primary" type="button">Make it a cue</button><button class="btn ghost" type="button">Not a cue</button></div>
+          </div>
+          <div class="card">
+            <div class="who"><span class="orb sm" aria-hidden="true"></span>Each time you went to Notices · 2 Sundays</div>
+            <q>church family news</q>
+            <div class="to"><span class="kind" style="width:12px;height:12px;border-radius:4px;background:#f59e0b"></span>Notices</div>
+            <div class="acts"><button class="btn primary" type="button">Make it a cue</button><button class="btn ghost" type="button">Not a cue</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="parthead"><span class="kind" style="background:#14b8a6"></span><h3>Prayer</h3><span class="aside">Right 18 of the last 20</span></div>
+        <div class="list">
+          <div class="cue"><span class="p">let us pray<small>Built in · right 10 times in a row</small></span><span class="record" title="Last 10: all right"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><div class="trust" role="radiogroup" aria-label="let us pray"><button type="button">Learning</button><button type="button">Ready in Next</button><button type="button" class="hf" aria-checked="true"><svg><use href="#i-bolt"/></svg>Hands-free</button></div></div>
+          <div class="cue"><span class="p">bow your heads<small>Built in · corrected once: “not now” during a song</small></span><span class="record"><i></i><i></i><i></i><i class="miss"></i><i></i><i></i><i></i><i></i><i class="none"></i><i class="none"></i></span><div class="trust"><button type="button">Learning</button><button type="button" aria-checked="true">Ready in Next</button><button type="button" disabled title="7 of 10 right in a row"><svg><use href="#i-lock"/></svg>7 of 10</button></div></div>
+          <div class="cue"><span class="p">let’s go to the Lord<small>Taught by you · Sunday</small></span><span class="record"><i></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i></span><div class="trust"><button type="button">Learning</button><button type="button" aria-checked="true">Ready in Next</button><button type="button" disabled><svg><use href="#i-lock"/></svg>1 of 10</button></div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="parthead"><span class="kind" style="background:#22c55e"></span><h3>Offering</h3><span class="aside">Right 9 of the last 10</span></div>
+        <div class="list">
+          <div class="cue"><span class="p">as the ushers make their way<small>Taught by you · this part only</small></span><span class="record"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="none"></i></span><div class="trust"><button type="button">Learning</button><button type="button" aria-checked="true">Ready in Next</button><button type="button" disabled><svg><use href="#i-lock"/></svg>9 of 10</button></div></div>
+          <div class="cue"><span class="p">tithes and offerings<small>Built in · corrected once: “wrong part”, went to Notices</small></span><span class="record"><i></i><i class="miss"></i><i></i><i></i><i></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i></span><div class="trust"><button type="button">Learning</button><button type="button" aria-checked="true">Ready in Next</button><button type="button" disabled><svg><use href="#i-lock"/></svg>3 of 10</button></div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="parthead"><span class="kind" style="background:#3b82f6"></span><h3>Sermon points</h3><span class="aside">The words after the cue become the point</span></div>
+        <div class="list">
+          <div class="cue"><span class="p">point number …<small>Built in</small></span><span class="record"><i></i><i></i><i></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i></span><div class="trust"><button type="button">Learning</button><button type="button" aria-checked="true">Ready in Next</button><button type="button" disabled><svg><use href="#i-lock"/></svg>3 of 10</button></div></div>
+          <div class="cue"><span class="p">here’s the key<small>Taught by you</small></span><span class="record"><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i></span><div class="trust"><button type="button" aria-checked="true">Learning</button><button type="button">Ready in Next</button><button type="button" disabled><svg><use href="#i-lock"/></svg>0 of 10</button></div></div>
+        </div>
+      </div>
+      <p class="hint">Hands-free unlocks for a cue after it has been right 10 times in a row; then you choose. A correction sends it back to Ready in Next. A part’s own cues are saved with the service, so “Duplicate for next Sunday” keeps them.</p>
+    </section>
+
+    <!-- ================= DURING THE SERVICE ================= -->
+    <section class="page" data-page="live" data-title="During the service" data-sub="spirit says why it got something ready, and learns from one tap." hidden>
+      <div class="duo">
+        <div class="panel">
+          <span class="cap">Ready in Next</span>
+          <div class="lbl"><i style="background:var(--next)"></i>Next</div>
+          <div class="mon next">Be careful for nothing; but in every thing by prayer and supplication…<small>PHILIPPIANS 4:6</small></div>
+          <div class="tag"><span class="orb sm" aria-hidden="true"></span><span><b>Prayer</b> · <span class="why">spirit heard “let us pray”</span></span></div>
+          <button class="take" type="button"><svg width="18" height="18" style="color:var(--next)"><use href="#i-next"/></svg>Take</button>
+          <div class="row2"><button class="btn ghost" type="button" id="notthis">Not this</button></div>
+          <div class="why-sheet" id="why">
+            <b>What was wrong? spirit will remember.</b>
+            <div class="reasons" role="group" aria-label="What was wrong">
+              <button class="reason" type="button" aria-pressed="false">Wrong part</button>
+              <button class="reason" type="button" aria-pressed="true">Not now</button>
+              <button class="reason" type="button" aria-pressed="false">Never for these words</button>
+            </div>
+            <div class="learned"><span class="orb sm" aria-hidden="true"></span>Got it: “bow your heads” won’t move to Prayer while a song is on.</div>
+          </div>
+        </div>
+        <div class="panel">
+          <span class="cap">Hands-free (a cue that has earned it)</span>
+          <div class="lbl"><i style="background:var(--air)"></i>On air in 2 seconds</div>
+          <div class="mon air">Point 2<br><span style="font-size:15px;opacity:.85">God is faithful even when we are not.</span></div>
+          <div class="tag"><span class="orb sm" aria-hidden="true"></span><span><b>Point 2</b> · <span class="why">spirit heard “point number two”</span></span></div>
+          <button class="take" type="button"><span class="ring"><span>2</span></span>Going live · press to stop</button>
+          <p class="hint">Esc or Stop keeps it in Next instead, and counts as a correction.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</div>
+
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  function go(id) {
+    const page = $(`.page[data-page="${id}"]`);
+    if (!page) return;
+    $$('.page').forEach((p) => (p.hidden = p !== page));
+    $$('.nav[data-go]').forEach((n) => n.setAttribute('aria-current', n.dataset.go === id ? 'page' : 'false'));
+    $('#title').textContent = page.dataset.title;
+    $('#subtitle').textContent = page.dataset.sub;
+    $('.main').scrollTop = 0;
+  }
+  document.addEventListener('click', (e) => {
+    const g = e.target.closest('[data-go]'); if (g) go(g.dataset.go);
+    const lv = e.target.closest('.level'); if (lv) $$('.level').forEach((l) => l.setAttribute('aria-checked', l === lv ? 'true' : 'false'));
+    const t = e.target.closest('.trust button'); if (t && !t.disabled) [...t.parentElement.children].forEach((b) => b.setAttribute('aria-checked', b === t ? 'true' : 'false'));
+    const r = e.target.closest('.reason'); if (r) $$('.reason').forEach((b) => b.setAttribute('aria-pressed', b === r ? 'true' : 'false'));
+  });
+  $('#theme').addEventListener('click', () => {
+    const r = document.documentElement;
+    const dark = r.dataset.theme ? r.dataset.theme === 'dark' : !matchMedia('(prefers-color-scheme: light)').matches;
+    r.dataset.theme = dark ? 'light' : 'dark';
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,14 +1,15 @@
 // The service library folder: one JSON file per service or media item, inside a
 // folder the user picks (which can live in iCloud Drive, Dropbox, OneDrive or
 // Google Drive so the provider syncs it between computers). The renderer only
-// sees paths relative to that folder, limited to the services/ and media/ dirs.
+// sees paths relative to that folder, limited to the services/, media/ and spirit/ dirs
+// (spirit/learned.json: what VoiceVerses Spirit has learned, shared by the church's computers).
 import { app, BrowserWindow, dialog } from 'electron';
 import { watch } from 'fs';
 import { mkdir, readFile, readdir, rename, writeFile } from 'fs/promises';
 import { basename, join } from 'path';
 
 const LIBRARY_DIR_NAME = 'Voice Verses Library';
-const SAFE_PATH = /^(services|media)\/[A-Za-z0-9._-]+\.json$/;
+const SAFE_PATH = /^(services|media|spirit)\/[A-Za-z0-9._-]+\.json$/;
 const SAFE_DIR = /^(services|media)$/;
 
 const settingsPath = () => join(app.getPath('userData'), 'library.json');
@@ -39,7 +40,7 @@ function startWatching() {
   watchers = [];
   if (!libraryDir) return;
   // Watch each subfolder directly: recursive watching isn't available on every platform
-  for (const dir of ['services', 'media']) {
+  for (const dir of ['services', 'media', 'spirit']) {
     try {
       const watcher = watch(join(libraryDir, dir), notifyChanged);
       watcher.on('error', () => watcher.close());
@@ -55,6 +56,7 @@ async function useFolder(dir) {
   if (dir) {
     await mkdir(join(dir, 'services'), { recursive: true });
     await mkdir(join(dir, 'media'), { recursive: true });
+    await mkdir(join(dir, 'spirit'), { recursive: true });
   }
   startWatching();
 }

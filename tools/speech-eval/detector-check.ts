@@ -25,7 +25,9 @@ import { predictNext } from '@/lib/predictNext';
 import { crossReferences, setCrossReferenceData } from '@/lib/crossReferences';
 import crossReferenceData from '@/data/cross-references.json';
 import { duplicateService, nextSunday } from '@/lib/duplicateService';
-import { findMoment, findSermonPoint, partForMoment } from '@/speech/momentCues';
+import { findMoment, findSermonPoint, partByName, partForMoment } from '@/speech/momentCues';
+import { canBeHandsFree, cuesForListening, emptySpirit, hear, noticed, observe, recordOutcome, setCueLevel, teachCue } from '@/lib/spirit';
+import { mergeSpirit } from '@/lib/spiritSync';
 
 const single: [string, string | null][] = [
   ['Please turn with me to John chapter 3, verse 16.', 'John 3:16'],
@@ -219,7 +221,7 @@ const check = (label: string, got: string | null, want: string | null) => {
       'We are going to have lunch after the service in the fellowship hall, everyone is welcome',
       'God is faithful and he loves you more than you could ever know',
       'Paul was a great apostle and we can all learn something from his life',
-      'Turn off your phones and let us open our hearts to what the Spirit is saying this morning',
+      'Turn off your phones and let us open our hearts to what the spirit is saying this morning',
     ]) {
       const r = await story([text]);
       // (a short phrase from a verse may still be offered faintly by the quote search, below 45%)
@@ -658,6 +660,71 @@ const check = (label: string, got: string | null, want: string | null) => {
     check('sermon points: the words in the next sentence', await run({ sermonPoints: true }, ['My second point.', 'Grace is greater than all our sin.']), 'point 2 Grace is greater than all our sin.');
     check('sermon points off: nothing', await run({ sermonPoints: false }, ['Point number two God is faithful even when we are not']), null);
     check('a reference in a point still shows the verse', await run({ sermonPoints: true }, ['Point number three, Romans 8:28 says all things work together for good']), 'verse Romans 8:28');
+  }
+
+  // spirit: taught cues, the trust ladder, corrections and learning by watching
+  {
+    let st = emptySpirit();
+    st = teachCue(st, 'as the ushers make their way', { part: 'Offering' });
+    const taught = st.cues.find((c) => c.phrase === 'as the ushers make their way')!;
+    const heardAs = (t: string, singing = false) => {
+      const m = findMoment(t, cuesForListening(st), { singing });
+      return m ? m.part ?? m.kind ?? '?' : null;
+    };
+    check('spirit: a taught cue names its part', heardAs('And as the ushers make their way to the front'), 'Offering');
+    check('spirit: built-in cues still work', heardAs('Let us pray.'), 'prayer');
+    for (let i = 0; i < 9; i++) st = recordOutcome(st, taught.id, 'right');
+    const after9 = st.cues.find((c) => c.id === taught.id)!;
+    check('spirit: Hands-free stays locked at 9 right', `${canBeHandsFree(after9)} ${setCueLevel(st, taught.id, 'handsfree').cues.find((c) => c.id === taught.id)!.level}`, 'false next');
+    st = recordOutcome(st, taught.id, 'right');
+    st = setCueLevel(st, taught.id, 'handsfree');
+    check('spirit: 10 right in a row unlocks Hands-free', st.cues.find((c) => c.id === taught.id)!.level, 'handsfree');
+    st = recordOutcome(st, taught.id, 'wrong', { correction: 'wrong-part' });
+    const corrected = st.cues.find((c) => c.id === taught.id)!;
+    check('spirit: a correction sends it back to Ready in Next', `${corrected.level} ${corrected.streak} ${corrected.record.slice(-2).join(',')}`, 'next 0 right,wrong');
+    const bow = 'builtin:prayer:bow your heads';
+    st = recordOutcome(st, bow, 'wrong', { correction: 'not-now', singing: true });
+    check('spirit: "not now" during a song: ignored while singing', `${heardAs('bow your heads', true)} / ${heardAs('bow your heads')}`, 'null / prayer');
+    st = recordOutcome(st, 'builtin:prayer:let us pray', 'wrong', { correction: 'never' });
+    check('spirit: "never for these words" switches a built-in cue off', heardAs('Let us pray.'), null);
+    st = recordOutcome(st, taught.id, 'wrong', { correction: 'never' });
+    check('spirit: "never" removes a taught cue', String(st.cues.some((c) => c.id === taught.id)), 'false');
+
+    // Learning by watching: the same words said just before going to Offering on two Sundays
+    let w = emptySpirit();
+    const sunday = (t0: number, lines: string[], part: string) => {
+      for (const l of lines) w = hear(w, l);
+      w = { ...w, heard: w.heard.map((h, i, all) => (i >= all.length - lines.length ? { ...h, at: new Date(t0 - (all.length - i) * 1000).toISOString() } : h)) };
+      w = observe(w, part, t0);
+    };
+    sunday(Date.now() - 7 * 86_400_000, ['Church it is that time again', 'And as the ushers make their way to the front let us be cheerful givers'], 'Offering');
+    sunday(Date.now() - 60_000, ['Thank you choir', 'Now as the ushers make their way forward'], 'Offering');
+    sunday(Date.now() - 30_000, ['Thank you choir', 'Let us bow our heads'], 'Prayer');
+    const n = noticed(w);
+    check('spirit noticed the words said before going to Offering both times', n[0] ? `${n[0].phrase} → ${n[0].part} ×${n[0].times}` : null, 'as the ushers make their way → Offering ×2');
+    check('spirit: words said before different parts are not noticed', String(n.some((x) => x.phrase.includes('thank you choir'))), 'false');
+
+    // Two computers learning together through the library folder
+    {
+      let a = teachCue(emptySpirit(), 'as the ushers make their way', { part: 'Offering' });
+      const id = a.cues.find((c) => c.source === 'taught')!.id;
+      let b = { ...a, cues: a.cues.map((c) => ({ ...c })) };
+      a = recordOutcome(a, id, 'right');
+      a = { ...a, cues: a.cues.map((c) => (c.id === id ? { ...c, updatedAt: '2030-01-01T00:00:00.000Z' } : c)) };
+      b = teachCue(b, 'church family news', { part: 'Notices' });
+      b = hear(b, 'Good morning church');
+      const m = mergeSpirit(a, b);
+      check('merge: the newer change to a cue wins, both computers\' new cues are kept', `${m.cues.find((c) => c.id === id)!.streak} ${m.cues.some((c) => c.phrase === 'church family news')} ${m.heard.length}`, '1 true 1');
+    }
+
+    // A part named in a taught cue, and a church's own point cue
+    const order = [{ section: 'Worship', name: 'Holy, Holy, Holy' }, { section: 'Giving', name: 'Offering' }, { section: 'Word', name: 'Sermon' }];
+    check('spirit: a part by name, ahead', String(partByName('Offering', order, 0)), '1');
+    let pt = teachCue(emptySpirit(), "here's the key", { point: true });
+    const own = findSermonPoint("And here's the key, grace is greater than our sin", cuesForListening(pt));
+    check('spirit: a church\'s own point cue takes the words after it', own ? `${own.number ?? '-'}|${own.text}` : null, '-|Grace is greater than our sin.');
+    pt = { ...pt, cues: pt.cues.map((c) => (c.id === 'builtin:point:write' ? { ...c, off: true } : c)) };
+    check('spirit: a built-in point cue switched off', String(findSermonPoint('Write this down, you are never alone in the valley', cuesForListening(pt))), 'null');
   }
 
   // Inputs that belong to a video card are recognised (they are silent without sound in their SDI cable)

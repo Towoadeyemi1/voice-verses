@@ -30,7 +30,7 @@ import {
 } from './referenceExtraction';
 import { DetectionInfo, SpeechEngineType } from './ISpeechProvider';
 import { VerseAssistant } from '@/ai/verseAssistant';
-import { findMoment, findSermonPoint, Moment, SermonPoint, tidyPoint } from './momentCues';
+import { BUILTIN_MOMENT_CUES, findMoment, findSermonPoint, Moment, SermonPoint, SpokenCue, tidyPoint } from './momentCues';
 
 export interface VerseDetectionOptions {
   onVerseDetected: (verse: BibleVerse, info: DetectionInfo) => void;
@@ -68,7 +68,9 @@ export interface VerseDetectionOptions {
   /** Moment autopilot: "let us pray", "as the ushers come forward"… (the live screen puts that part in Next) */
   onMoment?: (moment: Moment) => void;
   /** Sermon points on cue: "point number two…" with its words (the live screen makes a point slide in Next) */
-  onSermonPoint?: (point: SermonPoint) => void;
+  onSermonPoint?: (point: SermonPoint & { cueId?: string }) => void;
+  /** Every finished sentence (spirit learns from what was said before the operator moved on) */
+  onSentence?: (sentence: string) => void;
   /** The preacher asked for help finding a scripture ("help me find it"): the app is looking now */
   onFindRequested?: (heard: string) => void;
   
@@ -343,18 +345,26 @@ export class VerseDetectionController {
    * Main entry point - process incoming transcript
    */
   private lastMoment: { kind: string; at: number } | null = null;
-  private pendingPoint: { number: number | null; at: number } | null = null;
+  /** The church's spoken cues with the built-in ones (spirit; Settings → Cues) */
+  private cues: SpokenCue[] = BUILTIN_MOMENT_CUES;
+
+  /** The spoken cues to listen for: built-in ones (some maybe switched off) and the church's own. */
+  setCues(cues: SpokenCue[]): void {
+    this.cues = cues;
+  }
+  private pendingPoint: { number: number | null; at: number; cueId?: string } | null = null;
   private lastPoint: { key: string; at: number } | null = null;
 
   /** "Let us pray": passed on once (the same kind not again for 2 minutes, nothing within 8 s of the last). */
   private noticeMoment(sentence: string): void {
     if (!this.features.momentAutopilot || !this.options.onMoment) return;
-    const moment = findMoment(sentence);
+    const moment = findMoment(sentence, this.cues, { singing: this.songMode });
     if (!moment) return;
     const now = Date.now();
     const last = this.lastMoment;
-    if (last && (now - last.at < 8_000 || (last.kind === moment.kind && now - last.at < 120_000))) return;
-    this.lastMoment = { kind: moment.kind, at: now };
+    const key = moment.kind ?? `part:${moment.part}`;
+    if (last && (now - last.at < 8_000 || (last.kind === key && now - last.at < 120_000))) return;
+    this.lastMoment = { kind: key, at: now };
     this.options.onMoment(moment);
   }
 
@@ -362,19 +372,19 @@ export class VerseDetectionController {
   private noticePoint(sentence: string): void {
     if (!this.features.sermonPoints || !this.options.onSermonPoint || this.songMode) return;
     const now = Date.now();
-    const point = findSermonPoint(sentence);
+    const point = findSermonPoint(sentence, this.cues);
     if (!point && this.pendingPoint && now - this.pendingPoint.at < 15_000) {
       const text = tidyPoint(sentence);
-      if (text) this.sendPoint({ number: this.pendingPoint.number, text });
+      if (text) this.sendPoint({ number: this.pendingPoint.number, text, cueId: this.pendingPoint.cueId });
       this.pendingPoint = null;
       return;
     }
     if (!point) return;
     if (point.text) this.sendPoint(point);
-    else this.pendingPoint = { number: point.number, at: now };
+    else this.pendingPoint = { number: point.number, at: now, cueId: point.cueId };
   }
 
-  private sendPoint(point: SermonPoint): void {
+  private sendPoint(point: SermonPoint & { cueId?: string }): void {
     const key = `${point.number ?? '-'}|${point.text}`;
     if (this.lastPoint?.key === key && Date.now() - this.lastPoint.at < 60_000) return;
     this.lastPoint = { key, at: Date.now() };
@@ -416,6 +426,7 @@ export class VerseDetectionController {
     if (!reference) {
       // Moments and sermon points are noticed on finished sentences, and the rest goes on as usual
       if (isFinal) {
+        this.options.onSentence?.(cleanText);
         this.noticeMoment(cleanText);
         this.noticePoint(cleanText);
       }
