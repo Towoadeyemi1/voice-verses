@@ -327,6 +327,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ⏳ 1.21.0 **The church's app feeds each service**: Voice Verses checks the church app on a schedule (and on demand) for each upcoming service's songs (choir), announcements (announcement team), and pictures and media (creative team). spirit drafts the order of service from them for that service's type; the operator approves or adjusts before the service; spirit notes each adjustment and the reason, and applies it next time when the reason holds (e.g. "announcements go after the offering on Communion Sundays"). Works offline from the last copy.
 - ✅ The feed the church's developers build: `docs/integrations/church-app-feed.md` (written now so they can start).
 
+## "Users should be able to create service templates for more service types, and even use existing service types to create templates. There is also a children Sunday school type."
+
+(5 Nov 2026.)
+- ✅ 1.18.1 **Children's Sunday school** is a type of service (and "Sunday school" in a name means it).
+- ✅ 1.18.1 A **ready-made order for every type of service** (18): Sunday service, Communion Sunday, Thanksgiving Sunday, Midweek service, Bible study, Friday Night Prayers, Prayer and Fasting, Youth Day, Children's Sunday school, Children's service, Special event, Conference, Christmas, New Year (Crossover), Easter, Wedding, Funeral, Dedication.
+- ✅ 1.18.1 **Service templates** in Plan services: New template (any type, the app's or the church's own; start from the ready-made order for that type, from a service or template the church has, with or without its slides, or from nothing), "Make it a template" on any ready-made order, "Use for <day>", Edit, Delete (with Undo). "Save as a template" in the editor asks for the name and type. A template opens in the editor as a template (no date).
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

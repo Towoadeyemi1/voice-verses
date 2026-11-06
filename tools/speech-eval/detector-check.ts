@@ -27,7 +27,9 @@ import crossReferenceData from '@/data/cross-references.json';
 import { duplicateService, nextSunday } from '@/lib/duplicateService';
 import { findMoment, findSermonPoint, partByName, partForMoment } from '@/speech/momentCues';
 import { canBeHandsFree, cuesForListening, emptySpirit, forgive, hear, moveCanBeHandsFree, moveTrust, noticed, observe, recordMove, recordOutcome, recordTiming, serviceSummary, setCueLevel, setCueTypes, setMoveLevel, teachCue, usualMinutes } from '@/lib/spirit';
-import { serviceType } from '@/lib/serviceTypes';
+import { SERVICE_TYPES, serviceType } from '@/lib/serviceTypes';
+import { serviceFromTemplate, templateForType, templateFrom } from '@/lib/serviceTemplates';
+import { readyOrderFor } from '@/lib/starters';
 import { mergeSpirit } from '@/lib/spiritSync';
 
 const single: [string, string | null][] = [
@@ -767,6 +769,18 @@ const check = (label: string, got: string | null, want: string | null) => {
       ['Sunday Celebration', '2026-11-05', 'Sunday service'],
       ['Evening Service', '2026-11-05', 'Midweek service'],
     ] as const) check(`types: "${name}" is a ${want}`, serviceType({ name, date: new Date(`${day}T10:00:00`) }), want);
+    check('types: "Children\'s Sunday School" is its own type', serviceType({ name: "Children's Sunday School", date: new Date('2026-11-08T09:00:00') }), "Children's Sunday school");
+
+    // 1.18.1: a ready-made order for every type, and templates
+    check('templates: every type of service has a ready-made order', SERVICE_TYPES.filter((t) => !readyOrderFor(t)).join(', ') || 'all', 'all');
+    const fnp = templateForType('Friday Night Prayers', 'Friday Night Prayers (vigil)');
+    check('templates: from the ready-made order for its type', `${fnp.isTemplate} ${fnp.type} ${fnp.templateName} ${fnp.sections.flatMap((x) => x.subsections).some((i) => i.name === 'Prayer points')}`, 'true Friday Night Prayers Friday Night Prayers (vigil) true');
+    const planned = { id: 'svc-a', name: 'Sunday Celebration', date: new Date('2026-11-08'), startTime: '10:00', isTemplate: false, sections: [{ id: 'sec', name: 'Worship', subsections: [{ id: 'it', name: 'Song', slides: [{ id: 'sl', type: 'blank' as const }] }] }] };
+    const bare = templateFrom(planned, 'Communion Sunday', 'Communion Sunday', false);
+    const full = templateFrom(planned, 'Sunday', 'Sunday service', true);
+    check('templates: from a service, with or without its slides, never sharing its ids', `${bare.sections[0].subsections[0].slides.length} ${full.sections[0].subsections[0].slides.length} ${bare.sections[0].subsections[0].id !== 'it' && bare.id !== 'svc-a'}`, '0 1 true');
+    const made = serviceFromTemplate(full, new Date('2026-11-15'));
+    check('templates: a service from a template keeps its type, gets new ids and the day', `${made.isTemplate} ${made.type} ${made.name} ${made.sections[0].subsections[0].slides[0].id !== full.sections[0].subsections[0].slides[0].id} ${new Date(made.date).getDate()}`, 'false Sunday service Sunday true 15');
     check('types: a type chosen for the service wins', serviceType({ name: 'Sunday Celebration', date: new Date('2026-11-08T10:00:00'), type: 'Thanksgiving Sunday' }), 'Thanksgiving Sunday');
 
     // Timings per type, and How it went per service

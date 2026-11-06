@@ -132,6 +132,8 @@ Check this list before debugging. Add every new mistake that cost time.
 - **A service named "Sunday Celebration" was guessed as a Midweek service** because the sample is dated today (a Thursday in the test). The name decides before the day.
 - **spirit's next song replaced the slides in the middle** while the last slide was still being sung, which would have broken following the singers. What spirit gets ready now waits in Next only; its part comes into the middle when it is taken (`goLive`).
 
+- **A service made from a saved order shared its parts' and slides' ids with the order** (the old "Your saved orders" copied the template as it was). Two services with the same slide ids get mixed up on screen and in spirit's records. Templates and the services made from them now always get new ids.
+
 ## Hardware
 
 - **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).

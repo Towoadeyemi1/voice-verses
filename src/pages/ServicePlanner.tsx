@@ -10,9 +10,44 @@ import { AppShell, Section } from '@/components/shell/AppShell';
 import { timelineParts } from '@/components/live/ServiceTimeline';
 import { duplicateService, nextSunday } from '@/lib/duplicateService';
 import { serviceFromStarter, STARTER_SERVICES, StarterService } from '@/lib/starters';
+import { serviceType } from '@/lib/serviceTypes';
+import { serviceFromTemplate, templateName } from '@/lib/serviceTemplates';
+import { TemplateDialog } from '@/components/service-templates/TemplateDialog';
+import { colorFor } from '@/components/live/ServiceTimeline';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { SERVICE_EXPORT_EXTENSION, exportService, importService } from '@/lib/library/files';
 import { addSamples, removeSamples, SAMPLES_CHANGED } from '@/lib/samples/seed';
+
+const shortDay = (d: Date) => d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+
+/** The type of service, as a small coloured label */
+const TypePill = ({ type }: { type: string }) => (
+  <span className="self-start inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground mb-0.5">
+    <i className="w-2 h-2 rounded-full" style={{ background: colorFor(type) === '#64748b' ? 'hsl(var(--primary))' : colorFor(type) }} />
+    {type}
+  </span>
+);
+
+/** The order of service as a thin bar of its parts, as long as each part's time */
+const OrderBar = ({ service }: { service: Service }) => {
+  const parts = timelineParts(service);
+  if (!parts.length) return <span className="text-[13px] text-muted-foreground mt-2">No parts yet</span>;
+  return (
+    <span className="flex gap-[2px] mt-2.5 h-1.5" aria-hidden="true">
+      {parts.map((p) => (
+        <span key={p.item.id} className="rounded-full" style={{ flex: p.minutes, background: p.color }} />
+      ))}
+    </span>
+  );
+};
+
+/** "8 parts · about 1 h 45" */
+const summaryOf = (service: Service) => {
+  const parts = timelineParts(service);
+  const minutes = parts.reduce((n, p) => n + p.minutes, 0);
+  const length = minutes >= 60 ? `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60}` : ''}` : `${minutes} min`;
+  return parts.length ? `${parts.length} ${parts.length === 1 ? 'part' : 'parts'} · about ${length}` : 'Empty: add parts in the editor';
+};
 
 const ServicePlanner = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -46,8 +81,8 @@ const ServicePlanner = () => {
   };
 
   const getServicesForDate = (date: Date) => {
-    return services.filter(s => 
-      s.date.toDateString() === date.toDateString()
+    return services.filter(s =>
+      !s.isTemplate && new Date(s.date).toDateString() === date.toDateString()
     ).sort((a, b) => a.startTime.localeCompare(b.startTime));
   };
 
@@ -131,15 +166,37 @@ const ServicePlanner = () => {
     }
   };
 
+  // ---- Service templates (1.18.1) ----------------------------------------------------
+
+  const [templateDialog, setTemplateDialog] = useState<{ open: boolean; type?: string }>({ open: false });
+  const openNewTemplate = (type?: string) => setTemplateDialog({ open: true, type });
+  const createTemplate = async (template: Service) => {
+    await ServiceStorage.saveService(template);
+    setTemplateDialog({ open: false });
+    await loadServices();
+    toast.success(`Template “${templateName(template)}” made`, { description: `For ${template.type}. Change its parts in the editor.` });
+    navigate(`/service-builder/${template.id}`);
+  };
+  const planFromTemplate = async (template: Service) => {
+    const service = serviceFromTemplate(template, selectedDate);
+    await ServiceStorage.saveService(service);
+    await loadServices();
+    toast.success(`${service.name} planned for ${shortDay(selectedDate)}`, { description: 'Add the songs, verses and slides for this day.' });
+    navigate(`/service-builder/${service.id}`);
+  };
+  const deleteTemplate = async (template: Service) => {
+    await ServiceStorage.deleteService(template.id);
+    await loadServices();
+    toast(`Template “${templateName(template)}” deleted`, {
+      action: { label: 'Undo', onClick: () => void ServiceStorage.saveService(template).then(loadServices) },
+    });
+  };
+
   const todayServices = getServicesForDate(selectedDate);
-  const [templates, setTemplates] = useState<Service[]>([]);
-  
-  useEffect(() => {
-    ServiceStorage.getTemplates().then(setTemplates);
-  }, [services]);
+  const templates = services.filter((sv) => sv.isTemplate);
 
   const upcoming = services
-    .filter((s) => new Date(s.date).setHours(23, 59) >= Date.now())
+    .filter((s) => !s.isTemplate && new Date(s.date).setHours(23, 59) >= Date.now())
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || a.startTime.localeCompare(b.startTime))
     .slice(0, 6);
   const dayLabel = (d: Date) => new Date(d).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
@@ -175,7 +232,7 @@ const ServicePlanner = () => {
               mode="single"
               selected={selectedDate}
               onSelect={(d) => d && setSelectedDate(d)}
-              modifiers={{ planned: services.map((s) => new Date(s.date)) }}
+              modifiers={{ planned: services.filter((s) => !s.isTemplate).map((s) => new Date(s.date)) }}
               modifiersClassNames={{ planned: 'after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary' }}
               className="w-full p-1"
               classNames={{
@@ -291,47 +348,68 @@ const ServicePlanner = () => {
             )}
           </Section>
 
-          <Section title="Start from an order of service" description="Each part has a typical length, so the live screen's timeline and timers are ready. Change anything after.">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-              {STARTER_SERVICES.map((starter) => {
-                const parts = timelineParts(serviceFromStarter(starter, selectedDate));
-                return (
-                  <button key={starter.id} type="button" onClick={() => handleStarter(starter)} className="text-left rounded-xl bg-muted/40 hover:bg-muted/70 p-4 transition">
-                    <span className="block font-semibold">{starter.name}</span>
-                    <span className="block text-xs text-muted-foreground mt-1 leading-snug">{starter.description}</span>
-                    <span className="flex gap-[2px] mt-3 h-1.5">
-                      {parts.map((p) => (
-                        <span key={p.item.id} className="rounded-full" style={{ flex: p.minutes, background: p.color }} />
-                      ))}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+          <Section
+            title="Service templates"
+            description="A starting order for each type of service you run. Make one from the ready-made order for its type, from a service you planned, or from nothing."
+            actions={
+              <Button onClick={() => openNewTemplate()} data-new-template>
+                <Plus className="w-4 h-4" />
+                New template
+              </Button>
+            }
+          >
+            {templates.length ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3" data-templates>
+                {[...templates]
+                  .sort((a, b) => serviceType(a).localeCompare(serviceType(b)) || templateName(a).localeCompare(templateName(b)))
+                  .map((template) => (
+                    <div key={template.id} className="rounded-xl bg-muted/40 p-4 flex flex-col gap-1" data-template={templateName(template)}>
+                      <TypePill type={serviceType(template)} />
+                      <span className="font-semibold text-[15px]">{templateName(template)}</span>
+                      <span className="text-[13px] text-muted-foreground">{summaryOf(template)}</span>
+                      <OrderBar service={template} />
+                      <div className="flex flex-wrap items-center gap-1.5 mt-auto pt-2.5">
+                        <Button size="sm" onClick={() => planFromTemplate(template)} data-use-template>
+                          Use for {shortDay(selectedDate)}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => navigate(`/service-builder/${template.id}`)} title="Change this template">
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="ghost" className="ml-auto text-muted-foreground hover:text-destructive" onClick={() => deleteTemplate(template)} title="Delete this template" aria-label={`Delete ${templateName(template)}`}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="m-0 text-sm text-muted-foreground">No templates yet. Start with the ready-made order for one of your types of service below, and make it your own.</p>
+            )}
           </Section>
 
-          {templates.length > 0 && (
-            <Section title="Your saved orders" description="Services you saved as a template in the editor.">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                {templates.map((template) => (
-                  <button
-                    key={template.id}
-                    type="button"
-                    className="text-left rounded-xl bg-muted/40 hover:bg-muted/70 p-4 transition"
-                    onClick={async () => {
-                      const newService: Service = { ...template, id: Date.now().toString(), date: selectedDate, isTemplate: false };
-                      await ServiceStorage.saveService(newService);
-                      await loadServices();
-                      toast.success('Service created from your saved order');
-                    }}
-                  >
-                    <span className="block font-semibold">{template.templateName}</span>
-                    <span className="block text-xs text-muted-foreground mt-1">{template.sections?.length || 0} sections</span>
-                  </button>
-                ))}
-              </div>
-            </Section>
-          )}
+          <Section title="Ready-made orders" description="One for each type of service, with a typical length for each part, so the live screen’s timeline and timers are ready. Use one as it is, or make it your own template.">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3" data-ready-orders>
+              {STARTER_SERVICES.map((starter) => (
+                <div key={starter.id} className="rounded-xl bg-muted/40 p-4 flex flex-col gap-1" data-ready-order={starter.type}>
+                  <TypePill type={starter.type} />
+                  <span className="font-semibold text-[15px]">{starter.name}</span>
+                  <span className="text-[13px] text-muted-foreground leading-snug">{starter.description}</span>
+                  <OrderBar service={serviceFromStarter(starter, selectedDate)} />
+                  <div className="flex flex-wrap items-center gap-1.5 mt-auto pt-2.5">
+                    <Button size="sm" variant="secondary" onClick={() => handleStarter(starter)}>
+                      Use for {shortDay(selectedDate)}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => openNewTemplate(starter.type)} data-make-template={starter.type}>
+                      <Copy className="w-4 h-4" />
+                      Make it a template
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+          <TemplateDialog open={templateDialog.open} initialType={templateDialog.type} onOpenChange={(open) => setTemplateDialog((d) => ({ ...d, open }))} services={services} onCreate={createTemplate} />
         </div>
       </div>
     </AppShell>

@@ -236,6 +236,21 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   - Desktop watches the `services/` and `media/` subfolders; the browser uses the File System Access API.
 - **AI slides** (`src/ai/slideGenerator.ts`, `AiSlidesDialog`): from a bulletin or sermon notes, makes announcement or sermon slides through a JSON schema, with scripture references resolved to real verses.
 
+### Service templates (1.18.1, `lib/serviceTemplates.ts`, `components/service-templates/TemplateDialog.tsx`)
+
+- A template is a service with `isTemplate`, `templateName` and `type`. It is never listed as a service on a day (Plan services, Coming up, the calendar, the live screen).
+- **Ready-made orders** (`STARTER_SERVICES`, `readyOrderFor`): one for each type of service, with a typical length per part. Each card has **Use for <day>** and **Make it a template**.
+- **Service templates** in Plan services: the church's own, sorted by type, each with its type, its parts and length, the order as a bar, **Use for <day>**, **Edit** and **Delete** (Undo in the toast).
+- **New template** asks for the type of service (the app's or any name), a name, and what it starts from:
+  - the ready-made order for that type
+  - a service or template the church has ("Keep its songs, verses and slides", off by default)
+  - nothing
+  
+  It then opens in the editor.
+- **Save as a template** in the editor uses the same dialog for the service open: its type is suggested, and its slides are kept.
+- In the editor, a template shows "Template for <type>", edits its name, and has no date.
+- Everything copied gets new ids (`duplicateService`), so a template, the services made from it and the original never share a part or slide. A service made from a template keeps its type.
+
 ## 8. The operator's live screen (1.4.0, design 4, `components/LiveWorkspace.tsx`)
 
 - **Top bar:**
