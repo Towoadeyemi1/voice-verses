@@ -338,6 +338,19 @@ The autopilot that learns how a church runs its service. Approved mock-up: `docs
 - **Settings → Cues:** the sentence "When the preacher says [words] get [a part of this service / any … part / a sermon point] ready." and Teach spirit; "what was said lately" to pick the words from; the spirit noticed cards; the cues grouped by part, moment and sermon points, each with its record (10 dots), its trust and remove (or switch off/on for built-in ones). Built-in phrases nobody has changed are folded away. The sidebar shows "n new" when spirit has noticed something.
 - **Saved** in `voice-verses-spirit` (every window; events kept 120 days, at most 3000) and, with a library folder, in `spirit/learned.json` (`lib/spiritSync.ts`): pulled on start and when the file changes, pushed 5 s after a change. Merging keeps the newest change of each cue and the union of the rest; content is compared without times so computers don't keep rewriting each other.
 
+### spirit for the whole service (1.18.0)
+
+- **Types of service** (`lib/serviceTypes.ts`): `Service.type` (Plan services → Type of service, any name; ready ones: Sunday service, Communion Sunday, Thanksgiving Sunday, Midweek service, Bible study, Friday Night Prayers, Prayer and Fasting, Youth Day, Children's service, Special event, Conference, Christmas, New Year, Easter, Wedding, Funeral, Dedication). Without one, the name decides ("Crossover" → New Year, "Sunday" → Sunday service), then the day. Every spirit event, observation and timing carries the service and its type. A cue can be for every type or only one ("…ready in [every service ▾]"); the listening engine only hears the cues for the type loaded.
+- **Moves** (`MOVES`, `recordMove`, `setMoveLevel`, `moveTrust`): each kind of move has its own trust (Learning → Ready in Next → Hands-free after 10 right in a row), in `moves`. Working in 1.18.0:
+  - *The countdown into the next part*: when a part's own countdown reaches zero (made longer: waits), the next part with slides is got ready. It may become Hands-free.
+  - *The next song*: when the last slide of a song part goes on screen and the next part is a song, it waits in Next. Hands-free comes in 1.19.0, when spirit can tell the singing has finished.
+  - Coming in 1.19.0 and shown as such: get the service ready, the end of the service, move on when a part's time is up, clear after a reading, the logo between parts.
+- What spirit gets ready waits in Next without changing the slides in the middle; when it is taken, its part comes into the middle. "Not this" works for moves as for cues; "Never" sends a move back to Learning.
+- **"What spirit will do next"** (`live/SpiritStrip.tsx`), under the order of service when spirit is not Off: "spirit · <type>", up to three things it is waiting for (the part after a running countdown, the next song, the next parts' cues with their phrases, a point slide in the sermon) with how far each goes, "spirit today: n of m", and **Pause** (also the P key): nothing is got ready or goes live by itself until Resume; the saved level is unchanged; verses said outright still go up.
+- **Timings**: when a part ends, how long it ran is kept per type of service (`recordTiming`, last 500; parts of 1–180 minutes). `usualMinutes` gives the middle of the last runs (for 1.19.0).
+- **How it went** (`settings/SpiritSummary.tsx`, `serviceSummary`): when listening stops and spirit took part in this service; also in Settings → How spirit runs for the last service. spirit's moves taken as they were out of every move (spirit's, corrected and the operator's own), a bar of the service from start to end, each correction with **Just this once** (`forgive`: the cue or move goes back exactly as it was, a removed taught cue comes back, and the correction stops counting), and what has earned Hands-free with **Make it Hands-free**.
+- Shared through the library folder like the rest: moves by newest change, timings together, a correction forgiven on one computer stays forgiven.
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:
@@ -414,6 +427,6 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `ai-assistant-settings` | AI provider and options |
 | `global-service-logo` | The church logo (data URL) |
 | `library-sync-state`, `library-tombstones` | Library folder sync |
-| `voice-verses-spirit` | spirit (1.17.0): its level, every cue (phrase, target, source, trust, last 10 outcomes, streak, correction note), what it observed and was told were not cues, events and words heard (7 days). Shared as `spirit/learned.json` in the library folder |
+| `voice-verses-spirit` | spirit (1.17.0): its level, every cue (phrase, target, source, trust, last 10 outcomes, streak, correction note, types of service), each move's trust and timings per type of service (1.18.0), what it observed and was told were not cues, events and words heard (7 days). Shared as `spirit/learned.json` in the library folder |
 
 Desktop-only files in `userData`: `screens.json` (display for each output), saved output window placement, and the encrypted secrets.

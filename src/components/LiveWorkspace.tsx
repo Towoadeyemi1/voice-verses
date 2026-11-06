@@ -14,7 +14,13 @@ import { buildSongSlides, ccliLicence } from '@/lib/songs';
 import { addLine, captureSlide, draftLyrics, draftTitle } from '@/lib/spontaneousSong';
 import { Moment, partByName, partForMoment, SermonPoint } from '@/speech/momentCues';
 import { startSpiritSync } from '@/lib/spiritSync';
-import { canBeHandsFree, Correction, cuesForListening, hear, loadSpirit, observe, Outcome, recordOutcome, recordReady, SPIRIT_CHANGED, updateSpirit } from '@/lib/spirit';
+import { canBeHandsFree, Correction, cuesForListening, hear, loadSpirit, moveCanBeHandsFree, moveTrust, observe, Outcome, recordMove, recordOutcome, recordReady, recordTiming, serviceSummary, SPIRIT_CHANGED, updateSpirit, type MoveKind, type SpiritContext } from '@/lib/spirit';
+import { serviceType } from '@/lib/serviceTypes';
+import { BUILTIN_MOMENT_PHRASES, type MomentKind } from '@/speech/momentCues';
+import { SpiritStrip, type SpiritExpectation } from './live/SpiritStrip';
+import { SpiritSummary } from './settings/SpiritSummary';
+import { useSpirit as useSpiritState } from './settings/SpiritPage';
+import './settings/settings.css';
 import { SAMPLES_CHANGED } from '@/lib/samples/seed';
 import { DEMO_STEPS } from '@/lib/demoScript';
 import { WelcomePane } from './live/WelcomePane';
@@ -256,7 +262,16 @@ export const LiveWorkspace = () => {
       const next = c?.kind === 'chapter' ? c.verses.find((v) => v.verse === verse.verse + 1) : undefined;
       setPreview(next ? { verse: next } : null);
     } else {
-      const from = opts.within ?? collection;
+      let from = opts.within ?? collection;
+      // A slide of another part (spirit put it in Next): that part comes into the middle with it
+      if (!opts.capturing && !(from?.kind === 'slides' && from.slides.some((sl) => sl.id === item.slide.id))) {
+        const owner = partOf(item.slide.id);
+        if (owner) {
+          from = { kind: 'slides', title: owner.item.name, slides: owner.item.slides };
+          setCollection(from);
+          setCurrentItemId(owner.item.id);
+        }
+      }
       const c = from?.kind === 'slides' ? from : null;
       const index = broadcastSlide(item.slide, c);
       if (!opts.capturing) startPart(item.slide.id);
@@ -271,6 +286,8 @@ export const LiveWorkspace = () => {
         controller.current?.setLiveLyrics(null);
       }
       setPreview(c && index >= 0 && c.slides[index + 1] ? { slide: c.slides[index + 1] } : null);
+      // The last slide of a song is up: spirit gets the next song in the plan ready
+      if (item.slide.type === 'lyrics' && c && index >= 0 && index === c.slides.length - 1 && !opts.capturing) handlers.current.songEnding(item.slide.id);
     }
     setPreviewSuggestionId(undefined);
     setPrediction(null);
@@ -303,18 +320,38 @@ export const LiveWorkspace = () => {
    * the service), stopping the one this screen started for the part before.
    */
   const startPart = (slideId: string) => {
-    const part = partOf(slideId)?.item ?? null;
+    const owner = partOf(slideId);
+    const part = owner?.item ?? null;
     if (part && livePart?.id !== part.id) {
+      // How long the part before ran, for this type of service (spirit learns each type's timings)
+      const before = livePart;
+      if (before && service && loadSpirit().level !== 'off') {
+        const name = service.sections.flatMap((sec) => sec.subsections).find((it) => it.id === before.id)?.name;
+        if (name) updateSpirit((st) => recordTiming(st, serviceType(service), name, (Date.now() - before.at) / 60_000));
+      }
       setLivePart({ id: part.id, at: Date.now() });
       movedOn.current = null;
     }
     if (partCountdown.current && partCountdown.current.itemId !== part?.id) {
       stopCountdown(partCountdown.current.id);
+      window.clearTimeout(countdownEnd.current);
       partCountdown.current = null;
     }
     if (part?.countdown?.enabled && part.autoStartCountdown !== false && loadFeatures().partCountdowns && partCountdown.current?.itemId !== part.id) {
       const started = startCountdown(countdownFromConfig(part.countdown, part.name));
       partCountdown.current = { itemId: part.id, id: started.id };
+      // When it reaches zero, spirit gets the part after it ready (the countdown into the welcome)
+      window.clearTimeout(countdownEnd.current);
+      const svc = owner?.service;
+      const watch = () => {
+        countdownEnd.current = window.setTimeout(() => {
+          if (partCountdown.current?.id !== started.id) return;
+          const running = handlers.current.countdown;
+          if (running?.id === started.id && running.endsAt > Date.now() + 500) return watch(); // made longer
+          if (svc) handlers.current.countdownEnded(svc, part.id);
+        }, Math.max(0, (handlers.current.countdown?.id === started.id ? handlers.current.countdown.endsAt : started.endsAt) - Date.now()) + 300);
+      };
+      watch();
     }
   };
 
@@ -571,25 +608,52 @@ export const LiveWorkspace = () => {
   const [cue, setCue] = useState<{ id: string; note: string; part?: string } | null>(null);
   /** What spirit got ready (or, at Learning, would have), waiting to learn whether it was right */
   const spiritPending = useRef<{
-    cueId: string;
+    /** A spoken cue, or a move (1.18.0) */
+    cueId?: string;
+    move?: MoveKind;
     mode: 'learning' | 'next' | 'handsfree';
     slideId?: string;
     partId?: string;
+    /** What it is, e.g. "Offering" */
+    what: string;
+    /** Why, in words: "spirit heard “let us pray”", "the countdown ended" */
+    why: string;
     heard: string;
     singing: boolean;
     before?: { collection: Collection; preview: Live; currentItemId?: string };
     timer?: number;
   } | null>(null);
   const handsFreeTimer = useRef<number>();
+  /** Pause (P): spirit hands everything back for now; its saved level is unchanged */
+  const [spiritPaused, setSpiritPaused] = useState(false);
+  const pausedRef = useRef(spiritPaused);
+  pausedRef.current = spiritPaused;
+  /** The countdown of the part on screen reaching zero */
+  const countdownEnd = useRef<number>();
+  /** The type of the service loaded now: the listening engine only hears cues kept for it */
+  const typeRef = useRef<string>();
+  /** How it went, when listening stops (1.18.0) */
+  const [howItWent, setHowItWent] = useState<string | null>(null);
+
+  /** Where spirit is: this service and its type, for learning each type separately */
+  const spiritCtx = (what?: string): SpiritContext => ({ serviceId: service?.id, type: serviceType(service), what });
 
   /** How far a cue goes now: spirit's level, and the cue's own (Hands-free only when both allow it). */
   const spiritMode = (cueId?: string): 'off' | 'learning' | 'next' | 'handsfree' => {
     const state = loadSpirit();
-    if (state.level === 'off') return 'off';
+    if (state.level === 'off' || pausedRef.current) return 'off';
     const c = state.cues.find((x) => x.id === cueId);
     if (!c) return 'next';
     if (c.level === 'learning') return 'learning';
     return c.level === 'handsfree' && state.level === 'handsfree' && canBeHandsFree(c) ? 'handsfree' : 'next';
+  };
+  /** How far a move goes now (1.18.0), the same way. */
+  const moveMode = (move: MoveKind): 'off' | 'learning' | 'next' | 'handsfree' => {
+    const state = loadSpirit();
+    if (state.level === 'off' || pausedRef.current) return 'off';
+    const t = moveTrust(state, move);
+    if (t.level === 'learning') return 'learning';
+    return t.level === 'handsfree' && state.level === 'handsfree' && moveCanBeHandsFree(state, move) ? 'handsfree' : 'next';
   };
 
   const settleSpirit = (outcome: Outcome, why?: { correction?: Correction }) => {
@@ -597,19 +661,26 @@ export const LiveWorkspace = () => {
     if (!p) return;
     window.clearTimeout(p.timer);
     spiritPending.current = null;
-    updateSpirit((st) => recordOutcome(st, p.cueId, outcome, { ...why, singing: p.singing }));
+    const ctx = spiritCtx(p.what);
+    const note = why?.correction === 'never' ? 'never for this' : why?.correction === 'not-now' ? (p.singing ? 'not now, during a song' : 'not now') : why?.correction === 'wrong-part' ? 'wrong part' : undefined;
+    if (p.move) updateSpirit((st) => {
+      const next = recordMove(st, p.move!, outcome, ctx, note);
+      return why?.correction === 'never' ? { ...next, moves: { ...next.moves, [p.move!]: { ...moveTrust(next, p.move!), level: 'learning' as const } } } : next;
+    });
+    else if (p.cueId) updateSpirit((st) => recordOutcome(st, p.cueId!, outcome, { ...why, singing: p.singing }, ctx));
   };
 
   /** spirit got something ready in Next: at Hands-free it goes live after 3 seconds unless stopped. */
-  const spiritReady = (pending: NonNullable<typeof spiritPending.current>, item: Live, title: string) => {
+  const spiritReady = (pending: NonNullable<typeof spiritPending.current>, item: Live) => {
     if (spiritPending.current) window.clearTimeout(spiritPending.current.timer);
     spiritPending.current = pending;
-    updateSpirit((st) => recordReady(st, pending.cueId));
+    updateSpirit((st) => recordReady(st, pending.cueId, { ...spiritCtx(pending.what), move: pending.move }));
     window.clearTimeout(handsFreeTimer.current);
+    const because = pending.why.charAt(0).toUpperCase() + pending.why.slice(1);
     if (pending.mode === 'handsfree' && item) {
       let stopped = false;
-      const id = toast(`${title} goes live in 3 seconds`, {
-        description: `spirit heard “${pending.heard}”. Stop keeps it in Next.`,
+      const id = toast(`${pending.what} goes live in 3 seconds`, {
+        description: `${because}. Stop keeps it in Next.`,
         duration: 3200,
         action: {
           label: 'Stop',
@@ -627,32 +698,62 @@ export const LiveWorkspace = () => {
         void goLive(item);
       }, 3000);
     } else {
-      toast(`${title} is ready in Next`, { description: `spirit heard “${pending.heard}”. Take shows it; “Not this” teaches spirit.`, duration: 6000 });
+      toast(`${pending.what} is ready in Next`, { description: `${because}. Take shows it; “Not this” teaches spirit.`, duration: 6000 });
     }
+  };
+
+  /**
+   * spirit gets a part of the service ready by itself (a cue or a move): its
+   * first slide waits in Next (the slides in the middle stay as they are until
+   * it is taken). At Learning it only notes it: right if the operator goes
+   * there within 90 seconds.
+   */
+  const spiritPart = (svc: Service, item: ServiceSubsection, how: { cueId?: string; move?: MoveKind; why: string; heard: string }) => {
+    const mode = how.move ? moveMode(how.move) : spiritMode(how.cueId);
+    const first = item.slides[0];
+    if (mode === 'off' || !first) return;
+    const key = how.move ?? how.cueId;
+    if (mode === 'learning') {
+      if (spiritPending.current) window.clearTimeout(spiritPending.current.timer);
+      const pending = { cueId: how.cueId, move: how.move, mode, partId: item.id, what: item.name, why: how.why, heard: how.heard, singing: songMode };
+      spiritPending.current = { ...pending, timer: window.setTimeout(() => (spiritPending.current?.move ?? spiritPending.current?.cueId) === key && settleSpirit('wrong'), 90_000) };
+      return;
+    }
+    const before = { collection, preview, currentItemId };
+    if (svc.id !== service?.id) chooseService(svc.id);
+    setPreview({ slide: first });
+    setCue({ id: first.id, note: how.why, part: item.name });
+    spiritReady({ cueId: how.cueId, move: how.move, mode, slideId: first.id, partId: item.id, what: item.name, why: how.why, heard: how.heard, singing: songMode, before }, { slide: first });
   };
 
   /** "Let us pray": that part of the order of service goes into Next (or, at Learning, spirit only notes it). */
   const moment = (m: Moment) => {
     const svc = service;
-    const mode = spiritMode(m.cueId);
-    if (!svc || mode === 'off') return;
+    if (!svc || !m.cueId) return;
     const parts = svc.sections.flatMap((section) => section.subsections.map((item) => ({ item, name: item.name, section: section.name })));
     const current = parts.findIndex((p) => p.item.id === currentItemId);
     const at = m.part ? partByName(m.part, parts, current) : m.kind ? partForMoment(m.kind, parts, current) : null;
     const target = at === null ? null : parts[at];
-    if (!target || !target.item.slides.length || !m.cueId) return;
-    if (mode === 'learning') {
-      // spirit only watches: right if the operator goes there within 90 s
-      if (spiritPending.current) window.clearTimeout(spiritPending.current.timer);
-      const pending = { cueId: m.cueId, mode, partId: target.item.id, heard: m.heard, singing: songMode };
-      spiritPending.current = { ...pending, timer: window.setTimeout(() => spiritPending.current?.cueId === m.cueId && settleSpirit('wrong'), 90_000) };
-      return;
-    }
-    const before = { collection, preview, currentItemId };
-    loadServiceItem(svc, target.item, false);
-    const first = target.item.slides[0];
-    setCue({ id: first.id, note: `spirit heard “${m.heard}”`, part: target.item.name });
-    spiritReady({ cueId: m.cueId, mode, slideId: first.id, partId: target.item.id, heard: m.heard, singing: songMode, before }, { slide: first }, target.item.name);
+    if (!target || !target.item.slides.length) return;
+    spiritPart(svc, target.item, { cueId: m.cueId, why: `spirit heard “${m.heard}”`, heard: m.heard });
+  };
+
+  /** The countdown of a part reached zero: the part after it (1.18.0, move "countdown-end"). */
+  const countdownEnded = (svc: Service, itemId: string) => {
+    const all = svc.sections.flatMap((sec) => sec.subsections);
+    const next = all.slice(all.findIndex((it) => it.id === itemId) + 1).find((it) => it.slides.length);
+    if (next) spiritPart(svc, next, { move: 'countdown-end', why: 'the countdown ended', heard: 'the countdown ended' });
+  };
+
+  /** The last slide of a song is up: the next song in the plan waits in Next (1.18.0, move "next-song"). */
+  const songEnding = (slideId: string) => {
+    const owner = partOf(slideId);
+    if (!owner) return;
+    const all = owner.service.sections.flatMap((sec) => sec.subsections.map((it) => ({ it, section: sec.name })));
+    const after = all[all.findIndex((x) => x.it.id === owner.item.id) + 1];
+    const isSong = (x?: { it: ServiceSubsection; section: string }) => !!x && x.it.slides.length > 0 && x.it.slides.every((sl) => sl.type === 'lyrics');
+    if (!isSong(after)) return;
+    spiritPart(owner.service, after.it, { move: 'next-song', why: `${owner.item.name} is on its last slide`, heard: 'the last slide' });
   };
 
   /** "Point number two…": the sermon's own point slide if it has one, else a point slide made from the words, in Next. */
@@ -667,9 +768,10 @@ export const LiveWorkspace = () => {
     const title = p.number !== null ? `Point ${p.number}` : 'Write this down';
     const slide: Slide = own ?? { id: `point-${p.number ?? 'note'}-${Date.now()}`, type: 'announcement', title, content: p.text };
     const before = { collection, preview, currentItemId };
+    const heard = p.number !== null ? `point ${p.number}` : p.text.split(' ').slice(0, 4).join(' ');
     setPreview({ slide });
     setCue({ id: slide.id, note: `spirit heard ${p.number !== null ? `point ${p.number}` : 'a point'}` });
-    spiritReady({ cueId: p.cueId, mode, slideId: slide.id, heard: p.number !== null ? `point ${p.number}` : p.text.split(' ').slice(0, 4).join(' '), singing: songMode, before }, { slide }, title);
+    spiritReady({ cueId: p.cueId, mode, slideId: slide.id, what: title, why: `spirit heard “${heard}”`, heard, singing: songMode, before }, { slide });
   };
 
   /** "Not this": what spirit got ready is put back, and the reason teaches it. */
@@ -687,11 +789,13 @@ export const LiveWorkspace = () => {
     toast('spirit will remember', {
       description:
         correction === 'never'
-          ? `It won’t use “${p.heard}” again.`
+          ? p.move
+            ? 'It will only watch this kind of move until you trust it again (Settings → What spirit does).'
+            : `It won’t use “${p.heard}” again.`
           : correction === 'not-now'
-            ? p.singing
+            ? p.singing && !p.move
               ? `“${p.heard}” won’t move anything while a song is on.`
-              : 'It will be more careful with these words.'
+              : 'It will be more careful.'
             : 'Choose the right part yourself: spirit learns from that too.',
       duration: 5000,
     });
@@ -704,14 +808,14 @@ export const LiveWorkspace = () => {
       if (p.partId === item.id && p.mode === 'learning') settleSpirit('right');
       else if (p.partId && p.partId !== item.id) settleSpirit('wrong', { correction: 'wrong-part' });
     }
-    if (loadSpirit().level !== 'off') updateSpirit((st) => observe(st, item.name));
+    if (loadSpirit().level !== 'off' && !pausedRef.current) updateSpirit((st) => observe(st, item.name, Date.now(), { serviceId: svc.id, type: serviceType(svc) }));
     loadServiceItem(svc, item);
   };
 
   // spirit's cues for the listening engine, kept current (and shared through the library folder)
   useEffect(() => {
     startSpiritSync();
-    const apply = () => controller.current?.setCues(cuesForListening(loadSpirit()));
+    const apply = () => controller.current?.setCues(cuesForListening(loadSpirit(), typeRef.current));
     window.addEventListener(SPIRIT_CHANGED, apply);
     window.addEventListener('storage', apply);
     return () => {
@@ -755,8 +859,8 @@ export const LiveWorkspace = () => {
     if (!previewSuggestionId && !prediction) setPreview(loaded.verses[0] ? { verse: loaded.verses[0] } : null);
   };
 
-  const handlers = useRef({ present, addSuggestion, collection, captureLine, predict, chapterCalled, moment, sermonPoint });
-  handlers.current = { present, addSuggestion, collection, captureLine, predict, chapterCalled, moment, sermonPoint };
+  const handlers = useRef({ present, addSuggestion, collection, captureLine, predict, chapterCalled, moment, sermonPoint, songEnding, countdownEnded, countdown });
+  handlers.current = { present, addSuggestion, collection, captureLine, predict, chapterCalled, moment, sermonPoint, songEnding, countdownEnded, countdown };
 
   // ---- The demo: a scripted sermon and worship set through the real detector ----------
 
@@ -855,7 +959,7 @@ export const LiveWorkspace = () => {
     });
     controller.current = detector;
     detector.setFeatures(detectionFeatures());
-    detector.setCues(cuesForListening(loadSpirit()));
+    detector.setCues(cuesForListening(loadSpirit(), typeRef.current));
     detector.setPlanned(plannedVerses());
     detector.setSongMode(songMode);
     detector.setSongLibrary(songs.map((m) => ({ id: m.id, title: m.name, lyrics: m.lyrics ?? '' })));
@@ -951,6 +1055,9 @@ export const LiveWorkspace = () => {
     setPassage(null);
     desktop?.setListening(false);
     if (!quiet) toast.info('Listening stopped');
+    // How it went: when spirit took part in this service
+    const sum = !quiet && service ? serviceSummary(loadSpirit(), service.id) : null;
+    if (sum && sum.serviceId === service?.id && sum.right + sum.wrong + sum.manual > 0) setHowItWent(service.id);
   };
 
   useEffect(() => () => stopListening(true), []);
@@ -962,8 +1069,21 @@ export const LiveWorkspace = () => {
 
   // ---- Keyboard ---------------------------------------------------------------
 
-  const keys = useRef({ sendPreview, step, preview, clearText });
-  keys.current = { sendPreview, step, preview, clearText };
+  const togglePause = () =>
+    setSpiritPaused((p) => {
+      toast(p ? 'spirit carries on' : 'spirit is paused', { description: p ? 'It gets things ready again, as far as you trust it.' : 'Nothing moves by itself until you resume. Verses said outright still go up.' });
+      if (!p) {
+        window.clearTimeout(handsFreeTimer.current);
+        const pending = spiritPending.current;
+        if (pending) {
+          window.clearTimeout(pending.timer);
+          spiritPending.current = null;
+        }
+      }
+      return !p;
+    });
+  const keys = useRef({ sendPreview, step, preview, clearText, togglePause });
+  keys.current = { sendPreview, step, preview, clearText, togglePause };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -986,7 +1106,8 @@ export const LiveWorkspace = () => {
       if (e.key === ' ' || e.key === 'Enter') {
         if (keys.current.preview) keys.current.sendPreview();
         else keys.current.step(1);
-      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') keys.current.step(1);
+      } else if ((e.key === 'p' || e.key === 'P') && !e.metaKey && !e.ctrlKey && !e.altKey && loadSpirit().level !== 'off') keys.current.togglePause();
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') keys.current.step(1);
       else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') keys.current.step(-1);
       else return;
       e.preventDefault();
@@ -1007,6 +1128,11 @@ export const LiveWorkspace = () => {
 
   // The service on the timeline: the one chosen, or today's (the one under way when there are several)
   const service = useMemo(() => pickService(services, chosenService), [services, chosenService]);
+  typeRef.current = service ? serviceType(service) : undefined;
+  // Another type of service: its own cues
+  useEffect(() => {
+    controller.current?.setCues(cuesForListening(loadSpirit(), typeRef.current));
+  }, [typeRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
   const todays = useMemo(() => todaysServices(services), [services]);
 
   // Today's plan makes its verses likelier suggestions
@@ -1235,6 +1361,44 @@ export const LiveWorkspace = () => {
   // The service part whose slides are in the middle (none for a song from the library or a chapter)
   const loadedPart = collection?.kind === 'slides' && collection.slides[0] ? partOf(collection.slides[0].id)?.item : undefined;
 
+  // ---- What spirit will do next (1.18.0) ------------------------------------------------------------
+
+  const spiritState = useSpiritState();
+  const levelWord = (m: 'off' | 'learning' | 'next' | 'handsfree') => (m === 'handsfree' ? 'Hands-free' : m === 'learning' ? 'Learning' : 'Ready in Next');
+  const spiritExpect: SpiritExpectation[] = (() => {
+    if (!service || spiritState.level === 'off') return [];
+    const out: SpiritExpectation[] = [];
+    const flat = service.sections.flatMap((sec) => sec.subsections.map((item) => ({ item, name: item.name, section: sec.name })));
+    const at = flat.findIndex((p) => p.item.id === (livePart?.id ?? currentItemId));
+    const after = flat.slice(at + 1).find((p) => p.item.slides.length);
+    const liveSlide = live && 'slide' in live ? live.slide : null;
+    // A countdown running for the part on screen
+    if (partCountdown.current && after && partCountdown.current.itemId === livePart?.id && moveMode('countdown-end') !== 'off')
+      out.push({ what: after.name, when: 'when the countdown ends', level: levelWord(moveMode('countdown-end')) });
+    // A song on screen with a song after it
+    if (liveSlide?.type === 'lyrics' && after && after.item.slides.every((sl) => sl.type === 'lyrics') && moveMode('next-song') !== 'off')
+      out.push({ what: after.name, when: 'when this song reaches its last slide', level: levelWord(moveMode('next-song')) });
+    // Cues that would get the next part (or the one after) ready
+    if (features.momentAutopilot) {
+      for (const target of flat.slice(at + 1, at + 3)) {
+        if (out.length >= 3) break;
+        const cues = spiritState.cues.filter((c) => !c.off && (!c.types?.length || c.types.includes(serviceType(service))));
+        const own = cues.filter((c) => c.part && c.part.toLowerCase() === target.name.toLowerCase());
+        const kinds = (Object.keys(BUILTIN_MOMENT_PHRASES) as MomentKind[]).filter((k) => partForMoment(k, flat, at) === flat.indexOf(target));
+        const said = [...own, ...cues.filter((c) => c.moment && kinds.includes(c.moment))].slice(0, 2);
+        if (said.length) out.push({ what: target.name, when: `when the preacher says ${said.map((c) => `“${c.phrase}”`).join(' or ')}`, level: levelWord(spiritMode(said[0].id)) });
+      }
+    }
+    if (features.sermonPoints && at >= 0 && /word|sermon|message|preach|teach/i.test(`${flat[at].section} ${flat[at].name}`) && out.length < 3)
+      out.push({ what: 'A point slide', when: 'when the preacher says “point number…”', level: levelWord(spiritMode('builtin:point:number')) });
+    return out.slice(0, 3);
+  })();
+  const todayScore = (() => {
+    if (!service) return { right: 0, total: 0 };
+    const sum = serviceSummary(spiritState, service.id);
+    return sum.serviceId === service.id ? { right: sum.right, total: sum.right + sum.wrong + sum.manual } : { right: 0, total: 0 };
+  })();
+
   const describeLive = (item: Live): string => {
     if (!item) return 'Nothing on screen';
     if ('verse' in item) return `${item.verse.book} ${item.verse.chapter}:${item.verse.verse}`;
@@ -1369,7 +1533,8 @@ export const LiveWorkspace = () => {
       </header>
       {features.guardian && <Guardian listening={listening} muted={muted} lastSound={() => lastSound.current} onFix={fixBooth} />}
 
-      <nav className="relative px-6 pt-1 pb-4 flex items-center gap-3" aria-label="Order of service">
+      <div className="relative">
+      <nav className={`relative px-6 pt-1 ${service && spiritState.level !== 'off' ? 'pb-2' : 'pb-4'} flex items-center gap-3`} aria-label="Order of service">
         {todays.length > 1 && <ServicePicker services={todays} currentId={service?.id} onPick={switchService} />}
         <div className="min-w-0 flex-1">
           <ServiceTimeline
@@ -1384,6 +1549,22 @@ export const LiveWorkspace = () => {
         </div>
         {service && parts.length > 1 && <AutoAdvanceToggle on={autoAdvance} onChange={setAutoAdvance} />}
       </nav>
+      {service && spiritState.level !== 'off' && (
+        <div className="px-6 pb-3">
+          <SpiritStrip
+            paused={spiritPaused}
+            type={serviceType(service)}
+            expect={spiritExpect}
+            score={todayScore}
+            onPause={togglePause}
+            onOpen={() => {
+              setSettingsPane('spirit');
+              setShowSettings(true);
+            }}
+          />
+        </div>
+      )}
+      </div>
 
       <div className="relative min-h-0 grid grid-cols-[minmax(0,1fr)_clamp(380px,33vw,720px)] min-[1900px]:grid-cols-[300px_minmax(0,1fr)_clamp(560px,34vw,900px)] max-[1000px]:grid-cols-1">
         <aside className="hidden min-[1900px]:block min-h-0 pl-6 pb-5" aria-label="Library">{library}</aside>
@@ -1533,6 +1714,17 @@ export const LiveWorkspace = () => {
             service={service}
             serviceIsToday={!!service && todays.some((s) => s.id === service.id)}
           />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!howItWent} onOpenChange={(o) => !o && setHowItWent(null)}>
+        <DialogContent className="vvs max-w-[760px] max-h-[calc(100dvh-56px)] overflow-y-auto p-7 gap-0 border-0 sm:rounded-[18px]" style={{ background: 'var(--s-win)' }} data-how-it-went>
+          <DialogTitle className="text-[22px] font-bold tracking-[-0.02em] mb-4">How {service?.name.replace(/^Sample: /, '') ?? 'the service'} went</DialogTitle>
+          {howItWent && <SpiritSummary summary={serviceSummary(spiritState, howItWent)} spirit={spiritState} title="spirit in this service" />}
+          <div className="flex justify-end mt-5">
+            <button type="button" className="st-btn primary" onClick={() => setHowItWent(null)}>
+              Done
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
       <ApiKeyDialog

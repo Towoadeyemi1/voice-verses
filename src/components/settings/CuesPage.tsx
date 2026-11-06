@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Lock, RotateCcw, X, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { accuracy, canBeHandsFree, Cue, CueLevel, dismissNoticed, HANDS_FREE_AFTER, noticed, removeCue, setCueLevel, switchCue, teachCue, updateSpirit } from '@/lib/spirit';
+import { accuracy, canBeHandsFree, Cue, CueLevel, dismissNoticed, HANDS_FREE_AFTER, noticed, removeCue, setCueLevel, setCueTypes, switchCue, teachCue, updateSpirit } from '@/lib/spirit';
+import { knownTypes } from '@/lib/serviceTypes';
 import type { MomentKind } from '@/speech/momentCues';
 import { colorFor } from '@/components/live/ServiceTimeline';
 import { SpiritOrb } from '@/components/spirit/SpiritOrb';
@@ -32,6 +33,8 @@ export function CuesPage({ service }: { service?: Service | null }) {
   const parts = useMemo(() => [...new Set((service?.sections ?? []).flatMap((s) => s.subsections.map((i) => i.name)))], [service]);
   const [target, setTarget] = useState<string>(parts.find((p) => /offering|giving/i.test(p)) ? `part:${parts.find((p) => /offering|giving/i.test(p))}` : 'moment:prayer');
   const [picking, setPicking] = useState(false);
+  /** Which types of service the cue is for: every one, or one */
+  const [forType, setForType] = useState('all');
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const suggestions = noticed(spirit);
 
@@ -43,8 +46,14 @@ export function CuesPage({ service }: { service?: Service | null }) {
       toast.error('A cue needs at least two words', { description: 'One word is said too often to mean a moment.' });
       return;
     }
-    updateSpirit((s) => teachCue(s, words, targetOf(target)));
-    toast.success('spirit learned a new cue', { description: `When the preacher says “${words}”, ${targetName(target)} will be ready in Next.` });
+    updateSpirit((s) => {
+      const taught = teachCue(s, words, targetOf(target));
+      const cue = taught.cues[taught.cues.length - 1];
+      return forType === 'all' || !cue ? taught : setCueTypes(taught, cue.id, [forType]);
+    });
+    toast.success('spirit learned a new cue', {
+      description: `When the preacher says “${words}”${forType === 'all' ? '' : ` in a ${forType}`}, ${targetName(target)} will be ready in Next.`,
+    });
     setPhrase('');
   };
 
@@ -61,7 +70,7 @@ export function CuesPage({ service }: { service?: Service | null }) {
     const record = [...Array(10 - c.record.length).fill('none'), ...c.record];
     const earned = canBeHandsFree(c);
     const source = c.source === 'builtin' ? 'Built in' : c.source === 'noticed' ? 'Noticed by spirit' : 'Taught by you';
-    const detail = [source, c.note ? `corrected: “${c.note}”` : null, c.streak >= 2 ? `right ${c.streak} times in a row` : null].filter(Boolean).join(' · ');
+    const detail = [source, c.types?.length ? `only in ${c.types.join(', ')}` : null, c.note ? `corrected: “${c.note}”` : null, c.streak >= 2 ? `right ${c.streak} times in a row` : null].filter(Boolean).join(' · ');
     return (
       <div key={c.id} className={`sp-cue ${c.off ? 'off' : ''}`} data-cue={c.phrase}>
         <span className="p">
@@ -150,7 +159,24 @@ export function CuesPage({ service }: { service?: Service | null }) {
               </SelectGroup>
             </SelectContent>
           </Select>
-          <span>ready.</span>
+          <span>ready in</span>
+          <Select value={forType} onValueChange={setForType}>
+            <SelectTrigger className="st-select-trigger sp-slot w-auto" aria-label="For which services" data-cue-type>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="max-h-80">
+              <SelectItem value="all">every service</SelectItem>
+              <SelectGroup>
+                <SelectLabel>Only in</SelectLabel>
+                {knownTypes(service ? [service] : []).map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <span>.</span>
         </div>
         <div className="foot">
           {spirit.heard.length > 0 ? (

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Help from AI</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;family=Newsreader:ital,opsz,wght@1,6..72,400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#f0b44a}a:hover{color:#ffd28a}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; padding: 28px 40px; background: radial-gradient(60% 60% at 90% 0%, rgba(64,98,190,.35), transparent 70%), radial-gradient(50% 50% at 0% 100%, rgba(240,180,74,.18), transparent 70%), #0e0d10; color: #f4f1f6; font-family: Figtree, -apple-system, system-ui, sans-serif; font-size: 14px; display: flex">
+  <div style="flex: 1; min-width: 0; display: grid; grid-template-columns: 260px minmax(0, 1fr); background: #161518; border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,245,255,.07); box-shadow: 0 24px 64px rgba(0,0,0,.5)">
+
+    <aside style="background: #121114; padding: 18px 12px; display: flex; flex-direction: column; gap: 6px">
+      <b style="margin: 4px 10px 12px; font-size: 22px; font-weight: 700; letter-spacing: -.02em">Settings</b>
+      <span style="margin: 0 10px 4px; font-size: 13px; font-weight: 700; color: #b2abb7">spirit</span>
+      <a href="#" style="display: flex; align-items: center; gap: 11px; min-height: 40px; padding: 6px 10px; border-radius: 10px; color: #f4f1f6; text-decoration: none; font-weight: 500"><i style="width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #f0b44a, #f472b6)"></i>How spirit runs</a>
+      <a href="#" style="display: flex; align-items: center; gap: 11px; min-height: 40px; padding: 6px 10px; border-radius: 10px; color: #f4f1f6; text-decoration: none; font-weight: 500"><i style="width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #2dd4bf, #0d9488)"></i>Cues</a>
+      <a href="#" style="display: flex; align-items: center; gap: 11px; min-height: 40px; padding: 6px 10px; border-radius: 10px; color: #f4f1f6; text-decoration: none; font-weight: 500"><i style="width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #a78bfa, #7c3aed)"></i>What it does</a>
+      <a href="#" style="display: flex; align-items: center; gap: 11px; min-height: 40px; padding: 6px 10px; border-radius: 10px; background: rgba(240,180,74,.16); color: #f4f1f6; text-decoration: none; font-weight: 650"><i style="width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #60a5fa, #2563eb)"></i>Help from AI</a>
+    </aside>
+
+    <main style="padding: 22px 30px; display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow: hidden">
+      <div>
+        <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -.02em">Help from AI <span style="font-size: 13px; font-weight: 700; color: #b2abb7; background: rgba(255,245,255,.09); border-radius: 999px; padding: 2px 9px; vertical-align: 4px">Optional</span></h1>
+        <p style="margin: 3px 0 0; color: #b2abb7; max-width: 80ch">spirit works without it. With an AI, it understands what the preacher means, not only the phrases it knows, and learns more from each service.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+        <sc-for list="{{providers}}" as="p" hint-placeholder-count="4">
+          <button type="button" aria-pressed="{{p.on}}" style="{{p.style}}">
+            <b style="font-size: 14.5px">{{p.name}}</b>
+            <span style="font-size: 13px; color: #b2abb7; line-height: 1.35">{{p.desc}}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: #1f1d22">
+        <label for="key" style="font-weight: 600; white-space: nowrap">Claude key</label>
+        <input id="key" type="password" value="sk-ant-••••••••••••" readonly style="flex: 1; height: 36px; border: 0; border-radius: 9px; background: rgba(255,245,255,.06); color: #f4f1f6; padding: 0 12px; font: 500 14px Figtree, system-ui, sans-serif">
+        <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: #b2abb7; white-space: nowrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b2abb7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+          Connected · kept locked on this computer
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 18px; flex: 1; min-height: 0">
+        <section style="display: flex; flex-direction: column; gap: 8px">
+          <h2 style="margin: 0; font-size: 14px; font-weight: 700">What AI does for spirit</h2>
+          <div style="background: #1f1d22; border-radius: 14px; overflow: hidden">
+            <sc-for list="{{uses}}" as="u" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 64px; border-top: 1px solid rgba(255,245,255,.06)">
+                <div style="flex: 1; min-width: 0">
+                  <b style="display: block; font-size: 14.5px; font-weight: 650">{{u.title}} <span style="margin-left: 6px; font-size: 12px; font-weight: 700; color: #b2abb7; background: rgba(255,245,255,.09); border-radius: 999px; padding: 1px 8px">{{u.when}}</span></b>
+                  <span style="display: block; font-size: 13px; color: #b2abb7; margin-top: 2px">{{u.desc}}</span>
+                </div>
+                <button type="button" role="switch" aria-checked="{{u.on}}" aria-label="{{u.title}}" style="{{u.sw}}"><i style="{{u.knob}}"></i></button>
+              </div>
+            </sc-for>
+          </div>
+          <h2 style="margin: 8px 0 0; font-size: 14px; font-weight: 700">What never changes</h2>
+          <div style="background: #1f1d22; border-radius: 14px; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: #b2abb7">
+            <span><b style="color: #f4f1f6">Scripture keeps its rule.</b> AI never puts a verse on the screens: only a verse said outright, or 99% sure.</span>
+            <span><b style="color: #f4f1f6">AI’s ideas climb the same ladder.</b> First in Next for your Take; Hands-free only after 10 right in a row, and only when you choose.</span>
+            <span><b style="color: #f4f1f6">The internet can drop.</b> spirit carries on with what it already knows; AI catches up after the service.</span>
+          </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 12px">
+          <div style="background: #1f1d22; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+            <b style="font-size: 14px">For example</b>
+            <q style="font: italic 400 19px/1.35 Newsreader, Georgia, serif; color: #f4f1f6">Let’s get our hearts ready to give back to the Lord this morning.</q>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13.5px">
+              <div style="display: flex; gap: 10px; align-items: baseline"><span style="width: 92px; flex: none; color: #b2abb7">Without AI</span><span>No cue matches these words. Nothing happens.</span></div>
+              <div style="display: flex; gap: 10px; align-items: baseline"><span style="width: 92px; flex: none; color: #b2abb7">With AI</span><span><b>The Offering</b>, 94% sure. It waits in Next, and becomes a suggested cue for next time.</span></div>
+            </div>
+          </div>
+          <div style="background: #1f1d22; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: #b2abb7">
+            <b style="font-size: 14px; color: #f4f1f6">What is sent to the AI</b>
+            <span>The words spirit heard, written down. The order of service and song titles. Never the sound itself.</span>
+            <span>Choose <b style="color: #f4f1f6">On this computer</b> to keep everything in the booth.</span>
+            <span>Your provider charges your key for what it uses. spirit asks only when it is unsure, and once after the service.</span>
+          </div>
+          <button type="button" style="height: 40px; border: 0; border-radius: 12px; background: rgba(240,180,74,.16); color: #f0b44a; font: 600 14px Figtree, system-ui, sans-serif">Try it with last Sunday’s words</button>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var card = 'display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 12px 14px; min-height: 76px; border: 0; border-radius: 14px; color: #f4f1f6; font-family: Figtree, system-ui, sans-serif; ';
+    var providers = [
+      { name: 'Claude', desc: 'Best at understanding sermons. Your own key.', on: 'true', style: card + 'background: #26232a; box-shadow: 0 0 0 2px #f0b44a' },
+      { name: 'OpenAI', desc: 'Your own key.', on: 'false', style: card + 'background: #1f1d22' },
+      { name: 'On this computer', desc: 'Ollama. Free, nothing leaves the booth; needs a newer computer.', on: 'false', style: card + 'background: #1f1d22' },
+      { name: 'Another server', desc: 'Any OpenAI-compatible server your church runs.', on: 'false', style: card + 'background: #1f1d22' }
+    ];
+    var sw = function (on) { return 'position: relative; width: 46px; height: 28px; flex: none; border: 0; border-radius: 999px; padding: 0; background: ' + (on ? '#f0b44a' : 'rgba(255,245,255,.12)'); };
+    var knob = function (on) { return 'position: absolute; top: 3px; left: ' + (on ? '21px' : '3px') + '; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3)'; };
+    var mk = function (title, when, desc, on) { return { title: title, when: when, desc: desc, on: on ? 'true' : 'false', sw: sw(on), knob: knob(on) }; };
+    var uses = [
+      mk('Understand what the preacher means', 'During the service', 'When no cue matches but a sentence sounds like a moment, spirit asks. Only finished sentences.', true),
+      mk('Learn after each service', 'After the service', 'Reads the service’s words and your moves; suggests cues and habits for your yes.', true),
+      mk('Prepare before Sunday', 'Before the service', 'Reads the plan, the songs and the sermon notes; expects the points and verses in order.', true),
+      mk('Say why spirit got it wrong', 'After a correction', 'One plain sentence on each correction, in How Sunday went.', false)
+    ];
+    return { providers: providers, uses: uses };
+  }
+}
+</script>
+</body>
+</html>

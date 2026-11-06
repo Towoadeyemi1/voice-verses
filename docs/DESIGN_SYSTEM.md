@@ -135,6 +135,9 @@ Approved mock-up: [`design/spirit.html`](design/spirit.html). Parts: `components
 - A cue's record is 10 small dots: filled right, amber-striped corrected, empty not yet. The last service is one bar of the service from start to end, with a legend in words.
 - Corrections are one tap, in the volunteer's words: Wrong part, Not now, Never for these words.
 
+- "What spirit will do next" (1.18.0) is one quiet row under the order of service: the orb pill with the type of service, up to three soft chips ("Welcome · when the countdown ends · Ready in Next"; Hands-free in the gold), and Pause on the right. Paused, it says so in words. It never uses red or green.
+- How it went is a dialog, not a page: a ring with spirit's moves of all, one sentence, the run bar with its legend, corrections with Just this once, and the gold Make it Hands-free.
+
 ## Building it into the app
 
 - Put the tokens in `src/index.css` as CSS variables, keeping shadcn's names mapped: `--background` = `--win`, `--card` = `--surface`, `--primary` = `--accent`. Dark should be the default, with a light option.

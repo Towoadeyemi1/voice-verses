@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AppShell, Section } from '@/components/shell/AppShell';
 import { colorFor } from '@/components/live/ServiceTimeline';
+import { knownTypes, serviceType } from '@/lib/serviceTypes';
 import { ScaledStage } from '@/components/ScaledStage';
 import { OutputContent } from '@/components/OutputContent';
 import { SettingsPanel } from '@/components/SettingsPanel';
@@ -868,6 +869,23 @@ const ServiceBuilder = () => {
                     onChange={(e) => setService({ ...service, date: new Date(e.target.value) })}
                   />
                   <Input type="time" aria-label="Start time" value={service.startTime} onChange={(e) => setService({ ...service, startTime: e.target.value })} className="w-32" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="service-type" className="text-[13px] text-muted-foreground">Type of service</Label>
+                  <Input
+                    id="service-type"
+                    list="service-types"
+                    value={service.type ?? ''}
+                    placeholder={serviceType(service)}
+                    onChange={(e) => setService({ ...service, type: e.target.value || undefined })}
+                    data-service-type
+                  />
+                  <datalist id="service-types">
+                    {knownTypes().map((t) => (
+                      <option key={t} value={t} />
+                    ))}
+                  </datalist>
+                  <p className="m-0 text-[13px] text-muted-foreground">spirit learns each type’s order and habits on its own. Pick one, or type your church’s own name for it.</p>
                 </div>
               </div>
             </Section>

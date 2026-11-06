@@ -99,9 +99,12 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 - ✅ 1.15.0 NDI output: each output as an NDI source, the lower third see-through, through the free NDI Runtime (D28).
 - ✅ 1.16.0 Moment autopilot and sermon points on cue, off by default: into Next, never on screen by itself. Still to come: per-moment looks (a calm look for prayer) and editing the phrases.
 - ✅ 1.17.0 spirit (D29, owner approved `design/spirit.html`): Settings → spirit and Cues, cues the church teaches or spirit notices by watching, a trust ladder per cue (Learning, Ready in Next, Hands-free after 10 right in a row), "Not this" with why, learning shared through the library folder.
-- ⏳ 1.18.0 spirit: Hands-free polish and a summary after the service ("spirit ran 14 of 18 moves").
-- ⏳ 1.19.0 spirit runs the order of service: moving on when a part's time is up, and to the part after a song ends, on the same trust ladder.
-- ⏳ 1.20.0 A local control API on the network server (show a verse, clear, next, logo, countdown, status) for a Stream Deck, a phone or another app (D27).
+- ✅ 1.18.0 spirit for the whole service: types of service (D30), every move on its own ladder (the countdown into the next part and the next song now), "What spirit will do next" with Pause, How it went with Just this once.
+- ⏳ 1.19.0 spirit runs the order of service: getting the service ready, moving on when a part's time is up (with each type's learned timings), the next song going live when the singing ends, clearing after a reading, the logo between parts, the end of the service.
+- ⏳ 1.20.0 Help from AI for spirit (optional): Claude, OpenAI, and models on the church's own computers (Ollama, LM Studio, llama.cpp, any OpenAI-compatible server). It understands meaning when no cue matches, learns after each service, and prepares before Sunday. Never puts a verse up.
+- ⏳ 1.21.0 The church's app feeds each service (`docs/integrations/church-app-feed.md`): songs, announcements and media pulled on a schedule; spirit drafts the order for the service's type; the team approves or adjusts before the service; spirit learns each adjustment and why.
+- ⏳ Training: lessons on the real screens, in a practice room, by role (once the live screen settles).
+- ⏳ A local control API on the network server (show a verse, clear, next, logo, countdown, status) for a Stream Deck, a phone or another app (D27).
 
 **Phase 1: make it beautiful and smooth (1.5.x)**
 - ✅ 1.5.0 Built-in motion and still backgrounds, generated in the app so they work offline with no copyright issues: soft gradients, light rays, bokeh, aurora and paper textures in the colour team's colours.
