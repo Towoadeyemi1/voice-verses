@@ -771,7 +771,7 @@ const check = (label: string, got: string | null, want: string | null) => {
     ] as const) check(`types: "${name}" is a ${want}`, serviceType({ name, date: new Date(`${day}T10:00:00`) }), want);
     check('types: "Children\'s Sunday School" is its own type', serviceType({ name: "Children's Sunday School", date: new Date('2026-11-08T09:00:00') }), "Children's Sunday school");
 
-    // 1.18.1: a ready-made order for every type, and templates
+    // 1.18.3: a ready-made order for every type, and templates
     check('templates: every type of service has a ready-made order', SERVICE_TYPES.filter((t) => !readyOrderFor(t)).join(', ') || 'all', 'all');
     const fnp = templateForType('Friday Night Prayers', 'Friday Night Prayers (vigil)');
     check('templates: from the ready-made order for its type', `${fnp.isTemplate} ${fnp.type} ${fnp.templateName} ${fnp.sections.flatMap((x) => x.subsections).some((i) => i.name === 'Prayer points')}`, 'true Friday Night Prayers Friday Night Prayers (vigil) true');

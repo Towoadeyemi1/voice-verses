@@ -166,7 +166,7 @@ const ServicePlanner = () => {
     }
   };
 
-  // ---- Service templates (1.18.1) ----------------------------------------------------
+  // ---- Service templates (1.18.3) ----------------------------------------------------
 
   const [templateDialog, setTemplateDialog] = useState<{ open: boolean; type?: string }>({ open: false });
   const openNewTemplate = (type?: string) => setTemplateDialog({ open: true, type });

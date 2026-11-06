@@ -1,5 +1,5 @@
 /**
- * Service templates (1.18.1): a starting order for a type of service. A church
+ * Service templates (1.18.3): a starting order for a type of service. A church
  * can keep several per type, made from scratch, from the app's ready-made order
  * for that type, or from a service or template it already has. A new service
  * made from one gets everything in it with new ids, on the day chosen.

@@ -1,8 +1,12 @@
-/** spirit's mark: a soft living light (still when motion is reduced). */
-export const SpiritOrb = ({ size = 26, className = '' }: { size?: number; className?: string }) => (
+/**
+ * spirit's mark: a soft living light (still when motion is reduced). `still` on
+ * the live screen: a light that never stops moving makes the computer draw the
+ * window 60 times a second all service long (1.18.2).
+ */
+export const SpiritOrb = ({ size = 26, className = '', still = false }: { size?: number; className?: string; still?: boolean }) => (
   <span
     aria-hidden="true"
-    className={`vv-spirit-orb inline-block rounded-full flex-none ${className}`}
+    className={`${still ? '' : 'vv-spirit-orb '}inline-block rounded-full flex-none ${className}`}
     style={{
       width: size,
       height: size,

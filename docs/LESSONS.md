@@ -132,6 +132,14 @@ Check this list before debugging. Add every new mistake that cost time.
 - **A service named "Sunday Celebration" was guessed as a Midweek service** because the sample is dated today (a Thursday in the test). The name decides before the day.
 - **spirit's next song replaced the slides in the middle** while the last slide was still being sung, which would have broken following the singers. What spirit gets ready now waits in Next only; its part comes into the middle when it is taken (`goLive`).
 
+## Listening got slower (1.18.0 → 1.18.2)
+
+- **The owner: "the detection of what the speaker is saying is now very bad".** The words were the same; the live results were not. Measure before guessing: the same recording through the old and new builds (`tools/e2e/listening-load.cjs`; for an old build, `git worktree add` it and symlink `node_modules`).
+- **Anything that keeps the live screen's thread busy holds back the sound.** The microphone's samples pass through the window on their way to the speech engine. If they arrive late, the engine skips live (partial) results (`MAX_LAG`), so words and verses come late.
+- **Never redraw the live screen per audio frame.** The meter was set 125 times a second, and each redraw did spirit's work. Throttle the meter (about 15 a second), and work out anything derived with `useMemo` from state already loaded.
+- **Never read or write a large saved state in a hot path.** `loadSpirit()` parses everything spirit learned; calling it inside a render, or saving after every sentence, costs milliseconds each time. Use what is loaded (`cueModeIn`, `moveModeIn`) and batch writes (`hearSoon`, `flushHeard` every 20 s).
+- **A CSS animation that never stops keeps the window drawing 60 times a second.** Keep marks still on the live screen (`SpiritOrb still`).
+- **The web build overwrites the desktop build in `dist/`.** Build the desktop renderer last before running e2e, or the app will not load and the tests hang.
 - **A service made from a saved order shared its parts' and slides' ids with the order** (the old "Your saved orders" copied the template as it was). Two services with the same slide ids get mixed up on screen and in spirit's records. Templates and the services made from them now always get new ids.
 
 ## Hardware

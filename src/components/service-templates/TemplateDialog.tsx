@@ -26,7 +26,7 @@ const Bar = ({ service }: { service: Service | null }) => {
 };
 
 /**
- * A new service template (1.18.1): a type of service, a name, and what it
+ * A new service template (1.18.3): a type of service, a name, and what it
  * starts from (the app's ready-made order for that type, a service or template
  * the church has, or nothing). With `source`, it is "Save as a template" for
  * that service, and only asks for the name and type.

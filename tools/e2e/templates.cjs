@@ -1,4 +1,4 @@
-// Service templates (1.18.1) in Plan services:
+// Service templates (1.18.3) in Plan services:
 //  - a ready-made order for every type of service, Children's Sunday school included;
 //  - "Make it a template" from the ready-made Friday Night Prayers opens it as a template in the editor;
 //  - "Use for <day>" plans a service of that type from it;

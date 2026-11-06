@@ -40,7 +40,7 @@ export const SpiritStrip = ({
       style={{ background: paused ? 'hsl(var(--muted))' : 'linear-gradient(135deg, rgba(240,180,74,.18), rgba(244,114,182,.14))', boxShadow: paused ? undefined : 'inset 0 0 0 1px rgba(240,180,74,.35)' }}
       title="How spirit runs: what it does, and how far it is trusted"
     >
-      <SpiritOrb size={18} />
+      <SpiritOrb size={18} still />
       {paused ? 'spirit is paused' : `spirit · ${type}`}
     </button>
     <div className="min-w-0 flex-1 flex items-center gap-2 overflow-hidden">

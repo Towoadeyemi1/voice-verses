@@ -327,12 +327,28 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ⏳ 1.21.0 **The church's app feeds each service**: Voice Verses checks the church app on a schedule (and on demand) for each upcoming service's songs (choir), announcements (announcement team), and pictures and media (creative team). spirit drafts the order of service from them for that service's type; the operator approves or adjusts before the service; spirit notes each adjustment and the reason, and applies it next time when the reason holds (e.g. "announcements go after the offering on Communion Sundays"). Works offline from the last copy.
 - ✅ The feed the church's developers build: `docs/integrations/church-app-feed.md` (written now so they can start).
 
+## "The voice detection is very bad!!! The detection of what the speaker is saying is now very bad, other version was way better, what have you done."
+
+(6 Nov 2026.)
+- 💬 Measured with the same spoken sermon on 1.15.0 and 1.18.0, with a service loaded and a week of what spirit learned: the words heard were the same, but 1.18.0 gave 28% fewer live results while words were spoken (31 against 43), the window worked 60% harder (11.6% against 7.1%) and was busy almost twice as often. On a busy booth computer (Logic running too) that holds back the sound on its way to the speech engine, which then skips its live results: words show late and verses go up late.
+- The causes:
+  - The live screen redrew on every sliver of sound (125 times a second).
+  - Each redraw read all of spirit's saved learning several times.
+  - spirit saved everything after every sentence.
+  - spirit's orb kept the window drawing 60 times a second.
+- ✅ 1.18.2 Fixed:
+  - The meter updates 15 times a second.
+  - spirit's strip is worked out only when something changes, from what is already loaded.
+  - Sentences heard are saved together every 20 s.
+  - The orb is still on the live screen.
+  
+  Measured again: 44 live results, the window at 4.2% (less than 1.15.0), graphics back to 1.15.0's. `tools/e2e/listening-load.cjs` now checks this for every change.
 ## "Users should be able to create service templates for more service types, and even use existing service types to create templates. There is also a children Sunday school type."
 
 (5 Nov 2026.)
-- ✅ 1.18.1 **Children's Sunday school** is a type of service (and "Sunday school" in a name means it).
-- ✅ 1.18.1 A **ready-made order for every type of service** (18): Sunday service, Communion Sunday, Thanksgiving Sunday, Midweek service, Bible study, Friday Night Prayers, Prayer and Fasting, Youth Day, Children's Sunday school, Children's service, Special event, Conference, Christmas, New Year (Crossover), Easter, Wedding, Funeral, Dedication.
-- ✅ 1.18.1 **Service templates** in Plan services: New template (any type, the app's or the church's own; start from the ready-made order for that type, from a service or template the church has, with or without its slides, or from nothing), "Make it a template" on any ready-made order, "Use for <day>", Edit, Delete (with Undo). "Save as a template" in the editor asks for the name and type. A template opens in the editor as a template (no date).
+- ✅ 1.18.3 **Children's Sunday school** is a type of service (and "Sunday school" in a name means it).
+- ✅ 1.18.3 A **ready-made order for every type of service** (18): Sunday service, Communion Sunday, Thanksgiving Sunday, Midweek service, Bible study, Friday Night Prayers, Prayer and Fasting, Youth Day, Children's Sunday school, Children's service, Special event, Conference, Christmas, New Year (Crossover), Easter, Wedding, Funeral, Dedication.
+- ✅ 1.18.3 **Service templates** in Plan services: New template (any type, the app's or the church's own; start from the ready-made order for that type, from a service or template the church has, with or without its slides, or from nothing), "Make it a template" on any ready-made order, "Use for <day>", Edit, Delete (with Undo). "Save as a template" in the editor asks for the name and type. A template opens in the editor as a template (no date).
 
 ## Process
 
