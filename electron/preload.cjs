@@ -49,6 +49,7 @@ contextBridge.exposeInMainWorld('voiceVerses', {
     find: () => invoke('propresenter:find'),
     search: (options) => invoke('propresenter:search', options),
     setUp: (connection) => invoke('propresenter:set-up', connection),
+    diagnose: (connection) => invoke('propresenter:diagnose', connection),
   },
   screens: {
     displays: () => invoke('screens:displays'),

@@ -3,10 +3,10 @@ import { AlertCircle, Check, Laptop, Monitor, Radio, RefreshCw } from 'lucide-re
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { desktop, ProPresenterConnection, ProPresenterStatus, ProPresenterThemeSlide } from '@/lib/desktop';
-import { connectionOf, loadProPresenterSettings, ProPresenterSettings as Settings, saveProPresenterSettings } from '@/lib/proPresenter';
+import { connectionOf, loadProPresenterSettings, NOT_SHOWING, ProPresenterSettings as Settings, saveProPresenterSettings } from '@/lib/proPresenter';
 import { DOWNLOAD_PAGE_URL } from '@/lib/releases';
 import { loadAppMode, saveAppMode } from '@/lib/appMode';
-import { List, Note, Row, Section, Toggle } from './settings/kit';
+import { List, Mark, Note, Row, Section, Toggle } from './settings/kit';
 
 const TEST_VERSE = {
   reference: 'John 3:16',
@@ -28,6 +28,8 @@ export function ProPresenterSettings() {
   const [status, setStatus] = useState<ProPresenterStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  /** What ProPresenter says about the message, its layers, screens and Look (after a test verse, or on asking) */
+  const [diagnosis, setDiagnosis] = useState<{ state: 'ok' | 'warn' | 'problem'; title: string; detail: string }[] | null>(null);
   const [found, setFound] = useState<Found[] | null>(null);
   const [searchedAt, setSearchedAt] = useState<Date | null>(null);
   const [themes, setThemes] = useState<ProPresenterThemeSlide[]>([]);
@@ -106,8 +108,14 @@ export function ProPresenterSettings() {
 
   const sendTest = () =>
     run('test', async () => {
-      await desktop!.proPresenter.show(connectionOf(settings), { ...TEST_VERSE, stage: settings.stage });
-      toast.success('Sent John 3:16 to ProPresenter', { description: 'Look at ProPresenter’s output. Its Look needs the Messages layer on.' });
+      const result = await desktop!.proPresenter.show(connectionOf(settings), { ...TEST_VERSE, stage: settings.stage });
+      if (desktop!.proPresenter.diagnose) setDiagnosis((await desktop!.proPresenter.diagnose(connectionOf(settings))).checks);
+      if (result && result.messagesOn === false) toast.warning('ProPresenter took John 3:16 but isn’t showing it', { description: NOT_SHOWING, duration: 12000 });
+      else toast.success('Sent John 3:16 to ProPresenter', { description: 'ProPresenter is showing it on its Messages layer. If its screens still show nothing, its current Look has the Messages layer off for them.' });
+    });
+  const askWhy = () =>
+    run('why', async () => {
+      if (desktop!.proPresenter.diagnose) setDiagnosis((await desktop!.proPresenter.diagnose(connectionOf(settings))).checks);
     });
   const clearTest = () => run('clear', () => desktop!.proPresenter.clear(connectionOf(settings), { stage: settings.stage }));
   const createMessage = () =>
@@ -285,6 +293,16 @@ export function ProPresenterSettings() {
         <Note>ProPresenter didn’t say which tokens the message has. Send a test verse: if it shows on ProPresenter’s output, it’s set up.</Note>
       )}
 
+      {diagnosis && (
+        <Section title="What ProPresenter says" aside="Asked just now" data-pp-diagnosis>
+          <List>
+            {diagnosis.map((c, i) => (
+              <Row key={i} lead={<Mark state={c.state} />} title={c.title} desc={c.detail} />
+            ))}
+          </List>
+        </Section>
+      )}
+
       <Section title="What ProPresenter shows">
         <List plain>
           <Row title="Its look" desc="Change the theme, size and position in ProPresenter’s message called “Voice Verses”. The Look on ProPresenter’s screens needs the Messages layer on." />
@@ -298,6 +316,11 @@ export function ProPresenterSettings() {
             <button type="button" className="st-btn ghost" onClick={clearTest} disabled={!connected || !!busy}>
               Clear it
             </button>
+            {desktop.proPresenter.diagnose && (
+              <button type="button" className="st-btn ghost" onClick={askWhy} disabled={!connected || !!busy} data-pp-why>
+                Why isn’t it on the screens?
+              </button>
+            )}
           </Row>
           {loadAppMode() === 'screens' && (
             <Row title="Companion screen" desc="For a second operator who only sends verses to ProPresenter: listen, approve each verse, clear.">

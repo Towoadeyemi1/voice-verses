@@ -61,14 +61,25 @@ async function send(action: (settings: ProPresenterSettings) => Promise<void>): 
   }
 }
 
+// Say once when ProPresenter takes verses but shows nothing, until it shows one again
+let notShowing = false;
+
+/** What to tell the operator when ProPresenter took the verse but its Messages layer shows nothing. */
+export const NOT_SHOWING =
+  'ProPresenter took the verse but is not showing it. In ProPresenter, check that the “Voice Verses” message is the one showing (Messages), that no other message is on top of it, and that the current Look has the Messages layer on for the audience screens.';
+
 export function sendVerseToProPresenter(verse: BibleVerse): Promise<boolean> {
-  return send((settings) =>
-    desktop!.proPresenter.show(connectionOf(settings), {
+  return send(async (settings) => {
+    const result = await desktop!.proPresenter.show(connectionOf(settings), {
       reference: verseReference(verse),
       text: plainVerseText(verse.text),
       stage: settings.stage,
-    }),
-  );
+    });
+    if (result && result.messagesOn === false) {
+      if (!notShowing) toast.warning('ProPresenter isn’t showing the verse', { description: NOT_SHOWING, duration: 12000 });
+      notShowing = true;
+    } else if (result && result.messagesOn) notShowing = false;
+  });
 }
 
 export function clearProPresenter(): Promise<boolean> {

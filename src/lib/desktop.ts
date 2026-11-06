@@ -140,7 +140,8 @@ export interface DesktopBridge {
     themes(connection: ProPresenterConnection): Promise<ProPresenterThemeSlide[]>;
     /** Creates the "Voice Verses" message using the given theme slide */
     createMessage(connection: ProPresenterConnection, theme: ProPresenterThemeSlide['id']): Promise<ProPresenterStatus>;
-    show(connection: ProPresenterConnection, verse: { reference: string; text: string; stage: boolean }): Promise<void>;
+    /** Shows the verse; `messagesOn` false: ProPresenter took it but its Messages layer shows nothing (null: it can't say) */
+    show(connection: ProPresenterConnection, verse: { reference: string; text: string; stage: boolean }): Promise<{ messagesOn: boolean | null } | void>;
     clear(connection: ProPresenterConnection, options: { stage: boolean }): Promise<void>;
     /** ProPresenter running on this computer, found without typing a port (older desktop versions don't have it) */
     find?(): Promise<{ host: string; port: number; version: string; name: string } | null>;
@@ -148,6 +149,8 @@ export interface DesktopBridge {
     search?(options?: { ports?: number[] }): Promise<{ host: string; port: number; version: string; name: string; here: boolean }[]>;
     /** Makes sure the "Voice Verses" message exists (best-suited theme), and says what is ready */
     setUp?(connection: ProPresenterConnection): Promise<ProPresenterStatus & { theme: string | null }>;
+    /** What ProPresenter says about the Voice Verses message, its layers, screens and Look (older desktop versions don't have it) */
+    diagnose?(connection: ProPresenterConnection): Promise<{ checks: { state: 'ok' | 'warn' | 'problem'; title: string; detail: string }[] }>;
   };
   screens: {
     displays(): Promise<DisplayInfo[]>;

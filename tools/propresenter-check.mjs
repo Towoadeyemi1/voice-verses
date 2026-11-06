@@ -49,8 +49,9 @@ const server = createServer(async (req, res) => {
   }
   if (req.method === 'GET' && req.url === '/v1/themes') return send(200, THEMES);
   if (messageMatch) {
-    const name = decodeURIComponent(messageMatch[1]);
-    if (!messages.some((m) => m.id.name === name)) return send(404);
+    // Voice Verses addresses its message by its uuid (1.18.4)
+    const id = decodeURIComponent(messageMatch[1]);
+    if (!messages.some((m) => m.id.uuid === id)) return send(404);
     return send(204);
   }
   if (req.url === '/v1/stage/message') {
@@ -92,15 +93,16 @@ try {
   assert.match(created.message, /\{Verse\}/);
   assert.match(created.message, /\{Reference\}/);
   assert.deepEqual(created.theme, { uuid: 'AAAA-1111', name: 'Lower Third', index: 0 });
+  // A new message is posted with only its name: an empty uuid with index 0 can be read as message 0
+  assert.deepEqual(created.id, { name: 'Voice Verses' });
   // A second "create" does not duplicate it
   await pp.createMessage(connection, slides[0].id);
   assert.equal(messages.length, 1);
 
   // Showing a verse fills the tokens; the stage message is optional
   await pp.showVerse(connection, { reference: 'Romans 8:28', text: 'And we know that all things work together for good', stage: false });
-  const trigger = requests.at(-1);
-  assert.equal(trigger.method, 'POST');
-  assert.equal(trigger.url, '/v1/message/Voice%20Verses/trigger');
+  const trigger = requests.findLast((r) => r.method === 'POST' && /\/trigger$/.test(r.url));
+  assert.equal(trigger.url, '/v1/message/MSG-1/trigger');
   assert.deepEqual(trigger.json, [
     { name: 'Verse', text: { text: 'And we know that all things work together for good' } },
     { name: 'Reference', text: { text: 'Romans 8:28' } },
@@ -111,7 +113,7 @@ try {
   assert.equal(stageMessage, 'John 11:35 — Jesus wept.');
 
   await pp.clear(connection, { stage: true });
-  assert.equal(requests.at(-2).url, '/v1/message/Voice%20Verses/clear');
+  assert.equal(requests.findLast((r) => /\/clear$/.test(r.url)).url, '/v1/message/MSG-1/clear');
   assert.equal(stageMessage, null);
 
   console.log('✅ ProPresenter client OK');
