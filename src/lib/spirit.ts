@@ -265,6 +265,14 @@ export function recordTiming(state: SpiritState, type: string, part: string, min
   return { ...state, timings: [...state.timings, { at: now(), type, part, minutes: Math.round(minutes * 10) / 10 }].slice(-500) };
 }
 
+/** How far a move goes now, the same way. Pure: no storage read. */
+export function moveModeIn(state: SpiritState, move: MoveKind, paused = false): 'off' | 'learning' | 'next' | 'handsfree' {
+  if (state.level === 'off' || paused) return 'off';
+  const t = moveTrust(state, move);
+  if (t.level === 'learning') return 'learning';
+  return t.level === 'handsfree' && state.level === 'handsfree' && moveCanBeHandsFree(state, move) ? 'handsfree' : 'next';
+}
+
 /** How long a part usually runs in this type of service (the middle of its last runs), if seen at least twice. */
 export function usualMinutes(state: SpiritState, type: string, part: string): number | null {
   const runs = state.timings.filter((t) => t.type === type && t.part.toLowerCase() === part.toLowerCase()).slice(-8).map((t) => t.minutes).sort((a, b) => a - b);
@@ -289,6 +297,34 @@ export const setCueTypes = (state: SpiritState, id: string, types: string[]): Sp
 
 /** Remembers a finished sentence (7 days, on this computer and the library folder). */
 export const hear = (state: SpiritState, text: string): SpiritState => ({ ...state, heard: [...state.heard, { at: now(), text }].slice(-3000) });
+
+/**
+ * Sentences heard but not yet saved (1.18.2). Saving spirit rewrites all it
+ * has learned, so while listening sentences are kept here and saved together
+ * (every 20 s, when the operator moves on, and when listening stops) instead
+ * of once per sentence, which slowed the live screen and with it the sound
+ * going to the speech engine.
+ */
+let unsaved: { at: string; text: string }[] = [];
+export const hearSoon = (text: string): void => {
+  unsaved.push({ at: now(), text });
+};
+/** Saves the sentences heard since the last save (nothing to do: nothing is written). */
+export function flushHeard(): void {
+  if (!unsaved.length) return;
+  const batch = unsaved;
+  unsaved = [];
+  updateSpirit((st) => ({ ...st, heard: [...st.heard, ...batch].slice(-3000) }));
+}
+
+/** How far a spoken cue goes now (Hands-free only when spirit and the cue both allow it). Pure: no storage read. */
+export function cueModeIn(state: SpiritState, cueId: string | undefined, paused = false): 'off' | 'learning' | 'next' | 'handsfree' {
+  if (state.level === 'off' || paused) return 'off';
+  const c = state.cues.find((x) => x.id === cueId);
+  if (!c) return 'next';
+  if (c.level === 'learning') return 'learning';
+  return c.level === 'handsfree' && state.level === 'handsfree' && canBeHandsFree(c) ? 'handsfree' : 'next';
+}
 
 /** The operator went to a part themselves: the last few sentences said (within 15 s) are kept to learn from. */
 export function observe(state: SpiritState, part: string, at = Date.now(), ctx: SpiritContext = {}): SpiritState {
