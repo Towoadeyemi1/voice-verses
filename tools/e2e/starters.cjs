@@ -27,7 +27,7 @@ const { launch, setBounds, check, done, OUT } = require('./lib.cjs');
   // Orders of service
   await win.evaluate(() => (location.hash = '#/service-planner')); await win.waitForTimeout(2000);
   await win.screenshot({ path: `${OUT}/starters-services.png`, fullPage: true });
-  await win.getByRole('button', { name: /^Sunday Service/ }).click(); await win.waitForTimeout(2000);
+  await win.locator('[data-ready-order="Sunday service"]').getByRole('button', { name: /^Use for/ }).click(); await win.waitForTimeout(2000);
   check('Sunday Service opened in the builder', win.url().includes('service-builder'), win.url());
   const parts = await win.evaluate(() => new Promise((res) => { const r = indexedDB.open('cornerstone-bible-db'); r.onsuccess = () => { const q = r.result.transaction('services').objectStore('services').getAll(); q.onsuccess = () => res(q.result.map((s) => `${s.name}:${s.sections.length}`)); }; }));
   check('service has its 10 parts', parts.some((p) => p === 'Sunday Service:10'), JSON.stringify(parts));

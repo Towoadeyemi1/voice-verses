@@ -61,6 +61,7 @@ import {
 import { AppShell, Section } from '@/components/shell/AppShell';
 import { colorFor } from '@/components/live/ServiceTimeline';
 import { knownTypes, serviceType } from '@/lib/serviceTypes';
+import { TemplateDialog } from '@/components/service-templates/TemplateDialog';
 import { ScaledStage } from '@/components/ScaledStage';
 import { OutputContent } from '@/components/OutputContent';
 import { SettingsPanel } from '@/components/SettingsPanel';
@@ -142,18 +143,15 @@ const ServiceBuilder = () => {
     navigate('/service-planner');
   };
 
-  const handleSaveAsTemplate = async () => {
-    if (!service) return;
-    const templateName = prompt('Enter template name:');
-    if (!templateName) return;
-    const template: Service = {
-      ...service,
-      id: `template-${Date.now()}`,
-      isTemplate: true,
-      templateName,
-    };
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const handleSaveAsTemplate = () => setSavingTemplate(true);
+  const saveTemplate = async (template: Service) => {
     await ServiceStorage.saveService(template);
-    toast.success('Template saved');
+    setSavingTemplate(false);
+    toast.success(`Template “${template.templateName}” saved`, {
+      description: `For ${template.type}. Use it in Plan services → Service templates.`,
+      action: { label: 'Open it', onClick: () => navigate(`/service-builder/${template.id}`) },
+    });
   };
 
   const handleAddSection = () => {
@@ -837,14 +835,16 @@ const ServiceBuilder = () => {
   return (
     <AppShell
       wide
-      title={service.name || 'Untitled service'}
-      subtitle={`${when} · starts ${service.startTime}`}
+      title={(service.isTemplate ? service.templateName || service.name : service.name) || 'Untitled service'}
+      subtitle={service.isTemplate ? `Template for ${serviceType(service)} · services made from it start with this order` : `${when} · starts ${service.startTime}`}
       actions={
         <>
-          <Button onClick={handleSaveAsTemplate} variant="ghost" className="hidden sm:flex" title="Keep this order of service to start other services from">
-            <Copy className="w-4 h-4" />
-            Save as an order
-          </Button>
+          {!service.isTemplate && (
+            <Button onClick={handleSaveAsTemplate} variant="ghost" className="hidden sm:flex" title="Keep this order of service as a template, to start other services of this type from" data-save-template>
+              <Copy className="w-4 h-4" />
+              Save as a template
+            </Button>
+          )}
           <Button variant="secondary" onClick={async () => { await handleSave(); navigate(`/presenter?service=${service.id}`); }}>
             <Monitor className="w-4 h-4" />
             Present
@@ -860,8 +860,13 @@ const ServiceBuilder = () => {
           <div className="space-y-6 lg:sticky lg:top-24">
             <Section title="Service">
               <div className="space-y-3">
-                <Input value={service.name} onChange={(e) => setService({ ...service, name: e.target.value })} placeholder="Service name" aria-label="Service name" />
-                <div className="grid grid-cols-[1fr_auto] gap-2">
+                <Input
+                  value={service.isTemplate ? service.templateName ?? service.name : service.name}
+                  onChange={(e) => setService(service.isTemplate ? { ...service, name: e.target.value, templateName: e.target.value } : { ...service, name: e.target.value })}
+                  placeholder={service.isTemplate ? 'Template name' : 'Service name'}
+                  aria-label={service.isTemplate ? 'Template name' : 'Service name'}
+                />
+                <div className={`grid grid-cols-[1fr_auto] gap-2 ${service.isTemplate ? 'hidden' : ''}`}>
                   <Input
                     type="date"
                     aria-label="Date"
@@ -1667,6 +1672,7 @@ const ServiceBuilder = () => {
           setShowScriptureDialog(false);
         }}
       />
+      <TemplateDialog open={savingTemplate} onOpenChange={setSavingTemplate} services={[service]} source={service} onCreate={(t) => void saveTemplate(t)} />
     </AppShell>
   );
 };

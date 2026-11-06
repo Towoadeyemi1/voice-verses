@@ -505,6 +505,8 @@ export interface StarterService {
   name: string;
   description: string;
   startTime: string;
+  /** The type of service it is the ready-made order for (lib/serviceTypes.ts) */
+  type: string;
   /** [section, [item, minutes][]][] */
   plan: [string, [string, number][]][];
 }
@@ -512,6 +514,7 @@ export interface StarterService {
 export const STARTER_SERVICES: StarterService[] = [
   {
     id: 'sunday',
+    type: 'Sunday service',
     name: 'Sunday Service',
     description: 'Worship, prayer, notices, offering, the sermon and a response. About 1 h 45.',
     startTime: '10:00',
@@ -530,6 +533,7 @@ export const STARTER_SERVICES: StarterService[] = [
   },
   {
     id: 'bible-study',
+    type: 'Bible study',
     name: 'Midweek Bible Study',
     description: 'Teaching through a passage with discussion. About 1 h 15.',
     startTime: '19:00',
@@ -543,6 +547,7 @@ export const STARTER_SERVICES: StarterService[] = [
   },
   {
     id: 'prayer',
+    type: 'Midweek service',
     name: 'Prayer Meeting',
     description: 'Worship, a scripture, prayer points and testimonies. About an hour.',
     startTime: '19:00',
@@ -557,6 +562,7 @@ export const STARTER_SERVICES: StarterService[] = [
   },
   {
     id: 'communion',
+    type: 'Communion Sunday',
     name: 'Communion Service',
     description: 'A Sunday service with the Lord’s Supper after the sermon.',
     startTime: '10:00',
@@ -573,6 +579,7 @@ export const STARTER_SERVICES: StarterService[] = [
   },
   {
     id: 'youth',
+    type: 'Youth Day',
     name: 'Youth Service',
     description: 'Longer worship, a shorter talk and small groups.',
     startTime: '18:00',
@@ -587,6 +594,7 @@ export const STARTER_SERVICES: StarterService[] = [
   },
   {
     id: 'wedding',
+    type: 'Wedding',
     name: 'Wedding',
     description: 'Processional, readings, sermon, vows, rings, signing and recessional.',
     startTime: '13:00',
@@ -602,6 +610,7 @@ export const STARTER_SERVICES: StarterService[] = [
   },
   {
     id: 'thanksgiving',
+    type: 'Funeral',
     name: 'Thanksgiving Service (celebration of life)',
     description: 'Hymns, scripture, tributes, a sermon and the committal.',
     startTime: '11:00',
@@ -615,7 +624,180 @@ export const STARTER_SERVICES: StarterService[] = [
       ['Closing', [['Committal and benediction', 5]]],
     ],
   },
+  {
+    id: 'thanksgiving-sunday',
+    type: 'Thanksgiving Sunday',
+    name: 'Thanksgiving Sunday',
+    description: 'A Sunday service with testimonies and a thanksgiving offering. About 2 hours.',
+    startTime: '10:00',
+    plan: [
+      ['Before', [['Countdown', 5]]],
+      ['Welcome', [['Welcome', 4]]],
+      ['Worship', [['Praise', 15], ['Worship', 10]]],
+      ['Thanksgiving', [['Testimonies', 15], ['Thanksgiving offering and dance', 15]]],
+      ['Word', [['Sermon', 35]]],
+      ['Prayer', [['Prayer of thanksgiving', 5]]],
+      ['Closing', [['Notices', 4], ['Benediction', 3]]],
+    ],
+  },
+  {
+    id: 'friday-prayers',
+    type: 'Friday Night Prayers',
+    name: 'Friday Night Prayers',
+    description: 'Worship, a word, and long sessions of prayer points. About 2 hours.',
+    startTime: '21:00',
+    plan: [
+      ['Welcome', [['Welcome', 3]]],
+      ['Worship', [['Praise and worship', 20]]],
+      ['Word', [['Exhortation', 20]]],
+      ['Prayer', [['Prayer points', 45], ['Prayer for the sick', 15]]],
+      ['Response', [['Testimonies', 7]]],
+      ['Closing', [['Closing prayer and grace', 5]]],
+    ],
+  },
+  {
+    id: 'prayer-fasting',
+    type: 'Prayer and Fasting',
+    name: 'Prayer and Fasting',
+    description: 'Worship, the word for the fast, prayer points and breaking the fast. About 1 h 45.',
+    startTime: '17:00',
+    plan: [
+      ['Welcome', [['Welcome', 3]]],
+      ['Worship', [['Worship', 15]]],
+      ['Word', [['The word for the fast', 30]]],
+      ['Prayer', [['Prayer points', 40]]],
+      ['Closing', [['Prayer to break the fast', 7], ['Grace', 3]]],
+    ],
+  },
+  {
+    id: 'sunday-school',
+    type: "Children's Sunday school",
+    name: "Children's Sunday school",
+    description: 'Songs with actions, a Bible story, a memory verse, activity and prayer. About an hour.',
+    startTime: '10:00',
+    plan: [
+      ['Welcome', [['Welcome and register', 5]]],
+      ['Worship', [['Action songs', 10]]],
+      ['Word', [['Bible story', 15], ['Memory verse', 5]]],
+      ['Activity', [['Craft or game', 15]]],
+      ['Prayer', [['Prayer', 5]]],
+      ['Closing', [['Goodbye song', 5]]],
+    ],
+  },
+  {
+    id: 'childrens-service',
+    type: "Children's service",
+    name: "Children's Service",
+    description: 'A service led by the children: songs, a drama, a short message and prayer.',
+    startTime: '10:00',
+    plan: [
+      ['Before', [['Countdown', 5]]],
+      ['Welcome', [['Welcome', 4]]],
+      ['Worship', [['Children’s choir', 10], ['Songs', 8]]],
+      ['Drama', [['Drama or recitation', 10]]],
+      ['Word', [['Short message', 15]]],
+      ['Prayer', [['Prayer for the children', 5]]],
+      ['Closing', [['Closing song', 4], ['Benediction', 3]]],
+    ],
+  },
+  {
+    id: 'special-event',
+    type: 'Special event',
+    name: 'Special Event',
+    description: 'A revival night, crusade or concert: worship, a guest minister and ministry time.',
+    startTime: '18:00',
+    plan: [
+      ['Before', [['Countdown', 10]]],
+      ['Welcome', [['Welcome', 5]]],
+      ['Worship', [['Praise and worship', 25]]],
+      ['Word', [['Guest minister', 45]]],
+      ['Response', [['Ministry time', 20]]],
+      ['Closing', [['Offering', 5], ['Benediction', 3]]],
+    ],
+  },
+  {
+    id: 'conference',
+    type: 'Conference',
+    name: 'Conference Session',
+    description: 'One session of a conference: worship, a speaker and a response.',
+    startTime: '09:00',
+    plan: [
+      ['Before', [['Countdown and sponsors', 10]]],
+      ['Welcome', [['Host and notices', 5]]],
+      ['Worship', [['Worship', 20]]],
+      ['Word', [['Speaker', 50]]],
+      ['Response', [['Prayer and response', 10]]],
+      ['Closing', [['Next session', 3]]],
+    ],
+  },
+  {
+    id: 'christmas',
+    type: 'Christmas',
+    name: 'Christmas Service',
+    description: 'Carols, the Christmas readings, a short message and a blessing.',
+    startTime: '10:00',
+    plan: [
+      ['Before', [['Countdown', 5]]],
+      ['Welcome', [['Welcome', 4]]],
+      ['Worship', [['Carol 1', 5], ['Carol 2', 5]]],
+      ['Scripture reading', [['The Christmas readings', 15]]],
+      ['Worship', [['Carol 3', 5], ['Choir item', 6]]],
+      ['Word', [['Christmas message', 20]]],
+      ['Giving', [['Offering', 5]]],
+      ['Closing', [['Final carol', 5], ['Blessing', 3]]],
+    ],
+  },
+  {
+    id: 'new-year',
+    type: 'New Year',
+    name: 'Crossover Service',
+    description: 'Worship into the new year: testimonies, a word for the year, the countdown at midnight and prayer.',
+    startTime: '22:00',
+    plan: [
+      ['Welcome', [['Welcome', 5]]],
+      ['Worship', [['Praise and worship', 30]]],
+      ['Thanksgiving', [['Testimonies of the year', 20]]],
+      ['Word', [['A word for the new year', 30]]],
+      ['Crossover', [['Countdown to midnight', 5], ['Happy New Year: praise', 15]]],
+      ['Prayer', [['Prayer for the year', 15]]],
+      ['Closing', [['Benediction', 3]]],
+    ],
+  },
+  {
+    id: 'easter',
+    type: 'Easter',
+    name: 'Easter Sunday',
+    description: 'The resurrection: celebration worship, the Easter reading, a message and a response.',
+    startTime: '10:00',
+    plan: [
+      ['Before', [['Countdown', 5]]],
+      ['Welcome', [['He is risen: welcome', 4]]],
+      ['Worship', [['Celebration songs', 15]]],
+      ['Scripture reading', [['The Easter reading', 6]]],
+      ['Word', [['Easter message', 35]]],
+      ['Response', [['Response and prayer', 8]]],
+      ['Giving', [['Offering', 5]]],
+      ['Closing', [['Closing song', 5], ['Benediction', 3]]],
+    ],
+  },
+  {
+    id: 'dedication',
+    type: 'Dedication',
+    name: 'Child Dedication',
+    description: 'Within a Sunday service: the family comes forward, a reading, the dedication prayer and a blessing.',
+    startTime: '10:00',
+    plan: [
+      ['Welcome', [['Welcome', 4]]],
+      ['Worship', [['Songs', 12]]],
+      ['Dedication', [['The family comes forward', 3], ['Scripture', 3], ['Dedication prayer', 5], ['Blessing and presentation', 4]]],
+      ['Word', [['Sermon', 30]]],
+      ['Closing', [['Closing song', 5], ['Benediction', 3]]],
+    ],
+  },
 ];
+
+/** The ready-made order for a type of service, if the app has one. */
+export const readyOrderFor = (type: string): StarterService | undefined => STARTER_SERVICES.find((s) => s.type.toLowerCase() === type.trim().toLowerCase());
 
 /** A new service from a starter order, on the date given. Item lengths become their (switched-off) timers. */
 export function serviceFromStarter(s: StarterService, date: Date): Service {
@@ -631,7 +813,7 @@ export function serviceFromStarter(s: StarterService, date: Date): Service {
       countdown: { enabled: false, durationMinutes: minutes, displayTargets: ['confidence'], alertEnabled: false },
     })),
   }));
-  return { id: `${Date.now()}`, name: s.name, date, startTime: s.startTime, sections, isTemplate: false };
+  return { id: `${Date.now()}`, name: s.name, type: s.type, date, startTime: s.startTime, sections, isTemplate: false };
 }
 
 // ---- Stage (confidence) monitor layouts ------------------------------------------

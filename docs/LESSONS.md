@@ -140,6 +140,7 @@ Check this list before debugging. Add every new mistake that cost time.
 - **Never read or write a large saved state in a hot path.** `loadSpirit()` parses everything spirit learned; calling it inside a render, or saving after every sentence, costs milliseconds each time. Use what is loaded (`cueModeIn`, `moveModeIn`) and batch writes (`hearSoon`, `flushHeard` every 20 s).
 - **A CSS animation that never stops keeps the window drawing 60 times a second.** Keep marks still on the live screen (`SpiritOrb still`).
 - **The web build overwrites the desktop build in `dist/`.** Build the desktop renderer last before running e2e, or the app will not load and the tests hang.
+- **A service made from a saved order shared its parts' and slides' ids with the order** (the old "Your saved orders" copied the template as it was). Two services with the same slide ids get mixed up on screen and in spirit's records. Templates and the services made from them now always get new ids.
 
 ## Hardware
 

@@ -27,6 +27,7 @@ python tools/e2e/make-sermon-audio.py /path/to/en_US-lessac-medium.onnx /tmp/vv-
 xvfb-run -a node tools/e2e/spirit.cjs      # spirit: a taught cue gets its part ready in Next, Not this → Wrong part remembered, a Hands-free cue goes live after its countdown, a manual pick observed, spirit noticed → Make it a cue
 xvfb-run -a node tools/e2e/spirit-moves.cjs # spirit for the whole service: the strip, the countdown into Welcome, the next song and Not this, Pause, a Hands-free move, What spirit does, How it went and Just this once
 xvfb-run -a node tools/e2e/listening-load.cjs # listening stays light with a week of spirit's learning: few saves, live results keep coming, the window rarely busy; prints CPU to compare versions
+xvfb-run -a node tools/e2e/templates.cjs    # service templates: a ready-made order per type, Make it a template, Use for a day, a template for the church's own type from a service, Save as a template
 xvfb-run -a node tools/e2e/ndi.cjs         # NDI® out: a receiver gets the projector (full HD) and the lower third (see-through); needs VOICE_VERSES_NDI_LIB=/path/to/libndi (from NDI's SDK, never committed), else checks the runtime message
 xvfb-run -a node tools/e2e/features-booth.cjs # Settings: Features presets and switches, the booth check light, page and Fix buttons, a screen chosen in the room, ProPresenter searched for, a warning when a screen is unplugged
 node tools/e2e/mock-ollama.cjs &                                           # fake Ollama for AI slide tests

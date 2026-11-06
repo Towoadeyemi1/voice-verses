@@ -9,7 +9,7 @@ const tag = process.argv[2] || 'before';
   ]);
   await setBounds(app, 1600, 1000);
   await win.evaluate(() => (location.hash = '#/service-planner')); await win.waitForTimeout(1800);
-  await win.getByRole('button', { name: /^Sunday Service/ }).click(); await win.waitForTimeout(2500);
+  await win.locator('[data-ready-order="Sunday service"]').getByRole('button', { name: /^Use for/ }).click(); await win.waitForTimeout(2500);
   await win.screenshot({ path: `${OUT}/${tag}-builder.png` });
   const builder = win.url().split('#')[1];
   for (const [name, hash] of [['planner', '/service-planner'], ['media', '/media-library'], ['templates', '/templates'], ['screens', '/display-manager'], ['presenter', '/presenter'], ['install', '/install']]) {

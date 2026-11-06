@@ -343,6 +343,12 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
   - The orb is still on the live screen.
   
   Measured again: 44 live results, the window at 4.2% (less than 1.15.0), graphics back to 1.15.0's. `tools/e2e/listening-load.cjs` now checks this for every change.
+## "Users should be able to create service templates for more service types, and even use existing service types to create templates. There is also a children Sunday school type."
+
+(5 Nov 2026.)
+- ✅ 1.18.3 **Children's Sunday school** is a type of service (and "Sunday school" in a name means it).
+- ✅ 1.18.3 A **ready-made order for every type of service** (18): Sunday service, Communion Sunday, Thanksgiving Sunday, Midweek service, Bible study, Friday Night Prayers, Prayer and Fasting, Youth Day, Children's Sunday school, Children's service, Special event, Conference, Christmas, New Year (Crossover), Easter, Wedding, Funeral, Dedication.
+- ✅ 1.18.3 **Service templates** in Plan services: New template (any type, the app's or the church's own; start from the ready-made order for that type, from a service or template the church has, with or without its slides, or from nothing), "Make it a template" on any ready-made order, "Use for <day>", Edit, Delete (with Undo). "Save as a template" in the editor asks for the name and type. A template opens in the editor as a template (no date).
 
 ## Process
 
