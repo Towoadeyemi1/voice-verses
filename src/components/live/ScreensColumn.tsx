@@ -143,7 +143,7 @@ export const ScreensColumn = ({
           <Popover>
             <PopoverTrigger asChild>
               <button type="button" className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5 whitespace-nowrap flex-shrink-0" data-not-this title="spirit got this ready: tell it what was wrong">
-                <SpiritOrb size={14} /> Not this
+                <SpiritOrb size={14} still /> Not this
               </button>
             </PopoverTrigger>
             <PopoverContent align="end" className="vvs w-[340px] p-3.5 rounded-[14px] border-0 space-y-2.5" style={{ background: 'var(--s-raised)', boxShadow: 'var(--s-lift), 0 0 0 1px rgba(255,245,255,.07)' }}>

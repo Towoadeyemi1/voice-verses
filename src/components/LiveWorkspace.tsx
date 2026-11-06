@@ -14,7 +14,7 @@ import { buildSongSlides, ccliLicence } from '@/lib/songs';
 import { addLine, captureSlide, draftLyrics, draftTitle } from '@/lib/spontaneousSong';
 import { Moment, partByName, partForMoment, SermonPoint } from '@/speech/momentCues';
 import { startSpiritSync } from '@/lib/spiritSync';
-import { canBeHandsFree, Correction, cuesForListening, hear, loadSpirit, moveCanBeHandsFree, moveTrust, observe, Outcome, recordMove, recordOutcome, recordReady, recordTiming, serviceSummary, SPIRIT_CHANGED, updateSpirit, type MoveKind, type SpiritContext } from '@/lib/spirit';
+import { Correction, cueModeIn, cuesForListening, flushHeard, hearSoon, loadSpirit, moveModeIn, moveTrust, observe, Outcome, recordMove, recordOutcome, recordReady, recordTiming, serviceSummary, SPIRIT_CHANGED, updateSpirit, type MoveKind, type SpiritContext } from '@/lib/spirit';
 import { serviceType } from '@/lib/serviceTypes';
 import { BUILTIN_MOMENT_PHRASES, type MomentKind } from '@/speech/momentCues';
 import { SpiritStrip, type SpiritExpectation } from './live/SpiritStrip';
@@ -639,22 +639,9 @@ export const LiveWorkspace = () => {
   const spiritCtx = (what?: string): SpiritContext => ({ serviceId: service?.id, type: serviceType(service), what });
 
   /** How far a cue goes now: spirit's level, and the cue's own (Hands-free only when both allow it). */
-  const spiritMode = (cueId?: string): 'off' | 'learning' | 'next' | 'handsfree' => {
-    const state = loadSpirit();
-    if (state.level === 'off' || pausedRef.current) return 'off';
-    const c = state.cues.find((x) => x.id === cueId);
-    if (!c) return 'next';
-    if (c.level === 'learning') return 'learning';
-    return c.level === 'handsfree' && state.level === 'handsfree' && canBeHandsFree(c) ? 'handsfree' : 'next';
-  };
+  const spiritMode = (cueId?: string) => cueModeIn(loadSpirit(), cueId, pausedRef.current);
   /** How far a move goes now (1.18.0), the same way. */
-  const moveMode = (move: MoveKind): 'off' | 'learning' | 'next' | 'handsfree' => {
-    const state = loadSpirit();
-    if (state.level === 'off' || pausedRef.current) return 'off';
-    const t = moveTrust(state, move);
-    if (t.level === 'learning') return 'learning';
-    return t.level === 'handsfree' && state.level === 'handsfree' && moveCanBeHandsFree(state, move) ? 'handsfree' : 'next';
-  };
+  const moveMode = (move: MoveKind) => moveModeIn(loadSpirit(), move, pausedRef.current);
 
   const settleSpirit = (outcome: Outcome, why?: { correction?: Correction }) => {
     const p = spiritPending.current;
@@ -808,7 +795,10 @@ export const LiveWorkspace = () => {
       if (p.partId === item.id && p.mode === 'learning') settleSpirit('right');
       else if (p.partId && p.partId !== item.id) settleSpirit('wrong', { correction: 'wrong-part' });
     }
-    if (loadSpirit().level !== 'off' && !pausedRef.current) updateSpirit((st) => observe(st, item.name, Date.now(), { serviceId: svc.id, type: serviceType(svc) }));
+    if (loadSpirit().level !== 'off' && !pausedRef.current) {
+      flushHeard();
+      updateSpirit((st) => observe(st, item.name, Date.now(), { serviceId: svc.id, type: serviceType(svc) }));
+    }
     loadServiceItem(svc, item);
   };
 
@@ -940,7 +930,7 @@ export const LiveWorkspace = () => {
       onCapturedLine: (line) => handlers.current.captureLine(line),
       onMoment: (m) => handlers.current.moment(m),
       onSermonPoint: (p) => handlers.current.sermonPoint(p),
-      onSentence: (text) => loadSpirit().level !== 'off' && updateSpirit((st) => hear(st, text)),
+      onSentence: (text) => hearSoon(text),
       onLyricsMove: (index, cue) => {
         const c = handlers.current.collection;
         if (c?.kind !== 'slides' || !c.slides[index]) return;
@@ -982,9 +972,16 @@ export const LiveWorkspace = () => {
       speech.current = createSpeechProvider(settings, {
         onTranscript: (text, isFinal) => controller.current?.onTranscript(text, isFinal),
         onVolumeUpdate: (v) => {
-          setVolume(v);
+          // The meter needs about 15 updates a second, not one per sliver of sound (125): each redraws the live screen
           loudest.current = Math.max(loudest.current, v);
           if (v >= 2) lastSound.current = Date.now();
+          meterPeak.current = Math.max(meterPeak.current, v);
+          const t = performance.now();
+          if (t - meterAt.current >= 66) {
+            meterAt.current = t;
+            setVolume(meterPeak.current);
+            meterPeak.current = 0;
+          }
         },
         onError: (error) => toast.error('Speech recognition error', { description: error.message }),
       });
@@ -1043,6 +1040,18 @@ export const LiveWorkspace = () => {
     }, 10_000);
     return () => window.clearTimeout(timer);
   }, [listening]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const meterAt = useRef(0);
+  const meterPeak = useRef(0);
+  // Sentences heard are saved together every 20 s while listening (not once per sentence)
+  useEffect(() => {
+    if (!listening) return;
+    const timer = window.setInterval(flushHeard, 20_000);
+    return () => {
+      window.clearInterval(timer);
+      flushHeard();
+    };
+  }, [listening]);
 
   const stopListening = (quiet = false) => {
     speech.current?.disconnect();
@@ -1365,7 +1374,8 @@ export const LiveWorkspace = () => {
 
   const spiritState = useSpiritState();
   const levelWord = (m: 'off' | 'learning' | 'next' | 'handsfree') => (m === 'handsfree' ? 'Hands-free' : m === 'learning' ? 'Learning' : 'Ready in Next');
-  const spiritExpect: SpiritExpectation[] = (() => {
+  const countdownFor = partCountdown.current?.itemId;
+  const spiritExpect: SpiritExpectation[] = useMemo(() => {
     if (!service || spiritState.level === 'off') return [];
     const out: SpiritExpectation[] = [];
     const flat = service.sections.flatMap((sec) => sec.subsections.map((item) => ({ item, name: item.name, section: sec.name })));
@@ -1373,11 +1383,11 @@ export const LiveWorkspace = () => {
     const after = flat.slice(at + 1).find((p) => p.item.slides.length);
     const liveSlide = live && 'slide' in live ? live.slide : null;
     // A countdown running for the part on screen
-    if (partCountdown.current && after && partCountdown.current.itemId === livePart?.id && moveMode('countdown-end') !== 'off')
-      out.push({ what: after.name, when: 'when the countdown ends', level: levelWord(moveMode('countdown-end')) });
+    if (countdownFor && after && countdownFor === livePart?.id && moveModeIn(spiritState, 'countdown-end', spiritPaused) !== 'off')
+      out.push({ what: after.name, when: 'when the countdown ends', level: levelWord(moveModeIn(spiritState, 'countdown-end', spiritPaused)) });
     // A song on screen with a song after it
-    if (liveSlide?.type === 'lyrics' && after && after.item.slides.every((sl) => sl.type === 'lyrics') && moveMode('next-song') !== 'off')
-      out.push({ what: after.name, when: 'when this song reaches its last slide', level: levelWord(moveMode('next-song')) });
+    if (liveSlide?.type === 'lyrics' && after && after.item.slides.every((sl) => sl.type === 'lyrics') && moveModeIn(spiritState, 'next-song', spiritPaused) !== 'off')
+      out.push({ what: after.name, when: 'when this song reaches its last slide', level: levelWord(moveModeIn(spiritState, 'next-song', spiritPaused)) });
     // Cues that would get the next part (or the one after) ready
     if (features.momentAutopilot) {
       for (const target of flat.slice(at + 1, at + 3)) {
@@ -1386,18 +1396,18 @@ export const LiveWorkspace = () => {
         const own = cues.filter((c) => c.part && c.part.toLowerCase() === target.name.toLowerCase());
         const kinds = (Object.keys(BUILTIN_MOMENT_PHRASES) as MomentKind[]).filter((k) => partForMoment(k, flat, at) === flat.indexOf(target));
         const said = [...own, ...cues.filter((c) => c.moment && kinds.includes(c.moment))].slice(0, 2);
-        if (said.length) out.push({ what: target.name, when: `when the preacher says ${said.map((c) => `“${c.phrase}”`).join(' or ')}`, level: levelWord(spiritMode(said[0].id)) });
+        if (said.length) out.push({ what: target.name, when: `when the preacher says ${said.map((c) => `“${c.phrase}”`).join(' or ')}`, level: levelWord(cueModeIn(spiritState, said[0].id, spiritPaused)) });
       }
     }
     if (features.sermonPoints && at >= 0 && /word|sermon|message|preach|teach/i.test(`${flat[at].section} ${flat[at].name}`) && out.length < 3)
-      out.push({ what: 'A point slide', when: 'when the preacher says “point number…”', level: levelWord(spiritMode('builtin:point:number')) });
+      out.push({ what: 'A point slide', when: 'when the preacher says “point number…”', level: levelWord(cueModeIn(spiritState, 'builtin:point:number', spiritPaused)) });
     return out.slice(0, 3);
-  })();
-  const todayScore = (() => {
+  }, [service, spiritState, spiritPaused, livePart?.id, currentItemId, live, countdownFor, features.momentAutopilot, features.sermonPoints]);
+  const todayScore = useMemo(() => {
     if (!service) return { right: 0, total: 0 };
     const sum = serviceSummary(spiritState, service.id);
     return sum.serviceId === service.id ? { right: sum.right, total: sum.right + sum.wrong + sum.manual } : { right: 0, total: 0 };
-  })();
+  }, [service, spiritState]);
 
   const describeLive = (item: Live): string => {
     if (!item) return 'Nothing on screen';
