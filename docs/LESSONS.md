@@ -142,6 +142,8 @@ Check this list before debugging. Add every new mistake that cost time.
 - **The web build overwrites the desktop build in `dist/`.** Build the desktop renderer last before running e2e, or the app will not load and the tests hang.
 - **A service made from a saved order shared its parts' and slides' ids with the order** (the old "Your saved orders" copied the template as it was). Two services with the same slide ids get mixed up on screen and in spirit's records. Templates and the services made from them now always get new ids.
 
+- **The verse went into the owner's "Service Countdown" message, and nothing showed (ProPresenter 21).** Voice Verses made its message with `id: { uuid: '', name, index: 0 }` and sent verses to `/v1/message/<name>/trigger`; ProPresenter can read an id as a uuid, a name or an index, and took message 0. Never send an index or empty uuid when creating; address a message by the uuid read back from `/v1/messages`; compare the list before and after creating so a changed message is noticed (`changedMessages`). After triggering, `/v1/status/layers` says whether messages are showing.
+
 ## Hardware
 
 - **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).

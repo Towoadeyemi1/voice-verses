@@ -48,7 +48,40 @@ async function request(connection, method, path, body) {
   return text ? JSON.parse(text) : null;
 }
 
-const messagePath = (suffix) => `/v1/message/${encodeURIComponent(MESSAGE_NAME)}/${suffix}`;
+/**
+ * The "Voice Verses" message is always addressed by its own ProPresenter id
+ * (uuid), found by its exact name. Addressing it by name let ProPresenter 21
+ * pick another message (the owner's "Service Countdown") when it could not
+ * resolve the name (1.18.4). Ids are remembered per ProPresenter and looked up
+ * again if ProPresenter no longer knows one.
+ */
+const ids = new Map();
+const where = ({ host, port }) => `${host}:${port}`;
+const messageList = (answer) => (Array.isArray(answer) ? answer : Array.isArray(answer?.messages) ? answer.messages : []);
+const isOurs = (m) => messageName(m).toLowerCase() === MESSAGE_NAME.toLowerCase();
+
+async function ourMessageId(connection, fresh = false) {
+  const key = where(connection);
+  if (!fresh && ids.has(key)) return ids.get(key);
+  const message = messageList(await request(connection, 'GET', '/v1/messages')).find(isOurs);
+  const uuid = message?.id?.uuid;
+  if (!message) throw new Error(`ProPresenter has no message named "${MESSAGE_NAME}". Press Set up again in Settings → ProPresenter.`);
+  if (!uuid) throw new Error(`ProPresenter did not give the "${MESSAGE_NAME}" message an id. Update ProPresenter, or make the message again.`);
+  ids.set(key, uuid);
+  return uuid;
+}
+
+/** Runs a request on the Voice Verses message; if ProPresenter has forgotten its id, finds it again once. */
+async function onOurMessage(connection, method, suffix, body) {
+  const run = async (fresh) => request(connection, method, `/v1/message/${encodeURIComponent(await ourMessageId(connection, fresh))}/${suffix}`, body);
+  try {
+    return await run(false);
+  } catch (error) {
+    if (!ids.has(where(connection))) throw error;
+    ids.delete(where(connection));
+    return run(true);
+  }
+}
 
 /** A message's name and tokens, however this ProPresenter version reports them. */
 const messageName = (m) => String(m?.id?.name ?? m?.name ?? '').trim();
@@ -78,9 +111,9 @@ export function messageReadiness(message) {
 /** Connection check: which ProPresenter is this, and is the Voice Verses message set up? */
 export async function status(connection) {
   const version = await request(connection, 'GET', '/version');
-  const answer = await request(connection, 'GET', '/v1/messages');
-  const messages = Array.isArray(answer) ? answer : Array.isArray(answer?.messages) ? answer.messages : [];
-  let message = messages.find((m) => messageName(m).toLowerCase() === MESSAGE_NAME.toLowerCase());
+  const messages = messageList(await request(connection, 'GET', '/v1/messages'));
+  let message = messages.find(isOurs);
+  if (message?.id?.uuid) ids.set(where(connection), message.id.uuid);
   let check = messageReadiness(message);
   if (message && !check.ready) {
     // The message on its own may say more than the list does
@@ -148,8 +181,10 @@ export async function createMessage(connection, theme) {
   if (!theme?.uuid) throw new Error('Choose a theme for the verse.');
   const current = await status(connection);
   if (current.hasMessage) return current;
+  const before = messageList(await request(connection, 'GET', '/v1/messages'));
+  // A new message: only its name. An empty id with index 0 let ProPresenter 21 overwrite message 0 instead.
   await request(connection, 'POST', '/v1/messages', {
-    id: { uuid: '', name: MESSAGE_NAME, index: 0 },
+    id: { name: MESSAGE_NAME },
     message: '{Verse} — {Reference}',
     tokens: [
       { name: 'Verse', text: { text: '' } },
@@ -159,22 +194,52 @@ export async function createMessage(connection, theme) {
     visible_on_network: false,
     is_active: false,
   });
+  const after = messageList(await request(connection, 'GET', '/v1/messages'));
+  const changed = changedMessages(before, after);
+  if (changed.length) {
+    throw new Error(
+      `ProPresenter changed your message “${changed.join('”, “')}” instead of making a new one. Open it in ProPresenter and put back what it said, then make a message named “${MESSAGE_NAME}” with {Verse} and {Reference} tokens yourself.`,
+    );
+  }
+  if (!after.some(isOurs)) throw new Error(`ProPresenter did not make the "${MESSAGE_NAME}" message. Make it in ProPresenter (Messages → +) with {Verse} and {Reference} tokens.`);
   return status(connection);
 }
 
-/** Shows a verse: updates the message tokens and triggers it, optionally on the stage screens too. */
+/** Messages that were there before and now read differently (their text or tokens), other than ours. */
+export function changedMessages(before, after) {
+  const shape = (m) => JSON.stringify({ text: messageText(m), tokens: tokenNames(m), theme: m?.theme?.uuid ?? null });
+  const was = new Map(before.filter((m) => m?.id?.uuid).map((m) => [m.id.uuid, m]));
+  return after
+    .filter((m) => m?.id?.uuid && was.has(m.id.uuid) && shape(was.get(m.id.uuid)) !== shape(m))
+    .map((m) => messageName(was.get(m.id.uuid)) || 'Untitled');
+}
+
+/**
+ * Shows a verse: triggers the Voice Verses message with the verse in its tokens,
+ * optionally on the stage screens too. Then asks ProPresenter whether its
+ * Messages layer is showing: `messagesOn` false means it took the verse but
+ * shows nothing (e.g. another message took its place); null when it can't say.
+ */
 export async function showVerse(connection, { reference, text, stage }) {
-  await request(connection, 'POST', messagePath('trigger'), [
+  await onOurMessage(connection, 'POST', 'trigger', [
     { name: 'Verse', text: { text: String(text) } },
     { name: 'Reference', text: { text: String(reference) } },
   ]);
   if (stage) {
     await request(connection, 'PUT', '/v1/stage/message', `${reference} — ${text}`);
   }
+  let messagesOn = null;
+  try {
+    const layers = await request(connection, 'GET', '/v1/status/layers');
+    if (typeof layers?.messages === 'boolean') messagesOn = layers.messages;
+  } catch {
+    // Older ProPresenter: it can't say
+  }
+  return { messagesOn };
 }
 
 export async function clear(connection, { stage }) {
-  await request(connection, 'GET', messagePath('clear'));
+  await onOurMessage(connection, 'GET', 'clear');
   if (stage) {
     await request(connection, 'DELETE', '/v1/stage/message');
   }

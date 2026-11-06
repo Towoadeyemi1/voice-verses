@@ -3,7 +3,7 @@ import { AlertCircle, Check, Laptop, Monitor, Radio, RefreshCw } from 'lucide-re
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { desktop, ProPresenterConnection, ProPresenterStatus, ProPresenterThemeSlide } from '@/lib/desktop';
-import { connectionOf, loadProPresenterSettings, ProPresenterSettings as Settings, saveProPresenterSettings } from '@/lib/proPresenter';
+import { connectionOf, loadProPresenterSettings, NOT_SHOWING, ProPresenterSettings as Settings, saveProPresenterSettings } from '@/lib/proPresenter';
 import { DOWNLOAD_PAGE_URL } from '@/lib/releases';
 import { loadAppMode, saveAppMode } from '@/lib/appMode';
 import { List, Note, Row, Section, Toggle } from './settings/kit';
@@ -106,8 +106,9 @@ export function ProPresenterSettings() {
 
   const sendTest = () =>
     run('test', async () => {
-      await desktop!.proPresenter.show(connectionOf(settings), { ...TEST_VERSE, stage: settings.stage });
-      toast.success('Sent John 3:16 to ProPresenter', { description: 'Look at ProPresenter’s output. Its Look needs the Messages layer on.' });
+      const result = await desktop!.proPresenter.show(connectionOf(settings), { ...TEST_VERSE, stage: settings.stage });
+      if (result && result.messagesOn === false) toast.warning('ProPresenter took John 3:16 but isn’t showing it', { description: NOT_SHOWING, duration: 12000 });
+      else toast.success('Sent John 3:16 to ProPresenter', { description: 'ProPresenter is showing it on its Messages layer. If its screens still show nothing, its current Look has the Messages layer off for them.' });
     });
   const clearTest = () => run('clear', () => desktop!.proPresenter.clear(connectionOf(settings), { stage: settings.stage }));
   const createMessage = () =>

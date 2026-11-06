@@ -350,6 +350,22 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.18.3 A **ready-made order for every type of service** (18): Sunday service, Communion Sunday, Thanksgiving Sunday, Midweek service, Bible study, Friday Night Prayers, Prayer and Fasting, Youth Day, Children's Sunday school, Children's service, Special event, Conference, Christmas, New Year (Crossover), Easter, Wedding, Funeral, Dedication.
 - ✅ 1.18.3 **Service templates** in Plan services: New template (any type, the app's or the church's own; start from the ready-made order for that type, from a service or template the church has, with or without its slides, or from nothing), "Make it a template" on any ready-made order, "Use for <day>", Edit, Delete (with Undo). "Save as a template" in the editor asks for the name and type. A template opens in the editor as a template (no date).
 
+## "For the ProPresenter, it sent, but show didn't send it to the screens!!" (screenshots: ProPresenter's Messages, the message "Service Countdown" with Verse and Reference tokens, Verse filled, Reference empty)
+
+(6 Nov 2026.)
+- 💬 Cause, most likely:
+  - Voice Verses made its message by posting `id: { uuid: '', index: 0 }`, and sent each verse to the message's name.
+  - On the owner's ProPresenter 21, that changed message 0, the church's **"Service Countdown"**, and the verses went into it.
+  - So no "Voice Verses" message showed, and the countdown message was altered.
+  - **The owner should put Service Countdown back** (take out the Verse and Reference tokens and put back its countdown).
+- ✅ 1.18.4:
+  - The message is always addressed by its own ProPresenter id, found by its exact name.
+  - A new message is posted with only its name.
+  - If ProPresenter changes another message instead, Voice Verses says which one and stops.
+  - After each verse, Voice Verses asks ProPresenter whether its Messages layer is showing, and says so plainly if it isn't (and with the test verse).
+  
+  Checked by `tools/checks/propresenter-trigger.mjs` (in CI).
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
