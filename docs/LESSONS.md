@@ -142,7 +142,8 @@ Check this list before debugging. Add every new mistake that cost time.
 - **The web build overwrites the desktop build in `dist/`.** Build the desktop renderer last before running e2e, or the app will not load and the tests hang.
 - **A service made from a saved order shared its parts' and slides' ids with the order** (the old "Your saved orders" copied the template as it was). Two services with the same slide ids get mixed up on screen and in spirit's records. Templates and the services made from them now always get new ids.
 
-- **The verse went into the owner's "Service Countdown" message, and nothing showed (ProPresenter 21).** Voice Verses made its message with `id: { uuid: '', name, index: 0 }` and sent verses to `/v1/message/<name>/trigger`; ProPresenter can read an id as a uuid, a name or an index, and took message 0. Never send an index or empty uuid when creating; address a message by the uuid read back from `/v1/messages`; compare the list before and after creating so a changed message is noticed (`changedMessages`). After triggering, `/v1/status/layers` says whether messages are showing.
+- **Read the whole screenshot before diagnosing.** The owner's ProPresenter picture showed the message detail of "Service Countdown" (it was selected) and I concluded Voice Verses had changed it; the next picture showed the separate "Voice Verses" message, on air. A wrong diagnosis costs more trust than "I can't tell from this; here is how we find out".
+- **When ProPresenter takes a verse but shows nothing, ask ProPresenter, don't guess.** `diagnose()` reads the message (`/v1/message/{uuid}`), `/v1/status/layers`, `/v1/status/screens` and `/v1/look/current`, and says what each means. Address the message by the uuid read back from `/v1/messages`; never create one with an empty uuid and index 0 (an id may be read as a uuid, a name or an index).
 
 ## Hardware
 

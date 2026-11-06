@@ -238,6 +238,54 @@ export async function showVerse(connection, { reference, text, stage }) {
   return { messagesOn };
 }
 
+/**
+ * Why a verse may not be on ProPresenter's screens (1.18.4): what ProPresenter
+ * itself says about the Voice Verses message (its text, tokens and their values,
+ * its theme), its layers, its screens and the current Look. Each answer is read
+ * however this version shapes it; what it doesn't say is left out.
+ */
+export async function diagnose(connection) {
+  const ask = (path) => request(connection, 'GET', path).catch(() => undefined);
+  const out = { checks: [] };
+  const add = (state, title, detail) => out.checks.push({ state, title, detail });
+  let uuid = null;
+  try {
+    uuid = await ourMessageId(connection, true);
+  } catch (error) {
+    add('problem', `No message named “${MESSAGE_NAME}”`, error.message);
+    return out;
+  }
+  const raw = await ask(`/v1/message/${encodeURIComponent(uuid)}`);
+  const m = raw?.message && typeof raw.message === 'object' && !Array.isArray(raw.message) ? { ...raw, ...raw.message } : raw;
+  const text = messageText(m);
+  const tokens = (Array.isArray(m?.tokens) ? m.tokens : []).map((t) => ({ name: String(t?.name ?? '').replace(/[{}]/g, ''), value: t?.text?.text ?? null, kind: t?.text ? 'text' : t?.timer ? 'timer' : t?.clock ? 'clock' : 'other' }));
+  if (m) {
+    add(text.trim() ? 'ok' : 'problem', 'The message’s text', text.trim() ? `“${text}”` : 'The message has no text, so nothing can show. In ProPresenter, edit the message and put the Verse and Reference tokens in its text box.');
+    for (const t of tokens) add(t.kind === 'text' ? 'ok' : 'warn', `Token “${t.name}”`, t.kind === 'text' ? (t.value ? `Now: “${String(t.value).slice(0, 80)}”` : 'Empty now') : `It is a ${t.kind} token; Voice Verses needs text tokens.`);
+    const theme = m?.theme?.name || m?.theme?.id?.name || '';
+    add(theme ? 'ok' : 'warn', 'Its theme', theme ? `“${theme}”. Its text box is where the verse appears: if the theme’s text is white on white, or outside the screen, nothing is seen.` : 'ProPresenter didn’t name a theme for the message: choose one in the message’s Theme.');
+  }
+  const layers = await ask('/v1/status/layers');
+  if (layers && typeof layers.messages === 'boolean') add(layers.messages ? 'ok' : 'problem', 'Messages layer', layers.messages ? 'On: a message is showing.' : 'Off: no message is showing right now. Send a test verse, then check again.');
+  const screens = await ask('/v1/status/screens');
+  if (screens && typeof screens === 'object') {
+    for (const [name, on] of Object.entries(screens)) if (typeof on === 'boolean') add(on ? 'ok' : 'problem', `${name.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase())} screens`, on ? 'On.' : 'Off in ProPresenter: nothing shows on them.');
+  }
+  const look = await ask('/v1/look/current');
+  if (look && typeof look === 'object') {
+    const name = look?.id?.name ?? look?.name ?? 'The current Look';
+    const list = Array.isArray(look.screens) ? look.screens : [];
+    list.forEach((sc, i) => {
+      const on = typeof sc?.messages === 'boolean' ? sc.messages : typeof sc?.layers?.messages === 'boolean' ? sc.layers.messages : null;
+      if (on === null) return;
+      const screen = sc?.name ?? sc?.id?.name ?? `screen ${i + 1}`;
+      add(on ? 'ok' : 'problem', `Look “${name}”, ${screen}`, on ? 'Shows messages.' : 'Messages are switched off for this screen in the Look, so the verse never reaches it. Turn Messages on for it in ProPresenter’s Looks.');
+    });
+    if (!list.length) add('warn', `Look “${name}”`, 'ProPresenter didn’t say which layers this Look shows. Check that Messages is on for the audience screens in its Looks.');
+  }
+  return out;
+}
+
 export async function clear(connection, { stage }) {
   await onOurMessage(connection, 'GET', 'clear');
   if (stage) {

@@ -140,6 +140,7 @@ handle('propresenter:clear', (connection, options) => proPresenter.clear(connect
 handle('propresenter:find', () => proPresenter.findLocal());
 handle('propresenter:search', (options) => proPresenter.search({ ports: Array.isArray(options?.ports) ? options.ports.slice(0, 4) : [] }));
 handle('propresenter:set-up', (connection) => proPresenter.setUp(connection));
+handle('propresenter:diagnose', (connection) => proPresenter.diagnose(connection));
 
 handle('network:configure', (options) => network.configure(options ?? {}));
 handle('network:status', () => network.status());

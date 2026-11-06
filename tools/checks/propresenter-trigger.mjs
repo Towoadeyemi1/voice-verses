@@ -5,7 +5,7 @@
 // posted without an index, a replaced message is noticed, and "not showing" is reported.
 // Run: node tools/checks/propresenter-trigger.mjs
 import http from 'node:http';
-import { changedMessages, createMessage, showVerse } from '../../electron/propresenter.js';
+import { changedMessages, createMessage, diagnose, showVerse } from '../../electron/propresenter.js';
 
 let failed = 0;
 const check = (label, ok, detail = '') => {
@@ -42,6 +42,10 @@ function pretend({ withOurs, layersOn = true }) {
         return send(204);
       }
       if (url === '/v1/status/layers') return send(200, { messages: layersOn, slide: true, media: true });
+      if (url === '/v1/status/screens') return send(200, { audience: true, stage: true });
+      if (url === '/v1/look/current') return send(200, { id: { name: 'Sunday' }, screens: [{ name: 'Audience', messages: false }, { name: 'Stage', messages: true }] });
+      const one = url.match(/^\/v1\/message\/([^/]+)$/);
+      if (one) return send(200, resolve(one[1]));
       send(404);
     });
   });
@@ -85,6 +89,18 @@ const listen = (server) => new Promise((r) => server.listen(0, '127.0.0.1', () =
   const c = await listen(p.server);
   const result = await showVerse(c, { reference: 'John 3:16', text: 'For God so loved the world', stage: false });
   check('"not showing" is reported when the Messages layer is off', result.messagesOn === false, JSON.stringify(result));
+  p.server.close();
+}
+
+// 5. Why isn't it on the screens: ProPresenter's own answers, in words
+{
+  const p = pretend({ withOurs: true, layersOn: true });
+  const c = await listen(p.server);
+  const { checks } = await diagnose(c);
+  const find = (re) => checks.find((x) => re.test(x.title));
+  check('the message’s text is read', /Verse/.test(find(/text/)?.detail ?? ''), find(/text/)?.detail);
+  check('the Look with Messages off for the audience is found', find(/Look “Sunday”, Audience/)?.state === 'problem', JSON.stringify(find(/Audience/)));
+  check('…and the stage screen in it is fine', find(/Look “Sunday”, Stage/)?.state === 'ok');
   p.server.close();
 }
 

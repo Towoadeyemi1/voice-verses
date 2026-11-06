@@ -149,6 +149,8 @@ export interface DesktopBridge {
     search?(options?: { ports?: number[] }): Promise<{ host: string; port: number; version: string; name: string; here: boolean }[]>;
     /** Makes sure the "Voice Verses" message exists (best-suited theme), and says what is ready */
     setUp?(connection: ProPresenterConnection): Promise<ProPresenterStatus & { theme: string | null }>;
+    /** What ProPresenter says about the Voice Verses message, its layers, screens and Look (older desktop versions don't have it) */
+    diagnose?(connection: ProPresenterConnection): Promise<{ checks: { state: 'ok' | 'warn' | 'problem'; title: string; detail: string }[] }>;
   };
   screens: {
     displays(): Promise<DisplayInfo[]>;
