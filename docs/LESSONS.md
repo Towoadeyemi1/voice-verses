@@ -145,6 +145,9 @@ Check this list before debugging. Add every new mistake that cost time.
 - **Read the whole screenshot before diagnosing.** The owner's ProPresenter picture showed the message detail of "Service Countdown" (it was selected) and I concluded Voice Verses had changed it; the next picture showed the separate "Voice Verses" message, on air. A wrong diagnosis costs more trust than "I can't tell from this; here is how we find out".
 - **When ProPresenter takes a verse but shows nothing, ask ProPresenter, don't guess.** `diagnose()` reads the message (`/v1/message/{uuid}`), `/v1/status/layers`, `/v1/status/screens` and `/v1/look/current`, and says what each means. Address the message by the uuid read back from `/v1/messages`; never create one with an empty uuid and index 0 (an id may be read as a uuid, a name or an index).
 
+- **A verse Voice Verses kept re-sending beat the operator's Hide in ProPresenter.** Two people (or two apps) driving one output must notice each other: before sending, check whether what was sent is still showing (`/v1/status/layers`); if someone hid it, stop and offer Send again. Clear what you put up when your own screens clear, and only that.
+- **"Best-suited theme" meant a full-screen scripture theme.** For a message over other content, prefer a lower third.
+
 ## Hardware
 
 - **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).

@@ -32,8 +32,9 @@ other.close();
 pp.close();
 
 const theme = (label) => ({ id: { uuid: label, name: label, index: 0 }, label });
-check('theme: one named for scripture is chosen', pickTheme([theme('Songs › Lyrics'), theme('Lower third › Bar'), theme('Scripture › Full')]).label === 'Scripture › Full');
-check('theme: else a lower third', pickTheme([theme('Songs › Lyrics'), theme('Lower third › Bar')]).label === 'Lower third › Bar');
+// A lower third first (1.18.5): a full-screen scripture theme covered every screen in the owner's church
+check('theme: a lower third is chosen over a full-screen scripture theme', pickTheme([theme('Songs › Lyrics'), theme('Lower third › Bar'), theme('Scripture › Full')]).label === 'Lower third › Bar');
+check('theme: else one named for scripture', pickTheme([theme('Songs › Lyrics'), theme('Scripture › Full')]).label === 'Scripture › Full');
 check('theme: else the first', pickTheme([theme('Default › Blank')]).label === 'Default › Blank');
 check('theme: none', pickTheme([]) === null);
 

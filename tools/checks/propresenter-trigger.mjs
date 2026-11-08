@@ -5,7 +5,7 @@
 // posted without an index, a replaced message is noticed, and "not showing" is reported.
 // Run: node tools/checks/propresenter-trigger.mjs
 import http from 'node:http';
-import { changedMessages, createMessage, diagnose, showVerse } from '../../electron/propresenter.js';
+import { changedMessages, clear, createMessage, diagnose, pickTheme, showVerse } from '../../electron/propresenter.js';
 
 let failed = 0;
 const check = (label, ok, detail = '') => {
@@ -14,6 +14,7 @@ const check = (label, ok, detail = '') => {
 };
 
 function pretend({ withOurs, layersOn = true }) {
+  const state = { layersOn };
   const messages = [{ id: { uuid: 'c0', name: 'Service Countdown', index: 0 }, message: 'Service begins in {Countdown}', tokens: [{ name: 'Countdown', timer: {} }], theme: { uuid: 't0' } }];
   if (withOurs) messages.push({ id: { uuid: 'v1', name: 'Voice Verses', index: 1 }, message: '{Verse} — {Reference}', tokens: [{ name: 'Verse', text: { text: '' } }, { name: 'Reference', text: { text: '' } }], theme: { uuid: 't1' } });
   const triggered = [];
@@ -41,7 +42,7 @@ function pretend({ withOurs, layersOn = true }) {
         triggered.push(m.id.name);
         return send(204);
       }
-      if (url === '/v1/status/layers') return send(200, { messages: layersOn, slide: true, media: true });
+      if (url === '/v1/status/layers') return send(200, { messages: state.layersOn, slide: true, media: true });
       if (url === '/v1/status/screens') return send(200, { audience: true, stage: true });
       if (url === '/v1/look/current') return send(200, { id: { name: 'Sunday' }, screens: [{ name: 'Audience', messages: false }, { name: 'Stage', messages: true }] });
       const one = url.match(/^\/v1\/message\/([^/]+)$/);
@@ -49,7 +50,7 @@ function pretend({ withOurs, layersOn = true }) {
       send(404);
     });
   });
-  return { server, messages, triggered, posted };
+  return { server, messages, triggered, posted, state };
 }
 
 const listen = (server) => new Promise((r) => server.listen(0, '127.0.0.1', () => r({ host: '127.0.0.1', port: server.address().port })));
@@ -102,6 +103,31 @@ const listen = (server) => new Promise((r) => server.listen(0, '127.0.0.1', () =
   check('the Look with Messages off for the audience is found', find(/Look “Sunday”, Audience/)?.state === 'problem', JSON.stringify(find(/Audience/)));
   check('…and the stage screen in it is fine', find(/Look “Sunday”, Stage/)?.state === 'ok');
   p.server.close();
+}
+
+// 6. Hide pressed in ProPresenter: the next verse is not put back over it, until Voice Verses clears or is told to send
+{
+  const p = pretend({ withOurs: true, layersOn: true });
+  const c = await listen(p.server);
+  await showVerse(c, { reference: 'John 5:8', text: 'Rise', stage: false });
+  p.state.layersOn = false; // the ProPresenter operator pressed Hide
+  const next = await showVerse(c, { reference: 'John 5:9', text: 'And immediately', stage: false });
+  check('after Hide in ProPresenter, the next verse is not sent', next.hiddenInProPresenter === true && p.triggered.length === 1, JSON.stringify({ next, sent: p.triggered.length }));
+  const forced = await showVerse(c, { reference: 'John 5:9', text: 'And immediately', stage: false, force: true });
+  check('…“Send again” sends it', p.triggered.length === 2 && !forced.hiddenInProPresenter);
+  p.state.layersOn = true;
+  await showVerse(c, { reference: 'John 5:10', text: 'The Jews', stage: false });
+  await clear(c, { stage: false }).catch(() => {});
+  p.state.layersOn = false; // cleared by Voice Verses itself: not a Hide
+  const after = await showVerse(c, { reference: 'John 5:11', text: 'He answered', stage: false });
+  check('a verse after Voice Verses cleared its own is sent', !after.hiddenInProPresenter && p.triggered.length === 4, JSON.stringify({ after, sent: p.triggered.length }));
+  p.server.close();
+}
+
+// 7. Set-up picks a lower third over a full-screen scripture theme
+{
+  const pick = pickTheme([{ label: 'Scripture › Full Screen' }, { label: 'Default › Lower Third' }, { label: 'Message › Bar' }]);
+  check('set-up picks a lower-third theme', pick?.label === 'Default › Lower Third', pick?.label);
 }
 
 console.log(failed ? `${failed} failed` : 'all passed');

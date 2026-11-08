@@ -68,13 +68,35 @@ let notShowing = false;
 export const NOT_SHOWING =
   'ProPresenter took the verse but is not showing it. In ProPresenter, check that the “Voice Verses” message is the one showing (Messages), that no other message is on top of it, and that the current Look has the Messages layer on for the audience screens.';
 
-export function sendVerseToProPresenter(verse: BibleVerse): Promise<boolean> {
+/**
+ * Someone pressed Hide in ProPresenter (1.18.5): Voice Verses stops sending verses there, instead of
+ * putting the next one straight back over them, until the operator chooses Send again.
+ */
+let hiddenThere = false;
+/** Voice Verses has put a verse on ProPresenter since it last cleared it: only then does it clear (never someone else's stage message) */
+let sentSinceClear = false;
+
+export function sendVerseToProPresenter(verse: BibleVerse, opts: { force?: boolean } = {}): Promise<boolean> {
+  if (hiddenThere && !opts.force) return Promise.resolve(false);
   return send(async (settings) => {
     const result = await desktop!.proPresenter.show(connectionOf(settings), {
       reference: verseReference(verse),
       text: plainVerseText(verse.text),
       stage: settings.stage,
+      force: opts.force,
     });
+    if (result && result.hiddenInProPresenter) {
+      hiddenThere = true;
+      sentSinceClear = false;
+      toast('ProPresenter’s operator hid the verse', {
+        description: 'Voice Verses stopped sending verses to ProPresenter, so it doesn’t put them back over them. Its own screens carry on.',
+        duration: 20000,
+        action: { label: 'Send again', onClick: () => void resumeProPresenter(verse) },
+      });
+      return;
+    }
+    hiddenThere = false;
+    sentSinceClear = true;
     if (result && result.messagesOn === false) {
       if (!notShowing) toast.warning('ProPresenter isn’t showing the verse', { description: NOT_SHOWING, duration: 12000 });
       notShowing = true;
@@ -82,6 +104,15 @@ export function sendVerseToProPresenter(verse: BibleVerse): Promise<boolean> {
   });
 }
 
+/** Sends verses to ProPresenter again after its operator hid one, starting with this verse. */
+export function resumeProPresenter(verse?: BibleVerse): Promise<boolean> {
+  hiddenThere = false;
+  return verse ? sendVerseToProPresenter(verse, { force: true }) : Promise.resolve(true);
+}
+
+/** Takes Voice Verses' verse off ProPresenter (the message, and the stage message if it sent one): only when it put one there. */
 export function clearProPresenter(): Promise<boolean> {
+  if (!sentSinceClear) return Promise.resolve(false);
+  sentSinceClear = false;
   return send((settings) => desktop!.proPresenter.clear(connectionOf(settings), { stage: settings.stage }));
 }
