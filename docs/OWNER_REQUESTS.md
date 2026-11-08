@@ -370,6 +370,23 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
   Checked by `tools/checks/propresenter-trigger.mjs` (in CI).
 - ⏳ The owner runs "Why isn't it on the screens?" on 1.18.4 and sends what it says.
 
+## "The message has taken over all the screens … what do I do?" · from the booth operator: "Earlier when I clicked Hide it didn't hide it … even when it came up it was in this tiny box (stage message) … I'll give it its own layout … maybe you can give me a breakdown of everything in there"
+
+(8 Nov 2026, a Sunday.)
+- 💬 Steps sent with pictures: Hide in ProPresenter's Messages (or clear only the Messages layer, not the big X), and switch off Send verses in Voice Verses; after the service, a lower-third theme for the Voice Verses message.
+- Causes:
+  - Every verse that goes live in Voice Verses was sent again, including each next verse while following a reading. So Hide in ProPresenter only lasted until the next verse.
+  - Clearing in Voice Verses (Esc), or a song or slide going up, didn't take the verse off ProPresenter; only Logo did.
+  - Set-up preferred a "Scripture" theme, which is usually full screen.
+  - The stage copy (Also on ProPresenter's stage screens) shows in the Stage Message box of each stage layout, which in the church's layout is small.
+- ✅ 1.18.5:
+  - **Hide in ProPresenter is respected.** Voice Verses notices it, stops sending, and says so with **Send again**.
+  - **Clear (Esc), and a song or slide going up, take the verse off ProPresenter.** That covers the message, and the stage message if Voice Verses sent one. Voice Verses only clears what it put there, so a stage message typed in ProPresenter is never cleared.
+  - **Set-up picks a lower-third theme first.**
+  
+  Checked by `tools/checks/propresenter-trigger.mjs`.
+- ✅ A breakdown for the booth of everything Voice Verses does in ProPresenter (shared as a page).
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

@@ -28,7 +28,7 @@ import { loadCrossReferences } from '@/lib/crossReferences';
 import { predictNext } from '@/lib/predictNext';
 import type { ScriptureHint } from '@/speech/scriptureHints';
 import { plainVerseText } from '@/lib/verseText';
-import { sendVerseToProPresenter } from '@/lib/proPresenter';
+import { clearProPresenter, sendVerseToProPresenter } from '@/lib/proPresenter';
 import { hasSecret } from '@/lib/secrets';
 import { desktop } from '@/lib/desktop';
 import { loadSendMode, saveSendMode, SendMode } from '@/lib/sendMode';
@@ -274,6 +274,8 @@ export const LiveWorkspace = () => {
       }
       const c = from?.kind === 'slides' ? from : null;
       const index = broadcastSlide(item.slide, c);
+      // A song or slide replaces the verse: it comes off ProPresenter as well
+      void clearProPresenter();
       if (!opts.capturing) startPart(item.slide.id);
       // A song being captured is not followed: its words are what is being sung
       if (item.slide.type === 'lyrics' && c && index >= 0 && !opts.capturing) {
@@ -376,6 +378,8 @@ export const LiveWorkspace = () => {
   const clearText = () => {
     syncService.broadcast({ type: 'SLIDE_UPDATE', data: { slide: null, index: -1, slideIndex: -1, upcoming: [], timestamp: new Date() } });
     controller.current?.setLiveLyrics(null);
+    // The verse comes off ProPresenter too (it stayed up there until someone hid it)
+    void clearProPresenter();
   };
 
   /** Previous / next item after what is live (verse or slide). */

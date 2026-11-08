@@ -220,7 +220,26 @@ export function changedMessages(before, after) {
  * Messages layer is showing: `messagesOn` false means it took the verse but
  * shows nothing (e.g. another message took its place); null when it can't say.
  */
-export async function showVerse(connection, { reference, text, stage }) {
+/** Per ProPresenter: Voice Verses' verse was showing after its last send (to notice a Hide pressed in ProPresenter) */
+const showing = new Map();
+const layersNow = async (connection) => {
+  try {
+    const layers = await request(connection, 'GET', '/v1/status/layers');
+    return typeof layers?.messages === 'boolean' ? layers.messages : null;
+  } catch {
+    return null; // Older ProPresenter: it can't say
+  }
+};
+
+export async function showVerse(connection, { reference, text, stage, force = false }) {
+  // Someone pressed Hide in ProPresenter since the last verse: don't put it back over them (1.18.5)
+  if (!force && showing.get(where(connection))) {
+    const on = await layersNow(connection);
+    if (on === false) {
+      showing.set(where(connection), false);
+      return { messagesOn: false, hiddenInProPresenter: true };
+    }
+  }
   await onOurMessage(connection, 'POST', 'trigger', [
     { name: 'Verse', text: { text: String(text) } },
     { name: 'Reference', text: { text: String(reference) } },
@@ -228,13 +247,8 @@ export async function showVerse(connection, { reference, text, stage }) {
   if (stage) {
     await request(connection, 'PUT', '/v1/stage/message', `${reference} — ${text}`);
   }
-  let messagesOn = null;
-  try {
-    const layers = await request(connection, 'GET', '/v1/status/layers');
-    if (typeof layers?.messages === 'boolean') messagesOn = layers.messages;
-  } catch {
-    // Older ProPresenter: it can't say
-  }
+  const messagesOn = await layersNow(connection);
+  showing.set(where(connection), messagesOn === true);
   return { messagesOn };
 }
 
@@ -287,6 +301,7 @@ export async function diagnose(connection) {
 }
 
 export async function clear(connection, { stage }) {
+  showing.set(where(connection), false);
   await onOurMessage(connection, 'GET', 'clear');
   if (stage) {
     await request(connection, 'DELETE', '/v1/stage/message');
@@ -362,7 +377,8 @@ export async function findLocal() {
 
 /** The theme slide that suits verses best: one named for scripture, else a lower third, else the first. */
 export function pickTheme(slides) {
-  const score = (s) => (/scripture|bible|verse|word/i.test(s.label) ? 2 : /lower|third|message/i.test(s.label) ? 1 : 0);
+  // A lower third shows the verse without covering the screen; a full-screen scripture theme hides everything else (1.18.5)
+  const score = (s) => (/lower|third/i.test(s.label) ? 3 : /message/i.test(s.label) ? 2 : /scripture|bible|verse|word/i.test(s.label) ? 1 : 0);
   return [...slides].sort((a, b) => score(b) - score(a))[0] ?? null;
 }
 

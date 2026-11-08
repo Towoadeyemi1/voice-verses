@@ -123,7 +123,8 @@ const ProPresenterLive = () => {
 
   const clear = async () => {
     setPending(null);
-    if (await clearProPresenter()) setLive(null);
+    await clearProPresenter();
+    setLive(null);
   };
 
   const stop = useCallback(() => {

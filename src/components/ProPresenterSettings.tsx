@@ -108,7 +108,7 @@ export function ProPresenterSettings() {
 
   const sendTest = () =>
     run('test', async () => {
-      const result = await desktop!.proPresenter.show(connectionOf(settings), { ...TEST_VERSE, stage: settings.stage });
+      const result = await desktop!.proPresenter.show(connectionOf(settings), { ...TEST_VERSE, stage: settings.stage, force: true });
       if (desktop!.proPresenter.diagnose) setDiagnosis((await desktop!.proPresenter.diagnose(connectionOf(settings))).checks);
       if (result && result.messagesOn === false) toast.warning('ProPresenter took John 3:16 but isn’t showing it', { description: NOT_SHOWING, duration: 12000 });
       else toast.success('Sent John 3:16 to ProPresenter', { description: 'ProPresenter is showing it on its Messages layer. If its screens still show nothing, its current Look has the Messages layer off for them.' });
