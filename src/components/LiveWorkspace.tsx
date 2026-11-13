@@ -59,6 +59,8 @@ import { SettingsPanel, type Pane } from './SettingsPanel';
 import { BoothSetup } from './booth-setup/BoothSetup';
 import { boothSetupAsked, opensByItself, SHOW_BOOTH_SETUP } from '@/lib/boothSetup';
 import { PRACTICE_CHANGED, practising, setPractice } from '@/lib/practice';
+import { narrate } from '@/lib/guide';
+import { PLAY_DEMO } from './guide/GuideHost';
 import { BoothCheckLight, Guardian, type BoothFix } from './live/BoothCheck';
 import { ApiKeyDialog } from './ApiKeyDialog';
 import { CountdownControl } from './CountdownControl';
@@ -865,9 +867,13 @@ export const LiveWorkspace = () => {
   const suggestionsRef = useRef(suggestions);
   suggestionsRef.current = suggestions;
   const demoRun = useRef(0);
+  const demoRef = useRef(demo);
+  demoRef.current = demo;
 
   const stopDemo = (finished = false) => {
     demoRun.current++;
+    demoRef.current = null;
+    void narrate(null);
     setDemo((d) => {
       if (d) setSendMode(d.mode);
       return null;
@@ -892,7 +898,12 @@ export const LiveWorkspace = () => {
     const detector = createDetector();
     for (const step of DEMO_STEPS) {
       if (demoRun.current !== run) return;
-      if (step.kind === 'caption') setDemo((d) => (d ? { ...d, caption: step.text } : d));
+      if (step.kind === 'caption') {
+        setDemo((d) => (d ? { ...d, caption: step.text } : d));
+        // The guide points at where it happens and says it (1.19.1)
+        await narrate({ target: step.target, say: step.text, click: step.click, label: practice ? 'Demo · practice' : 'Demo' });
+        if (demoRun.current !== run) return;
+      }
       if (step.kind === 'say') {
         await detector.onTranscript(step.text, false);
         if (!(await wait(350))) return;
@@ -923,6 +934,11 @@ export const LiveWorkspace = () => {
     }
     if (demoRun.current === run) stopDemo(true);
   };
+
+  const startDemoRef = useRef(startDemo);
+  startDemoRef.current = startDemo;
+  const stopDemoRef = useRef(stopDemo);
+  stopDemoRef.current = stopDemo;
 
   /** The detector, wired to this screen (used for listening, and for the demo). */
   const createDetector = () => {
@@ -1035,6 +1051,19 @@ export const LiveWorkspace = () => {
 
   // ---- Practice: the band, and a way out ------------------------------------------------
   const [practice, setPracticeOn] = useState(practising);
+  // Training's "Watch the demo", and ending practice from its band, reach the demo here
+  useEffect(() => {
+    const play = (e: Event) => void startDemoRef.current({ practice: !!(e as CustomEvent<{ practice?: boolean }>).detail?.practice });
+    const ended = () => {
+      if (!practising() && demoRef.current?.practice) stopDemoRef.current();
+    };
+    window.addEventListener(PLAY_DEMO, play);
+    window.addEventListener(PRACTICE_CHANGED, ended);
+    return () => {
+      window.removeEventListener(PLAY_DEMO, play);
+      window.removeEventListener(PRACTICE_CHANGED, ended);
+    };
+  }, []);
   /**
    * What this screen was working on when practice began (Next, the reading, the suggestions,
    * the part): put back when it ends, so nothing from practice is left in Next for a real Take.
@@ -1565,6 +1594,7 @@ export const LiveWorkspace = () => {
               <DropdownMenuItem onSelect={() => navigate('/media-library')}>Pictures, videos and songs</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => navigate('/templates')}>Looks and colour teams</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => navigate('/display-manager')}>Screens</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => navigate('/training')}>Training</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setShowSettings(true)}>Settings</DropdownMenuItem>
             </DropdownMenuContent>
@@ -1592,12 +1622,12 @@ export const LiveWorkspace = () => {
 
         <div className="flex items-center justify-end gap-1.5">
           {features.boothCheck && <BoothCheckLight service={service} serviceIsToday={!!service && todays.some((s) => s.id === service.id)} onFix={fixBooth} />}
-          <button type="button" onClick={() => setShowPalette(true)} className="w-10 h-10 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" title="Find a verse, song or action (⌘K)" aria-label="Search">
+          <button type="button" onClick={() => setShowPalette(true)} data-guide="search" className="w-10 h-10 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" title="Find a verse, song or action (⌘K)" aria-label="Search">
             <Search className="w-5 h-5" />
           </button>
           <AlertControl className="h-9 hidden xl:flex" />
           <CountdownControl className="h-9 hidden xl:flex" />
-          <button type="button" onClick={() => setShowSettings(true)} className="w-10 h-10 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" title="Settings" aria-label="Settings">
+          <button type="button" onClick={() => setShowSettings(true)} data-guide="settings" className="w-10 h-10 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" title="Settings" aria-label="Settings">
             <Settings className="w-5 h-5" />
           </button>
           <div className="text-right leading-tight ml-2">
@@ -1816,20 +1846,6 @@ export const LiveWorkspace = () => {
         }}
         onDemo={() => void startDemo({ practice: true })}
       />
-      {practice && (
-        <div className="vv-practice-band" role="status" data-practice-band>
-          Practice: nothing goes to the projector, stream, stage or ProPresenter
-          <button
-            type="button"
-            onClick={() => {
-              if (demo) stopDemo();
-              setPractice(false);
-            }}
-          >
-            End practice
-          </button>
-        </div>
-      )}
       <ApiKeyDialog
         open={showApiKey}
         onClose={(saved) => {

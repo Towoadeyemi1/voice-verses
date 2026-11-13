@@ -56,7 +56,7 @@ export const StatusCapsule = ({
           </button>
         </>
       ) : (
-        <button type="button" onClick={onListen} disabled={connecting} className="h-8 px-3.5 rounded-full bg-primary/15 hover:bg-primary/25 text-sm font-semibold flex items-center gap-2 disabled:opacity-60">
+        <button type="button" onClick={onListen} disabled={connecting} data-guide="listen" className="h-8 px-3.5 rounded-full bg-primary/15 hover:bg-primary/25 text-sm font-semibold flex items-center gap-2 disabled:opacity-60">
           {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
           {connecting ? 'Starting…' : 'Start listening'}
         </button>

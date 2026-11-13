@@ -146,6 +146,14 @@ Approved mock-up: [`design/training/`](design/training/) (`SetUp.dc.html`). Part
 - Screens are tiles with the number Identify screens shows; sound has a meter in the team colour (green stays for Next).
 - **Practice** is a violet striped band along the bottom of the live screen with its words ("Practice: nothing goes to the projector, stream, stage or ProPresenter") and End practice; Live is titled "Live in practice". The ProPresenter lesson (Training, later) has a red band instead, because it uses ProPresenter for real.
 
+## Training and the guide (1.19.1)
+
+Approved mock-up: [`design/training/`](design/training/) (`Main`, `ShowMe`, `TryIt`). Parts: `pages/Training.tsx` (`tr-` classes in `settings.css`), `components/guide/` (`guide.css`).
+- The guide never moves the app around: it dims everything but one control, rings it in the team colour, and a white arrow pointer glides to it and taps (an accent ripple). Motion is still with reduced motion.
+- The card says one short line in 19px bold; the reason is behind "Why?"; what happened is a ✓ line in the team colour (not green: green is Next); a wrong click is an amber note that names what was clicked, never a telling-off.
+- The card sits beside what it is about, never over it.
+- The voice is on by default with a speaker button to turn it off; the words are always on the card too.
+
 ## Building it into the app
 
 - Put the tokens in `src/index.css` as CSS variables, keeping shadcn's names mapped: `--background` = `--win`, `--card` = `--surface`, `--primary` = `--accent`. Dark should be the default, with a light option.

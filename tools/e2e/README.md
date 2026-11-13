@@ -10,6 +10,7 @@ xvfb-run -a node tools/e2e/transitions.cjs   # moving backgrounds, transitions, 
 xvfb-run -a node tools/e2e/starters.cjs      # starter looks, themes, colour teams, orders of service, countdowns
 xvfb-run -a node tools/e2e/microphone.cjs [/tmp/vv-e2e/worship.wav]   # Settings → Listening: sound check, channel, input found again by name
 xvfb-run -a -s "-screen 0 3840x1600x24" node tools/e2e/booth-setup.cjs [/tmp/vv-e2e/moments.wav]   # Set up your booth on a new computer, and the demo in practice (nothing reaches the room)
+xvfb-run -a -s "-screen 0 3840x1600x24" node tools/e2e/training.cjs   # Training: Show me / Let me try Your first Sunday, the booth check lesson, the narrated demo
 xvfb-run -a node tools/e2e/samples.cjs        # fresh install: samples, welcome view, the demo, every page photographed
 xvfb-run -a node tools/e2e/alerts.cjs         # alerts: projector, stage only, clearing, hiding by itself
 xvfb-run -a node tools/e2e/pages.cjs         # every page renders without errors (screenshots)

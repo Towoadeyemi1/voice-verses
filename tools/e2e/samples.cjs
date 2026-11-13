@@ -20,9 +20,11 @@ const { OUT, launch, check, done } = require('./lib.cjs');
   await win.screenshot({ path: `${OUT}/tour-1-live-welcome.png` });
 
   // The demo
-  await win.getByRole('button', { name: /Watch a 1-minute demo/ }).click();
+  // The demo is narrated (1.19.1): about two minutes; no voices under Xvfb
+  await win.evaluate(() => localStorage.setItem('voice-verses-guide-voice', 'off'));
+  await win.getByRole('button', { name: /Watch the demo/ }).click();
   const seen = new Set(); let predicted = ''; let newSong = false; let shotVerse = false; let shotSong = false;
-  for (let i = 0; i < 140; i++) {
+  for (let i = 0; i < 400; i++) {
     await win.waitForTimeout(500);
     const live = await win.evaluate(() => { const m = JSON.parse(localStorage.getItem('voice-verses-live') || 'null'); const v = m?.data?.verse; const s = m?.data?.slide; return v ? `${v.book} ${v.chapter}:${v.verse}` : s ? `${s.songTitle || s.title} · ${s.sectionLabel ?? ''}` : ''; });
     if (live) seen.add(live);

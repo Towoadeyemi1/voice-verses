@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, Images, MonitorUp, Palette, Radio, Settings } from 'lucide-react';
+import { CalendarDays, GraduationCap, Images, MonitorUp, Palette, Radio, Settings } from 'lucide-react';
 import { CountdownControl } from '../CountdownControl';
 import { AlertControl } from '../AlertControl';
 import { showLogo } from '@/lib/showLogo';
@@ -11,6 +11,7 @@ const PAGES = [
   { path: '/media-library', label: 'Media', icon: Images },
   { path: '/templates', label: 'Looks', icon: Palette },
   { path: '/display-manager', label: 'Screens', icon: MonitorUp },
+  { path: '/training', label: 'Training', icon: GraduationCap },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 

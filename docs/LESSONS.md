@@ -22,6 +22,8 @@ Check this list before debugging. Add every new mistake that cost time.
 - **Closing the main window left outputs orphaned:** `suspendScreens()` on close and `resumeScreens()` on reopen. `activate` checks `!mainWindow`.
 - **Detection stopped when the app wasn't focused:** Chromium throttles background windows. Use the three command-line switches, `backgroundThrottling: false`, and both power-save blockers.
 - **Practice left the demo's next verse waiting in Next** (1.19.0): after End practice the live screen was back to the room, but Next still held John 3:18, one Space from the projector. Ending practice must put back everything the live screen was working on (Next, the reading, suggestions, the part), not just what Live shows. Checked by `tools/e2e/booth-setup.cjs`.
+- **The guide's clicks closed the search** (1.19.1): a click on the lesson card counted as a click outside the open search dialog, which closes it. The guide's layer stops pointer-downs from reaching the page (`onPointerDown` stopPropagation).
+- **No voices under Xvfb:** `speechSynthesis` may never say it finished. The guide never waits on it longer than twice the reading time, and tests turn the voice off (`voice-verses-guide-voice`).
 - **Every e2e profile is a new booth** (1.19.0): Set up your booth opens by itself on a fresh profile and would sit over every other test. `launch()` closes it unless `firstRun: true`.
 - **The `screen` module can't fake a second display under Xvfb/xinerama.** In tests, patch `screen.getAllDisplays`, `getPrimaryDisplay` and `getDisplayMatching`, and emit `display-added` (see `tools/e2e/lib.cjs`).
 

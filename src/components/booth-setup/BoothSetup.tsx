@@ -98,7 +98,7 @@ export function BoothSetup({ open, onClose, onSettings, onDemo }: { open: boolea
 
         <footer className="bs-foot">
           <span className="text">
-            <b>5 · Try it.</b> A one-minute practice sermon: watch a verse found and put up. Nothing reaches the room.
+            <b>5 · Try it.</b> A two-minute practice sermon, explained step by step: watch a verse found and put up. Nothing reaches the room.
           </span>
           <button type="button" className={`st-btn ${all ? 'primary' : ''}`} disabled={!all} onClick={() => finish(onDemo)} data-setup-demo>
             <PlayCircle />
