@@ -16,7 +16,7 @@ fs.mkdirSync(OUT, { recursive: true });
  * Starts the app with a fresh profile. `audio` is a WAV file the fake
  * microphone plays (see make-sermon-audio.py); it is played once.
  */
-async function launch(name, { audio } = {}) {
+async function launch(name, { audio, firstRun = false } = {}) {
   const profile = path.join(OUT, `profile-${name}`);
   fs.rmSync(profile, { recursive: true, force: true });
   const args = ['--no-sandbox', `--user-data-dir=${profile}`];
@@ -27,6 +27,12 @@ async function launch(name, { audio } = {}) {
   win.on('pageerror', (e) => errors.push(e.message));
   win.on('console', (m) => { if (m.type() === 'error' && !/audio devices|favicon/i.test(m.text())) errors.push(m.text().slice(0, 200)); });
   await win.waitForTimeout(2000);
+  // A fresh profile is a new booth, where Set up your booth opens by itself (1.19.0); other tests skip it
+  if (!firstRun)
+    await win.evaluate(() => {
+      localStorage.setItem('voice-verses-booth-setup', JSON.stringify({ confirmed: {}, laterAt: 'e2e' }));
+      window.dispatchEvent(new CustomEvent('voice-verses-show-booth-setup', { detail: { open: false } }));
+    });
   return { app, win, errors };
 }
 

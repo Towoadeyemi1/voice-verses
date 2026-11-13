@@ -47,7 +47,7 @@ export function MovesPage({ onCues }: { onCues: () => void }) {
               className="hf"
               aria-checked={t.level === 'handsfree'}
               disabled={!unlocked}
-              title={!m.handsFree ? 'Hands-free for this comes with 1.19, when spirit can tell the singing has finished' : unlocked ? 'Goes live by itself when spirit is Hands-free, after a 3-second countdown' : `Unlocks after ${HANDS_FREE_AFTER} right in a row`}
+              title={!m.handsFree ? 'Hands-free for this comes later, when spirit can tell the singing has finished' : unlocked ? 'Goes live by itself when spirit is Hands-free, after a 3-second countdown' : `Unlocks after ${HANDS_FREE_AFTER} right in a row`}
               onClick={() => updateSpirit((s) => setMoveLevel(s, id, 'handsfree'))}
             >
               {unlocked ? <Zap /> : <Lock />}
@@ -55,7 +55,7 @@ export function MovesPage({ onCues }: { onCues: () => void }) {
             </button>
           </div>
         ) : (
-          <span className="st-pill">Coming in 1.19</span>
+          <span className="st-pill">Coming soon</span>
         )}
         <span />
       </div>

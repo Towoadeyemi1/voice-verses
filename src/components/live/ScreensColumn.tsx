@@ -44,6 +44,7 @@ export const ScreensColumn = ({
   clickMode,
   onClickMode,
   onEditLive,
+  practice = false,
   onEditNext,
   nextCountdown,
   onNotThis,
@@ -65,6 +66,8 @@ export const ScreensColumn = ({
   onClickMode: (mode: ClickMode) => void;
   /** Quick edit (only for a slide, not a verse) */
   onEditLive?: () => void;
+  /** Practice (1.19.0): Live shows what the room would see, but the room doesn't */
+  practice?: boolean;
   onEditNext?: () => void;
   /** The countdown Next will start (a part with its own countdown), shown in its picture */
   nextCountdown?: { countdown: Countdown; remaining: number } | null;
@@ -98,7 +101,7 @@ export const ScreensColumn = ({
         </div>
       </div>
 
-      <Label tone="live" title="Live" detail={logoUp ? (logo ? 'Logo' : 'Clear') : liveLabel}>
+      <Label tone="live" title={practice ? 'Live in practice' : 'Live'} detail={logoUp ? (logo ? 'Logo' : 'Clear') : liveLabel}>
         {onEditLive && !logoUp && (
           <button type="button" onClick={onEditLive} className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5" title="Quick edit: change the words or the look of what is on the screens">
             <Pencil className="w-3.5 h-3.5" /> Edit

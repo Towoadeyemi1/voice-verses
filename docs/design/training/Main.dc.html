@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Training</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#f0b44a}a:hover{color:#ffd28a}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #0e0d10; color: #f4f1f6; font-family: Figtree, -apple-system, system-ui, sans-serif; font-size: 14px; display: flex; flex-direction: column">
+
+  <header style="height: 64px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 28px; border-bottom: 1px solid rgba(255,245,255,.07)">
+    <b style="font-size: 16px; font-weight: 700">Voice Verses</b>
+    <nav aria-label="Pages" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: rgba(255,245,255,.05); margin-left: 24px">
+      <a href="#" style="padding: 8px 14px; border-radius: 10px; color: #b2abb7; text-decoration: none; font-weight: 600">Live</a>
+      <a href="#" style="padding: 8px 14px; border-radius: 10px; color: #b2abb7; text-decoration: none; font-weight: 600">Services</a>
+      <a href="#" style="padding: 8px 14px; border-radius: 10px; color: #b2abb7; text-decoration: none; font-weight: 600">Media</a>
+      <a href="#" style="padding: 8px 14px; border-radius: 10px; color: #f4f1f6; background: #26232a; text-decoration: none; font-weight: 700">Training</a>
+      <a href="#" style="padding: 8px 14px; border-radius: 10px; color: #b2abb7; text-decoration: none; font-weight: 600">Settings</a>
+    </nav>
+  </header>
+
+  <main style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; padding: 28px 40px">
+    <section style="display: flex; flex-direction: column; gap: 22px; min-width: 0">
+      <div>
+        <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.02em">Training</h1>
+        <p style="margin: 4px 0 0; color: #b2abb7; font-size: 15px">Short lessons on the real screens. Watch it done, or do it yourself.</p>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 18px; padding: 18px 20px; border-radius: 16px; background: linear-gradient(135deg, rgba(240,180,74,.16), rgba(244,114,182,.10)); box-shadow: inset 0 0 0 1px rgba(240,180,74,.35)">
+        <div role="img" aria-label="3 of 6 steps done" style="width: 54px; height: 54px; flex: none; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#f0b44a 0 50%, rgba(255,245,255,.1) 50% 100%)">
+          <span style="width: 42px; height: 42px; border-radius: 50%; background: #241f22; display: grid; place-items: center; font-weight: 800">3/6</span>
+        </div>
+        <div style="flex: 1; min-width: 0">
+          <b style="display: block; font-size: 16px">Carry on: Your first Sunday</b>
+          <span style="color: #b2abb7; font-size: 14px">Next: take the verse off the screens with Clear (Esc)</span>
+        </div>
+        <button type="button" style="height: 44px; padding: 0 18px; border: 0; border-radius: 12px; background: #f0b44a; color: #2a1d04; font: 700 14.5px Figtree, system-ui, sans-serif">Carry on</button>
+      </div>
+
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: baseline; gap: 10px">
+            <h2 style="margin: 0; font-size: 16px; font-weight: 700">{{g.title}}</h2>
+            <span style="font-size: 13px; color: #b2abb7">{{g.who}}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+            <sc-for list="{{g.lessons}}" as="l" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 14px; background: #1f1d22">
+                <div style="display: flex; align-items: center; gap: 8px">
+                  <b style="flex: 1; font-size: 15px">{{l.title}}</b>
+                  <span style="{{l.doneStyle}}">{{l.done}}</span>
+                </div>
+                <span style="font-size: 13px; color: #b2abb7; line-height: 1.4">{{l.desc}}</span>
+                <span style="font-size: 13px; color: #b2abb7">{{l.meta}}</span>
+                <div style="display: flex; gap: 6px; margin-top: 4px">
+                  <button type="button" style="height: 36px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(240,180,74,.16); color: #f0b44a; font: 600 13.5px Figtree, system-ui, sans-serif">Show me</button>
+                  <button type="button" style="height: 36px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(255,245,255,.08); color: #f4f1f6; font: 600 13.5px Figtree, system-ui, sans-serif">Let me try</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <aside style="display: flex; flex-direction: column; gap: 14px">
+      <div style="padding: 18px; border-radius: 16px; background: #1f1d22; display: flex; flex-direction: column; gap: 10px">
+        <b style="font-size: 15px">Practice mode</b>
+        <p style="margin: 0; color: #b2abb7; font-size: 14px; line-height: 1.45">Every lesson runs in practice mode. Live, Next and the strip work as usual, but nothing reaches the projector, stream, stage or ProPresenter.</p>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: repeating-linear-gradient(135deg, rgba(139,92,246,.22) 0 10px, rgba(139,92,246,.12) 10px 20px); font-weight: 700; font-size: 13.5px">Practice: nothing goes to the room</div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: repeating-linear-gradient(135deg, rgba(239,68,68,.30) 0 10px, rgba(239,68,68,.18) 10px 20px); font-weight: 700; font-size: 13.5px">ProPresenter lesson: uses ProPresenter for real</div>
+        <span style="font-size: 13px; color: #b2abb7">ProPresenter runs your screens, so its lesson has a red band instead. Do it before the service.</span>
+      </div>
+      <div style="padding: 18px; border-radius: 16px; background: #1f1d22; display: flex; flex-direction: column; gap: 10px">
+        <b style="font-size: 15px">Stuck during a service?</b>
+        <p style="margin: 0; color: #b2abb7; font-size: 14px; line-height: 1.45">Every warning has <b style="color: #f4f1f6">Show me the fix</b>. It lights up the one thing to change, then you are straight back to your service.</p>
+      </div>
+      <div style="padding: 18px; border-radius: 16px; background: #1f1d22; display: flex; flex-direction: column; gap: 10px">
+        <b style="font-size: 15px">New computer?</b>
+        <p style="margin: 0; color: #b2abb7; font-size: 14px; line-height: 1.45">Set up your booth opens by itself the first time Voice Verses starts. Run it again here any time.</p>
+      </div>
+    </aside>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var done = 'font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; color: #b2abb7; background: rgba(255,245,255,.08)';
+    var todo = 'font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 999px; color: #f0b44a; background: rgba(240,180,74,.14)';
+    var l = function (title, desc, meta, finished) { return { title: title, desc: desc, meta: meta, done: finished ? '✓ Done' : 'New', doneStyle: finished ? done : todo }; };
+    return {
+      groups: [
+        { title: 'Everyone', who: 'Volunteers on Sunday', lessons: [
+          l('Your first Sunday', 'Start listening, put a verse up, Take, Clear, a song, the logo, Pause spirit.', '6 steps · 5 min', false),
+          l('Red is live, green is next', 'What is on the screens now, what waits in Next, and Take.', '3 steps · 2 min', true),
+          l('When something goes wrong', 'The booth check light, a warning, and its Fix button.', '4 steps · 3 min', false)
+        ] },
+        { title: 'Setting up', who: 'Once, by whoever sets up the booth', lessons: [
+          l('Set up your booth', 'Voice Verses finds your sound, screens and ProPresenter; you confirm each.', '5 steps · 8 min', true),
+          l('ProPresenter: verses on your own slide', 'One slide your team puts up and clears. Uses ProPresenter for real.', '6 steps · 6 min', false),
+          l('Screens and outputs', 'Projector, stream lower third and stage, by HDMI, SDI or NDI.', '5 steps · 5 min', false)
+        ] },
+        { title: 'Before Sunday', who: 'Planning', lessons: [
+          l('Plan a service from a template', 'Pick the type of service, use its template, add songs and verses.', '5 steps · 4 min', false),
+          l('Songs and slides', 'Import a song, edit a slide, change its look.', '6 steps · 6 min', false),
+          l('Teach spirit a cue', '“When the preacher says … get … ready”, and correcting it.', '4 steps · 3 min', false)
+        ] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

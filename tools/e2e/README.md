@@ -9,6 +9,7 @@ xvfb-run -a -s "-screen 0 3840x1600x24" node tools/e2e/screens.cjs   # Settings 
 xvfb-run -a node tools/e2e/transitions.cjs   # moving backgrounds, transitions, the designer and the backgrounds gallery
 xvfb-run -a node tools/e2e/starters.cjs      # starter looks, themes, colour teams, orders of service, countdowns
 xvfb-run -a node tools/e2e/microphone.cjs [/tmp/vv-e2e/worship.wav]   # Settings → Listening: sound check, channel, input found again by name
+xvfb-run -a -s "-screen 0 3840x1600x24" node tools/e2e/booth-setup.cjs [/tmp/vv-e2e/moments.wav]   # Set up your booth on a new computer, and the demo in practice (nothing reaches the room)
 xvfb-run -a node tools/e2e/samples.cjs        # fresh install: samples, welcome view, the demo, every page photographed
 xvfb-run -a node tools/e2e/alerts.cjs         # alerts: projector, stage only, clearing, hiding by itself
 xvfb-run -a node tools/e2e/pages.cjs         # every page renders without errors (screenshots)
@@ -36,7 +37,7 @@ node tools/e2e/mock-ollama.cjs &                                           # fak
 Each script prints a `PASS` or `FAIL` line for each check and exits non-zero on failure. Screenshots and profiles go to `$E2E_OUT` (default `/tmp/vv-e2e`).
 
 `lib.cjs` has the helpers:
-- `launch(name, { audio })` starts the app with a fresh profile and, optionally, a fake microphone playing a WAV.
+- `launch(name, { audio, firstRun })` starts the app with a fresh profile and, optionally, a fake microphone playing a WAV. A fresh profile is a new booth, where Set up your booth opens by itself; `launch` closes it (marked "Finish later") unless `firstRun: true`.
 - `plugInSecondDisplay(app)` fakes a second display, because Xvfb can't.
 - `showVerse(win, verse)` puts a verse on screen without speech.
 - `seedMedia(win, items)` adds songs or pictures to IndexedDB.

@@ -2,6 +2,7 @@ import { toast } from 'sonner';
 import { BibleVerse } from '@/types/bible';
 import { desktop, ProPresenterConnection } from '@/lib/desktop';
 import { plainVerseText, verseReference } from '@/lib/verseText';
+import { practising } from '@/lib/practice';
 
 /**
  * Sends the verses Voice Verses shows to ProPresenter as well (desktop app
@@ -43,7 +44,8 @@ let failing = false;
 /** Runs a request if sending is turned on. True when ProPresenter accepted it. */
 async function send(action: (settings: ProPresenterSettings) => Promise<void>): Promise<boolean> {
   const settings = loadProPresenterSettings();
-  if (!desktop || !settings.enabled) return false;
+  // Practice never reaches ProPresenter
+  if (!desktop || !settings.enabled || practising()) return false;
   try {
     await action(settings);
     if (failing) toast.success('ProPresenter is receiving verses again');
@@ -112,7 +114,7 @@ export function resumeProPresenter(verse?: BibleVerse): Promise<boolean> {
 
 /** Takes Voice Verses' verse off ProPresenter (the message, and the stage message if it sent one): only when it put one there. */
 export function clearProPresenter(): Promise<boolean> {
-  if (!sentSinceClear) return Promise.resolve(false);
+  if (!sentSinceClear || practising()) return Promise.resolve(false);
   sentSinceClear = false;
   return send((settings) => desktop!.proPresenter.clear(connectionOf(settings), { stage: settings.stage }));
 }

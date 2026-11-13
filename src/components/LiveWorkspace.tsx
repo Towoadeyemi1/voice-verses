@@ -14,7 +14,7 @@ import { buildSongSlides, ccliLicence } from '@/lib/songs';
 import { addLine, captureSlide, draftLyrics, draftTitle } from '@/lib/spontaneousSong';
 import { Moment, partByName, partForMoment, SermonPoint } from '@/speech/momentCues';
 import { startSpiritSync } from '@/lib/spiritSync';
-import { Correction, cueModeIn, cuesForListening, flushHeard, hearSoon, loadSpirit, moveModeIn, moveTrust, observe, Outcome, recordMove, recordOutcome, recordReady, recordTiming, serviceSummary, SPIRIT_CHANGED, updateSpirit, type MoveKind, type SpiritContext } from '@/lib/spirit';
+import { Correction, cueModeIn, cuesForListening, flushHeard, hearSoon, loadSpirit, moveModeIn, moveTrust, observe, Outcome, recordMove, recordOutcome, recordReady, recordTiming, serviceSummary, SPIRIT_CHANGED, learn, type MoveKind, type SpiritContext } from '@/lib/spirit';
 import { serviceType } from '@/lib/serviceTypes';
 import { BUILTIN_MOMENT_PHRASES, type MomentKind } from '@/speech/momentCues';
 import { SpiritStrip, type SpiritExpectation } from './live/SpiritStrip';
@@ -56,6 +56,9 @@ import type { Passage } from '@/speech/VerseDetectionController';
 import { readingTokens } from '@/speech/readingTracker';
 import type { Live } from './OutputContent';
 import { SettingsPanel, type Pane } from './SettingsPanel';
+import { BoothSetup } from './booth-setup/BoothSetup';
+import { boothSetupAsked, opensByItself, SHOW_BOOTH_SETUP } from '@/lib/boothSetup';
+import { PRACTICE_CHANGED, practising, setPractice } from '@/lib/practice';
 import { BoothCheckLight, Guardian, type BoothFix } from './live/BoothCheck';
 import { ApiKeyDialog } from './ApiKeyDialog';
 import { CountdownControl } from './CountdownControl';
@@ -329,7 +332,7 @@ export const LiveWorkspace = () => {
       const before = livePart;
       if (before && service && loadSpirit().level !== 'off') {
         const name = service.sections.flatMap((sec) => sec.subsections).find((it) => it.id === before.id)?.name;
-        if (name) updateSpirit((st) => recordTiming(st, serviceType(service), name, (Date.now() - before.at) / 60_000));
+        if (name) learn((st) => recordTiming(st, serviceType(service), name, (Date.now() - before.at) / 60_000));
       }
       setLivePart({ id: part.id, at: Date.now() });
       movedOn.current = null;
@@ -654,18 +657,18 @@ export const LiveWorkspace = () => {
     spiritPending.current = null;
     const ctx = spiritCtx(p.what);
     const note = why?.correction === 'never' ? 'never for this' : why?.correction === 'not-now' ? (p.singing ? 'not now, during a song' : 'not now') : why?.correction === 'wrong-part' ? 'wrong part' : undefined;
-    if (p.move) updateSpirit((st) => {
+    if (p.move) learn((st) => {
       const next = recordMove(st, p.move!, outcome, ctx, note);
       return why?.correction === 'never' ? { ...next, moves: { ...next.moves, [p.move!]: { ...moveTrust(next, p.move!), level: 'learning' as const } } } : next;
     });
-    else if (p.cueId) updateSpirit((st) => recordOutcome(st, p.cueId!, outcome, { ...why, singing: p.singing }, ctx));
+    else if (p.cueId) learn((st) => recordOutcome(st, p.cueId!, outcome, { ...why, singing: p.singing }, ctx));
   };
 
   /** spirit got something ready in Next: at Hands-free it goes live after 3 seconds unless stopped. */
   const spiritReady = (pending: NonNullable<typeof spiritPending.current>, item: Live) => {
     if (spiritPending.current) window.clearTimeout(spiritPending.current.timer);
     spiritPending.current = pending;
-    updateSpirit((st) => recordReady(st, pending.cueId, { ...spiritCtx(pending.what), move: pending.move }));
+    learn((st) => recordReady(st, pending.cueId, { ...spiritCtx(pending.what), move: pending.move }));
     window.clearTimeout(handsFreeTimer.current);
     const because = pending.why.charAt(0).toUpperCase() + pending.why.slice(1);
     if (pending.mode === 'handsfree' && item) {
@@ -801,7 +804,7 @@ export const LiveWorkspace = () => {
     }
     if (loadSpirit().level !== 'off' && !pausedRef.current) {
       flushHeard();
-      updateSpirit((st) => observe(st, item.name, Date.now(), { serviceId: svc.id, type: serviceType(svc) }));
+      learn((st) => observe(st, item.name, Date.now(), { serviceId: svc.id, type: serviceType(svc) }));
     }
     loadServiceItem(svc, item);
   };
@@ -858,7 +861,7 @@ export const LiveWorkspace = () => {
 
   // ---- The demo: a scripted sermon and worship set through the real detector ----------
 
-  const [demo, setDemo] = useState<{ caption: string; mode: SendMode } | null>(null);
+  const [demo, setDemo] = useState<{ caption: string; mode: SendMode; practice?: boolean } | null>(null);
   const suggestionsRef = useRef(suggestions);
   suggestionsRef.current = suggestions;
   const demoRun = useRef(0);
@@ -873,14 +876,18 @@ export const LiveWorkspace = () => {
     controller.current = null;
     setTranscript('');
     setSongMode(false);
+    // A practice demo ends its practice: this screen goes back to what the room shows, and to what it was doing
+    if (practising()) setPractice(false);
     if (finished) toast.success('That was the demo', { description: 'Press Start listening to do the same with your microphone.', duration: 8000 });
   };
 
-  const startDemo = async () => {
+  /** `practice`: nothing reaches the room (the demo at the end of Set up your booth) */
+  const startDemo = async ({ practice = false }: { practice?: boolean } = {}) => {
     if (listening || demo) return;
     const run = ++demoRun.current;
     const wait = (ms: number) => new Promise<boolean>((done) => window.setTimeout(() => done(demoRun.current === run), ms));
-    setDemo({ caption: 'Starting the demo', mode: sendMode });
+    if (practice) setPractice(true, 'the demo');
+    setDemo({ caption: 'Starting the demo', mode: sendMode, practice });
     setSendMode('auto');
     const detector = createDetector();
     for (const step of DEMO_STEPS) {
@@ -1012,6 +1019,57 @@ export const LiveWorkspace = () => {
   };
 
   const [settingsPane, setSettingsPane] = useState<Pane>('features');
+
+  // ---- Set up your booth (1.19.0): by itself on a new computer, or when asked ----------
+  const [showSetup, setShowSetup] = useState(() => opensByItself() || boothSetupAsked());
+  useEffect(() => {
+    const show = (e: Event) => {
+      const open = (e as CustomEvent<{ open: boolean }>).detail?.open !== false;
+      boothSetupAsked();
+      if (open) setShowSettings(false);
+      setShowSetup(open);
+    };
+    window.addEventListener(SHOW_BOOTH_SETUP, show);
+    return () => window.removeEventListener(SHOW_BOOTH_SETUP, show);
+  }, []);
+
+  // ---- Practice: the band, and a way out ------------------------------------------------
+  const [practice, setPracticeOn] = useState(practising);
+  /**
+   * What this screen was working on when practice began (Next, the reading, the suggestions,
+   * the part): put back when it ends, so nothing from practice is left in Next for a real Take.
+   */
+  const working = { preview, previewSuggestionId, collection, recent, suggestions, reading, passage, songMode, awaitingChapter, prediction, currentItemId, livePart };
+  const workingRef = useRef(working);
+  workingRef.current = working;
+  const beforePractice = useRef<typeof working | null>(null);
+  useEffect(() => {
+    const sync = () => {
+      const on = practising();
+      setPracticeOn(on);
+      if (on) {
+        if (!beforePractice.current) beforePractice.current = workingRef.current;
+        return;
+      }
+      const was = beforePractice.current;
+      beforePractice.current = null;
+      if (!was) return;
+      setPreview(was.preview);
+      setPreviewSuggestionId(was.previewSuggestionId);
+      setCollection(was.collection);
+      setRecent(was.recent);
+      setSuggestions(was.suggestions);
+      setReading(was.reading);
+      setPassage(was.passage);
+      setSongMode(was.songMode);
+      setAwaitingChapter(was.awaitingChapter);
+      setPrediction(was.prediction);
+      setCurrentItemId(was.currentItemId);
+      setLivePart(was.livePart);
+    };
+    window.addEventListener(PRACTICE_CHANGED, sync);
+    return () => window.removeEventListener(PRACTICE_CHANGED, sync);
+  }, []);
   const openListeningSettings = () => {
     setSettingsPane('listening');
     setShowSettings(true);
@@ -1474,7 +1532,10 @@ export const LiveWorkspace = () => {
   );
 
   return (
-    <div className="relative h-screen min-h-[640px] grid grid-rows-[64px_auto_minmax(0,1fr)] grid-cols-[minmax(0,1fr)] bg-background text-foreground overflow-hidden max-[1000px]:h-auto max-[1000px]:overflow-visible">
+    <div
+      className="relative h-screen min-h-[640px] grid grid-rows-[64px_auto_minmax(0,1fr)] grid-cols-[minmax(0,1fr)] bg-background text-foreground overflow-hidden max-[1000px]:h-auto max-[1000px]:overflow-visible"
+      style={practice ? { paddingBottom: 52 } : undefined}
+    >
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.22] transition-[background] duration-1000"
         style={{ background: `radial-gradient(45% 60% at 82% 40%, ${glowA}, transparent 70%), radial-gradient(35% 45% at 72% 95%, ${glowB}, transparent 70%)` }}
@@ -1626,7 +1687,7 @@ export const LiveWorkspace = () => {
                 demoPlaying={!!demo}
                 onItem={loadServiceItem}
                 onListen={startListening}
-                onDemo={startDemo}
+                onDemo={() => void startDemo()}
                 onVerse={(r) => void search(r)}
                 onSearch={() => setShowPalette(true)}
                 onPlan={() => navigate('/service-planner')}
@@ -1639,7 +1700,11 @@ export const LiveWorkspace = () => {
               <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse-soft flex-shrink-0" aria-hidden />
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-[15px] font-semibold">Demo: {demo.caption}</p>
-                <p className="m-0 text-[13px] text-muted-foreground">Played through the real listening engine, as if it had been heard. It uses the real screens.</p>
+                <p className="m-0 text-[13px] text-muted-foreground">
+                  {demo.practice
+                    ? 'Played through the real listening engine, as if it had been heard. Practice: only this screen shows it.'
+                    : 'Played through the real listening engine, as if it had been heard. It uses the real screens.'}
+                </p>
               </div>
               <button type="button" onClick={() => stopDemo()} className="h-9 px-3.5 rounded-xl bg-muted text-sm font-semibold hover:bg-muted/70">
                 Stop the demo
@@ -1671,6 +1736,7 @@ export const LiveWorkspace = () => {
         </NowPane>
 
         <ScreensColumn
+          practice={practice}
           live={live}
           logo={logo}
           next={preview}
@@ -1741,6 +1807,29 @@ export const LiveWorkspace = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <BoothSetup
+        open={showSetup}
+        onClose={() => setShowSetup(false)}
+        onSettings={(pane) => {
+          setSettingsPane(pane);
+          setShowSettings(true);
+        }}
+        onDemo={() => void startDemo({ practice: true })}
+      />
+      {practice && (
+        <div className="vv-practice-band" role="status" data-practice-band>
+          Practice: nothing goes to the projector, stream, stage or ProPresenter
+          <button
+            type="button"
+            onClick={() => {
+              if (demo) stopDemo();
+              setPractice(false);
+            }}
+          >
+            End practice
+          </button>
+        </div>
+      )}
       <ApiKeyDialog
         open={showApiKey}
         onClose={(saved) => {

@@ -138,6 +138,14 @@ Approved mock-up: [`design/spirit.html`](design/spirit.html). Parts: `components
 - "What spirit will do next" (1.18.0) is one quiet row under the order of service: the orb pill with the type of service, up to three soft chips ("Welcome · when the countdown ends · Ready in Next"; Hands-free in the gold), and Pause on the right. Paused, it says so in words. It never uses red or green.
 - How it went is a dialog, not a page: a ring with spirit's moves of all, one sentence, the run bar with its legend, corrections with Just this once, and the gold Make it Hands-free.
 
+## Set up your booth and practice (1.19.0)
+
+Approved mock-up: [`design/training/`](design/training/) (`SetUp.dc.html`). Parts: `components/booth-setup/BoothSetup.tsx`, `bs-` classes in `settings.css`.
+- A sheet over the live screen in the Settings look: a small uppercase kicker in the team colour ("Set up your booth · 2 of 4 confirmed"), a large title, one short line, a row of four progress bars, "Finish later" as a quiet button.
+- One card per thing found, two by two. The card to check now has a 2px team-colour ring and the pill "Check this one"; confirmed cards say "✓ Confirmed" in grey; the rest "To check". Each card says what was found in one sentence, then Looks right (solid team colour: the one confirming action), then quieter choices.
+- Screens are tiles with the number Identify screens shows; sound has a meter in the team colour (green stays for Next).
+- **Practice** is a violet striped band along the bottom of the live screen with its words ("Practice: nothing goes to the projector, stream, stage or ProPresenter") and End practice; Live is titled "Live in practice". The ProPresenter lesson (Training, later) has a red band instead, because it uses ProPresenter for real.
+
 ## Building it into the app
 
 - Put the tokens in `src/index.css` as CSS variables, keeping shadcn's names mapped: `--background` = `--win`, `--card` = `--surface`, `--primary` = `--accent`. Dark should be the default, with a light option.

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, Check, Mic, MonitorUp, RefreshCw, X } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { AlertCircle, Check, Mic, MonitorUp, RefreshCw, Wand2, X } from 'lucide-react';
+import { showBoothSetup } from '@/lib/boothSetup';
 import { BoothCheckItem, needsAttention, runBoothCheck } from '@/lib/boothCheck';
 import type { BoothFix } from '@/components/live/BoothCheck';
-import { List, Mark, Ring, Row, Section } from './kit';
+import { List, Mark, Ring, Row, Section, Sq } from './kit';
 
 const GROUPS: { title: string; ids: (id: string) => boolean }[] = [
   { title: 'Sound', ids: (id) => id.startsWith('mic') || id === 'speech' },
@@ -15,6 +17,13 @@ export function BoothCheckPage({ service, serviceIsToday, onFix }: { service?: {
   const [items, setItems] = useState<BoothCheckItem[] | null>(null);
   const [checking, setChecking] = useState(false);
   const [at, setAt] = useState<Date | null>(null);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  /** Set up your booth lives on the live screen */
+  const setUp = () => {
+    showBoothSetup();
+    if (pathname !== '/') navigate('/');
+  };
 
   const check = useCallback(async () => {
     setChecking(true);
@@ -50,6 +59,16 @@ export function BoothCheckPage({ service, serviceIsToday, onFix }: { service?: {
           Check again
         </button>
       </div>
+
+      <Section title="Set up your booth">
+        <List>
+          <Row lead={<Sq tint="gold" icon={Wand2} />} title="Find everything again" desc="Voice Verses looks for your microphone, screens and ProPresenter, and you confirm each.">
+            <button type="button" className="st-btn soft" onClick={setUp} data-open-booth-setup>
+              Set up your booth
+            </button>
+          </Row>
+        </List>
+      </Section>
 
       {GROUPS.map((g) => {
         const list = (items ?? []).filter((i) => g.ids(i.id));

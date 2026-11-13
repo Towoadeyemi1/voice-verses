@@ -310,6 +310,35 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - 💬 Proposed: **Training**, lessons that run on the real interface. A spotlight on the real control, one short step at a time, waiting for the volunteer to do it themselves. Lessons happen in a **practice room** (the sample service, a recorded sermon, the screens shown only on this computer) so nothing reaches the room by mistake. Lessons are grouped by role (First Sunday, Setting up the booth, Songs and slides, Teaching spirit), with progress ticks, and a "Show me" link from any Settings page or warning.
 - ⏳ Mock-up first, for the owner's yes.
 
+"I am also worried about the demo, and how users will know what to do." … "So you're using links not a demo showing what to do or click?" … "What of the ProPresenter part?" … "Proceed"
+
+(13 Nov 2026.)
+- 💬 Agreed approach, all on the real screens in practice mode (nothing reaches the projector, stream, stage or ProPresenter):
+  - **Set up your booth**: Voice Verses finds the sound input (and hears speech on it), the screens, ProPresenter on the network and the church's types of service; the volunteer confirms or changes each, then tries a short demo sermon.
+  - **Your first Sunday**: a practice run of a service for a new volunteer.
+  - Every lesson in two modes: **Show me** (a spotlight and a moving pointer really do each step while a caption explains) and **Let me try** (the volunteer clicks; the app waits, undoes a wrong click with a hint, and checks the result itself, such as "John 3:16 is on Live").
+  - A **Training** page by role with progress per person, "Show me" buttons on Settings pages and warnings, and a picture guide made from any lesson to send to the team.
+  - **ProPresenter lesson**: Voice Verses' own steps get the spotlight; ProPresenter's steps are pictured beside it (it runs on another computer) and each is checked through ProPresenter's network connection where possible: connected, the presentation found, linked text proved by writing "Voice Verses test" and reading the slide back, Looks read from ProPresenter then confirmed by eye. Done before the service, because ProPresenter is live.
+  - Tried with Billie before it ships.
+- ✅ Mock-up `docs/design/training/` (Training page, Show me, Let me try, Set up your booth, the ProPresenter lesson, Show me the fix), approved with the changes below.
+
+"What do you think?" … "Proceed and do not mess up design, functionality or aesthetics"
+
+(13 Nov 2026.) Changes to the mock-up, agreed:
+- ✅ Set up your booth opens by itself the first time Voice Verses starts ("Finish later" to skip).
+- ✅ One short line per step; the explanation is behind "Why?".
+- ✅ The ProPresenter lesson has a red band ("uses ProPresenter for real; do it before the service"); every other lesson the purple practice band.
+- ✅ The three ways into ProPresenter look equal until Billie's test; none is marked Recommended.
+- ✅ New: **Show me the fix** on every warning during a service: one thing lit up, seconds, back to the service.
+- Later: picture guides to share and progress by person.
+- Each lesson gets its own automatic test so a change to the screens can't break it unnoticed.
+- Build order: Set up your booth on first launch; Your first Sunday (Show me, Let me try); Show me the fix; the ProPresenter lesson after Billie's test; the other lessons; then guides and progress by person.
+
+"Proceed" (build it; 13 Nov 2026):
+- ✅ 1.19.0 **Set up your booth** opens by itself the first time Voice Verses starts on a computer (never for a church already using it), and from Settings → Booth check any time. It listens to every input and finds the one with sound (the loudest channel on a desk feed), suggests the projector on a second screen, looks for ProPresenter on this computer and the network ("Yes, that's it" only remembers where it is; it never switches sending on), and keeps the church's types of service (listed first in Services). Each is confirmed or changed.
+- ✅ 1.19.0 **Practice mode** (D31): the demo after set-up runs on the real live screen, but nothing reaches the projector, stream, stage, DeckLink, NDI, network screens or ProPresenter, and spirit learns nothing. A violet band says so, with End practice; ending it puts this screen back as it was, so nothing from practice waits in Next. Checked by `tools/e2e/booth-setup.cjs`.
+- ⏳ Next: the Training page with Your first Sunday (Show me and Let me try), then Show me the fix on warnings.
+
 ## "Did you hear what I said about the goal of spirit running the whole service?" … "Do you think that is the best order?" … "Start please. Also, I want the option, if the user has an AI key, to add it and enhance the experience in a way that the app can learn better, perform more proficiently, and run spirit better. Is that even reasonable??"
 
 (5 Nov 2026.)
@@ -322,9 +351,9 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 (5 Nov 2026.) The church uses **its own church management app**. Its service types: Sunday services (e.g. Communion Sunday, Thanksgiving Sunday), Midweek, Special events, Life events (weddings, funerals, dedications), Christmas, New Year, Easter, Friday Night Prayers, Prayer and Fasting, Youth Day.
 - ✅ 1.18.0 **Service types**: every service has a type (Plan services → Type of service; guessed from the name and day when not chosen); spirit learns each type's order, timings and habits separately (a Friday Night Prayers is not run like a Sunday service). Cues can be for every type or only some.
-- ✅ 1.18.0 spirit for every move: Settings → What spirit does (every move on its own ladder; the countdown into the next part and the next song work now, the rest in 1.19.0), "What spirit will do next" under the order of service with Pause (P), and How it went when listening stops (score, the service start to end, corrections with "Just this once", what has earned Hands-free).
-- ⏳ 1.20.0 Help from AI includes models on the church's own computers: Ollama, LM Studio, llama.cpp and any OpenAI-compatible server, as well as Claude and OpenAI.
-- ⏳ 1.21.0 **The church's app feeds each service**: Voice Verses checks the church app on a schedule (and on demand) for each upcoming service's songs (choir), announcements (announcement team), and pictures and media (creative team). spirit drafts the order of service from them for that service's type; the operator approves or adjusts before the service; spirit notes each adjustment and the reason, and applies it next time when the reason holds (e.g. "announcements go after the offering on Communion Sundays"). Works offline from the last copy.
+- ✅ 1.18.0 spirit for every move: Settings → What spirit does (every move on its own ladder; the countdown into the next part and the next song work now, the rest in 1.20.0), "What spirit will do next" under the order of service with Pause (P), and How it went when listening stops (score, the service start to end, corrections with "Just this once", what has earned Hands-free).
+- ⏳ 1.21.0 Help from AI includes models on the church's own computers: Ollama, LM Studio, llama.cpp and any OpenAI-compatible server, as well as Claude and OpenAI.
+- ⏳ 1.22.0 **The church's app feeds each service**: Voice Verses checks the church app on a schedule (and on demand) for each upcoming service's songs (choir), announcements (announcement team), and pictures and media (creative team). spirit drafts the order of service from them for that service's type; the operator approves or adjusts before the service; spirit notes each adjustment and the reason, and applies it next time when the reason holds (e.g. "announcements go after the offering on Communion Sundays"). Works offline from the last copy.
 - ✅ The feed the church's developers build: `docs/integrations/church-app-feed.md` (written now so they can start).
 
 ## "The voice detection is very bad!!! The detection of what the speaker is saying is now very bad, other version was way better, what have you done."
@@ -386,6 +415,15 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
   
   Checked by `tools/checks/propresenter-trigger.mjs`.
 - ✅ A breakdown for the booth of everything Voice Verses does in ProPresenter (shared as a page).
+
+## "I saw someone send into ProPresenter and it came into a slide in a slide deck … why is the message route you are giving me so complex?" … "Our ProPresenter is set up so that when a slide is sent, it goes to our projector, lower third and confidence monitor all at once" … "Linked text seems to be the most flexible and non-disruptive?" … "Before you build, can't you check if people have tested this anywhere?"
+
+(12 Nov 2026.)
+- 💬 Three ways for verses to reach ProPresenter, chosen in Settings → ProPresenter:
+  - **A slide with linked text** (recommended): Voice Verses writes the verse to a file; a text box on the church's own "Voice Verses" slide is linked to it (ProPresenter 7.6+, Format → Linked Text → File). The team puts the slide up and clears it like any other; each screen keeps its own look.
+  - **A slide with Voice Verses' picture (NDI)**, as Pewbeam does: works today with 1.15.0 NDI output, but the same look on every screen.
+  - **A message**, kept as the quickest fallback.
+- ⏳ Billie's 10-minute test of linked text (speed, a different look per screen, the file in a shared folder from the iMac), then build: the NDI slide setting and guide first, linked text after the test.
 
 ## Process
 
