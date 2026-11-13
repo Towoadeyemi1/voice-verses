@@ -107,14 +107,14 @@ export const ScreensColumn = ({
             <Pencil className="w-3.5 h-3.5" /> Edit
           </button>
         )}
-        <button type="button" onClick={onLogo} className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground" title="Show the church logo on every screen">
+        <button type="button" onClick={onLogo} data-guide="logo" className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground" title="Show the church logo on every screen">
           Logo
         </button>
-        <button type="button" onClick={onClear} className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground" title="Take the words off the screens (Esc)">
+        <button type="button" onClick={onClear} data-guide="clear" className="h-[30px] px-2.5 rounded-lg text-[13.5px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground" title="Take the words off the screens (Esc)">
           Clear <kbd className="ml-0.5 text-[11px] text-muted-foreground font-sans">Esc</kbd>
         </button>
       </Label>
-      <div className="monitor-fit relative rounded-[14px] overflow-hidden shadow-[0_0_0_2px_hsl(var(--live)),0_18px_50px_-22px_hsl(var(--live))] flex-shrink-0" style={{ ['--ratio' as string]: projector.width / projector.height }}>
+      <div data-guide="live" className="monitor-fit relative rounded-[14px] overflow-hidden shadow-[0_0_0_2px_hsl(var(--live)),0_18px_50px_-22px_hsl(var(--live))] flex-shrink-0" style={{ ['--ratio' as string]: projector.width / projector.height }}>
         <ScaledStage stage={projector} fitShape className="bg-black">
           {logoUp ? (
             <div className="h-full flex items-center justify-center" style={{ width: projector.width, height: projector.height }}>
@@ -131,6 +131,7 @@ export const ScreensColumn = ({
       <button
         type="button"
         onClick={onTake}
+        data-guide="take"
         style={{ ['--ratio' as string]: projector.width / projector.height }}
         // A quiet raised graphite button: colour stays for meaning (red live, green next)
         className="monitor-fit h-14 flex-shrink-0 rounded-2xl text-foreground flex items-center justify-center gap-2.5 text-[17px] font-semibold tracking-[-0.01em] bg-gradient-to-b from-[hsl(260_7%_21%)] to-[hsl(260_7%_16%)] hover:from-[hsl(260_7%_24%)] hover:to-[hsl(260_7%_19%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.09),0_0_0_1px_rgba(255,255,255,0.06),0_12px_28px_-14px_rgba(0,0,0,0.9)] active:scale-[0.985] transition"
@@ -173,7 +174,7 @@ export const ScreensColumn = ({
           </button>
         )}
       </Label>
-      <div className="monitor-fit relative rounded-[14px] overflow-hidden shadow-[0_0_0_2px_hsl(var(--next))] flex-shrink-0" style={{ ['--ratio' as string]: projector.width / projector.height }}>
+      <div data-guide="next" className="monitor-fit relative rounded-[14px] overflow-hidden shadow-[0_0_0_2px_hsl(var(--next))] flex-shrink-0" style={{ ['--ratio' as string]: projector.width / projector.height }}>
         <ScaledStage stage={projector} fitShape className="bg-black">
           <OutputContent live={next} output="projection" countdown={nextCountdown?.countdown} remaining={nextCountdown?.remaining ?? 0} preview />
         </ScaledStage>

@@ -108,7 +108,7 @@ export const NowPane = ({
     {strip && expanded ? (
       strip
     ) : (
-    <div className="self-center min-w-0 overflow-hidden">
+    <div className="self-center min-w-0 overflow-hidden" data-guide="now">
       {verse ? (
         <ReadAlong verse={verse} word={word ?? -1} />
       ) : text ? (
@@ -139,7 +139,7 @@ export const NowPane = ({
 
     <div className="space-y-2.5 min-w-0">
       {heard !== undefined && (
-        <div className="flex items-center gap-2.5 text-[14.5px] text-muted-foreground whitespace-nowrap overflow-hidden">
+        <div className="flex items-center gap-2.5 text-[14.5px] text-muted-foreground whitespace-nowrap overflow-hidden" data-guide="heard">
           <Mic className="w-4 h-4 flex-shrink-0" />
           <span className="overflow-hidden text-ellipsis [direction:rtl] text-left">
             <bdi className="[direction:ltr]">{heard}</bdi>

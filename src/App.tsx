@@ -11,6 +11,9 @@ import Confidence from "./pages/Confidence";
 import DisplayManager from "./pages/DisplayManager";
 import Settings from "./pages/Settings";
 import Install from "./pages/Install";
+import Training from "./pages/Training";
+import { GuideHost } from "./components/guide/GuideHost";
+import { PracticeBand } from "./components/guide/PracticeBand";
 import ServicePlanner from "./pages/ServicePlanner";
 import ServiceBuilder from "./pages/ServiceBuilder";
 import Presenter from "./pages/Presenter";
@@ -65,10 +68,13 @@ const App = () => {
             <Route path="/media-library" element={<MediaLibrary />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/training" element={<Training />} />
             <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           {!isNetworkViewer && <HelpAssistant />}
+          {!isNetworkViewer && !isDisplayWindow() && <GuideHost />}
+          {!isNetworkViewer && !isDisplayWindow() && <PracticeBand />}
         </HashRouter>
       </TooltipProvider>
     </QueryClientProvider>

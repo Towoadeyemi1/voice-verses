@@ -339,6 +339,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.19.0 **Practice mode** (D31): the demo after set-up runs on the real live screen, but nothing reaches the projector, stream, stage, DeckLink, NDI, network screens or ProPresenter, and spirit learns nothing. A violet band says so, with End practice; ending it puts this screen back as it was, so nothing from practice waits in Next. Checked by `tools/e2e/booth-setup.cjs`.
 - ⏳ Next: the Training page with Your first Sunday (Show me and Let me try), then Show me the fix on warnings.
 
+"The demo does not look good without an explanatory voice, and a visible mouse arrow or pointer clicking and navigating the screen. It looks confusing and no one can understand what is happening. Also I did not see the training tab, or is it not supposed to be part of it?"
+
+(13 Nov 2026.) The Training tab was not in 1.19.0 (only Set up your booth and practice); that should have been said plainly.
+- ✅ 1.19.1 **The guide** (`components/guide/GuideHost.tsx`, `lib/guide.ts`): a pointer that glides to the real control and clicks it, a spotlight on it, and one short line on a card that is also **said aloud** in the computer's own voice (works offline on Mac and Windows; a speaker button turns it off).
+- ✅ 1.19.1 **The demo is narrated**: every step says what is happening while the pointer shows where (what is heard, Live, the words lighting up, Next, the suggestion it clicks, the hymn, the leader's cue, the new song). About two minutes.
+- ✅ 1.19.1 **Training tab** on every page (and on the live screen's welcome and its menu): Your first Sunday (Show me, Let me try), Watch the demo, When something goes wrong, Set up your booth; the rest shown as coming soon. Show me does every step; Let me try waits, stops and names a wrong click, and checks what the app really did. All in practice. Checked by `tools/e2e/training.cjs`.
+
 ## "Did you hear what I said about the goal of spirit running the whole service?" … "Do you think that is the best order?" … "Start please. Also, I want the option, if the user has an AI key, to add it and enhance the experience in a way that the app can learn better, perform more proficiently, and run spirit better. Is that even reasonable??"
 
 (5 Nov 2026.)

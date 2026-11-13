@@ -1,4 +1,5 @@
-import { Mic, PlayCircle, Search } from 'lucide-react';
+import { GraduationCap, Mic, PlayCircle, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { ScaledStage } from '@/components/ScaledStage';
 import { OutputContent } from '@/components/OutputContent';
 import type { Service, ServiceSubsection } from '@/types/service';
@@ -36,6 +37,7 @@ export const WelcomePane = ({
   onSearch: () => void;
   onPlan: () => void;
 }) => {
+  const navigate = useNavigate();
   const items = (service?.sections ?? []).flatMap((sec) => sec.subsections.map((item) => ({ item, section: sec.name }))).filter((x) => x.item.slides.length);
 
   return (
@@ -63,13 +65,17 @@ export const WelcomePane = ({
         {!listening && (
           <button type="button" onClick={onDemo} disabled={demoPlaying} className="h-11 px-4 rounded-xl bg-muted text-[15px] font-semibold flex items-center gap-2 hover:bg-muted/70 disabled:opacity-60">
             <PlayCircle className="w-4 h-4" />
-            {demoPlaying ? 'Demo playing…' : 'Watch a 1-minute demo'}
+            {demoPlaying ? 'Demo playing…' : 'Watch the demo'}
           </button>
         )}
         <button type="button" onClick={onSearch} className="h-11 px-4 rounded-xl bg-muted text-[15px] font-semibold flex items-center gap-2 hover:bg-muted/70">
           <Search className="w-4 h-4" />
           Find a verse, song or item
           <span className="text-[12px] text-muted-foreground">⌘K</span>
+        </button>
+        <button type="button" onClick={() => navigate('/training')} className="h-11 px-4 rounded-xl bg-muted text-[15px] font-semibold flex items-center gap-2 hover:bg-muted/70" data-open-training>
+          <GraduationCap className="w-4 h-4" />
+          Training
         </button>
         {!service && (
           <button type="button" onClick={onPlan} className="h-11 px-4 rounded-xl bg-muted text-[15px] font-semibold hover:bg-muted/70">

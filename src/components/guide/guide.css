@@ -1,0 +1,33 @@
+/* The guide (1.19.1, docs/design/training/ShowMe.dc.html, TryIt.dc.html): a dim with a hole,
+   a spotlight ring, a pointer that glides and taps, and one card with the step. */
+.vv-guide { position: fixed; inset: 0; z-index: 9000; pointer-events: none; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Figtree, system-ui, sans-serif; }
+.vv-guide .dim { position: fixed; pointer-events: auto; transition: background .25s; }
+.vv-guide .spot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 3px hsl(var(--primary)), 0 0 26px 6px hsl(var(--primary) / .45); transition: left .35s ease, top .35s ease, width .35s ease, height .35s ease; pointer-events: none; }
+.vv-guide .spot.waiting { animation: vvGuideWait 1.6s ease-in-out infinite; }
+@keyframes vvGuideWait { 0%, 100% { box-shadow: 0 0 0 3px hsl(var(--primary)); } 50% { box-shadow: 0 0 0 3px hsl(var(--primary)), 0 0 0 10px hsl(var(--primary) / .25); } }
+.vv-guide .pointer { position: fixed; left: 0; top: 0; z-index: 2; pointer-events: none; transition: transform .75s cubic-bezier(.3, .7, .2, 1); filter: drop-shadow(0 3px 6px rgba(0,0,0,.5)); }
+.vv-guide .pointer svg { display: block; position: relative; }
+.vv-guide .pointer span { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; background: hsl(var(--primary) / .75); opacity: 0; }
+.vv-guide .pointer span.tap { animation: vvGuideTap .6s ease-out 1; }
+@keyframes vvGuideTap { 0% { transform: scale(.4); opacity: .95; } 100% { transform: scale(1.9); opacity: 0; } }
+.vv-guide .pointer.beckon svg { animation: vvGuideBeckon 1.4s ease-in-out infinite; }
+@keyframes vvGuideBeckon { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-6px, -6px); } }
+.vv-guide .card { position: fixed; z-index: 3; width: 400px; max-width: calc(100vw - 32px); pointer-events: auto; padding: 18px 20px; border-radius: 18px; background: var(--s-raised); box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 1px var(--s-line); display: flex; flex-direction: column; gap: 12px; transition: left .35s ease, top .35s ease; }
+.vv-guide .card.narration { gap: 8px; padding: 14px 18px; }
+.vv-guide .card .row { display: flex; align-items: center; gap: 8px; }
+.vv-guide .card .row .st-pill { margin-left: 0; font-size: 13px; padding: 4px 10px; }
+.vv-guide .card .where { flex: 1; min-width: 0; font-size: 13px; color: var(--s-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vv-guide .card .grow { flex: 1; }
+.vv-guide .card .say { font-size: 19px; line-height: 1.35; font-weight: 700; letter-spacing: -.01em; }
+.vv-guide .card .why { font-size: 14px; line-height: 1.5; color: var(--s-ink-2); }
+.vv-guide .card .why summary { cursor: pointer; color: var(--s-accent); font-weight: 600; font-size: 13.5px; width: fit-content; }
+.vv-guide .card .ok { margin: 0; font-size: 15px; font-weight: 700; color: var(--s-accent); }
+.vv-guide .card .hint { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--s-warn-soft); color: var(--s-ink); font-size: 14px; }
+.vv-guide .card .dashes { display: flex; gap: 5px; }
+.vv-guide .card .dashes span { flex: 1; height: 4px; border-radius: 2px; background: var(--s-fill-2); }
+.vv-guide .card .dashes span.on { background: var(--s-accent); }
+.vv-guide .card .waiting-text { font-size: 13px; color: var(--s-ink-2); }
+@media (prefers-reduced-motion: reduce) {
+  .vv-guide .pointer, .vv-guide .spot, .vv-guide .card { transition: none; }
+  .vv-guide .spot.waiting, .vv-guide .pointer.beckon svg, .vv-guide .pointer span.tap { animation: none; }
+}

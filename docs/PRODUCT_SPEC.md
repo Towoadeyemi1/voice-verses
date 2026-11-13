@@ -380,6 +380,17 @@ The autopilot that learns how a church runs its service. Approved mock-up: `docs
 - **When it opens**: by itself only on a new computer (nothing at all saved before the app first draws, `noteFirstRun` in `main.tsx`), until finished or "Finish later". Never for a church already using Voice Verses. Any time from Settings → Booth check → Set up your booth.
 - **Practice** (`lib/practice.ts`): the live screen works as usual, but only this window sees it (D31). A violet striped band along the bottom, "Practice: nothing goes to the projector, stream, stage or ProPresenter", with End practice; Live is titled "Live in practice". The ordinary Watch a 1-minute demo on the welcome screen still uses the real screens, as before.
 
+## 8g. Training and the guide (1.19.1)
+
+- **Training** (`pages/Training.tsx`, route `/training`, a tab in every page's bar, a button on the live screen's welcome and in its menu; approved mock-up `docs/design/training/Main.dc.html`): lessons by who they are for (Everyone, Setting up, Before Sunday), each New or ✓ Done on this computer, with Show me and Let me try; Carry on for a lesson left part-way; lessons still to come shown as Coming soon. Kept in `voice-verses-training`.
+- **Lessons** (`lib/lessons.ts`): *Your first Sunday* (Live, Next, Search, type John 3:16, Return, Take, Clear, Start listening), *Watch the demo* (the narrated demo in practice), *When something goes wrong* (the booth check light and its list), *Set up your booth* (opens it). Each step names a control by `data-guide` (or another selector), says one line, and has a check of what the app really did (`done`), e.g. Live shows John 3:16.
+- **The guide** (`components/guide/GuideHost.tsx`, `lib/guide.ts`): over every page (not the output windows). A dim with a hole over the control and a ring in the team colour; a white pointer that glides there (0.75 s) and taps; a card beside it (never over the control: beside things on the right, above the search box) with Show me / Let me try, Step n of N, the line, Why?, ✓ what happened, Back, Pause, the voice switch and Leave (Esc).
+  - *Show me*: the guide clicks, types a letter at a time and presses Return itself; the volunteer's clicks wait.
+  - *Let me try*: the pointer beckons; a click elsewhere is stopped and named ("Nearly. That's Settings. The lit one is the one to click."); after two, Show me this step is offered.
+  - Lessons run in practice (D31); ending practice ends the lesson.
+- **The voice**: the computer's own speech (`speechSynthesis`, a clear English voice such as Samantha or Microsoft Aria), offline on Mac and Windows; `voice-verses-guide-voice` on or off. Without a voice the card stays up as long as reading it takes.
+- **The demo, narrated**: each demo caption has a target and a line (`lib/demoScript.ts`); the demo goes on when the line has been said. Both the welcome screen's Watch the demo (real screens) and Training's (practice).
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:
@@ -457,6 +468,7 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `global-service-logo` | The church logo (data URL) |
 | `library-sync-state`, `library-tombstones` | Library folder sync |
 | `voice-verses-booth-setup` | Set up your booth (1.19.0): whether this computer started new, what was confirmed and when, finished or "Finish later" |
+| `voice-verses-training`, `voice-verses-guide-voice` | Training: lessons done on this computer and the one left part-way; the guide's voice on or off |
 | `voice-verses-church-types`, `voice-verses-no-propresenter` | The church's types of service, first in Services; "We don't use ProPresenter" |
 | `voice-verses-spirit` | spirit (1.17.0): its level, every cue (phrase, target, source, trust, last 10 outcomes, streak, correction note, types of service), each move's trust and timings per type of service (1.18.0), what it observed and was told were not cues, events and words heard (7 days). Shared as `spirit/learned.json` in the library folder |
 
