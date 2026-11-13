@@ -32,7 +32,7 @@ a{color:#f0b44a}a:hover{color:#ffd28a}
     <section style="display: flex; flex-direction: column; gap: 22px; min-width: 0">
       <div>
         <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.02em">Training</h1>
-        <p style="margin: 4px 0 0; color: #b2abb7; font-size: 15px">Short lessons on the real screens. Watch Voice Verses do each step, or do it yourself while it guides you. Nothing reaches the room while you practise.</p>
+        <p style="margin: 4px 0 0; color: #b2abb7; font-size: 15px">Short lessons on the real screens. Watch it done, or do it yourself.</p>
       </div>
 
       <div style="display: flex; align-items: center; gap: 18px; padding: 18px 20px; border-radius: 16px; background: linear-gradient(135deg, rgba(240,180,74,.16), rgba(244,114,182,.10)); box-shadow: inset 0 0 0 1px rgba(240,180,74,.35)">
@@ -75,20 +75,18 @@ a{color:#f0b44a}a:hover{color:#ffd28a}
     <aside style="display: flex; flex-direction: column; gap: 14px">
       <div style="padding: 18px; border-radius: 16px; background: #1f1d22; display: flex; flex-direction: column; gap: 10px">
         <b style="font-size: 15px">Practice mode</b>
-        <p style="margin: 0; color: #b2abb7; font-size: 14px; line-height: 1.45">Every lesson runs in practice mode. Live, Next and the strip work as usual, but the projector, stream, stage screens and ProPresenter stay as they are.</p>
+        <p style="margin: 0; color: #b2abb7; font-size: 14px; line-height: 1.45">Every lesson runs in practice mode. Live, Next and the strip work as usual, but nothing reaches the projector, stream, stage or ProPresenter.</p>
         <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: repeating-linear-gradient(135deg, rgba(139,92,246,.22) 0 10px, rgba(139,92,246,.12) 10px 20px); font-weight: 700; font-size: 13.5px">Practice: nothing goes to the room</div>
-        <span style="font-size: 13px; color: #b2abb7">ProPresenter lessons are the exception: ProPresenter is your live system, so do them before the service.</span>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: repeating-linear-gradient(135deg, rgba(239,68,68,.30) 0 10px, rgba(239,68,68,.18) 10px 20px); font-weight: 700; font-size: 13.5px">ProPresenter lesson: uses ProPresenter for real</div>
+        <span style="font-size: 13px; color: #b2abb7">ProPresenter runs your screens, so its lesson has a red band instead. Do it before the service.</span>
       </div>
       <div style="padding: 18px; border-radius: 16px; background: #1f1d22; display: flex; flex-direction: column; gap: 10px">
-        <b style="font-size: 15px">For the team at home</b>
-        <p style="margin: 0; color: #b2abb7; font-size: 14px; line-height: 1.45">Any lesson can become a picture guide to send to a volunteer before Sunday: the same steps, with the screens marked up.</p>
-        <button type="button" style="align-self: flex-start; height: 36px; padding: 0 12px; border: 0; border-radius: 10px; background: rgba(255,245,255,.08); color: #f4f1f6; font: 600 13.5px Figtree, system-ui, sans-serif">Make a picture guide</button>
+        <b style="font-size: 15px">Stuck during a service?</b>
+        <p style="margin: 0; color: #b2abb7; font-size: 14px; line-height: 1.45">Every warning has <b style="color: #f4f1f6">Show me the fix</b>. It lights up the one thing to change, then you are straight back to your service.</p>
       </div>
-      <div style="padding: 18px; border-radius: 16px; background: #1f1d22; display: flex; flex-direction: column; gap: 8px">
-        <b style="font-size: 15px">Who has done what</b>
-        <span style="font-size: 14px; color: #b2abb7">Billie · 7 of 10 lessons</span>
-        <span style="font-size: 14px; color: #b2abb7">Alex · 3 of 10 lessons</span>
-        <span style="font-size: 13px; color: #b2abb7">Each person picks their name when they start a lesson, on this computer.</span>
+      <div style="padding: 18px; border-radius: 16px; background: #1f1d22; display: flex; flex-direction: column; gap: 10px">
+        <b style="font-size: 15px">New computer?</b>
+        <p style="margin: 0; color: #b2abb7; font-size: 14px; line-height: 1.45">Set up your booth opens by itself the first time Voice Verses starts. Run it again here any time.</p>
       </div>
     </aside>
   </main>
@@ -109,7 +107,7 @@ class Component extends DCLogic {
         ] },
         { title: 'Setting up', who: 'Once, by whoever sets up the booth', lessons: [
           l('Set up your booth', 'Voice Verses finds your sound, screens and ProPresenter; you confirm each.', '5 steps · 8 min', true),
-          l('ProPresenter: a slide that follows Voice Verses', 'One slide your team puts up and clears; its words follow Voice Verses.', '6 steps · 6 min', false),
+          l('ProPresenter: verses on your own slide', 'One slide your team puts up and clears. Uses ProPresenter for real.', '6 steps · 6 min', false),
           l('Screens and outputs', 'Projector, stream lower third and stage, by HDMI, SDI or NDI.', '5 steps · 5 min', false)
         ] },
         { title: 'Before Sunday', who: 'Planning', lessons: [

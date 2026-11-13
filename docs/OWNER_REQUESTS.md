@@ -320,7 +320,19 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
   - A **Training** page by role with progress per person, "Show me" buttons on Settings pages and warnings, and a picture guide made from any lesson to send to the team.
   - **ProPresenter lesson**: Voice Verses' own steps get the spotlight; ProPresenter's steps are pictured beside it (it runs on another computer) and each is checked through ProPresenter's network connection where possible: connected, the presentation found, linked text proved by writing "Voice Verses test" and reading the slide back, Looks read from ProPresenter then confirmed by eye. Done before the service, because ProPresenter is live.
   - Tried with Billie before it ships.
-- ⏳ Mock-up `docs/design/training/` (Training page, Show me, Let me try, Set up your booth, the ProPresenter lesson), waiting for the owner's yes.
+- ⏳ Mock-up `docs/design/training/` (Training page, Show me, Let me try, Set up your booth, the ProPresenter lesson, Show me the fix), waiting for the owner's yes.
+
+"What do you think?" … "Proceed and do not mess up design, functionality or aesthetics"
+
+(13 Nov 2026.) Changes to the mock-up, agreed:
+- ✅ Set up your booth opens by itself the first time Voice Verses starts ("Finish later" to skip).
+- ✅ One short line per step; the explanation is behind "Why?".
+- ✅ The ProPresenter lesson has a red band ("uses ProPresenter for real; do it before the service"); every other lesson the purple practice band.
+- ✅ The three ways into ProPresenter look equal until Billie's test; none is marked Recommended.
+- ✅ New: **Show me the fix** on every warning during a service: one thing lit up, seconds, back to the service.
+- Later: picture guides to share and progress by person.
+- Each lesson gets its own automatic test so a change to the screens can't break it unnoticed.
+- Build order: Set up your booth on first launch; Your first Sunday (Show me, Let me try); Show me the fix; the ProPresenter lesson after Billie's test; the other lessons; then guides and progress by person.
 
 ## "Did you hear what I said about the goal of spirit running the whole service?" … "Do you think that is the best order?" … "Start please. Also, I want the option, if the user has an AI key, to add it and enhance the experience in a way that the app can learn better, perform more proficiently, and run spirit better. Is that even reasonable??"
 
