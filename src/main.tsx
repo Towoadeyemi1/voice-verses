@@ -4,6 +4,12 @@ import "@fontsource-variable/figtree";
 import "@fontsource-variable/newsreader";
 import "./index.css";
 import { applyTeamAccent, TEAM_CHANGED } from "./lib/colorTeams";
+import { noteFirstRun } from "./lib/boothSetup";
+import { isDisplayWindow } from "./lib/appUrl";
+import { isNetworkViewer } from "./lib/networkView";
+
+// Before anything is saved: is this a new booth? (Set up your booth opens by itself then)
+if (!isDisplayWindow() && !isNetworkViewer) noteFirstRun();
 
 // The app's accent follows the colour team
 applyTeamAccent();

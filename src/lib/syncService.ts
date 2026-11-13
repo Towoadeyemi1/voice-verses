@@ -7,6 +7,7 @@ import { saveAssignments, saveTemplates } from '@/lib/templates';
 import { BibleParser } from '@/lib/bibleParser';
 import { loadTeams, saveTeams, setActiveTeam, setTeamsFollowMonths, teamsFollowMonths } from '@/lib/colorTeams';
 import { loadShapes, saveShapes } from '@/lib/screenShapes';
+import { PRACTICE_CHANGED, practising } from '@/lib/practice';
 
 export type SyncMessage = {
   type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE' | 'LOGO' | 'COUNTDOWN' | 'ALERT';
@@ -49,12 +50,15 @@ const ALERT_KEY = 'voice-verses-alert';
 class SyncService {
   private channel: BroadcastChannel | null = null;
   private listeners: Set<(message: SyncMessage) => void> = new Set();
+  /** In practice (lib/practice.ts): what this window shows instead of the room; undefined until practice changes it */
+  private practiceLive: SyncMessage | null | undefined = undefined;
 
   constructor() {
     if (isNetworkViewer) {
       this.followNetwork();
       return;
     }
+    if (typeof window !== 'undefined') window.addEventListener(PRACTICE_CHANGED, () => this.practiceChanged());
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       this.channel = new BroadcastChannel('cornerstone-bible-sync');
       this.channel.onmessage = (event) => {
@@ -64,6 +68,12 @@ class SyncService {
   }
 
   broadcast(message: SyncMessage) {
+    // Practice: this window alone sees it; no screen, no other window, no report
+    if (practising()) {
+      if (LIVE_TYPES.has(message.type)) this.practiceLive = message;
+      this.listeners.forEach((listener) => listener(message));
+      return;
+    }
     if (LIVE_TYPES.has(message.type)) this.remember(message);
     // Licensed online text that goes on screen is reported to its publisher
     if (message.type === 'VERSE_UPDATE' && message.data.verse) void BibleParser.reportShown(message.data.verse);
@@ -75,8 +85,29 @@ class SyncService {
     this.channel?.postMessage(message);
   }
 
-  /** What is on screen now, or null if nothing has been shown yet. */
+  /** What is on screen now (in practice, in this window), or null if nothing has been shown yet. */
   current(): SyncMessage | null {
+    if (practising() && this.practiceLive !== undefined) return this.practiceLive;
+    return this.onScreens();
+  }
+
+  /** When practice ends, this window goes back to what the room has been showing all along. */
+  private practiceChanged() {
+    if (practising()) return;
+    this.practiceLive = undefined;
+    const room: SyncMessage = this.onScreens() ?? { type: 'SLIDE_UPDATE', data: { slide: null } };
+    const countdowns = this.currentCountdowns();
+    const alerts = this.currentAlerts();
+    for (const message of [
+      room,
+      { type: 'COUNTDOWN', data: { countdowns, countdown: countdowns[0] ?? null } },
+      { type: 'ALERT', data: { alerts, alert: alerts[0] ?? null } },
+    ] as SyncMessage[])
+      this.listeners.forEach((listener) => listener(message));
+  }
+
+  /** What the screens in the room show now, even while this window practises. */
+  onScreens(): SyncMessage | null {
     try {
       const saved = localStorage.getItem(LIVE_KEY);
       return saved ? JSON.parse(saved) : null;

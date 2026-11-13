@@ -35,7 +35,7 @@ const uploaded = new Set<string>();
 
 function snapshot(): NetworkSnapshot {
   return {
-    live: syncService.current(),
+    live: syncService.onScreens(),
     countdown: syncService.currentCountdown(),
     countdowns: syncService.currentCountdowns(),
     alert: syncService.currentAlerts()[0] ?? null,

@@ -343,3 +343,55 @@
 .vvs .sp-heard button:hover { background: var(--s-fill); }
 .vvs .sp-heard time { font-size: 12.5px; color: var(--s-ink-3); font-variant-numeric: tabular-nums; }
 @media (max-width: 860px) { .vvs .sp-levels, .vvs .sp-stats { grid-template-columns: 1fr; } .vvs .sp-hero { grid-template-columns: 1fr; } .vvs .sp-cue { grid-template-columns: 1fr; } .vvs input.sp-slot { min-width: 0; } }
+
+/* Set up your booth (1.19.0, docs/design/training/SetUp.dc.html): what was found, one card each, confirmed or changed */
+.vvs.bs-sheet { background: var(--s-win); box-shadow: 0 24px 64px rgba(0,0,0,.5), 0 0 0 1px var(--s-line); display: flex; flex-direction: column; gap: 22px; padding: 30px 36px 32px; }
+.vvs .bs-head { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+.vvs .bs-title { flex: 1; min-width: 280px; }
+.vvs .bs-kicker { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--s-accent); }
+.vvs .bs-title h1 { margin: 6px 0 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -.02em; }
+.vvs .bs-title p { margin: 6px 0 0; color: var(--s-ink-2); font-size: 15px; }
+.vvs .bs-steps { display: flex; gap: 6px; padding-bottom: 10px; }
+.vvs .bs-steps span { width: 36px; height: 6px; border-radius: 3px; background: var(--s-fill-2); transition: background .25s; }
+.vvs .bs-steps span.on { background: var(--s-accent); }
+.vvs .bs-head > .st-btn, .vvs .bs-head > .st-iconbtn { margin-bottom: 4px; }
+.vvs .bs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.vvs .bs-card { padding: 20px 22px; border-radius: 18px; background: var(--s-surface); display: flex; flex-direction: column; gap: 12px; min-width: 0; transition: box-shadow .2s, opacity .2s; }
+.vvs .bs-card.now { background: var(--s-raised); box-shadow: inset 0 0 0 2px var(--s-accent); }
+.vvs .bs-card.later { opacity: .82; }
+.vvs .bs-card > header { display: flex; align-items: center; gap: 10px; }
+.vvs .bs-card h2 { margin: 0; flex: 1; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+.vvs .bs-card .st-pill { margin-left: 0; font-size: 13px; padding: 4px 10px; }
+.vvs .bs-text { margin: 0; color: var(--s-ink-2); font-size: 14.5px; line-height: 1.5; }
+.vvs .bs-text b { color: var(--s-ink); }
+.vvs .bs-ask { margin: 0; font-size: 15px; font-weight: 650; }
+.vvs .bs-busy { display: flex; align-items: center; gap: 10px; }
+.vvs .bs-busy svg { width: 18px; height: 18px; flex: none; color: var(--s-accent); }
+.vvs .bs-small { font-size: 13px; color: var(--s-ink-2); }
+.vvs .bs-meter { height: 10px; border-radius: 5px; background: var(--s-fill-2); overflow: hidden; }
+.vvs .bs-meter span { display: block; height: 100%; border-radius: 5px; background: var(--s-accent); transition: width 80ms linear; }
+.vvs .bs-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 4px; }
+.vvs .bs-actions .st-btn { min-height: 40px; padding: 0 16px; font-size: 14px; }
+.vvs .bs-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.vvs .bs-tile { padding: 12px; border-radius: 12px; background: var(--s-sunken); display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.vvs .bs-tile .pic { aspect-ratio: 16 / 9; border-radius: 7px; background: #000; display: grid; place-items: center; font-size: 26px; font-weight: 800; color: var(--s-accent); font-variant-numeric: tabular-nums; }
+.vvs .bs-tile b { font-size: 14px; }
+.vvs .bs-tile .bs-small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vvs .bs-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vvs .bs-chips button { min-height: 36px; padding: 0 13px; border-radius: 999px; border: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; background: var(--s-fill-2); color: var(--s-ink-2); }
+.vvs .bs-chips button:hover { color: var(--s-ink); }
+.vvs .bs-chips button[aria-pressed="true"] { background: var(--s-accent-soft); color: var(--s-accent); }
+.vvs .bs-chips button svg { width: 14px; height: 14px; }
+.vvs .bs-chips button.more { background: none; box-shadow: inset 0 0 0 1px var(--s-line); }
+.vvs .bs-inner { padding: 14px; border-radius: 14px; background: var(--s-sunken); max-height: 420px; overflow-y: auto; }
+.vvs .bs-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px 20px; border-radius: 16px; background: var(--s-sunken); }
+.vvs .bs-foot .text { flex: 1; min-width: 260px; color: var(--s-ink-2); font-size: 14.5px; }
+.vvs .bs-foot .text b { color: var(--s-ink); }
+.vvs .bs-foot .st-btn { min-height: 42px; padding: 0 16px; font-size: 14px; }
+@media (max-width: 900px) { .vvs .bs-grid { grid-template-columns: 1fr; } .vvs.bs-sheet { padding: 22px 18px; } }
+@media (prefers-reduced-motion: reduce) { .vvs .bs-meter span, .vvs .bs-steps span, .vvs .bs-card { transition: none; } }
+
+/* Practice (1.19.0): the band along the bottom of the live screen while nothing reaches the room */
+.vv-practice-band { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 6px 16px; flex-wrap: wrap; color: #f4f1f6; font-weight: 700; font-size: 14.5px; text-align: center; background: repeating-linear-gradient(135deg, rgba(139,92,246,.88) 0 12px, rgba(109,72,216,.88) 12px 24px); box-shadow: 0 -8px 24px rgba(0,0,0,.35); }
+.vv-practice-band button { min-height: 36px; padding: 0 14px; border: 0; border-radius: 10px; background: rgba(0,0,0,.35); color: #f4f1f6; font: 600 13.5px inherit; cursor: pointer; }
+.vv-practice-band button:hover { background: rgba(0,0,0,.5); }

@@ -21,6 +21,8 @@ Check this list before debugging. Add every new mistake that cost time.
 - **Destroying a window inside its own input event hung Electron** (Esc on an output). Defer with `setImmediate`.
 - **Closing the main window left outputs orphaned:** `suspendScreens()` on close and `resumeScreens()` on reopen. `activate` checks `!mainWindow`.
 - **Detection stopped when the app wasn't focused:** Chromium throttles background windows. Use the three command-line switches, `backgroundThrottling: false`, and both power-save blockers.
+- **Practice left the demo's next verse waiting in Next** (1.19.0): after End practice the live screen was back to the room, but Next still held John 3:18, one Space from the projector. Ending practice must put back everything the live screen was working on (Next, the reading, suggestions, the part), not just what Live shows. Checked by `tools/e2e/booth-setup.cjs`.
+- **Every e2e profile is a new booth** (1.19.0): Set up your booth opens by itself on a fresh profile and would sit over every other test. `launch()` closes it unless `firstRun: true`.
 - **The `screen` module can't fake a second display under Xvfb/xinerama.** In tests, patch `screen.getAllDisplays`, `getPrimaryDisplay` and `getDisplayMatching`, and emit `display-added` (see `tools/e2e/lib.cjs`).
 
 ## Rendering

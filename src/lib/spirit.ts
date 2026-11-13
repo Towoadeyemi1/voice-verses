@@ -16,6 +16,7 @@
  * Pure functions take and return state, so they can be checked without a browser.
  */
 import { BUILTIN_MOMENT_CUES, BUILTIN_POINT_CUES, MomentKind, noticePatterns, SpokenCue } from '@/speech/momentCues';
+import { practising } from '@/lib/practice';
 
 export type SpiritLevel = 'off' | 'next' | 'handsfree';
 export type CueLevel = 'learning' | 'next' | 'handsfree';
@@ -38,7 +39,7 @@ export interface Cue extends SpokenCue {
 
 /**
  * The moves spirit can make besides spoken cues (1.18.0), each on its own
- * trust ladder. `works`: spirit makes it now; the rest come with 1.19.0.
+ * trust ladder. `works`: spirit makes it now; the rest come with 1.20.0.
  */
 export type MoveKind = 'countdown-end' | 'next-song' | 'time-up' | 'start' | 'end' | 'clear-after-reading' | 'logo-between';
 export const MOVES: { id: MoveKind; title: string; desc: string; group: string; works: boolean; handsFree: boolean }[] = [
@@ -104,7 +105,7 @@ export interface SpiritState {
   heard: { at: string; text: string }[];
   /** How far each move is trusted (1.18.0) */
   moves: Partial<Record<MoveKind, MoveTrust>>;
-  /** How long each part ran, per type of service (1.18.0; spirit's timings in 1.19.0) */
+  /** How long each part ran, per type of service (1.18.0; spirit's timings in 1.20.0) */
   timings: { at: string; type: string; part: string; minutes: number }[];
   updatedAt: string;
 }
@@ -173,6 +174,11 @@ export function updateSpirit(change: (state: SpiritState) => SpiritState): Spiri
   const next = change(loadSpirit());
   saveSpirit(next);
   return next;
+}
+
+/** What spirit learns from the live screen: nothing while practising (1.19.0), so a lesson or the demo never teaches it. */
+export function learn(change: (state: SpiritState) => SpiritState): SpiritState {
+  return practising() ? loadSpirit() : updateSpirit(change);
 }
 
 // ---- Cues ---------------------------------------------------------------------------------
@@ -307,6 +313,7 @@ export const hear = (state: SpiritState, text: string): SpiritState => ({ ...sta
  */
 let unsaved: { at: string; text: string }[] = [];
 export const hearSoon = (text: string): void => {
+  if (practising()) return;
   unsaved.push({ at: now(), text });
 };
 /** Saves the sentences heard since the last save (nothing to do: nothing is written). */

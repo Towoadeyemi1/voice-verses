@@ -320,7 +320,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
   - A **Training** page by role with progress per person, "Show me" buttons on Settings pages and warnings, and a picture guide made from any lesson to send to the team.
   - **ProPresenter lesson**: Voice Verses' own steps get the spotlight; ProPresenter's steps are pictured beside it (it runs on another computer) and each is checked through ProPresenter's network connection where possible: connected, the presentation found, linked text proved by writing "Voice Verses test" and reading the slide back, Looks read from ProPresenter then confirmed by eye. Done before the service, because ProPresenter is live.
   - Tried with Billie before it ships.
-- ⏳ Mock-up `docs/design/training/` (Training page, Show me, Let me try, Set up your booth, the ProPresenter lesson, Show me the fix), waiting for the owner's yes.
+- ✅ Mock-up `docs/design/training/` (Training page, Show me, Let me try, Set up your booth, the ProPresenter lesson, Show me the fix), approved with the changes below.
 
 "What do you think?" … "Proceed and do not mess up design, functionality or aesthetics"
 
@@ -334,6 +334,11 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - Each lesson gets its own automatic test so a change to the screens can't break it unnoticed.
 - Build order: Set up your booth on first launch; Your first Sunday (Show me, Let me try); Show me the fix; the ProPresenter lesson after Billie's test; the other lessons; then guides and progress by person.
 
+"Proceed" (build it; 13 Nov 2026):
+- ✅ 1.19.0 **Set up your booth** opens by itself the first time Voice Verses starts on a computer (never for a church already using it), and from Settings → Booth check any time. It listens to every input and finds the one with sound (the loudest channel on a desk feed), suggests the projector on a second screen, looks for ProPresenter on this computer and the network ("Yes, that's it" only remembers where it is; it never switches sending on), and keeps the church's types of service (listed first in Services). Each is confirmed or changed.
+- ✅ 1.19.0 **Practice mode** (D31): the demo after set-up runs on the real live screen, but nothing reaches the projector, stream, stage, DeckLink, NDI, network screens or ProPresenter, and spirit learns nothing. A violet band says so, with End practice; ending it puts this screen back as it was, so nothing from practice waits in Next. Checked by `tools/e2e/booth-setup.cjs`.
+- ⏳ Next: the Training page with Your first Sunday (Show me and Let me try), then Show me the fix on warnings.
+
 ## "Did you hear what I said about the goal of spirit running the whole service?" … "Do you think that is the best order?" … "Start please. Also, I want the option, if the user has an AI key, to add it and enhance the experience in a way that the app can learn better, perform more proficiently, and run spirit better. Is that even reasonable??"
 
 (5 Nov 2026.)
@@ -346,9 +351,9 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 (5 Nov 2026.) The church uses **its own church management app**. Its service types: Sunday services (e.g. Communion Sunday, Thanksgiving Sunday), Midweek, Special events, Life events (weddings, funerals, dedications), Christmas, New Year, Easter, Friday Night Prayers, Prayer and Fasting, Youth Day.
 - ✅ 1.18.0 **Service types**: every service has a type (Plan services → Type of service; guessed from the name and day when not chosen); spirit learns each type's order, timings and habits separately (a Friday Night Prayers is not run like a Sunday service). Cues can be for every type or only some.
-- ✅ 1.18.0 spirit for every move: Settings → What spirit does (every move on its own ladder; the countdown into the next part and the next song work now, the rest in 1.19.0), "What spirit will do next" under the order of service with Pause (P), and How it went when listening stops (score, the service start to end, corrections with "Just this once", what has earned Hands-free).
-- ⏳ 1.20.0 Help from AI includes models on the church's own computers: Ollama, LM Studio, llama.cpp and any OpenAI-compatible server, as well as Claude and OpenAI.
-- ⏳ 1.21.0 **The church's app feeds each service**: Voice Verses checks the church app on a schedule (and on demand) for each upcoming service's songs (choir), announcements (announcement team), and pictures and media (creative team). spirit drafts the order of service from them for that service's type; the operator approves or adjusts before the service; spirit notes each adjustment and the reason, and applies it next time when the reason holds (e.g. "announcements go after the offering on Communion Sundays"). Works offline from the last copy.
+- ✅ 1.18.0 spirit for every move: Settings → What spirit does (every move on its own ladder; the countdown into the next part and the next song work now, the rest in 1.20.0), "What spirit will do next" under the order of service with Pause (P), and How it went when listening stops (score, the service start to end, corrections with "Just this once", what has earned Hands-free).
+- ⏳ 1.21.0 Help from AI includes models on the church's own computers: Ollama, LM Studio, llama.cpp and any OpenAI-compatible server, as well as Claude and OpenAI.
+- ⏳ 1.22.0 **The church's app feeds each service**: Voice Verses checks the church app on a schedule (and on demand) for each upcoming service's songs (choir), announcements (announcement team), and pictures and media (creative team). spirit drafts the order of service from them for that service's type; the operator approves or adjusts before the service; spirit notes each adjustment and the reason, and applies it next time when the reason holds (e.g. "announcements go after the offering on Communion Sundays"). Works offline from the last copy.
 - ✅ The feed the church's developers build: `docs/integrations/church-app-feed.md` (written now so they can start).
 
 ## "The voice detection is very bad!!! The detection of what the speaker is saying is now very bad, other version was way better, what have you done."

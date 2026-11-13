@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { churchTypesFirst } from '@/lib/boothSetup';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Service } from '@/types/service';
@@ -390,7 +391,7 @@ const ServicePlanner = () => {
 
           <Section title="Ready-made orders" description="One for each type of service, with a typical length for each part, so the live screen’s timeline and timers are ready. Use one as it is, or make it your own template.">
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3" data-ready-orders>
-              {STARTER_SERVICES.map((starter) => (
+              {churchTypesFirst(STARTER_SERVICES, (st) => st.type).map((starter) => (
                 <div key={starter.id} className="rounded-xl bg-muted/40 p-4 flex flex-col gap-1" data-ready-order={starter.type}>
                   <TypePill type={starter.type} />
                   <span className="font-semibold text-[15px]">{starter.name}</span>
