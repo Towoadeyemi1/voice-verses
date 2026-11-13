@@ -310,6 +310,18 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - 💬 Proposed: **Training**, lessons that run on the real interface. A spotlight on the real control, one short step at a time, waiting for the volunteer to do it themselves. Lessons happen in a **practice room** (the sample service, a recorded sermon, the screens shown only on this computer) so nothing reaches the room by mistake. Lessons are grouped by role (First Sunday, Setting up the booth, Songs and slides, Teaching spirit), with progress ticks, and a "Show me" link from any Settings page or warning.
 - ⏳ Mock-up first, for the owner's yes.
 
+"I am also worried about the demo, and how users will know what to do." … "So you're using links not a demo showing what to do or click?" … "What of the ProPresenter part?" … "Proceed"
+
+(13 Nov 2026.)
+- 💬 Agreed approach, all on the real screens in practice mode (nothing reaches the projector, stream, stage or ProPresenter):
+  - **Set up your booth**: Voice Verses finds the sound input (and hears speech on it), the screens, ProPresenter on the network and the church's types of service; the volunteer confirms or changes each, then tries a short demo sermon.
+  - **Your first Sunday**: a practice run of a service for a new volunteer.
+  - Every lesson in two modes: **Show me** (a spotlight and a moving pointer really do each step while a caption explains) and **Let me try** (the volunteer clicks; the app waits, undoes a wrong click with a hint, and checks the result itself, such as "John 3:16 is on Live").
+  - A **Training** page by role with progress per person, "Show me" buttons on Settings pages and warnings, and a picture guide made from any lesson to send to the team.
+  - **ProPresenter lesson**: Voice Verses' own steps get the spotlight; ProPresenter's steps are pictured beside it (it runs on another computer) and each is checked through ProPresenter's network connection where possible: connected, the presentation found, linked text proved by writing "Voice Verses test" and reading the slide back, Looks read from ProPresenter then confirmed by eye. Done before the service, because ProPresenter is live.
+  - Tried with Billie before it ships.
+- ⏳ Mock-up `docs/design/training/` (Training page, Show me, Let me try, Set up your booth, the ProPresenter lesson), waiting for the owner's yes.
+
 ## "Did you hear what I said about the goal of spirit running the whole service?" … "Do you think that is the best order?" … "Start please. Also, I want the option, if the user has an AI key, to add it and enhance the experience in a way that the app can learn better, perform more proficiently, and run spirit better. Is that even reasonable??"
 
 (5 Nov 2026.)
@@ -386,6 +398,15 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
   
   Checked by `tools/checks/propresenter-trigger.mjs`.
 - ✅ A breakdown for the booth of everything Voice Verses does in ProPresenter (shared as a page).
+
+## "I saw someone send into ProPresenter and it came into a slide in a slide deck … why is the message route you are giving me so complex?" … "Our ProPresenter is set up so that when a slide is sent, it goes to our projector, lower third and confidence monitor all at once" … "Linked text seems to be the most flexible and non-disruptive?" … "Before you build, can't you check if people have tested this anywhere?"
+
+(12 Nov 2026.)
+- 💬 Three ways for verses to reach ProPresenter, chosen in Settings → ProPresenter:
+  - **A slide with linked text** (recommended): Voice Verses writes the verse to a file; a text box on the church's own "Voice Verses" slide is linked to it (ProPresenter 7.6+, Format → Linked Text → File). The team puts the slide up and clears it like any other; each screen keeps its own look.
+  - **A slide with Voice Verses' picture (NDI)**, as Pewbeam does: works today with 1.15.0 NDI output, but the same look on every screen.
+  - **A message**, kept as the quickest fallback.
+- ⏳ Billie's 10-minute test of linked text (speed, a different look per screen, the file in a shared folder from the iMac), then build: the NDI slide setting and guide first, linked text after the test.
 
 ## Process
 

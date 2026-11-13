@@ -107,7 +107,8 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 - ⏳ 1.19.0 spirit runs the order of service: getting the service ready, moving on when a part's time is up (with each type's learned timings), the next song going live when the singing ends, clearing after a reading, the logo between parts, the end of the service.
 - ⏳ 1.20.0 Help from AI for spirit (optional): Claude, OpenAI, and models on the church's own computers (Ollama, LM Studio, llama.cpp, any OpenAI-compatible server). It understands meaning when no cue matches, learns after each service, and prepares before Sunday. Never puts a verse up.
 - ⏳ 1.21.0 The church's app feeds each service (`docs/integrations/church-app-feed.md`): songs, announcements and media pulled on a schedule; spirit drafts the order for the service's type; the team approves or adjusts before the service; spirit learns each adjustment and why.
-- ⏳ Training: lessons on the real screens, in a practice room, by role (once the live screen settles).
+- ⏳ Training (mock-up `docs/design/training/`, waiting for the owner's yes): Set up your booth (found for you, you confirm), Your first Sunday, every lesson as Show me or Let me try on the real screens in practice mode, by role, picture guides to share, and the ProPresenter lesson with each ProPresenter step checked through its network connection.
+- ⏳ ProPresenter by slide: a slide with linked text (after Billie's test) and a slide with Voice Verses' NDI picture, beside the message.
 - ⏳ A local control API on the network server (show a verse, clear, next, logo, countdown, status) for a Stream Deck, a phone or another app (D27).
 
 **Phase 1: make it beautiful and smooth (1.5.x)**
