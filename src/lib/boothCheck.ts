@@ -152,8 +152,24 @@ async function screenChecks(): Promise<BoothCheckItem[]> {
 
 async function proPresenterCheck(): Promise<BoothCheckItem | null> {
   const settings = loadProPresenterSettings();
-  if (!desktop || !settings.enabled) return null;
+  if (!desktop) return null;
   const base = { id: 'propresenter', label: 'ProPresenter', fix: { label: 'ProPresenter settings', pane: 'propresenter' as Pane }, live: true };
+  // A slide with Voice Verses' picture (1.19.3): the projector must be going out over NDI
+  if (settings.route === 'ndi') {
+    const status = await withTimeout(desktop.ndi?.status() ?? Promise.reject(new Error('no NDI')), 4000).catch(() => null);
+    const sending = status?.projection.state === 'sending';
+    return sending
+      ? { ...base, state: 'ok', detail: 'The projector is going to ProPresenter over NDI.', fix: undefined }
+      : { ...base, state: 'warn', detail: 'ProPresenter is set to show Voice Verses’ picture, but the projector isn’t being sent over NDI.' };
+  }
+  if (!settings.enabled) return null;
+  // A slide with linked text (1.19.3): the folder must be there to write to
+  if (settings.route === 'linked') {
+    const result = await withTimeout(desktop.proPresenter.linked?.check() ?? Promise.reject(new Error('Needs Voice Verses 1.19.3')), 4000).catch((e) => ({ ok: false, folder: '', error: String(e) }));
+    return result.ok
+      ? { ...base, state: 'ok', detail: `Writing the words for ProPresenter to ${result.folder}.`, fix: undefined }
+      : { ...base, state: 'problem', detail: `Can’t write the words for ProPresenter${result.folder ? ` to ${result.folder}` : ''}. Is the shared folder there?` };
+  }
   try {
     const status = await withTimeout(desktop.proPresenter.status(connectionOf(settings)), 4000);
     if (!status.hasMessage) return { ...base, state: 'warn', detail: 'Connected, but the “Voice Verses” message is missing. Press Find and set up.' };

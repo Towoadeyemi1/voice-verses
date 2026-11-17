@@ -1,12 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, Check, Laptop, Monitor, Radio, RefreshCw } from 'lucide-react';
+import { AlertCircle, Check, FileText, FolderOpen, Laptop, MessageSquare, Monitor, MonitorPlay, Radio, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { desktop, ProPresenterConnection, ProPresenterStatus, ProPresenterThemeSlide } from '@/lib/desktop';
-import { connectionOf, loadProPresenterSettings, NOT_SHOWING, ProPresenterSettings as Settings, saveProPresenterSettings } from '@/lib/proPresenter';
+import { desktop, NdiAvailability, NdiConfig, ProPresenterConnection, ProPresenterStatus, ProPresenterThemeSlide } from '@/lib/desktop';
+import { connectionOf, linkedFiles, loadProPresenterSettings, NOT_SHOWING, ProPresenterRoute, ProPresenterSettings as Settings, saveProPresenterSettings, writeLinkedTest } from '@/lib/proPresenter';
 import { DOWNLOAD_PAGE_URL } from '@/lib/releases';
 import { loadAppMode, saveAppMode } from '@/lib/appMode';
-import { List, Mark, Note, Row, Section, Toggle } from './settings/kit';
+import { List, Mark, Note, Row, Section, Sq, Toggle, type Tint } from './settings/kit';
+import type { LucideIcon } from 'lucide-react';
+
+/** The three ways the words get into ProPresenter (1.19.3) */
+const ROUTES: { id: ProPresenterRoute; title: string; desc: string; icon: LucideIcon; tint: Tint }[] = [
+  { id: 'linked', title: 'A slide with linked text', desc: 'Your own slide, with your look on each screen. Your team puts it up and takes it down; its words follow Voice Verses.', icon: FileText, tint: 'blue' },
+  { id: 'ndi', title: 'A slide with Voice Verses’ picture', desc: 'Voice Verses draws the verse and sends it over NDI; a ProPresenter slide shows that picture. The same look on every screen.', icon: MonitorPlay, tint: 'violet' },
+  { id: 'message', title: 'A message over everything', desc: 'ProPresenter’s “Voice Verses” message shows over whatever is on. Quick to set up, but it covers every screen that shows messages.', icon: MessageSquare, tint: 'orange' },
+];
 
 const TEST_VERSE = {
   reference: 'John 3:16',
@@ -35,6 +43,31 @@ export function ProPresenterSettings() {
   const [themes, setThemes] = useState<ProPresenterThemeSlide[]>([]);
   const [theme, setTheme] = useState('');
   const [manual, setManual] = useState({ host: settings.host, port: String(settings.port || '') });
+  /** Linked text: the folder the files are written to */
+  const [folder, setFolder] = useState<string | null>(null);
+  const [wrote, setWrote] = useState<string | null>(null);
+  /** NDI: whether this computer can send it, and whether the projector is sent */
+  const [ndiAvail, setNdiAvail] = useState<NdiAvailability | null>(null);
+  const [ndi, setNdi] = useState<NdiConfig | null>(null);
+  const route = settings.route;
+  useEffect(() => {
+    desktop?.proPresenter.linked?.folder().then(setFolder).catch(() => {});
+    desktop?.ndi?.availability().then(setNdiAvail).catch(() => {});
+    desktop?.ndi?.get().then(setNdi).catch(() => {});
+  }, []);
+  const linked = desktop?.proPresenter.linked;
+  const testLinked = () =>
+    run('linked-test', async () => {
+      if (await writeLinkedTest(TEST_VERSE.text, `${TEST_VERSE.reference} KJV`)) setWrote('John 3:16 is in the files. On ProPresenter’s slide, the text box shows it now.');
+    });
+  const clearLinked = () =>
+    run('linked-clear', async () => {
+      if (await writeLinkedTest('', '')) setWrote('The files are empty: the text box on ProPresenter’s slide is blank.');
+    });
+  const sendNdi = async (on: boolean) => {
+    if (!desktop?.ndi || !ndi) return;
+    setNdi(await desktop.ndi.set({ ...ndi, projection: on }));
+  };
 
   const save = (changes: Partial<Settings>) => {
     const next = { ...settings, ...changes };
@@ -152,6 +185,108 @@ export function ProPresenterSettings() {
 
   return (
     <div className="st-page" data-propresenter-page>
+      <Section title="How the words get into ProPresenter">
+        <div className="st-presets" role="radiogroup" aria-label="How the words get into ProPresenter" data-pp-routes>
+          {ROUTES.map((r) => (
+            <button key={r.id} type="button" role="radio" aria-checked={route === r.id} className="st-preset" onClick={() => save({ route: r.id })} data-pp-route={r.id}>
+              <span className="st-tick" aria-hidden="true">
+                <Check />
+              </span>
+              <Sq tint={r.tint} icon={r.icon} size="lg" />
+              <b>{r.title}</b>
+              <span className="p">{r.desc}</span>
+            </button>
+          ))}
+        </div>
+        <p className="st-hint">Whichever you choose, Voice Verses’ own screens keep working. Nothing is sent while you practise.</p>
+      </Section>
+
+      {route === 'linked' && (
+        <>
+          <Section title="A slide with linked text" data-pp-linked>
+            <List>
+              <Row lead={<Sq tint="blue" icon={FileText} />} title="Send the words to ProPresenter" desc={settings.enabled ? 'On: each verse that goes live is written for ProPresenter, and cleared with Clear (Esc).' : 'Off: nothing is written.'}>
+                <Toggle id="pp-linked-on" label="Send the words to ProPresenter" checked={settings.enabled} onChange={(enabled) => save({ enabled })} />
+              </Row>
+              <Row title="Also song words" desc="The words of each song slide go there too, with the song and section as the reference.">
+                <Toggle id="pp-linked-songs" label="Also song words" checked={settings.linkedSongs} onChange={(linkedSongs) => save({ linkedSongs })} />
+              </Row>
+              <Row lead={<Sq tint="slate" icon={FolderOpen} />} title="The folder" desc={<span className="st-addr" data-pp-folder>{folder ?? '…'}</span>}>
+                <button type="button" className="st-btn" onClick={() => void linked?.reveal()} disabled={!linked}>
+                  Show the files
+                </button>
+                <button type="button" className="st-btn ghost" onClick={async () => { const f = await linked?.chooseFolder(); if (f) setFolder(f); }} disabled={!linked}>
+                  Choose another folder
+                </button>
+              </Row>
+              <Row title="Try it" desc="Writes John 3:16 now (even with sending off), so you can link the text box and see it. Clear it empties the files.">
+                <button type="button" className="st-btn soft" onClick={testLinked} disabled={!linked || !!busy} data-pp-linked-test>
+                  Write a test verse
+                </button>
+                <button type="button" className="st-btn ghost" onClick={clearLinked} disabled={!linked || !!busy}>
+                  Clear it
+                </button>
+              </Row>
+            </List>
+            {wrote && <Note icon={Check}>{wrote}</Note>}
+            {!linked && <Note warn>This needs Voice Verses 1.19.3 or later on this computer.</Note>}
+          </Section>
+          <Section title="Files Voice Verses writes">
+            <List plain>
+              {Object.keys(linkedFiles('', '')).map((name) => (
+                <Row key={name} title={name} desc={name === 'verse.txt' ? 'The words only.' : name === 'reference.txt' ? 'The reference and translation, such as “John 3:16 KJV”.' : 'The words, then the reference on the next line.'} />
+              ))}
+            </List>
+          </Section>
+          <Section title="In ProPresenter (once)">
+            <ol className="st-steps">
+              <li><i>1</i><b>Make the slide</b>A presentation called “Voice Verses” with one slide. Add a text box where the verse should sit.</li>
+              <li><i>2</i><b>Link the text box</b>Select it → Format → Linked Text → File → choose <b>verse.txt</b> (or verse-and-reference.txt). A second text box can show reference.txt.</li>
+              <li><i>3</i><b>Try it</b>Press <b>Write a test verse</b> here: the text box shows John 3:16. Clear it empties it.</li>
+              <li><i>4</i><b>Each screen’s look</b>Size and place it as you like; Looks can give the stage TVs a bigger version.</li>
+              <li><i>5</i><b>In the service</b>Put the slide in today’s playlist. When the reading starts, put it up: its words follow Voice Verses. Take it down as usual.</li>
+              <li><i>6</i><b>ProPresenter on another computer?</b>Choose a folder both computers can see: a shared folder, or a Dropbox, iCloud or OneDrive folder (these can take a few seconds).</li>
+            </ol>
+          </Section>
+        </>
+      )}
+
+      {route === 'ndi' && (
+        <>
+          <Section title="A slide with Voice Verses’ picture" data-pp-ndi>
+            <List>
+              <Row
+                lead={<Sq tint="violet" icon={MonitorPlay} />}
+                title="Send the projector over NDI"
+                desc={
+                  !ndiAvail
+                    ? 'Checking…'
+                    : !ndiAvail.available
+                      ? 'This computer needs the free NDI Runtime. Get NDI Tools from ndi.video/tools, then open Voice Verses again.'
+                      : ndi?.projection
+                        ? 'On: ProPresenter can show it as “… (Voice Verses Projector)”.'
+                        : 'Off.'
+                }
+              >
+                <Toggle id="pp-ndi-on" label="Send the projector over NDI" checked={!!ndi?.projection} onChange={(on) => void sendNdi(on)} disabled={!ndiAvail?.available || !ndi} />
+              </Row>
+            </List>
+            <p className="st-hint">The projector output goes as it looks in Voice Verses: verses, songs, slides and countdowns. The stream lower third can go over NDI too, see-through (Settings → Screens and outputs).</p>
+          </Section>
+          <Section title="In ProPresenter (once)">
+            <ol className="st-steps">
+              <li><i>1</i><b>Same network</b>Both computers on the church network. ProPresenter finds NDI sources on it by itself.</li>
+              <li><i>2</i><b>Add the input</b>ProPresenter → Settings → Inputs (Live Video): add an NDI input and choose “… (Voice Verses Projector)”.</li>
+              <li><i>3</i><b>Make the slide</b>A slide whose background is that live video input. Name it “Voice Verses”.</li>
+              <li><i>4</i><b>In the service</b>Put the slide up when the reading starts. It shows whatever Voice Verses shows; take it down as usual.</li>
+            </ol>
+          </Section>
+          <Note>NDI® is a registered trademark of Vizrt NDI AB (ndi.video).</Note>
+        </>
+      )}
+
+      {route === 'message' && (
+      <>
       <div className={`st-hero ${connected ? '' : 'plain'}`} data-propresenter-status={connected ? 'connected' : error ? 'error' : 'off'}>
         <span className={`st-glyph ${connected ? '' : 'off'}`}>
           <Radio />
@@ -375,6 +510,8 @@ export function ProPresenterSettings() {
           </div>
         </details>
       </Section>
+      </>
+      )}
     </div>
   );
 }

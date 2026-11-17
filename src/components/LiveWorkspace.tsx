@@ -28,7 +28,7 @@ import { loadCrossReferences } from '@/lib/crossReferences';
 import { predictNext } from '@/lib/predictNext';
 import type { ScriptureHint } from '@/speech/scriptureHints';
 import { plainVerseText } from '@/lib/verseText';
-import { clearProPresenter, sendVerseToProPresenter } from '@/lib/proPresenter';
+import { clearProPresenter, sendSlideToProPresenter, sendVerseToProPresenter } from '@/lib/proPresenter';
 import { hasSecret } from '@/lib/secrets';
 import { desktop } from '@/lib/desktop';
 import { loadSendMode, saveSendMode, SendMode } from '@/lib/sendMode';
@@ -279,8 +279,8 @@ export const LiveWorkspace = () => {
       }
       const c = from?.kind === 'slides' ? from : null;
       const index = broadcastSlide(item.slide, c);
-      // A song or slide replaces the verse: it comes off ProPresenter as well
-      void clearProPresenter();
+      // A song or slide replaces the verse: it comes off ProPresenter as well (or, with linked text and song words on, its words go there)
+      void sendSlideToProPresenter(item.slide);
       if (!opts.capturing) startPart(item.slide.id);
       // A song being captured is not followed: its words are what is being sung
       if (item.slide.type === 'lyrics' && c && index >= 0 && !opts.capturing) {

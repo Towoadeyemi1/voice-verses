@@ -50,6 +50,14 @@ contextBridge.exposeInMainWorld('voiceVerses', {
     search: (options) => invoke('propresenter:search', options),
     setUp: (connection) => invoke('propresenter:set-up', connection),
     diagnose: (connection) => invoke('propresenter:diagnose', connection),
+    linked: {
+      folder: () => invoke('linked:get-folder'),
+      chooseFolder: () => invoke('linked:choose-folder'),
+      defaultFolder: () => invoke('linked:default-folder'),
+      write: (files) => invoke('linked:write', files),
+      check: () => invoke('linked:check'),
+      reveal: () => invoke('linked:reveal'),
+    },
   },
   screens: {
     displays: () => invoke('screens:displays'),

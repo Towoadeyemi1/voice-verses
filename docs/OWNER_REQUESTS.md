@@ -439,6 +439,12 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - Made by `tools/guide/capture.cjs` (drives the real app and marks the controls) and `tools/guide/build.py` (the words, in `tools/guide/content.py`). Run both again when the app changes so the guide never goes stale.
 - ✅ 1.19.2 Found while taking the pictures and fixed: on a smaller screen (1440×900) the welcome text slid up under the order of service; the demo's card covered the suggestion bar.
 
+## "Did you miss out how to edit the detailed looks of slides and other presentation format? Also, I thought connection to ProPresenter and its connection options has a couple of options we agreed on, I see nothing in the app or in the material teaching users to connect in the various ways. Also I still think a number of features are missing. Did you do a thorough check?"
+
+(17 Nov 2026.) No: the guide was written from the main screens, not checked against the spec, and the three ProPresenter ways agreed earlier had not been built.
+- ✅ 1.19.3 **ProPresenter's three ways** in Settings → ProPresenter (D32): a slide with linked text (files in a folder, shareable with another computer; Write a test verse; also song words), a slide with Voice Verses' picture over NDI, and the message. Each with its steps in ProPresenter, and checked by the booth check. Checked by `tools/e2e/propresenter-routes.cjs`.
+- ⏳ The guide checked against every feature in the spec (a coverage list the guide's build checks), designing looks in full, the three ProPresenter ways, and every missing feature.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

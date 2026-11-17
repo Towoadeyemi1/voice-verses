@@ -4,6 +4,7 @@ import { dirname, join } from 'path';
 import * as secrets from './secrets.js';
 import * as library from './library.js';
 import * as proPresenter from './propresenter.js';
+import * as linkedText from './linkedText.js';
 import { keepAwake, outputWindowOptions, trackOutputWindow } from './outputs.js';
 import * as network from './network.js';
 import * as screens from './screens.js';
@@ -141,6 +142,13 @@ handle('propresenter:find', () => proPresenter.findLocal());
 handle('propresenter:search', (options) => proPresenter.search({ ports: Array.isArray(options?.ports) ? options.ports.slice(0, 4) : [] }));
 handle('propresenter:set-up', (connection) => proPresenter.setUp(connection));
 handle('propresenter:diagnose', (connection) => proPresenter.diagnose(connection));
+// A slide with linked text (1.19.3): the words written to files ProPresenter reads
+handle('linked:get-folder', () => linkedText.getFolder());
+handle('linked:choose-folder', () => linkedText.chooseFolder());
+handle('linked:default-folder', () => linkedText.useDefaultFolder());
+handle('linked:write', (files) => linkedText.write(files && typeof files === 'object' ? files : {}));
+handle('linked:check', () => linkedText.check());
+handle('linked:reveal', () => linkedText.reveal());
 
 handle('network:configure', (options) => network.configure(options ?? {}));
 handle('network:status', () => network.status());

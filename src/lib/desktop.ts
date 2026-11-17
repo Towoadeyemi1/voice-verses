@@ -64,6 +64,9 @@ export interface DisplayInfo {
   primary: boolean;
 }
 
+/** The files Voice Verses writes for ProPresenter's linked text */
+export type LinkedFile = 'verse.txt' | 'reference.txt' | 'verse-and-reference.txt';
+
 export type ScreenOutput = 'projection' | 'confidence' | 'lowerThird';
 /** Which display each output is shown on; null for off */
 export type ScreenConfig = Record<ScreenOutput, number | null>;
@@ -152,6 +155,16 @@ export interface DesktopBridge {
     setUp?(connection: ProPresenterConnection): Promise<ProPresenterStatus & { theme: string | null }>;
     /** What ProPresenter says about the Voice Verses message, its layers, screens and Look (older desktop versions don't have it) */
     diagnose?(connection: ProPresenterConnection): Promise<{ checks: { state: 'ok' | 'warn' | 'problem'; title: string; detail: string }[] }>;
+    /** A slide with linked text (1.19.3): the files ProPresenter reads (older desktop versions don't have it) */
+    linked?: {
+      folder(): Promise<string>;
+      /** null when the volunteer cancels */
+      chooseFolder(): Promise<string | null>;
+      defaultFolder(): Promise<string>;
+      write(files: Partial<Record<LinkedFile, string>>): Promise<{ folder: string; written: string[] }>;
+      check(): Promise<{ ok: boolean; folder: string; error?: string }>;
+      reveal(): Promise<void>;
+    };
   };
   screens: {
     displays(): Promise<DisplayInfo[]>;
