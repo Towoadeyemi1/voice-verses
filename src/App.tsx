@@ -29,6 +29,9 @@ import { desktop } from "./lib/desktop";
 import { isDisplayWindow } from "./lib/appUrl";
 import { toast } from "sonner";
 import { HelpAssistant } from "./components/HelpAssistant";
+import { startModules } from "./core/modules";
+import { recentEvents } from "./core/bus";
+import { listModules } from "./core/registry";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +39,10 @@ const App = () => {
   useEffect(() => {
     // Display windows (projection etc.) and network viewers only show slides; the operator window does the rest
     if (isDisplayWindow() || isNetworkViewer) return;
+    // The modules register and start listening on the event bus (D33)
+    startModules();
+    // Read-only view of the bus, for the end-to-end checks and for support
+    (window as unknown as { __voiceVersesBus?: unknown }).__voiceVersesBus = { recent: recentEvents, modules: listModules };
     librarySync.start();
     startNetworkPublisher();
     // The first time the app opens: sample services and songs, so it shows what it does

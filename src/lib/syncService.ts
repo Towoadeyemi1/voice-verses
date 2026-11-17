@@ -8,6 +8,8 @@ import { BibleParser } from '@/lib/bibleParser';
 import { loadTeams, saveTeams, setActiveTeam, setTeamsFollowMonths, teamsFollowMonths } from '@/lib/colorTeams';
 import { loadShapes, saveShapes } from '@/lib/screenShapes';
 import { PRACTICE_CHANGED, practising } from '@/lib/practice';
+import { publish } from '@/core/bus';
+import type { EventMap } from '@/core/events';
 
 export type SyncMessage = {
   type: 'VERSE_UPDATE' | 'STATUS_UPDATE' | 'SLIDE_UPDATE' | 'LOGO' | 'COUNTDOWN' | 'ALERT';
@@ -47,6 +49,27 @@ const ALERT_KEY = 'voice-verses-alert';
  * from current(), so a screen reopened mid-service shows what is live instead
  * of going blank.
  */
+/** What a screen message means for the rest of the app, as an event on the bus. */
+function announce(message: SyncMessage) {
+  const d = message.data;
+  if (message.type === 'VERSE_UPDATE' && d.verse) {
+    const v = d.verse;
+    const translation = BibleParser.getVersionLabel();
+    publish('live.changed', { kind: 'verse', reference: `${v.book} ${v.chapter}:${v.verse}`, translation, text: v.text, verse: { book: v.book, chapter: v.chapter, verse: v.verse, text: v.text } }, 'live');
+  } else if (message.type === 'SLIDE_UPDATE') {
+    const sl = d.slide as (Slide & { content?: string; songTitle?: string; sectionLabel?: string; title?: string }) | null | undefined;
+    const live: EventMap['live.changed'] = sl
+      ? { kind: 'slide', text: typeof sl.content === 'string' ? sl.content : undefined, slide: { id: sl.id, type: sl.type, title: sl.title, songTitle: sl.songTitle, sectionLabel: sl.sectionLabel, content: typeof sl.content === 'string' ? sl.content : undefined } }
+      : { kind: 'clear' };
+    publish('live.changed', live, 'live');
+  } else if (message.type === 'LOGO') publish('live.changed', { kind: 'logo' }, 'live');
+  else if (message.type === 'COUNTDOWN') publish('countdown.changed', { running: (d.countdowns ?? (d.countdown ? [d.countdown] : [])).length }, 'outputs');
+  else if (message.type === 'ALERT') {
+    const alerts = d.alerts ?? (d.alert ? [d.alert] : []);
+    publish('alert.changed', { count: alerts.length, text: alerts[0]?.text }, 'outputs');
+  }
+}
+
 class SyncService {
   private channel: BroadcastChannel | null = null;
   private listeners: Set<(message: SyncMessage) => void> = new Set();
@@ -68,6 +91,8 @@ class SyncService {
   }
 
   broadcast(message: SyncMessage) {
+    // Every module hears what the screens show through the event bus (1.19.4, D33)
+    announce(message);
     // Practice: this window alone sees it; no screen, no other window, no report
     if (practising()) {
       if (LIVE_TYPES.has(message.type)) this.practiceLive = message;

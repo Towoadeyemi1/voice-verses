@@ -400,6 +400,15 @@ The autopilot that learns how a church runs its service. Approved mock-up: `docs
 
 `docs/user-guide/README.md` and `index.html`: every feature step by step, each picture with numbered markers that match its numbered steps. `tools/guide/capture.cjs` drives the real desktop app (sample service, fake second screen and microphone, voice off) at 1440×900 and saves `docs/user-guide/img/*.jpg`; `tools/guide/build.py` writes both files from `tools/guide/content.py`. A marker that can't find its control is listed as MISSING.
 
+## 8i. Modules and the event bus (1.19.4, D33)
+
+- Every part of the app is a module with a manifest (`src/core/modules.ts`): live, outputs, listening, detection, bibles, services, library, spirit, propresenter. The registry (`src/core/registry.ts`) keeps them; each announces `module.registered` when the operator window starts.
+- The event bus (`src/core/bus.ts`) carries CloudEvents 1.0 envelopes: `type` `org.voiceverses.<name>.v1`, `source` `voiceverses://app/<module>`. It keeps the last 200 events in the window and passes them to the app's other windows over the `voice-verses-bus` BroadcastChannel (marked `remote`).
+- Events: `live.changed` (verse with reference, translation and text; slide with its words, song and section; logo; clear), `next.changed`, `countdown.changed`, `alert.changed`, `listening.started`, `listening.stopped`, `speech.heard` (finished sentences only), `verse.found` (went to the screens or Next), `suggestion.offered`, `service.updated`, `service.deleted`, `media.updated`, `media.deleted`, `bible.changed`, `module.registered`. Events carry plain values, never sound, pictures or keys.
+- Practice: events are marked `practice`, stay in the window and reach only subscribers that ask for them.
+- ProPresenter (`src/modules/proPresenter.ts`) follows `live.changed` from its own window: a verse is sent, a slide is sent (linked song words) or clears, the logo and Clear clear. The ProPresenter page's own buttons still call it directly.
+- The operator window exposes `window.__voiceVersesBus` (`recent()`, `modules()`), read-only, for checks and support.
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:

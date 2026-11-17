@@ -103,6 +103,11 @@ jobs:
       - name: "CHECK 9: ProPresenter client"
         run: node tools/propresenter-check.mjs
 
+      - name: "CHECK 10: Event bus and modules"
+        run: |
+          npx esbuild tools/checks/bus-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/bus-check.cjs --log-level=error
+          node /tmp/bus-check.cjs
+
       - name: QA Summary
         if: success()
         run: |

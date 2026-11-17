@@ -27,8 +27,8 @@ import { WelcomePane } from './live/WelcomePane';
 import { loadCrossReferences } from '@/lib/crossReferences';
 import { predictNext } from '@/lib/predictNext';
 import type { ScriptureHint } from '@/speech/scriptureHints';
-import { plainVerseText } from '@/lib/verseText';
-import { clearProPresenter, sendSlideToProPresenter, sendVerseToProPresenter } from '@/lib/proPresenter';
+import { plainVerseText, verseReference } from '@/lib/verseText';
+import { publish } from '@/core/bus';
 import { hasSecret } from '@/lib/secrets';
 import { desktop } from '@/lib/desktop';
 import { loadSendMode, saveSendMode, SendMode } from '@/lib/sendMode';
@@ -147,6 +147,14 @@ export const LiveWorkspace = () => {
   /** The countdown this screen started for a part with its own countdown (the Countdown before the service) */
   const partCountdown = useRef<{ itemId: string; id: string } | null>(null);
   const [preview, setPreview] = useState<Live>(null);
+  // What waits in Next, for any module that follows it (event bus)
+  useEffect(() => {
+    publish(
+      'next.changed',
+      !preview ? { kind: 'none' } : 'verse' in preview ? { kind: 'verse', reference: verseReference(preview.verse) } : { kind: 'slide', title: preview.slide.title },
+      'live',
+    );
+  }, [preview]);
   const [previewSuggestionId, setPreviewSuggestionId] = useState<string | undefined>();
   const [collection, setCollection] = useState<Collection | null>(null);
   const [recent, setRecent] = useState<BibleVerse[]>([]);
@@ -257,8 +265,8 @@ export const LiveWorkspace = () => {
       setAwaitingChapter(null);
       const verse = isOnlineVersion() ? (await BibleParser.getVerse(item.verse.book, item.verse.chapter, item.verse.verse)) ?? item.verse : item.verse;
       const shown: DisplayedVerse = { ...verse, timestamp: new Date() };
+      // ProPresenter and every other module follow through the event bus (live.changed)
       syncService.broadcast({ type: 'VERSE_UPDATE', data: { verse: shown, timestamp: shown.timestamp } });
-      sendVerseToProPresenter(verse);
       setRecent((prev) => [verse, ...prev.filter((v) => !sameVerse(v, verse))].slice(0, 30));
       if (!opts.fromDetector) controller.current?.follow(verse);
       controller.current?.setLiveLyrics(null);
@@ -279,8 +287,6 @@ export const LiveWorkspace = () => {
       }
       const c = from?.kind === 'slides' ? from : null;
       const index = broadcastSlide(item.slide, c);
-      // A song or slide replaces the verse: it comes off ProPresenter as well (or, with linked text and song words on, its words go there)
-      void sendSlideToProPresenter(item.slide);
       if (!opts.capturing) startPart(item.slide.id);
       // A song being captured is not followed: its words are what is being sung
       if (item.slide.type === 'lyrics' && c && index >= 0 && !opts.capturing) {
@@ -373,6 +379,7 @@ export const LiveWorkspace = () => {
   /** Detected or chosen: on screen straight away (Auto send), or into Preview to check first. */
   const present = async (item: Live, opts: { fromDetector?: boolean } = {}) => {
     if (!item) return;
+    if (opts.fromDetector && 'verse' in item) publish('verse.found', { reference: verseReference(item.verse), went: sendMode === 'auto' ? 'screens' : 'next' }, 'detection');
     if (sendMode === 'auto') return goLive(item, opts);
     if ('verse' in item) await loadChapter(item.verse.book, item.verse.chapter);
     setPreview(item);
@@ -383,8 +390,6 @@ export const LiveWorkspace = () => {
   const clearText = () => {
     syncService.broadcast({ type: 'SLIDE_UPDATE', data: { slide: null, index: -1, slideIndex: -1, upcoming: [], timestamp: new Date() } });
     controller.current?.setLiveLyrics(null);
-    // The verse comes off ProPresenter too (it stayed up there until someone hid it)
-    void clearProPresenter();
   };
 
   /** Previous / next item after what is live (verse or slide). */
@@ -474,8 +479,13 @@ export const LiveWorkspace = () => {
    * A later search of the same sentence (more words heard) replaces that
    * sentence's earlier guesses, so faint early guesses don't pile up.
    */
-  const addSuggestion = (s: LiveSuggestion) =>
-    setSuggestions((prev) => {
+  const addSuggestion = (s: LiveSuggestion) => {
+    publish(
+      'suggestion.offered',
+      s.kind === 'verse' ? { kind: 'verse', reference: verseReference(s.verse), score: s.score } : s.kind === 'song' ? { kind: 'song', title: s.title } : { kind: 'new-song' },
+      'detection',
+    );
+    return setSuggestions((prev) => {
       const now = Date.now();
       const same = (o: LiveSuggestion) =>
         o.kind === s.kind &&
@@ -486,6 +496,7 @@ export const LiveWorkspace = () => {
       const score = (o: LiveSuggestion) => (o.kind === 'verse' ? o.score : 0.8);
       return [{ ...s, at: now }, ...kept].sort((a, b) => b.at - a.at || score(b) - score(a)).slice(0, 12);
     });
+  };
 
   const songForSuggestion = (s: Extract<LiveSuggestion, { kind: 'song' }>) => {
     const song = songs.find((m) => m.id === s.songId);
@@ -957,7 +968,10 @@ export const LiveWorkspace = () => {
       onCapturedLine: (line) => handlers.current.captureLine(line),
       onMoment: (m) => handlers.current.moment(m),
       onSermonPoint: (p) => handlers.current.sermonPoint(p),
-      onSentence: (text) => hearSoon(text),
+      onSentence: (text) => {
+        publish('speech.heard', { text }, 'listening');
+        hearSoon(text);
+      },
       onLyricsMove: (index, cue) => {
         const c = handlers.current.collection;
         if (c?.kind !== 'slides' || !c.slides[index]) return;
@@ -1016,6 +1030,7 @@ export const LiveWorkspace = () => {
       await speech.current.init();
       setListening(true);
       desktop?.setListening(true);
+      publish('listening.started', { engine: settings.speechEngine }, 'listening');
       toast.success('Listening', { description: `Using ${getEngineDisplayName(settings)}` });
     } catch (error) {
       const blocked = desktop?.microphone && ['denied', 'restricted'].includes(await desktop.microphone.status().catch(() => ''));
@@ -1145,6 +1160,7 @@ export const LiveWorkspace = () => {
   }, [listening]);
 
   const stopListening = (quiet = false) => {
+    if (speech.current) publish('listening.stopped', {}, 'listening');
     speech.current?.disconnect();
     speech.current = null;
     controller.current?.reset();
@@ -1410,7 +1426,6 @@ export const LiveWorkspace = () => {
       if (v) {
         const shown: DisplayedVerse = { ...v, timestamp: new Date() };
         syncService.broadcast({ type: 'VERSE_UPDATE', data: { verse: shown, timestamp: shown.timestamp } });
-        sendVerseToProPresenter(v);
       }
     }
   };
