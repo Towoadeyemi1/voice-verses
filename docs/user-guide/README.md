@@ -16,12 +16,13 @@ How to use every part of Voice Verses, step by step. The numbers in each picture
 - [9. Design how things look](#looks)
 - [10. Screens: projector, stream and stage](#screens)
 - [11. ProPresenter: three ways to connect](#propresenter)
-- [12. Settings, page by page](#settings)
-- [13. spirit: let it run the service](#spirit)
-- [14. Plan your services](#planning)
-- [15. Media, the Screens page and Presenter](#pages)
-- [16. Training](#training)
-- [17. What the room sees](#room)
+- [12. Other apps and devices](#devices)
+- [13. Settings, page by page](#settings)
+- [14. spirit: let it run the service](#spirit)
+- [15. Plan your services](#planning)
+- [16. Media, the Screens page and Presenter](#pages)
+- [17. Training](#training)
+- [18. What the room sees](#room)
 - [Keyboard](#keyboard)
 - [When something goes wrong](#trouble)
 - [Every feature, and where to find it](#features)
@@ -468,9 +469,43 @@ ProPresenter is optional: Voice Verses’ own screens keep working whichever way
 - **ProPresenter not found?** In ProPresenter: Settings → Network → Enable Network, on the same network. Or type its address (Not in the list? → Type the address yourself).
 - The booth check checks the way you chose: the folder, the NDI picture, or the message.
 
+<a id="devices"></a>
+
+## 12. Other apps and devices
+
+A Stream Deck, a phone, or your church’s own apps (a dashboard, Planning Center, a captioning tool) can use Voice Verses over the church network. Each one is paired once, with a code shown on this computer, so only devices someone in the booth paired can use it. It needs the desktop app, and it works without the internet.
+
+### Turn it on
+
+![Turn it on](img/devices-1-on.jpg)
+
+1. Settings → **Other apps and devices**: switch it on. Switch it off and no other app can use Voice Verses (the network screens have their own switch).
+2. **The address** other apps use. Most find Voice Verses on the network by themselves.
+3. **Control the screens**: on, the device you pair next can show verses, Take, go forward or back, Clear and show the logo. Off, it can only see what’s on and follow what happens.
+4. **Show a pairing code**.
+
+### Pair a device
+
+![Pair a device](img/devices-2-code.jpg)
+
+1. Type these six digits in the other app. The code works once, for five minutes.
+2. **Stop** if you change your mind.
+
+### What is paired
+
+![What is paired](img/devices-3-paired.jpg)
+
+1. Each paired device, what it may do, and when it last used Voice Verses. Places it sends events to are listed under it, with **Stop sending**.
+2. **Remove** ends that device’s access at once. To pair it again, show a new code.
+
+**Good to know**
+
+- A remote **Take** does exactly what the Take button does. While you practise in Training, other apps can’t change the screens.
+- For the people who make the apps: the page links to **the guide for developers** (the API, its events and webhooks).
+
 <a id="settings"></a>
 
-## 12. Settings, page by page
+## 13. Settings, page by page
 
 Open Settings with the gear. Everything saves as you change it; there is no Save button to forget. Screens and ProPresenter have their own sections above.
 
@@ -537,7 +572,7 @@ Open Settings with the gear. Everything saves as you change it; there is no Save
 
 <a id="spirit"></a>
 
-## 13. spirit: let it run the service
+## 14. spirit: let it run the service
 
 spirit learns how your church runs its service, gets the next thing ready, and earns your trust one move at a time. It never puts a verse up that wasn’t said.
 
@@ -585,7 +620,7 @@ spirit learns how your church runs its service, gets the next thing ready, and e
 
 <a id="planning"></a>
 
-## 14. Plan your services
+## 15. Plan your services
 
 Open **Services** from the page bar (or the service name on the live screen).
 
@@ -636,7 +671,7 @@ Open **Services** from the page bar (or the service name on the live screen).
 
 <a id="pages"></a>
 
-## 15. Media, the Screens page and Presenter
+## 16. Media, the Screens page and Presenter
 
 ### Media
 
@@ -666,7 +701,7 @@ Every slide of the service by section. Click one to show it; **Start presenting*
 
 <a id="training"></a>
 
-## 16. Training
+## 17. Training
 
 Short lessons on the real screens, in practice: nothing reaches the projector, the stream, the stage or ProPresenter.
 
@@ -696,7 +731,7 @@ Short lessons on the real screens, in practice: nothing reaches the projector, t
 
 <a id="room"></a>
 
-## 17. What the room sees
+## 18. What the room sees
 
 ### The projector
 
@@ -788,26 +823,27 @@ The verse on a green key colour for the stream switcher. Over NDI it goes see-th
 | ProPresenter: a slide with Voice Verses’ NDI picture | [11. ProPresenter: three ways to connect](#propresenter) |
 | ProPresenter: the message; stage message; Why isn’t it on the screens? | [11. ProPresenter: three ways to connect](#propresenter) |
 | ProPresenter found on the network; type the address | [11. ProPresenter: three ways to connect](#propresenter) |
-| Features and presets | [12. Settings, page by page](#settings) |
-| Microphone, desk channel and sound check | [12. Settings, page by page](#settings) |
-| Speech engines: on this computer, browser, OpenAI | [12. Settings, page by page](#settings) |
-| Test with a recording | [12. Settings, page by page](#settings) |
-| AI verse assistant (Claude, OpenAI, Ollama, LM Studio, compatible) | [12. Settings, page by page](#settings) |
-| Bible translations: KJV, ASV, WEB, your own; ESV, NLT, API.Bible | [12. Settings, page by page](#settings) |
-| CCLI licence number | [12. Settings, page by page](#settings) |
-| Church logo | [12. Settings, page by page](#settings) |
-| Library folder and backup across computers | [12. Settings, page by page](#settings) |
-| Desktop app downloads and updates | [12. Settings, page by page](#settings) |
-| spirit: how much it does, what it does, cues, Not this, Pause, How it went | [13. spirit: let it run the service](#spirit) |
-| Moments on cue and sermon points | [13. spirit: let it run the service](#spirit) |
-| Services: calendar, new, import, save to a file, copy for next Sunday | [14. Plan your services](#planning) |
-| Service templates, ready-made orders, types of service | [14. Plan your services](#planning) |
-| The service editor: parts, slides, timers, reorder | [14. Plan your services](#planning) |
-| Make slides with AI | [14. Plan your services](#planning) |
-| Media: pictures, videos, SongSelect import, lyrics | [15. Media, the Screens page and Presenter](#pages) |
-| Presenter | [15. Media, the Screens page and Presenter](#pages) |
-| Training: Show me, Let me try, practice | [16. Training](#training) |
-| What the projector, stage and stream show | [17. What the room sees](#room) |
+| Other apps and devices: pairing, control, the API for developers | [12. Other apps and devices](#devices) |
+| Features and presets | [13. Settings, page by page](#settings) |
+| Microphone, desk channel and sound check | [13. Settings, page by page](#settings) |
+| Speech engines: on this computer, browser, OpenAI | [13. Settings, page by page](#settings) |
+| Test with a recording | [13. Settings, page by page](#settings) |
+| AI verse assistant (Claude, OpenAI, Ollama, LM Studio, compatible) | [13. Settings, page by page](#settings) |
+| Bible translations: KJV, ASV, WEB, your own; ESV, NLT, API.Bible | [13. Settings, page by page](#settings) |
+| CCLI licence number | [13. Settings, page by page](#settings) |
+| Church logo | [13. Settings, page by page](#settings) |
+| Library folder and backup across computers | [13. Settings, page by page](#settings) |
+| Desktop app downloads and updates | [13. Settings, page by page](#settings) |
+| spirit: how much it does, what it does, cues, Not this, Pause, How it went | [14. spirit: let it run the service](#spirit) |
+| Moments on cue and sermon points | [14. spirit: let it run the service](#spirit) |
+| Services: calendar, new, import, save to a file, copy for next Sunday | [15. Plan your services](#planning) |
+| Service templates, ready-made orders, types of service | [15. Plan your services](#planning) |
+| The service editor: parts, slides, timers, reorder | [15. Plan your services](#planning) |
+| Make slides with AI | [15. Plan your services](#planning) |
+| Media: pictures, videos, SongSelect import, lyrics | [16. Media, the Screens page and Presenter](#pages) |
+| Presenter | [16. Media, the Screens page and Presenter](#pages) |
+| Training: Show me, Let me try, practice | [17. Training](#training) |
+| What the projector, stage and stream show | [18. What the room sees](#room) |
 | Keyboard | [Keyboard](#keyboard) |
 | When something goes wrong | [When something goes wrong](#trouble) |
 
