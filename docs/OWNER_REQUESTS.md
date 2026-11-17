@@ -453,6 +453,14 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - 💬 **More Bibles:** today KJV, ASV, WEB on the computer; ESV and NLT with a free key; API.Bible for licensed translations (NKJV, NIV…); "Your own" only reads Voice Verses' own JSON. Proposed: read the common Bible file formats (OSIS, USFX, USFM, Zefania) and bundle more public-domain translations (e.g. the Berean Standard Bible, and older Bibles in other languages).
 - 💬 **Sermon preparation and service packages (API first):** proposed as one plan: a service package per service (scripture expected, slides, presentations, songs, announcements, media, notes); a local API v1 for every module (D27); importers for PowerPoint, Keynote/PDF, Word and text sermon notes, pictures; a connector to the CCCGHQ dashboard (choir lyrics, announcements, order of service, sermon artifacts); a sermon preparation space with optional AI (scriptures, cross-references, points, slides, pictures); and each package placed in the right service of the day, so detection already expects its scriptures (still rule 1: a verse goes up by itself only when said outright or 99% sure). Waiting for the owner's answers on CCCGHQ's API and the order.
 
+## "I want this app to be sitting on the most modern and elegant architecture; the service architecture should be such that when updates are needed or packages are added, it just advertises and other services that need it subscribe… Does this make sense? Also is it okay to give the CCCG Dashboard our documentation or collect their own? Also I want other churches to be able to use this if they are not using the CCCG Dashboard."
+
+(17 Nov 2026.)
+- 💬 Yes: proposed as an event-driven design inside the one app (D27 stays: one download, works offline, no separate services to install): every module publishes what it offers and the events it sends on one event bus; others subscribe. The same bus is reachable from outside through the local API (commands and questions over HTTP, live events over WebSocket or SSE, webhooks out), described in OpenAPI and AsyncAPI, versioned, and found on the church network by Bonjour/mDNS. Connectors and importers are add-on packages that register themselves.
+- 💬 CCCG Dashboard: both. Give them our open feed and service-package spec (`docs/integrations/`), and collect their API documentation if they already have one, so a CCCG connector can be written either way.
+- 💬 Other churches: CCCG is one connector among several. Everything works without it: planning in the app, imports (PowerPoint, PDF, Word, SongSelect), a Planning Center connector, and the open feed any church's own app can implement.
+- ⏳ Next: the architecture design for approval (step 2), then the service package and local API.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
