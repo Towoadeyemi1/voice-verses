@@ -181,6 +181,11 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Decision:** `lib/practice.ts` is a flag in the operator's window only, never saved. While it is on, `syncService.broadcast` gives the message to this window's own listeners and nothing else: no other window, no saved live state, no usage report. `onScreens()` is what the room shows (the network publisher uses it); `current()` is what this window shows. ProPresenter sends and clears do nothing, and spirit learns nothing (`learn`, `hearSoon`). When practice ends, this window goes back to what the room shows, and the live screen puts back what it was working on (Next, the reading, suggestions), so nothing from practice waits in Next for a real Take.
 - **Why:** Holding the outputs still from the receiving side would need every output, the DeckLink and NDI windows and the network screens to know about practice; stopping it at the one place messages leave is smaller and can't be missed. A flag that isn't saved can't be left on by a crash.
 
+### D32. Three ways into ProPresenter, chosen by the church
+- **Context:** The owner's ProPresenter sends each slide to the projector, lower third and stage at once, so a message shows over everything; they found it disruptive and asked for the ways other apps use (a slide whose text follows another app; a slide showing an NDI picture). They judged linked text the most flexible.
+- **Decision:** Settings → ProPresenter offers a slide with linked text (Voice Verses writes small text files a text box links to), a slide with Voice Verses' picture (the projector over NDI), and the message (kept as the default for churches already using it). Linked text writes only three named files, atomically, to a folder the church can share; a test write works with sending off so the text box can be linked.
+- **Why:** The team keeps control in ProPresenter (they put the slide up and take it down) and each screen keeps its own look; nothing needs ProPresenter's network API for linked text, so it works with any ProPresenter that has Linked Text, even on another computer through a shared folder.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

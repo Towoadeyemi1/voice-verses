@@ -110,7 +110,7 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 - ✅ 1.19.0 Set up your booth (opens by itself on a new computer; microphone, screens, ProPresenter and services found and confirmed) and practice mode (D31): the demo after it reaches nothing in the room.
 - ✅ 1.19.1 Training tab and the guide: Your first Sunday (Show me / Let me try), Watch the demo (narrated aloud, with the pointer), When something goes wrong.
 - ⏳ Training (mock-up `docs/design/training/`, approved 13 Nov 2026), still to come: Set up your booth (found for you, you confirm), Your first Sunday, every lesson as Show me or Let me try on the real screens in practice mode, by role, picture guides to share, and the ProPresenter lesson with each ProPresenter step checked through its network connection.
-- ⏳ ProPresenter by slide: a slide with linked text (after Billie's test) and a slide with Voice Verses' NDI picture, beside the message.
+- ✅ 1.19.3 ProPresenter by slide: a slide with linked text and a slide with Voice Verses' NDI picture, beside the message (D32). Billie's test now uses the app's own Write a test verse.
 - ⏳ A local control API on the network server (show a verse, clear, next, logo, countdown, status) for a Stream Deck, a phone or another app (D27).
 
 **Phase 1: make it beautiful and smooth (1.5.x)**
