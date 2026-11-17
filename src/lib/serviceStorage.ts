@@ -1,6 +1,7 @@
 import { Service, MediaItem } from '@/types/service';
 import { indexedDBService } from './indexedDBService';
 import { notifyLocalChange, setDeletion } from './library/localChanges';
+import { publish } from '@/core/bus';
 
 const SERVICES_KEY = 'cornerstone-services';
 const MEDIA_KEY = 'cornerstone-media';
@@ -16,6 +17,12 @@ export interface SaveOptions {
 function stamp<T extends { updatedAt?: string }>(item: T, options?: SaveOptions): T {
   return options?.fromSync ? item : { ...item, updatedAt: new Date().toISOString() };
 }
+
+/** A service's date as text for the event bus ("" when it can't be read) */
+const isoDate = (d: unknown): string => {
+  const t = new Date(d as string);
+  return Number.isNaN(t.getTime()) ? '' : t.toISOString();
+};
 
 export class ServiceStorage {
   static async getServices(): Promise<Service[]> {
@@ -105,6 +112,7 @@ export class ServiceStorage {
       setDeletion('services', service.id, null);
       notifyLocalChange();
     }
+    publish('service.updated', { id: service.id, name: service.name, date: isoDate(service.date), type: service.type, template: !!service.isTemplate }, 'services');
   }
 
   static async deleteService(id: string, options?: SaveOptions): Promise<void> {
@@ -116,6 +124,7 @@ export class ServiceStorage {
         setDeletion('services', id, new Date().toISOString());
         notifyLocalChange();
       }
+      publish('service.deleted', { id }, 'services');
     } catch (error) {
       console.error('Error deleting service:', error);
       throw error;
@@ -183,6 +192,7 @@ export class ServiceStorage {
       setDeletion('media', item.id, null);
       notifyLocalChange();
     }
+    publish('media.updated', { id: item.id, kind: item.type, name: item.name }, 'library');
   }
 
   static async deleteMediaItem(id: string, options?: SaveOptions): Promise<void> {
@@ -196,6 +206,7 @@ export class ServiceStorage {
         setDeletion('media', id, new Date().toISOString());
         notifyLocalChange();
       }
+      publish('media.deleted', { id }, 'library');
     } catch (error) {
       console.error('Error deleting media item:', error);
       throw error;

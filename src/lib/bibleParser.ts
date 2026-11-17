@@ -2,6 +2,7 @@ import { BibleVerse, BibleContext } from '@/types/bible';
 import { BibleVersionType } from '@/types/bibleVersion';
 import { convertBibleSuperSearchToStandard } from './bibleConverter';
 import { apiBibleFor, isApiBibleVersion, onlineChapter, reportScriptureShown } from './onlineBibles';
+import { publish } from '@/core/bus';
 
 interface BibleBook {
   abbrev: string;
@@ -413,6 +414,7 @@ export class BibleParser {
     currentVersion = version;
     localStorage.setItem('cornerstone-bible-version', version);
     this.preload();
+    publish('bible.changed', { translation: version, label: this.getVersionLabel() }, 'bibles');
   }
 
   /** Start downloading the selected translation so the first lookup is instant. */

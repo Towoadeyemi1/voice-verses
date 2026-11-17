@@ -459,7 +459,9 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - 💬 Yes: proposed as an event-driven design inside the one app (D27 stays: one download, works offline, no separate services to install): every module publishes what it offers and the events it sends on one event bus; others subscribe. The same bus is reachable from outside through the local API (commands and questions over HTTP, live events over WebSocket or SSE, webhooks out), described in OpenAPI and AsyncAPI, versioned, and found on the church network by Bonjour/mDNS. Connectors and importers are add-on packages that register themselves.
 - 💬 CCCG Dashboard: both. Give them our open feed and service-package spec (`docs/integrations/`), and collect their API documentation if they already have one, so a CCCG connector can be written either way.
 - 💬 Other churches: CCCG is one connector among several. Everything works without it: planning in the app, imports (PowerPoint, PDF, Word, SongSelect), a Planning Center connector, and the open feed any church's own app can implement.
-- ⏳ Next: the architecture design for approval (step 2), then the service package and local API.
+- ✅ **Approved** (17 Nov 2026, "Approved."): the design page (event bus, module registry, local API, service package, pairing with scoped keys, the build order, CCCG both ways). Recorded as D33 and `docs/architecture/README.md`.
+- ✅ 1.19.4 **Step 2.1, the bus and the registry:** nine modules register with manifests; what the screens show, Next, listening, what was heard, verses found, suggestions, services, songs and media and the Bible translation are announced as events; ProPresenter now follows the bus instead of being called by the live screen (so it also follows Presenter and the playlist). Nothing changes on screen. Checked by `tools/checks/bus-check.ts` (CI) and `tools/e2e/event-bus.cjs`.
+- ⏳ Next: step 2.2, the local API v1.
 
 ## Process
 

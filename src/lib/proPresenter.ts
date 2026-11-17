@@ -187,10 +187,10 @@ export const writeLinkedTest = (text: string, reference: string) => writeLinked(
  * A song or slide went live. Linked text with song words on: its words go to ProPresenter;
  * otherwise the verse comes off ProPresenter (1.18.5).
  */
-export function sendSlideToProPresenter(slide: Slide): Promise<boolean> {
+export function sendSlideToProPresenter(slide: { type: string; content?: string; songTitle?: string; sectionLabel?: string }): Promise<boolean> {
   const settings = loadProPresenterSettings();
   if (settings.route === 'linked' && settings.linkedSongs && slide.type === 'lyrics') {
-    return writeLinked(slide.content.trim(), [slide.songTitle, slide.sectionLabel].filter(Boolean).join(' · '));
+    return writeLinked((slide.content ?? '').trim(), [slide.songTitle, slide.sectionLabel].filter(Boolean).join(' · '));
   }
   return clearProPresenter();
 }
