@@ -1,6 +1,6 @@
 # Voice Verses Guide
 
-How to use every part of Voice Verses, step by step. The numbers in each picture match the numbered steps under it. (Version 1.19.1.)
+How to use every part of Voice Verses, step by step. The numbers in each picture match the numbered steps under it. (Version 1.19.3.)
 
 ## Contents
 
@@ -13,14 +13,18 @@ How to use every part of Voice Verses, step by step. The numbers in each picture
 - [6. Songs and slides](#songs)
 - [7. Countdowns and alerts](#countdowns)
 - [8. Is everything ready?](#booth-check)
-- [9. Settings, page by page](#settings)
-- [10. spirit: let it run the service](#spirit)
-- [11. Plan your services](#planning)
-- [12. Media, Looks, Screens and Presenter](#pages)
-- [13. Training](#training)
-- [14. What the room sees](#room)
+- [9. Design how things look](#looks)
+- [10. Screens: projector, stream and stage](#screens)
+- [11. ProPresenter: three ways to connect](#propresenter)
+- [12. Settings, page by page](#settings)
+- [13. spirit: let it run the service](#spirit)
+- [14. Plan your services](#planning)
+- [15. Media, the Screens page and Presenter](#pages)
+- [16. Training](#training)
+- [17. What the room sees](#room)
 - [Keyboard](#keyboard)
 - [When something goes wrong](#trouble)
+- [Every feature, and where to find it](#features)
 
 <a id="start"></a>
 
@@ -90,6 +94,25 @@ Everything for the service happens on this one screen. It is the same every Sund
 4. **Training**: short lessons on these real screens.
 5. **Today’s order**: click any part to load its slides.
 6. **Show a verse**: quick buttons for well-known verses.
+
+### The library, moving on by time, and spirit
+
+![The library, moving on by time, and spirit](img/live-3-more.jpg)
+
+1. **Library** (top left): the Bible, your songs and your services, to pick from during the service.
+2. **Move on by time**: when a part’s time is up, the next part loads by itself (into Next, or on screen if picking a slide goes live). The sermon, a verse on screen and a song being sung never move on by themselves.
+3. **Pause** (or the P key): spirit stops getting things ready by itself until you press it again.
+
+### The library
+
+![The library](img/live-4-library.jpg)
+
+1. Three tabs: **Bible** (type a reference; *History* shows what was on screen), **Songs** (your song library) and **Service** (today’s services, coming up and earlier, each part with its slides). Click anything to pick it.
+
+**Good to know**
+
+- **Several services on the same day** sit side by side before the order of service; one click switches between them.
+- The window can be any size: on a wide monitor the library stays open as a column on the left.
 
 <a id="demo"></a>
 
@@ -265,11 +288,191 @@ The booth check looks at the microphone, the screens, ProPresenter, the Bible an
 
 - During the service, a problem (a screen unplugged, no sound for 20 seconds) shows as an amber warning under the top bar, with its fix button.
 
+<a id="looks"></a>
+
+## 9. Design how things look
+
+A **look** is the design for one kind of thing on one screen: scripture on the projector, songs on the stream, and so on. Change a look and every slide that uses it changes, on the screens straight away. Open **Looks** from the page bar.
+
+### Looks
+
+![Looks](img/pages-5-looks.jpg)
+
+1. Three tabs: **Design a look**, **Which screen uses what**, and **Colour teams and themes**. Click a look in the row to design it.
+2. **Backgrounds**: moving backgrounds made by the app, and 40 ready-made samples.
+3. **Starter looks**: ready-made designs to add and change.
+4. **New look** starts one from nothing.
+
+### The designer
+
+![The designer](img/looks-1-designer.jpg)
+
+1. **On this slide**: click the part to change (Background, Main text, Reference / title, Logo, Transition). **Text**, **Shape** and **Picture** at the bottom add your own layers.
+2. Try it with a **short verse**, a **long verse**, a **song** or an **announcement**, so it works for all of them.
+3. **Undo** and **Redo** (⌘Z and ⇧⌘Z).
+4. **Duplicate** makes a copy to change. **Reset** puts a built-in look back as it came.
+
+### Change the background
+
+![Change the background](img/looks-2-background.jpg)
+
+1. Click **Background**.
+2. Choose **Colour**, **Gradient**, **Moving**, **Picture** or **Video**. Moving backgrounds are drawn by the app in your team’s colours, with a speed (0 is still). A picture or video can be dimmed and blurred so the words stay readable.
+
+### Backgrounds
+
+![Backgrounds](img/looks-3-backgrounds.jpg)
+
+1. **In your colours** (they follow your colour team) or **Samples (40)**. Pick one, choose what it goes behind on the projector (**Scripture**, **Songs**, **Announcements**, **Countdowns**), then press **Use**.
+
+### Starter looks
+
+![Starter looks](img/looks-4-starters.jpg)
+
+1. Tabs for Scripture, Songs, Announcements, Countdowns and Lower thirds. **Add** copies one into your looks; **Use on projector** puts it to work straight away.
+
+### Which screen uses what
+
+![Which screen uses what](img/looks-5-assign.jpg)
+
+1. For each screen (the projector, the lower third for the stream, the stage), choose the look for **Scripture**, **Songs**, **Announcements** and **Countdowns**.
+
+### Colour teams and themes
+
+![Colour teams and themes](img/looks-6-teams.jpg)
+
+1. **Colour team**: five colours every look can use. Change the team and every look changes with it. **Change with the month** picks the team for the season (Advent purple in December, Easter in April). **More colour teams** adds Christmas, Lent, Youth and others; **New team** makes your own. **Themes** set every look and a colour team in one click (**Use this theme**).
+
+### One slide, its own look
+
+![One slide, its own look](img/pages-3b-slide-menu.jpg)
+
+1. In the service editor, open a slide’s **⋮** menu and choose **Design…**
+
+### Designing one slide
+
+![Designing one slide](img/pages-3c-slide-design.jpg)
+
+1. The same designer, for this slide. At the bottom, choose where it applies: **This slide**, or every slide of that kind (for example **Every announcements slide**).
+
+**Good to know**
+
+- **Move and resize**: drag the text box to move it, and its corners to resize it. Pink guide lines show when things line up.
+- **The text panel** on the right: font, largest size (long verses shrink to fit), bold, italic, underline and highlight, colours (the team’s colours or any), alignment, up or down, line and letter spacing, shadow and outline, a box behind the text, and where it sits.
+- **Single words**: select words in the text and use the bold, italic, underline, highlight or colour buttons.
+- **Transitions**: click *Transition* in the list: dissolve, through black, lift, zoom, push or cut, from 0.2 to 3 seconds. A slide in a service can have its own.
+- **During the service**: Quick edit (the pencil on a slide, or Edit above Live) changes a slide’s words or look on the spot.
+- Slow computer? Settings → Screens and outputs → *Moving backgrounds on this computer* can keep them still.
+
+<a id="screens"></a>
+
+## 10. Screens: projector, stream and stage
+
+Voice Verses puts each output on its screen by itself, every time. Open Settings → **Screens and outputs** (or the **Screens** page).
+
+### Screens and outputs
+
+![Screens and outputs](img/settings-4-screens.jpg)
+
+1. **Screens and outputs** in the sidebar.
+2. **Click a screen** in the picture of the room.
+3. Choose what it **shows**: Projector, Lower third, Stage monitor or Nothing. It opens there by itself, every time.
+4. **Identify screens** puts a big number on every screen.
+
+### Screens on the network
+
+![Screens on the network](img/settings-4b-network.jpg)
+
+1. Click **On the network** in the picture of the room and switch **Share** on. Any browser on the church network can then show an output: a smart TV, a tablet on stage, another computer, or OBS and vMix as a browser source. The addresses it shows can be copied; the port is 47100.
+
+### NDI® on the network
+
+![NDI® on the network](img/settings-4c-ndi.jpg)
+
+1. Click **NDI on the network**. Each output can be an NDI source for vMix, OBS, TriCaster, NDI converters and ProPresenter; the lower third goes see-through. It needs the free **NDI Runtime** on this computer (NDI Tools, from ndi.video/tools).
+
+### Each output, and where it goes
+
+![Each output, and where it goes](img/settings-4d-outputs.jpg)
+
+1. Every output with its picture, where it is shown, its **screen shape** (match the screen, 16:9, 16:10, 4:3, ultrawide or your own size) and **Send it somewhere else too**: one output can go to a screen and a DeckLink port and the network at once.
+
+### Ways to connect a screen
+
+![Ways to connect a screen](img/settings-4e-ways.jpg)
+
+1. **Ways to connect a screen**: a display cable (HDMI, DisplayPort, USB‑C, AirPlay), **Blackmagic DeckLink** (SDI straight into the switcher; choose the video format your switcher uses and press *Show test colours*), the network, ProPresenter and NDI. Each says whether it is ready.
+
+### The stage monitor’s own settings
+
+![The stage monitor’s own settings](img/outputs-2b-stage-settings.jpg)
+
+1. On the stage monitor, move the mouse and click the gear. **Start from a layout** (Classic, Large words, Preacher, Singers or High contrast), then change colours and sizes.
+
+**Good to know**
+
+- Esc on an output that sits on your own screen turns it off.
+- If a screen is unplugged, its output comes back by itself when it is plugged in again, and the booth check says so meanwhile.
+- An HDMI-to-SDI converter on a spare video output works too, like any other screen.
+
+<a id="propresenter"></a>
+
+## 11. ProPresenter: three ways to connect
+
+ProPresenter is optional: Voice Verses’ own screens keep working whichever way you choose, and nothing is sent while you practise. Open Settings → **ProPresenter** and choose how the words get there.
+
+### Way 1: a slide with linked text (recommended for most churches)
+
+![Way 1: a slide with linked text (recommended for most churches)](img/pp-1-linked.jpg)
+
+1. Choose **A slide with linked text**. Your team keeps control: they put the slide up and take it down, and each screen keeps its own look.
+2. **Send the words to ProPresenter**: on for the service.
+3. **Also song words**: song slides go there too, if you want.
+4. **The folder** where Voice Verses writes the words. **Show the files** opens it. If ProPresenter is on another computer, press **Choose another folder** and pick a folder both computers can see (a shared folder, or a Dropbox, iCloud or OneDrive folder).
+5. **Write a test verse** writes John 3:16 now (even with sending off), so you can link the text box and see it. **Clear it** empties it.
+
+### Way 1, in ProPresenter (once)
+
+![Way 1, in ProPresenter (once)](img/pp-2-linked-steps.jpg)
+
+1. The page lists the six steps: **make a slide** called “Voice Verses” with a text box; select the text box → **Format → Linked Text → File** → choose **verse.txt** (or *verse-and-reference.txt*; a second box can show *reference.txt*); press **Write a test verse** here and the box shows John 3:16; give it the look you want on each screen; in the service, **put the slide up** when the reading starts, and its words follow Voice Verses.
+
+### Way 2: a slide with Voice Verses’ picture
+
+![Way 2: a slide with Voice Verses’ picture](img/pp-3-ndi.jpg)
+
+1. Choose **A slide with Voice Verses’ picture**. ProPresenter shows exactly what Voice Verses draws: verses, songs, slides and countdowns, with the same look on every screen.
+2. Switch on **Send the projector over NDI**. This computer needs the free NDI Runtime (NDI Tools, from ndi.video/tools).
+3. In ProPresenter, once: **Settings → Inputs**, add an NDI input and choose “… (Voice Verses Projector)”; then make a slide whose background is that input, and put it up when the reading starts.
+
+### Way 3: a message over everything
+
+![Way 3: a message over everything](img/pp-4-message.jpg)
+
+1. Choose **A message over everything**. It is the quickest to set up, but the message shows over every screen whose Look has Messages on.
+2. Switch **Send verses** on. Under it, **ProPresenter on your network** lists every ProPresenter found; press **Connect** beside yours. Voice Verses makes the “Voice Verses” message with a lower-third theme.
+
+### Way 3: what ProPresenter shows
+
+![Way 3: what ProPresenter shows](img/pp-5-message-more.jpg)
+
+1. **Also on ProPresenter’s stage screens** sends a stage message as well.
+2. **Send a test verse**, then **Clear it**.
+3. **Why isn’t it on the screens?** lists what ProPresenter says (the message, its layers and the Look on each screen) and what to change.
+
+**Good to know**
+
+- **Which way?** Linked text if your team runs ProPresenter and wants its own looks and control. The NDI picture if you want Voice Verses’ look (and songs and slides) inside ProPresenter. The message only for a quick start.
+- **Clear** (Esc), the **Logo**, or a song or slide going up takes Voice Verses’ verse off ProPresenter (linked text: the files are emptied).
+- With the message: if someone presses **Hide** in ProPresenter, Voice Verses stops sending and offers **Send again**.
+- **ProPresenter not found?** In ProPresenter: Settings → Network → Enable Network, on the same network. Or type its address (Not in the list? → Type the address yourself).
+- The booth check checks the way you chose: the folder, the NDI picture, or the message.
+
 <a id="settings"></a>
 
-## 9. Settings, page by page
+## 12. Settings, page by page
 
-Open Settings with the gear. Everything saves as you change it; there is no Save button to forget.
+Open Settings with the gear. Everything saves as you change it; there is no Save button to forget. Screens and ProPresenter have their own sections above.
 
 ### Features: what Voice Verses does by itself
 
@@ -287,23 +490,17 @@ Open Settings with the gear. Everything saves as you change it; there is no Save
 2. **Input**: the microphone or the sound desk’s USB feed.
 3. **Sound check**: speak and the bar moves. If the desk sends many channels, click the preacher’s channel (its meter moves when they speak).
 
-### Screens and outputs
+### Listening: how speech is heard
 
-![Screens and outputs](img/settings-4-screens.jpg)
+![Listening: how speech is heard](img/settings-3b-engine.jpg)
 
-1. **Screens and outputs** in the sidebar.
-2. **Click a screen** in the picture of the room.
-3. Choose what it **shows**: Projector, Lower third, Stage monitor or Nothing. It opens there by itself, every time.
-4. **Identify screens** puts a big number on every screen.
+1. **How speech is heard**: *On this computer* (recommended: offline and private), *The browser* (the web version only) or *OpenAI* (over the internet, with your own key).
 
-### ProPresenter (optional)
+### Listening: test a recording, and the AI assistant
 
-![ProPresenter (optional)](img/settings-5-propresenter.jpg)
+![Listening: test a recording, and the AI assistant](img/settings-3c-ai.jpg)
 
-1. **ProPresenter** in the sidebar.
-2. **ProPresenter on your network**: press **Connect** beside yours. The **Send verses** switch at the top turns sending on or off.
-3. **What ProPresenter shows**: its look, also on its stage screens, **Send a test verse**, **Clear it** and **Why isn’t it on the screens?**
-4. **Not in the list?** Three steps to switch on ProPresenter’s network setting, or type its address yourself.
+**Test with a recording**: choose a recorded service (MP3, M4A or WAV) and see every verse Voice Verses would have shown. **AI verse assistant** (optional): with Claude, OpenAI, Ollama or LM Studio on your own computer, or another compatible server, it also recognises verses quoted or described instead of named. Keys are kept in the computer’s own keychain, never in the web version.
 
 ### Bible translations
 
@@ -332,11 +529,25 @@ Open Settings with the gear. Everything saves as you change it; there is no Save
 
 1. **Library and backup** in the sidebar. **Choose folder** inside iCloud Drive, Dropbox, OneDrive or Google Drive to back up your services and share them between computers.
 
+### Desktop app
+
+![Desktop app](img/settings-9b-desktop.jpg)
+
+1. **Desktop app** in the sidebar: downloads for Mac (Apple chip or Intel) and Windows. Each is one installer with everything, the offline speech engine included. A new version is offered when it comes out.
+
 <a id="spirit"></a>
 
-## 10. spirit: let it run the service
+## 13. spirit: let it run the service
 
 spirit learns how your church runs its service, gets the next thing ready, and earns your trust one move at a time. It never puts a verse up that wasn’t said.
+
+### When spirit gets something wrong
+
+![When spirit gets something wrong](img/live-5-not-this.jpg)
+
+1. spirit put **Blessed Assurance** in Next because the last slide of the song before it went up. Next says why.
+2. **Not this** tells spirit it was wrong.
+3. Say why in one tap: **Wrong part**, **Not now** or **Never for these words**. spirit remembers.
 
 ### How spirit runs
 
@@ -374,7 +585,7 @@ spirit learns how your church runs its service, gets the next thing ready, and e
 
 <a id="planning"></a>
 
-## 11. Plan your services
+## 14. Plan your services
 
 Open **Services** from the page bar (or the service name on the live screen).
 
@@ -382,7 +593,12 @@ Open **Services** from the page bar (or the service name on the live screen).
 
 ![Services](img/pages-1-services.jpg)
 
-1. The **page bar**: Live, Services, Media, Looks, Screens, Training, Settings. Pick a day in the calendar; its services show with **Edit** and **Present**. **New service** is at the top right.
+1. The **page bar**: Live, Services, Media, Looks, Screens, Training, Settings. Pick a day in the calendar; its services show under it.
+2. **New service**.
+3. **Import** a service saved to a file (from another computer or church).
+4. **Copy for next Sunday** makes a fresh copy.
+5. **Save to a file**, to send or keep.
+6. **Present** opens it to run; **Edit** opens the editor.
 
 ### Templates and ready-made orders
 
@@ -397,28 +613,44 @@ Open **Services** from the page bar (or the service name on the live screen).
 
 1. **Type of service** (Sunday service, Communion Sunday, Friday Night Prayers…). spirit learns each type separately.
 2. **Save as a template** keeps this service as a starting point for next time.
+3. **Present** runs it.
+4. **Save**.
+
+### Add to a part
+
+![Add to a part](img/pages-3d-add.jpg)
+
+1. Click a part in the order, then **Add to “…”**: Scripture, Song, Announcement, Picture, Video or Blank. Drag parts and slides to reorder; each part has a timer for the timeline.
+2. **Make with AI** turns the bulletin or sermon notes into slides.
+
+### Make slides with AI (optional)
+
+![Make slides with AI (optional)](img/pages-3e-ai-slides.jpg)
+
+1. **Announcements from a bulletin** or **Sermon points from notes**: paste the words, press **Write the slides**, check them, then **Add slides to this item**. It needs an AI provider (Settings → Listening → AI verse assistant); it keeps your dates, times and places as written.
 
 **Good to know**
 
-- Add parts with the tiles on the left: **Scripture**, **Song**, **Announcement**, **Picture**, **Video**, **Countdown**. Drag to reorder.
-- **Copy for next Sunday** (on the Services page) makes a fresh copy of a service.
-- **Present** opens the service as a list of slides, with Live and Next beside it.
+- A part can have its own **countdown** that starts with its first slide (the Countdown before the service does this).
+- **Remove samples** takes away the sample services and songs the app came with.
 
 <a id="pages"></a>
 
-## 12. Media, Looks, Screens and Presenter
+## 15. Media, the Screens page and Presenter
 
 ### Media
 
 ![Media](img/pages-4-media.jpg)
 
-Pictures, videos and songs. **Add files** takes pictures, videos and SongSelect song files (.usr or .txt) with their writers, copyright and CCLI number. Songs here are recognised when the church sings them.
+1. **Add files**: pictures, videos, and SongSelect songs (.usr or .txt), kept with their writers, copyright and CCLI number.
+2. Show **Everything**, **Pictures**, **Videos** or **Songs**, or search by name.
+3. **Lyrics** opens a song’s words.
 
-### Looks
+### A song’s words
 
-![Looks](img/pages-5-looks.jpg)
+![A song’s words](img/pages-4b-lyrics.jpg)
 
-1. Three tabs: **Design a look** (the designer), **Which screen uses what**, and **Colour teams and themes**. **Backgrounds** has moving backgrounds and 40 samples; **Starter looks** has ready-made designs.
+1. Start each section with its name (Verse 1, Chorus, Bridge) and leave a blank line between sections. **Save lyrics**. Songs in your library are recognised when the church sings them.
 
 ### Screens
 
@@ -434,7 +666,7 @@ Every slide of the service by section. Click one to show it; **Start presenting*
 
 <a id="training"></a>
 
-## 13. Training
+## 16. Training
 
 Short lessons on the real screens, in practice: nothing reaches the projector, the stream, the stage or ProPresenter.
 
@@ -464,7 +696,7 @@ Short lessons on the real screens, in practice: nothing reaches the projector, t
 
 <a id="room"></a>
 
-## 14. What the room sees
+## 17. What the room sees
 
 ### The projector
 
@@ -507,9 +739,77 @@ The verse on a green key colour for the stream switcher. Over NDI it goes see-th
 | A screen is black or on the wrong display | Settings → Screens and outputs → Identify screens, then click the screen and choose what it shows. |
 | A wrong verse was suggested | Press × on the suggestion. Suggestions never go up by themselves. Switch to Ask first if you want every verse to wait in Next. |
 | spirit got the wrong part ready | Press Not this beside Next and say why. Press P to pause spirit. |
-| ProPresenter’s message covers its screens | In ProPresenter, Hide the “Voice Verses” message; Voice Verses stops sending until you choose Send again. To stop for good: Settings → ProPresenter → Send verses off. |
+| ProPresenter’s message covers its screens | Choose A slide with linked text in Settings → ProPresenter: your team then puts the verse slide up and takes it down. For now, Hide the message in ProPresenter: Voice Verses stops sending until you choose Send again. |
 | Something went up by mistake | Press Esc to clear, or the Logo button. |
 | You want to practise | Training → Your first Sunday → Let me try. Nothing reaches the room. |
+
+<a id="features"></a>
+
+## Every feature, and where to find it
+
+| Feature | In this guide |
+| --- | --- |
+| Set up your booth on a new computer; open again from Booth check | [1. Set up your booth (the first time)](#setup) |
+| The live screen: Live, Next, Take, Clear, Logo | [2. The live screen at a glance](#live) |
+| When I pick a slide: Goes live / Waits in Next | [2. The live screen at a glance](#live) |
+| Auto / Ask first | [2. The live screen at a glance](#live) |
+| Library: Bible, songs, services; History | [2. The live screen at a glance](#live) |
+| Several services on one day | [2. The live screen at a glance](#live) |
+| Move on by time | [2. The live screen at a glance](#live) |
+| The narrated demo | [3. Watch the demo](#demo) |
+| Search (⌘K) for verses, songs, parts and actions | [4. Put a verse on the screens yourself](#verse) |
+| Translation switch (KJV ▾) on the live screen | [4. Put a verse on the screens yourself](#verse) |
+| Next and previous verse with the arrow keys | [4. Put a verse on the screens yourself](#verse) |
+| Listening: verses said outright, read aloud, ranges, a chapter waiting for its verse | [5. Let it listen](#listening) |
+| Suggestions for quotes and stories, with how sure and why; all suggestions | [5. Let it listen](#listening) |
+| Song mode (♪ Song) | [6. Songs and slides](#songs) |
+| Songs follow the singers; worship leader’s cues; new singing captured | [6. Songs and slides](#songs) |
+| Slide strip, grid, double-click to show | [6. Songs and slides](#songs) |
+| Quick edit during the service | [6. Songs and slides](#songs) |
+| Countdowns (several, per screen, yellow and red, blink) | [7. Countdowns and alerts](#countdowns) |
+| Alerts (nursery, car, stage notes) | [7. Countdowns and alerts](#countdowns) |
+| Booth check and warnings during the service | [8. Is everything ready?](#booth-check) |
+| Looks: the designer (text, layers, shapes, pictures, undo) | [9. Design how things look](#looks) |
+| Backgrounds: colour, gradient, moving, picture, video; the gallery and samples | [9. Design how things look](#looks) |
+| Transitions | [9. Design how things look](#looks) |
+| Starter looks | [9. Design how things look](#looks) |
+| Which screen uses what | [9. Design how things look](#looks) |
+| Colour teams, change with the month, themes | [9. Design how things look](#looks) |
+| A slide’s own look | [9. Design how things look](#looks) |
+| Formatting single words | [9. Design how things look](#looks) |
+| Screens and outputs: each output on its display; Identify screens | [10. Screens: projector, stream and stage](#screens) |
+| Screen shapes and ultrawide | [10. Screens: projector, stream and stage](#screens) |
+| Screens on the network (browsers, smart TVs, OBS, vMix) | [10. Screens: projector, stream and stage](#screens) |
+| NDI® output | [10. Screens: projector, stream and stage](#screens) |
+| Blackmagic DeckLink SDI output | [10. Screens: projector, stream and stage](#screens) |
+| Stage monitor layouts and settings | [10. Screens: projector, stream and stage](#screens) |
+| Moving backgrounds on a slow computer | [9. Design how things look](#looks) |
+| ProPresenter: a slide with linked text | [11. ProPresenter: three ways to connect](#propresenter) |
+| ProPresenter: a slide with Voice Verses’ NDI picture | [11. ProPresenter: three ways to connect](#propresenter) |
+| ProPresenter: the message; stage message; Why isn’t it on the screens? | [11. ProPresenter: three ways to connect](#propresenter) |
+| ProPresenter found on the network; type the address | [11. ProPresenter: three ways to connect](#propresenter) |
+| Features and presets | [12. Settings, page by page](#settings) |
+| Microphone, desk channel and sound check | [12. Settings, page by page](#settings) |
+| Speech engines: on this computer, browser, OpenAI | [12. Settings, page by page](#settings) |
+| Test with a recording | [12. Settings, page by page](#settings) |
+| AI verse assistant (Claude, OpenAI, Ollama, LM Studio, compatible) | [12. Settings, page by page](#settings) |
+| Bible translations: KJV, ASV, WEB, your own; ESV, NLT, API.Bible | [12. Settings, page by page](#settings) |
+| CCLI licence number | [12. Settings, page by page](#settings) |
+| Church logo | [12. Settings, page by page](#settings) |
+| Library folder and backup across computers | [12. Settings, page by page](#settings) |
+| Desktop app downloads and updates | [12. Settings, page by page](#settings) |
+| spirit: how much it does, what it does, cues, Not this, Pause, How it went | [13. spirit: let it run the service](#spirit) |
+| Moments on cue and sermon points | [13. spirit: let it run the service](#spirit) |
+| Services: calendar, new, import, save to a file, copy for next Sunday | [14. Plan your services](#planning) |
+| Service templates, ready-made orders, types of service | [14. Plan your services](#planning) |
+| The service editor: parts, slides, timers, reorder | [14. Plan your services](#planning) |
+| Make slides with AI | [14. Plan your services](#planning) |
+| Media: pictures, videos, SongSelect import, lyrics | [15. Media, the Screens page and Presenter](#pages) |
+| Presenter | [15. Media, the Screens page and Presenter](#pages) |
+| Training: Show me, Let me try, practice | [16. Training](#training) |
+| What the projector, stage and stream show | [17. What the room sees](#room) |
+| Keyboard | [Keyboard](#keyboard) |
+| When something goes wrong | [When something goes wrong](#trouble) |
 
 ---
 

@@ -223,6 +223,31 @@ const esc = async (win) => {
   await win.waitForTimeout(500);
   await win.locator('[data-guide="clear"]').click();
 
+  // ---- 5b. The library drawer, Move on by time, and spirit's Not this ----
+  await shot(win, 'live-3-more', [
+    m(win.getByRole('button', { name: 'Library' }), 1, 'br'),
+    m(win.getByRole('switch').filter({ hasText: 'Move on by time' }).first(), 2, 'bl'),
+    m(win.locator('[data-spirit-pause]'), 3, 'bl'),
+  ]);
+  await win.getByRole('button', { name: 'Library' }).click();
+  await win.waitForTimeout(900);
+  await shot(win, 'live-4-library', [m(win.getByRole('tablist').first(), 1, 'bl')]);
+  await esc(win);
+  await win.locator('nav[aria-label="Order of service"] button[title*="Holy, Holy, Holy"]').first().click();
+  await win.waitForTimeout(1200);
+  const n = await tiles.count();
+  // The last slide of a song going on screen gets the next song ready (spirit)
+  await tiles.nth(n - 1).locator('button').first().click();
+  await win.waitForTimeout(600);
+  await win.locator('[data-guide="take"]').click();
+  await win.waitForTimeout(1500);
+  if (await win.locator('[data-not-this]').count()) {
+    await win.locator('[data-not-this]').click();
+    await win.waitForTimeout(500);
+    await shot(win, 'live-5-not-this', [m(win.locator('[data-label-detail="next"]'), 1, 'tl'), m(win.locator('[data-not-this]'), 2, 'tr'), m(win.getByRole('button', { name: 'Wrong part' }), 3, 'bl')]);
+    await esc(win);
+  } else missing.push('live-5-not-this (no Not this)');
+
   // ---- 6. Countdown, alerts, booth check light ----
   await btn(win, /^Countdown$/).click();
   await win.waitForTimeout(800);
@@ -280,16 +305,71 @@ const esc = async (win) => {
     m(win.locator('[data-settings] .st-main [role="switch"]').first(), 3, 'tr'),
   ]);
   await pane('listening', 'settings-3-listening', [m(win.getByLabel('Input to listen to'), 2, 'tl'), m(win.getByLabel('Sound level'), 3, 'tl')]);
+  const main = () => win.locator('[data-settings] .st-main');
+  await main().getByText('How speech is heard', { exact: true }).scrollIntoViewIfNeeded();
+  await main().evaluate((el) => el.scrollBy(0, 120));
+  await win.waitForTimeout(500);
+  await shot(win, 'settings-3b-engine', [m(main().getByText('How speech is heard', { exact: true }), 1, 'l')]);
+  await main().evaluate((el) => el.scrollTo(0, el.scrollHeight));
+  await win.waitForTimeout(500);
+  await shot(win, 'settings-3c-ai');
+  await win.locator('[data-pane="screens"]').click();
+  await win.waitForTimeout(1200);
+  for (const [label, name] of [['On the network', 'settings-4b-network'], ['NDI on the network', 'settings-4c-ndi']]) {
+    await main().getByText(label, { exact: true }).first().click();
+    await win.waitForTimeout(800);
+    await main().evaluate((el) => el.scrollBy(0, 330));
+    await win.waitForTimeout(400);
+    await shot(win, name, [m(main().getByText(label, { exact: true }).last(), 1, 'tl')]);
+    await main().evaluate((el) => el.scrollTo(0, 0));
+  }
+  await main().getByText('Each output, and where it goes', { exact: true }).scrollIntoViewIfNeeded();
+  await win.waitForTimeout(500);
+  await shot(win, 'settings-4d-outputs', [m(main().getByText('Each output, and where it goes', { exact: true }), 1, 'l')]);
+  await main().getByText('Ways to connect a screen', { exact: true }).scrollIntoViewIfNeeded();
+  await win.waitForTimeout(500);
+  await shot(win, 'settings-4e-ways', [m(main().getByText('Ways to connect a screen', { exact: true }), 1, 'l')]);
+  await main().evaluate((el) => el.scrollTo(0, 0));
+  await main().getByText('HDMI-SDI', { exact: true }).first().click();
+  await win.waitForTimeout(500);
   await pane('screens', 'settings-4-screens', [
     m(win.locator('[data-settings] .st-main').getByText('HDMI-SDI', { exact: true }).first(), 2, 'tl'),
     m(win.locator('[data-settings] .st-main').getByRole('radio', { name: 'Projector' }).first(), 3, 'tl'),
     m(btn(win, /Identify screens/), 4, 'tr'),
   ]);
-  await pane('propresenter', 'settings-5-propresenter');
+  const route = async (id, name, marks) => {
+    await win.locator(`[data-pp-route="${id}"]`).click();
+    await win.waitForTimeout(900);
+    await shot(win, name, marks);
+  };
+  await win.locator('[data-pane="propresenter"]').click();
+  await win.waitForTimeout(1300);
+  await route('linked', 'pp-1-linked', [
+    m(win.locator('[data-pp-route="linked"]'), 1, 'tl'),
+    m(win.locator('#pp-linked-on'), 2, 'tr'),
+    m(win.locator('#pp-linked-songs'), 3, 'tr'),
+    m(win.locator('[data-pp-folder]'), 4, 'tl'),
+    m(win.locator('[data-pp-linked-test]'), 5, 'tr'),
+  ]);
+  await win.locator('[data-settings] .st-main').evaluate((el) => el.scrollBy(0, 640));
+  await win.waitForTimeout(500);
+  await shot(win, 'pp-2-linked-steps', [m(win.locator('[data-settings] .st-steps li').first(), 1, 'tl')]);
+  await win.locator('[data-settings] .st-main').evaluate((el) => el.scrollTo(0, 0));
+  await route('ndi', 'pp-3-ndi', [m(win.locator('[data-pp-route="ndi"]'), 1, 'tl'), m(win.locator('#pp-ndi-on'), 2, 'tr'), m(win.locator('[data-settings] .st-steps').first(), 3, 'tl')]);
+  await route('message', 'pp-4-message', [m(win.locator('[data-pp-route="message"]'), 1, 'tl'), m(win.getByRole('switch', { name: 'Send verses to ProPresenter' }), 2, 'tr')]);
+  await win.locator('[data-settings] .st-main').evaluate((el) => el.scrollBy(0, 560));
+  await win.waitForTimeout(500);
+  await shot(win, 'pp-5-message-more', [
+    m(win.locator('[data-settings] .st-main').getByText('Also on ProPresenter’s stage screens', { exact: true }), 1, 'l'),
+    m(win.locator('[data-settings] .st-main').getByRole('button', { name: 'Send a test verse' }).last(), 2, 'tl'),
+    m(win.locator('[data-pp-why]'), 3, 'tr'),
+  ]);
+  await win.locator('[data-settings] .st-main').evaluate((el) => el.scrollTo(0, 0));
   await pane('bible', 'settings-6-bible');
   await pane('songs', 'settings-7-songs', [m(win.locator('#ccli-license'), 2, 'tl')]);
   await pane('logo', 'settings-8-logo');
   await pane('library', 'settings-9-library');
+  await pane('app', 'settings-9b-desktop');
   await pane('spirit', 'settings-10-spirit');
   await pane('moves', 'settings-11-moves');
   await pane('cues', 'settings-12-cues');
@@ -300,7 +380,14 @@ const esc = async (win) => {
     console.log('OUTLINE', name, JSON.stringify(await win.evaluate(() => [...document.querySelectorAll('main h2, main h3, [role="tab"]')].map((t) => t.textContent.trim()).filter(Boolean).slice(0, 30))));
   await go(win, '#/service-planner', 2200);
   await pageOutline('pages-1-services');
-  await shot(win, 'pages-1-services', [m(win.locator('nav[aria-label="Pages"]'), 1, 'bl')]);
+  await shot(win, 'pages-1-services', [
+    m(win.locator('nav[aria-label="Pages"]'), 1, 'bl'),
+    m(btn(win, /New service/), 2, 'br'),
+    m(win.locator('label').filter({ hasText: /^Import$/ }).first(), 3, 'bl'),
+    m(win.locator('button[title="Copy for next Sunday"]').first(), 4, 'tl'),
+    m(win.locator('button[title="Save to a file"]').first(), 5, 'tr'),
+    m(btn(win, /^Present$/), 6, 'tr'),
+  ]);
   await win.locator('[data-templates]').scrollIntoViewIfNeeded().catch(() => {});
   await win.waitForTimeout(500);
   await shot(win, 'pages-2-templates', [m(win.locator('[data-new-template]'), 1, 'tr'), m(win.locator('[data-ready-order="Sunday service"]'), 2, 'tl')]);
@@ -315,14 +402,72 @@ const esc = async (win) => {
       }),
   );
   await go(win, `#/service-builder/${sample}`, 2500);
-  await shot(win, 'pages-3-builder', [m(win.locator('[data-service-type]'), 1, 'tl'), m(win.locator('[data-save-template]'), 2, 'tr')]);
+  await shot(win, 'pages-3-builder', [
+    m(win.locator('[data-service-type]'), 1, 'tl'),
+    m(win.locator('[data-save-template]'), 2, 'tr'),
+    m(btn(win, /^Present$/), 3, 'tr'),
+    m(btn(win, /^Save$/), 4, 'tr'),
+  ]);
+  const more = win.locator('button:has(svg.lucide-more-vertical), button:has(svg.lucide-ellipsis-vertical)');
+  await more.first().click().catch(() => {});
+  await win.waitForTimeout(500);
+  await shot(win, 'pages-3b-slide-menu', [m(win.getByRole('menuitem').filter({ hasText: /design|look/i }).first(), 1, 'tl')]);
+  await win.getByRole('menuitem').filter({ hasText: /design|look/i }).first().click().catch(() => {});
+  await win.waitForTimeout(1500);
+  await shot(win, 'pages-3c-slide-design', [m(win.getByRole('dialog').last(), 1, 'tl')]);
+  await esc(win);
+  await win.locator('main').getByText('Welcome', { exact: true }).first().click().catch(() => {});
+  await win.waitForTimeout(500);
+  await btn(win, /Make with AI/).scrollIntoViewIfNeeded().catch(() => {});
+  await win.waitForTimeout(400);
+  await shot(win, 'pages-3d-add', [m(win.locator('main').getByText(/^Add to “/).first(), 1, 'tl'), m(btn(win, /Make with AI/), 2, 'tr')]);
+  await btn(win, /Make with AI/).click().catch(() => {});
+  await win.waitForTimeout(800);
+  await shot(win, 'pages-3e-ai-slides', [m(win.getByRole('dialog').last(), 1, 'tl')]);
+  await esc(win);
   await pageOutline('pages-3-builder');
   await go(win, '#/media-library', 2000);
   await pageOutline('pages-4-media');
-  await shot(win, 'pages-4-media');
+  await shot(win, 'pages-4-media', [m(win.getByText('Add files', { exact: true }).first(), 1, 'tr'), m(win.getByRole('group', { name: 'Show' }), 2, 'bl'), m(btn(win, /^Lyrics$/), 3, 'tl')]);
+  await btn(win, /^Lyrics$/).click().catch(() => {});
+  await win.waitForTimeout(900);
+  await shot(win, 'pages-4b-lyrics', [m(win.getByRole('dialog').last(), 1, 'tl')]);
+  await esc(win);
   await go(win, '#/templates', 2200);
   await pageOutline('pages-5-looks');
-  await shot(win, 'pages-5-looks', [m(win.getByRole('tablist'), 1, 'bl')]);
+  await shot(win, 'pages-5-looks', [
+    m(win.getByRole('tablist'), 1, 'bl'),
+    m(btn(win, /^Backgrounds$/), 2, 'bl'),
+    m(btn(win, /^Starter looks$/), 3, 'bl'),
+    m(btn(win, /^New look$/), 4, 'br'),
+  ]);
+  await win.locator('main').getByText('Main text', { exact: true }).first().scrollIntoViewIfNeeded().catch(() => {});
+  await win.evaluate(() => window.scrollBy(0, 120));
+  await win.waitForTimeout(700);
+  await shot(win, 'looks-1-designer', [
+    m(win.locator('main').getByText('Main text', { exact: true }).first(), 1, 'l'),
+    m(win.locator('main').getByText('Short verse', { exact: true }).first(), 2, 'tl'),
+    m(win.locator('main button[title^="Undo"]').first(), 3, 'tr'),
+    m(btn(win, /^Duplicate$/), 4, 'tl'),
+  ]);
+  await win.locator('main').getByText('Background', { exact: true }).first().click().catch(() => {});
+  await win.waitForTimeout(700);
+  await shot(win, 'looks-2-background', [m(win.locator('main').getByText('Background', { exact: true }).first(), 1, 'l'), m(win.getByRole('radiogroup', { name: 'Kind of background' }), 2, 'tl')]);
+  await win.evaluate(() => window.scrollTo(0, 0));
+  await btn(win, /^Backgrounds$/).click();
+  await win.waitForTimeout(1500);
+  await shot(win, 'looks-3-backgrounds', [m(win.getByRole('dialog').last(), 1, 'tl')]);
+  await esc(win);
+  await btn(win, /^Starter looks$/).click();
+  await win.waitForTimeout(1500);
+  await shot(win, 'looks-4-starters', [m(win.getByRole('dialog').last(), 1, 'tl')]);
+  await esc(win);
+  await win.getByRole('tab', { name: /Which screen uses what/ }).click();
+  await win.waitForTimeout(1200);
+  await shot(win, 'looks-5-assign', [m(win.getByRole('tab', { name: /Which screen uses what/ }), 1, 'bl')]);
+  await win.getByRole('tab', { name: /Colour teams and themes/ }).click();
+  await win.waitForTimeout(1200);
+  await shot(win, 'looks-6-teams', [m(win.getByRole('tab', { name: /Colour teams and themes/ }), 1, 'bl')]);
   await go(win, '#/display-manager', 2200);
   await pageOutline('pages-6-screens');
   await shot(win, 'pages-6-screens');
@@ -366,6 +511,13 @@ const esc = async (win) => {
   await shot(win, 'outputs-1-projector');
   await go(win, '#/confidence', 2500);
   await shot(win, 'outputs-2-stage');
+  await win.mouse.move(700, 400);
+  await win.mouse.move(720, 420);
+  await win.waitForTimeout(400);
+  await win.locator('button:has(svg.lucide-settings)').first().click().catch(() => {});
+  await win.waitForTimeout(900);
+  await shot(win, 'outputs-2b-stage-settings', [m(win.locator('.settings-panel'), 1, 'tl')]);
+  await esc(win);
   await go(win, '#/lower-third', 2500);
   await shot(win, 'outputs-3-lower-third');
 
