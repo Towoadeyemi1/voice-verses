@@ -461,7 +461,8 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - 💬 Other churches: CCCG is one connector among several. Everything works without it: planning in the app, imports (PowerPoint, PDF, Word, SongSelect), a Planning Center connector, and the open feed any church's own app can implement.
 - ✅ **Approved** (17 Nov 2026, "Approved."): the design page (event bus, module registry, local API, service package, pairing with scoped keys, the build order, CCCG both ways). Recorded as D33 and `docs/architecture/README.md`.
 - ✅ 1.19.4 **Step 2.1, the bus and the registry:** nine modules register with manifests; what the screens show, Next, listening, what was heard, verses found, suggestions, services, songs and media and the Bible translation are announced as events; ProPresenter now follows the bus instead of being called by the live screen (so it also follows Presenter and the playlist). Nothing changes on screen. Checked by `tools/checks/bus-check.ts` (CI) and `tools/e2e/event-bus.cjs`.
-- ⏳ Next: step 2.2, the local API v1.
+- ✅ 1.19.5 **Step 2.2, the local API v1** ("Start"): Settings → Other apps and devices turns it on; a device pairs once with a six-digit code and gets its own key (see only, or see and control); paired devices show a verse, put one in Next, Take, go forward or back, Clear and show the logo; they follow every event as it happens (Server-Sent Events, WebSocket or signed webhooks); Voice Verses announces itself on the network (Bonjour); removing a device ends its key at once. For developers: `docs/api/README.md`, OpenAPI and AsyncAPI. Checked by `tools/checks/api-check.mjs` (CI) and `tools/e2e/local-api.cjs`.
+- ⏳ Next: step 2.3, the service package (expected scriptures feeding detection and Next) and importers (PowerPoint, PDF, Word, SongSelect).
 
 ## Process
 

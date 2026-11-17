@@ -134,6 +134,12 @@
 
 /* Hero cards (ProPresenter, Booth check) */
 .vvs .st-hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px; border-radius: 16px; background: radial-gradient(70% 140% at 0% 0%, var(--s-accent-soft), transparent 60%), var(--s-surface); }
+.vvs .st-row-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--s-line); }
+.vvs .st-pair-code { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 16px; align-items: center; padding: 18px 20px; }
+.vvs .st-pair-code .code { grid-column: 1 / -1; font: 700 44px/1.1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .08em; color: var(--s-ink); margin-bottom: 6px; }
+.vvs .st-pair-code .t { font-size: 14.5px; font-weight: 600; }
+.vvs .st-pair-code .d { grid-column: 1; font-size: 13px; color: var(--s-ink-2); }
+.vvs .st-pair-code .st-btn { grid-column: 2; grid-row: 2 / span 2; }
 .vvs .st-hero.plain { background: var(--s-surface); }
 .vvs .st-glyph { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: var(--i-orange); color: #fff; box-shadow: var(--s-lift); }
 .vvs .st-glyph.off { background: var(--s-fill-2); color: var(--s-ink-2); box-shadow: none; }

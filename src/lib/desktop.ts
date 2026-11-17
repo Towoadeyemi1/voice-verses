@@ -47,6 +47,44 @@ export interface ProPresenterThemeSlide {
   label: string;
 }
 
+/** What Settings → Other apps and devices shows (the local API, 1.19.5) */
+export type ApiScope = 'read' | 'control' | 'write';
+export interface ApiWebhook {
+  id: string;
+  url: string;
+  types: string[];
+  createdAt: string;
+  failures: number;
+  paused: boolean;
+}
+export interface ApiDevice {
+  id: string;
+  name: string;
+  scopes: ApiScope[];
+  createdAt: string;
+  lastUsed: string | null;
+  webhooks: ApiWebhook[];
+}
+export interface ApiOverview {
+  pairing: { code: string; scopes: ApiScope[]; expires: number } | null;
+  devices: ApiDevice[];
+  /** Event streams open now */
+  listening: number;
+}
+export interface ApiStatus extends ApiOverview {
+  enabled: boolean;
+  running: boolean;
+  port: number;
+  /** e.g. http://192.168.1.20:47100/api/v1 */
+  urls: string[];
+}
+export interface ApiCommand {
+  id: string;
+  command: string;
+  body: Record<string, unknown>;
+}
+export type ApiAnswer = { ok: true; result?: unknown } | { ok: false; status: number; message: string };
+
 export interface NetworkStatus {
   running: boolean;
   port: number;
@@ -194,6 +232,19 @@ export interface DesktopBridge {
     hasMedia(id: string): Promise<boolean>;
     putMedia(id: string, mime: string, bytes: ArrayBuffer): Promise<void>;
     publish(state: unknown): void;
+  };
+  api: {
+    configure(options: { enabled: boolean; port?: number }): Promise<{ enabled: boolean; running: boolean; port: number; urls: string[] }>;
+    status(): Promise<ApiStatus>;
+    startPairing(scopes: ApiScope[]): Promise<ApiOverview>;
+    stopPairing(): Promise<ApiOverview>;
+    removeDevice(id: string): Promise<ApiOverview>;
+    removeWebhook(deviceId: string, hookId: string): Promise<ApiOverview>;
+    event(event: unknown): void;
+    setModules(list: unknown): void;
+    reply(id: string, answer: ApiAnswer): Promise<void>;
+    onCommand(callback: (message: ApiCommand) => void): () => void;
+    onChange(callback: (detail: { paired?: string }) => void): () => void;
   };
   library: {
     getFolder(): Promise<string | null>;

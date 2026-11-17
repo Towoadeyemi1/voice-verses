@@ -7,6 +7,7 @@ import { cloudType } from '@/core/events';
 import { getModule, listModules, registerModule } from '@/core/registry';
 import { MODULES } from '@/core/modules';
 import { setPractice } from '@/lib/practice';
+import { answer, answered, ask, CommandError } from '@/core/commands';
 
 let failed = 0;
 const check = (name: string, ok: boolean) => {
@@ -90,8 +91,42 @@ const ids = new Set(MODULES.map((m) => m.id));
 check('module ids are unique', ids.size === MODULES.length);
 offReg();
 
+// Commands (1.19.5): answered by one module, asked by the local API
+(async () => {
+  const none = await ask('live.take');
+  check('a live command nobody answers says the live screen isn’t open', !none.ok && none.status === 409);
+  check('an unknown command says so', (await ask('nothing.here')).ok === false);
+  const off = answer('live.take', () => ({ live: { kind: 'verse' } }));
+  check('an answered command returns its result', JSON.stringify(await ask('live.take')) === JSON.stringify({ ok: true, result: { live: { kind: 'verse' } } }));
+  check('answered() lists it', answered().includes('live.take'));
+  setPractice(true);
+  const practising = await ask('live.take');
+  setPractice(false);
+  check('live commands are refused while practising', !practising.ok && practising.status === 409 && /practice/.test(practising.message));
+  const offRefuse = answer('live.next', () => {
+    throw new CommandError(404, 'Couldn’t find it.');
+  });
+  const refused = await ask('live.next');
+  check('a refusal keeps its status and words', !refused.ok && refused.status === 404 && refused.message === 'Couldn’t find it.');
+  const errLog2 = console.error;
+  console.error = () => {};
+  const offCrash = answer('services.list', () => {
+    throw new Error('disk');
+  });
+  const crashed = await ask('services.list');
+  console.error = errLog2;
+  check('a crash is a plain 500, never its details', !crashed.ok && crashed.status === 500 && !/disk/.test(crashed.message));
+  off();
+  offRefuse();
+  offCrash();
+  check('unanswering removes it', !answered().includes('live.take'));
+  finish();
+})();
+
+function finish() {
 if (failed) {
   console.error(`\n${failed} bus check(s) failed`);
   process.exit(1);
 }
 console.log('\n✅ Event bus checks passed');
+}

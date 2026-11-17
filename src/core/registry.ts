@@ -16,7 +16,7 @@ export interface ModuleManifest {
   /** Commands and questions it answers (from step 2.2, through the local API) */
   answers: string[];
   emits: EventName[];
-  listens: (EventName | `${string}.*`)[];
+  listens: (EventName | `${string}.*` | '*')[];
 }
 
 const modules = new Map<string, ModuleManifest>();

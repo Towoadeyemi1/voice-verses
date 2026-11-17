@@ -365,6 +365,27 @@ const esc = async (win) => {
     m(win.locator('[data-pp-why]'), 3, 'tr'),
   ]);
   await win.locator('[data-settings] .st-main').evaluate((el) => el.scrollTo(0, 0));
+  // Other apps and devices (1.19.5): on, a pairing code, then a device paired from outside
+  await win.locator('[data-pane="devices"]').click();
+  await win.waitForTimeout(900);
+  await win.locator('#api-switch').click();
+  await win.waitForTimeout(1500);
+  await shot(win, 'devices-1-on', [
+    m(win.locator('#api-switch'), 1, 'tr'),
+    m(win.locator('.st-row:has([data-api-address])'), 2, 'r'),
+    m(win.getByRole('switch', { name: 'Allow it to control the screens' }), 3, 'tr'),
+    m(win.locator('[data-api-pair-start]'), 4, 'tr'),
+  ]);
+  await win.locator('[data-api-pair-start]').click();
+  await win.waitForTimeout(700);
+  await shot(win, 'devices-2-code', [m(win.locator('[data-api-code] .code'), 1, 'tl'), m(win.locator('[data-api-code] button'), 2, 'tr')]);
+  const apiAddress = (await win.locator('[data-api-address]').innerText().catch(() => '')).trim().replace(/^http:\/\/[^/:]+/, 'http://127.0.0.1');
+  const code = (await win.locator('[data-api-code] .code').innerText().catch(() => '')).replace(/\D/g, '');
+  await fetch(`${apiAddress}/pair`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, name: 'Stream Deck in the booth' }) }).catch(() => {});
+  await win.waitForTimeout(900);
+  await shot(win, 'devices-3-paired', [m(win.locator('[data-api-device="Stream Deck in the booth"]'), 1, 'tl'), m(win.locator('[data-api-device="Stream Deck in the booth"] button'), 2, 'tr')]);
+  await win.locator('#api-switch').click();
+  await win.waitForTimeout(600);
   await pane('bible', 'settings-6-bible');
   await pane('songs', 'settings-7-songs', [m(win.locator('#ccli-license'), 2, 'tl')]);
   await pane('logo', 'settings-8-logo');
