@@ -391,6 +391,10 @@ The autopilot that learns how a church runs its service. Approved mock-up: `docs
 - **The voice**: the computer's own speech (`speechSynthesis`, a clear English voice such as Samantha or Microsoft Aria), offline on Mac and Windows; `voice-verses-guide-voice` on or off. Without a voice the card stays up as long as reading it takes.
 - **The demo, narrated**: each demo caption has a target and a line (`lib/demoScript.ts`); the demo goes on when the line has been said. Both the welcome screen's Watch the demo (real screens) and Training's (practice).
 
+## 8h. The user guide (1.19.2)
+
+`docs/user-guide/README.md` and `index.html`: every feature step by step, each picture with numbered markers that match its numbered steps. `tools/guide/capture.cjs` drives the real desktop app (sample service, fake second screen and microphone, voice off) at 1440×900 and saves `docs/user-guide/img/*.jpg`; `tools/guide/build.py` writes both files from `tools/guide/content.py`. A marker that can't find its control is listed as MISSING.
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:

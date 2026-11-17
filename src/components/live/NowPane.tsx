@@ -108,7 +108,8 @@ export const NowPane = ({
     {strip && expanded ? (
       strip
     ) : (
-    <div className="self-center min-w-0 overflow-hidden" data-guide="now">
+    // Centred while it fits; taller than the space (a long verse, the welcome on a small screen) it starts at the top instead of slipping under the bar above
+    <div className={`[align-self:safe_center] min-w-0 min-h-0 max-h-full ${!verse && !text && empty ? 'overflow-y-auto' : 'overflow-hidden'}`} data-guide="now">
       {verse ? (
         <ReadAlong verse={verse} word={word ?? -1} />
       ) : text ? (

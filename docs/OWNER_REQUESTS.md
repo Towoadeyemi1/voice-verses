@@ -432,6 +432,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
   - **A message**, kept as the quickest fallback.
 - ⏳ Billie's 10-minute test of linked text (speed, a different look per screen, the file in a shared folder from the iMac), then build: the NDI slide setting and guide first, linked text after the test.
 
+## "Is it possible you create a comprehensive document and html/MD with screenshots with step numbers describing how to use all features in the app in a very intuitive and understandable way?"
+
+(17 Nov 2026.)
+- ✅ 1.19.2 **The user guide** (`docs/user-guide/`): 42 screenshots of the real app with numbered markers on each control, and numbered steps under each picture, from first set-up to settings, spirit, planning, Training and what the room sees, plus the keyboard and what to do when something goes wrong. As Markdown (`README.md`, on GitHub) and a page to open or share (`index.html`, also published as a private page the owner can share).
+- Made by `tools/guide/capture.cjs` (drives the real app and marks the controls) and `tools/guide/build.py` (the words, in `tools/guide/content.py`). Run both again when the app changes so the guide never goes stale.
+- ✅ 1.19.2 Found while taking the pictures and fixed: on a smaller screen (1440×900) the welcome text slid up under the order of service; the demo's card covered the suggestion bar.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
