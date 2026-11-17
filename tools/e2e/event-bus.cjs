@@ -14,8 +14,8 @@ const { OUT, launch, check, done } = require('./lib.cjs');
   const last = async (name) => (await bus()).events.filter((e) => e.name === name).at(-1);
 
   const first = await bus();
-  check('nine modules registered', first.modules.length === 9 && first.modules.includes('propresenter'), first.modules.join(','));
-  check('each announced itself', first.events.filter((e) => e.name === 'module.registered').length === 9);
+  check('ten modules registered', first.modules.length === 10 && first.modules.includes('propresenter'), first.modules.join(','));
+  check('each announced itself', first.events.filter((e) => e.name === 'module.registered').length === 10);
 
   // Take a verse
   await win.locator('[data-guide="search"]').click();

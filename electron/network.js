@@ -7,7 +7,13 @@
 //   GET /            the app's pages (index.html marked as a network viewer)
 //   GET /live        Server-Sent Events: the current state, then every change
 //   GET /media/:id   pictures and videos used by templates and slides
+//
+// The same server carries the local API under /api (electron/api.js) when Settings → Other
+// apps and devices is on (1.19.5). It runs while either is on; each part answers only while
+// its own switch is on, so the screens stay read-only and separate from the API.
 import http from 'http';
+import * as api from './api.js';
+import * as mdns from './mdns.js';
 import os from 'os';
 import { createReadStream } from 'fs';
 import { mkdir, readFile, stat, writeFile } from 'fs/promises';
@@ -36,6 +42,8 @@ const TYPES = {
 
 let server = null;
 let port = DEFAULT_PORT;
+let screensOn = false;
+let apiOn = false;
 let snapshot = null;
 const viewers = new Set();
 const media = new Map(); // id → { path, mime, size }
@@ -49,12 +57,19 @@ function addresses() {
 }
 
 export function status() {
+  const listening = Boolean(server?.listening);
   return {
-    running: Boolean(server?.listening),
+    running: listening && screensOn,
     port,
     viewers: viewers.size,
-    urls: server?.listening ? addresses().map((ip) => `http://${ip}:${port}/`) : [],
+    urls: listening && screensOn ? addresses().map((ip) => `http://${ip}:${port}/`) : [],
   };
+}
+
+/** The local API's address on each network this computer is on. */
+export function apiStatus() {
+  const listening = Boolean(server?.listening);
+  return { enabled: apiOn, running: listening && apiOn, port, urls: listening && apiOn ? addresses().map((ip) => `http://${ip}:${port}/api/v1`) : [] };
 }
 
 function send(res, code, body, type = 'text/plain; charset=utf-8') {
@@ -113,8 +128,10 @@ function serveLive(req, res) {
 }
 
 function handle(req, res) {
-  if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed');
   const { pathname } = new URL(req.url ?? '/', 'http://localhost');
+  if (pathname === '/api' || pathname.startsWith('/api/')) return apiOn ? void api.handle(req, res, pathname) : send(res, 404, 'Not found');
+  if (!screensOn) return send(res, 404, 'Not found');
+  if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed');
   if (pathname === '/live') return serveLive(req, res);
   const mediaMatch = /^\/media\/([\w.-]+)$/.exec(pathname);
   if (mediaMatch) return serveMedia(req, res, mediaMatch[1]);
@@ -126,18 +143,35 @@ setInterval(() => {
   for (const viewer of viewers) viewer.write(': keep-alive\n\n');
 }, 20_000).unref();
 
-/** Turns network outputs on or off (and changes the port). */
-export async function configure({ enabled, port: wanted }) {
-  const nextPort = Number.isInteger(wanted) && wanted >= 1024 && wanted <= 65535 ? wanted : DEFAULT_PORT;
-  if (server && (!enabled || nextPort !== port)) {
+const validPort = (wanted) => (Number.isInteger(wanted) && wanted >= 1024 && wanted <= 65535 ? wanted : DEFAULT_PORT);
+
+/** Starts, stops or moves the server so it runs while the screens or the API are on. */
+async function apply(nextPort) {
+  const wanted = screensOn || apiOn;
+  if (!screensOn) {
     for (const viewer of viewers) viewer.end();
     viewers.clear();
-    await new Promise((resolve) => server.close(resolve));
+  }
+  if (!apiOn) api.closeAll();
+  if (server && (!wanted || nextPort !== port)) {
+    for (const viewer of viewers) viewer.end();
+    viewers.clear();
+    api.closeAll();
+    const closing = server;
     server = null;
+    await new Promise((resolve) => {
+      closing.close(resolve);
+      closing.closeAllConnections?.();
+    });
   }
   port = nextPort;
-  if (enabled && !server) {
+  if (wanted && !server) {
     const starting = http.createServer(handle);
+    starting.on('upgrade', (req, socket) => {
+      socket.on('error', () => {});
+      if (!apiOn) return socket.destroy();
+      api.upgrade(req, socket).then((ours) => ours || socket.destroy(), () => socket.destroy());
+    });
     await new Promise((resolve, reject) => {
       starting.once('error', reject);
       starting.listen(port, '0.0.0.0', resolve);
@@ -146,7 +180,32 @@ export async function configure({ enabled, port: wanted }) {
     });
     server = starting;
   }
+  if (apiOn && server) mdns.advertise({ port, version: app.getVersion() });
+  else mdns.stop();
+}
+
+/** Turns network outputs on or off (and changes the port). */
+export async function configure({ enabled, port: wanted }) {
+  screensOn = Boolean(enabled);
+  try {
+    await apply(validPort(wanted));
+  } catch (error) {
+    screensOn = false;
+    throw error;
+  }
   return status();
+}
+
+/** Turns the local API on or off, on the same port as the network screens. */
+export async function configureApi({ enabled, port: wanted }) {
+  apiOn = Boolean(enabled);
+  try {
+    await apply(validPort(wanted ?? port));
+  } catch (error) {
+    apiOn = false;
+    throw error;
+  }
+  return apiStatus();
 }
 
 /** The current screens' state, sent to every viewer. */

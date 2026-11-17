@@ -85,6 +85,28 @@ contextBridge.exposeInMainWorld('voiceVerses', {
     putMedia: (id, mime, bytes) => invoke('network:put-media', id, mime, bytes),
     publish: (state) => ipcRenderer.send('network:publish', state),
   },
+  // The local API (1.19.5): other apps and devices on the church network
+  api: {
+    configure: (options) => invoke('api:configure', options),
+    status: () => invoke('api:status'),
+    startPairing: (scopes) => invoke('api:pair-start', scopes),
+    stopPairing: () => invoke('api:pair-stop'),
+    removeDevice: (id) => invoke('api:remove-device', id),
+    removeWebhook: (deviceId, hookId) => invoke('api:remove-webhook', deviceId, hookId),
+    event: (event) => ipcRenderer.send('api:event', event),
+    setModules: (list) => ipcRenderer.send('api:modules', list),
+    reply: (id, answer) => invoke('api:reply', id, answer),
+    onCommand: (callback) => {
+      const listener = (_event, message) => callback(message);
+      ipcRenderer.on('api:command', listener);
+      return () => ipcRenderer.removeListener('api:command', listener);
+    },
+    onChange: (callback) => {
+      const listener = (_event, detail) => callback(detail);
+      ipcRenderer.on('api:changed', listener);
+      return () => ipcRenderer.removeListener('api:changed', listener);
+    },
+  },
   library: {
     getFolder: () => invoke('library:get-folder'),
     chooseFolder: () => invoke('library:choose-folder'),

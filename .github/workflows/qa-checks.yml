@@ -108,6 +108,9 @@ jobs:
           npx esbuild tools/checks/bus-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/bus-check.cjs --log-level=error
           node /tmp/bus-check.cjs
 
+      - name: "CHECK 11: Local API (pairing, keys, commands, events, webhooks, Bonjour)"
+        run: node tools/checks/api-check.mjs
+
       - name: QA Summary
         if: success()
         run: |

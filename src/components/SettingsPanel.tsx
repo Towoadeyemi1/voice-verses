@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AudioLines, BookOpen, Download, FolderSync, Image as ImageIcon, Mic, MonitorUp, Music2, Radio, SlidersHorizontal, Sparkles, Workflow, X, type LucideIcon } from 'lucide-react';
+import { AudioLines, BookOpen, Download, FolderSync, Image as ImageIcon, Mic, MonitorUp, Music2, Network, Radio, SlidersHorizontal, Sparkles, Workflow, X, type LucideIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BibleVersionSettings } from './BibleVersionSettings';
 import { StorageSettings } from './StorageSettings';
@@ -18,6 +18,7 @@ import { BoothCheckPage } from './settings/BoothCheckPage';
 import { SpiritPage, useSpirit } from './settings/SpiritPage';
 import { CuesPage } from './settings/CuesPage';
 import { MovesPage } from './settings/MovesPage';
+import { DevicesPage } from './settings/DevicesPage';
 import { MOVES, moveCanBeHandsFree, moveTrust, noticed } from '@/lib/spirit';
 import { List, Ring, Row, Section, Sq, Tint } from './settings/kit';
 import { BoothCheckItem, needsAttention, runBoothCheck } from '@/lib/boothCheck';
@@ -25,7 +26,7 @@ import { desktop } from '@/lib/desktop';
 import type { BoothFix } from './live/BoothCheck';
 import type { Service } from '@/types/service';
 
-export type Pane = 'booth' | 'spirit' | 'moves' | 'cues' | 'features' | 'bible' | 'listening' | 'screens' | 'network' | 'songs' | 'logo' | 'library' | 'propresenter' | 'app';
+export type Pane = 'booth' | 'spirit' | 'moves' | 'cues' | 'features' | 'bible' | 'listening' | 'screens' | 'network' | 'songs' | 'logo' | 'library' | 'propresenter' | 'devices' | 'app';
 
 const GROUPS: { label: string; panes: { id: Pane; label: string; hint: string; icon: LucideIcon; tint: Tint }[] }[] = [
   {
@@ -51,6 +52,7 @@ const GROUPS: { label: string; panes: { id: Pane; label: string; hint: string; i
       { id: 'listening', label: 'Listening', hint: 'The microphone, the language, and how speech is heard.', icon: Mic, tint: 'rose' },
       { id: 'screens', label: 'Screens and outputs', hint: 'What each screen in the room shows, and how it gets there.', icon: MonitorUp, tint: 'indigo' },
       { id: 'propresenter', label: 'ProPresenter', hint: 'Optional. Also send the verses into ProPresenter, on this computer or another.', icon: Radio, tint: 'orange' },
+      { id: 'devices', label: 'Other apps and devices', hint: 'Let a Stream Deck, a phone or your church’s apps use Voice Verses over the network.', icon: Network, tint: 'indigo' },
     ],
   },
   {
@@ -196,6 +198,7 @@ export const SettingsPanel = ({
         {pane === 'features' && <FeatureSettings />}
         {pane === 'screens' && <ScreenSettings onGo={setPane} />}
         {pane === 'propresenter' && <ProPresenterSettings />}
+        {pane === 'devices' && <DevicesPage />}
 
         {pane === 'bible' && (
           <div className="st-page">

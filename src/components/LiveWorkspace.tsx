@@ -29,6 +29,7 @@ import { predictNext } from '@/lib/predictNext';
 import type { ScriptureHint } from '@/speech/scriptureHints';
 import { plainVerseText, verseReference } from '@/lib/verseText';
 import { publish } from '@/core/bus';
+import { answer, CommandError } from '@/core/commands';
 import { hasSecret } from '@/lib/secrets';
 import { desktop } from '@/lib/desktop';
 import { loadSendMode, saveSendMode, SendMode } from '@/lib/sendMode';
@@ -1244,6 +1245,61 @@ export const LiveWorkspace = () => {
 
   // The service on the timeline: the one chosen, or today's (the one under way when there are several)
   const service = useMemo(() => pickService(services, chosenService), [services, chosenService]);
+
+  // Commands from other apps and devices (the local API, 1.19.5): the same actions as the buttons
+  const remote = useRef({ goLive, loadChapter, setPreview, preview, sendPreview, clearText, step, serviceId: service?.id });
+  remote.current = { goLive, loadChapter, setPreview, preview, sendPreview, clearText, step, serviceId: service?.id };
+  useEffect(() => {
+    const verseFor = async (body: Record<string, unknown>) => {
+      const verse = await BibleParser.parseReference(String(body.reference ?? '').slice(0, 60));
+      if (!verse) throw new CommandError(404, `Couldn’t find “${String(body.reference ?? '').slice(0, 60)}”. Write it like John 3:16.`);
+      return verse;
+    };
+    // What the room shows now (the live screen's own state updates a moment later)
+    const shown = () => {
+      const now = syncService.current();
+      if (now?.type === 'VERSE_UPDATE' && now.data.verse) return { kind: 'verse', reference: verseReference(now.data.verse) };
+      if (now?.type === 'SLIDE_UPDATE' && now.data.slide) return { kind: 'slide', title: now.data.slide.title };
+      if (now?.type === 'LOGO') return { kind: 'logo' };
+      return { kind: 'none' };
+    };
+    const offs = [
+      answer('live.show', async (body) => {
+        const verse = await verseFor(body);
+        await remote.current.goLive({ verse });
+        return { live: { kind: 'verse', reference: verseReference(verse) } };
+      }),
+      answer('live.next', async (body) => {
+        const verse = await verseFor(body);
+        await remote.current.loadChapter(verse.book, verse.chapter);
+        remote.current.setPreview({ verse });
+        return { next: { kind: 'verse', reference: verseReference(verse) } };
+      }),
+      answer('live.take', async () => {
+        if (!remote.current.preview) throw new CommandError(409, 'Nothing is waiting in Next.');
+        await remote.current.sendPreview();
+        return { live: shown() };
+      }),
+      answer('live.clear', () => {
+        remote.current.clearText();
+        return { live: { kind: 'none' } };
+      }),
+      answer('live.advance', async () => {
+        await remote.current.step(1);
+        return { live: shown() };
+      }),
+      answer('live.back', async () => {
+        await remote.current.step(-1);
+        return { live: shown() };
+      }),
+      answer('live.logo', async () => {
+        await showLogo(remote.current.serviceId);
+        return { live: { kind: 'logo' } };
+      }),
+    ];
+    return () => offs.forEach((off) => off());
+  }, []);
+
   typeRef.current = service ? serviceType(service) : undefined;
   // Another type of service: its own cues
   useEffect(() => {

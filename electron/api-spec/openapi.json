@@ -1,0 +1,1530 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "Voice Verses local API",
+  "version": "1.0.0",
+  "x-app-version": "1.19.4",
+  "description": "Control Voice Verses and follow what it does from other apps and devices on the church network. Turn it on in Voice Verses: Settings → Other apps and devices. The address is shown there (port 47100 unless changed), and Voice Verses announces itself with Bonjour as _voiceverses._tcp.\n\nPair once: Voice Verses shows a six-digit code; POST it to /pair and keep the key you receive. Send the key as `Authorization: Bearer <key>` on every request (event streams also accept `?key=`, for browsers' EventSource and WebSocket). Each key is allowed some of: read, control, write.\n\nLive events are described in asyncapi.json.",
+  "license": {
+   "name": "See the Voice Verses repository"
+  }
+ },
+ "servers": [
+  {
+   "url": "http://{host}:{port}/api/v1",
+   "variables": {
+    "host": {
+     "default": "voice-verses.local"
+    },
+    "port": {
+     "default": "47100"
+    }
+   }
+  }
+ ],
+ "tags": [
+  {
+   "name": "About"
+  },
+  {
+   "name": "Pairing"
+  },
+  {
+   "name": "Live"
+  },
+  {
+   "name": "Services"
+  },
+  {
+   "name": "Events"
+  },
+  {
+   "name": "Webhooks"
+  }
+ ],
+ "paths": {
+  "/": {
+   "get": {
+    "summary": "What this is",
+    "tags": [
+     "About"
+    ],
+    "security": [],
+    "responses": {
+     "200": {
+      "description": "Voice Verses and its API version.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string"
+          },
+          "version": {
+           "type": "string"
+          },
+          "api": {
+           "type": "string",
+           "const": "1"
+          },
+          "pairing": {
+           "type": "boolean",
+           "description": "A pairing code is showing now"
+          },
+          "docs": {
+           "type": "object"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/pair": {
+   "post": {
+    "summary": "Pair this device with the code Voice Verses shows",
+    "tags": [
+     "Pairing"
+    ],
+    "security": [],
+    "description": "The code works once, for five minutes, and five wrong tries use it up. At most five tries a minute from one address.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "required": [
+         "code"
+        ],
+        "properties": {
+         "code": {
+          "type": "string",
+          "pattern": "^[0-9]{6}$"
+         },
+         "name": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "What Voice Verses calls this device, e.g. \"Stream Deck in the booth\""
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Paired. Keep the key: it is shown only now.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "key": {
+           "type": "string"
+          },
+          "device": {
+           "$ref": "#/components/schemas/Device"
+          }
+         }
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "No code is showing, the code is wrong, or it was used up.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "429": {
+      "description": "Too many tries.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/me": {
+   "get": {
+    "summary": "This device, and what it may do",
+    "tags": [
+     "Pairing"
+    ],
+    "security": [
+     {
+      "key": []
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "This device.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Device"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/modules": {
+   "get": {
+    "summary": "The modules in this Voice Verses: what each answers, sends and listens for",
+    "tags": [
+     "About"
+    ],
+    "security": [
+     {
+      "key": [
+       "read"
+      ]
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Modules.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "modules": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/Module"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/live": {
+   "get": {
+    "summary": "What the screens show, and what waits in Next",
+    "tags": [
+     "Live"
+    ],
+    "security": [
+     {
+      "key": [
+       "read"
+      ]
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Now.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "live": {
+           "description": "The data of the last live.changed event",
+           "type": [
+            "object",
+            "null"
+           ]
+          },
+          "next": {
+           "description": "The data of the last next.changed event",
+           "type": [
+            "object",
+            "null"
+           ]
+          },
+          "updatedAt": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "format": "date-time"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/live/show": {
+   "post": {
+    "summary": "Show a verse on the screens now",
+    "description": "Like searching for it and taking it live.",
+    "tags": [
+     "Live"
+    ],
+    "security": [
+     {
+      "key": [
+       "control"
+      ]
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Reference"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Done.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "live": {
+           "$ref": "#/components/schemas/Shown"
+          },
+          "next": {
+           "$ref": "#/components/schemas/Shown"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "The reference wasn't found.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Not possible now: the live screen isn't open, nothing is in Next, or Voice Verses is in practice.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "504": {
+      "description": "Voice Verses didn't answer.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/live/next": {
+   "post": {
+    "summary": "Put a verse in Next",
+    "description": "It waits for the operator (or /live/take).",
+    "tags": [
+     "Live"
+    ],
+    "security": [
+     {
+      "key": [
+       "control"
+      ]
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Reference"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Done.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "live": {
+           "$ref": "#/components/schemas/Shown"
+          },
+          "next": {
+           "$ref": "#/components/schemas/Shown"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "The reference wasn't found.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Not possible now: the live screen isn't open, nothing is in Next, or Voice Verses is in practice.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "504": {
+      "description": "Voice Verses didn't answer.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/live/take": {
+   "post": {
+    "summary": "Take what waits in Next live",
+    "description": "Like Space.",
+    "tags": [
+     "Live"
+    ],
+    "security": [
+     {
+      "key": [
+       "control"
+      ]
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Done.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "live": {
+           "$ref": "#/components/schemas/Shown"
+          },
+          "next": {
+           "$ref": "#/components/schemas/Shown"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "The reference wasn't found.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Not possible now: the live screen isn't open, nothing is in Next, or Voice Verses is in practice.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "504": {
+      "description": "Voice Verses didn't answer.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/live/clear": {
+   "post": {
+    "summary": "Clear the words from the screens",
+    "description": "Like Esc.",
+    "tags": [
+     "Live"
+    ],
+    "security": [
+     {
+      "key": [
+       "control"
+      ]
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Done.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "live": {
+           "$ref": "#/components/schemas/Shown"
+          },
+          "next": {
+           "$ref": "#/components/schemas/Shown"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "The reference wasn't found.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Not possible now: the live screen isn't open, nothing is in Next, or Voice Verses is in practice.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "504": {
+      "description": "Voice Verses didn't answer.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/live/advance": {
+   "post": {
+    "summary": "Go forward: the next slide or verse",
+    "description": "Like the right arrow.",
+    "tags": [
+     "Live"
+    ],
+    "security": [
+     {
+      "key": [
+       "control"
+      ]
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Done.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "live": {
+           "$ref": "#/components/schemas/Shown"
+          },
+          "next": {
+           "$ref": "#/components/schemas/Shown"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "The reference wasn't found.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Not possible now: the live screen isn't open, nothing is in Next, or Voice Verses is in practice.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "504": {
+      "description": "Voice Verses didn't answer.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/live/back": {
+   "post": {
+    "summary": "Go back: the slide or verse before",
+    "description": "Like the left arrow.",
+    "tags": [
+     "Live"
+    ],
+    "security": [
+     {
+      "key": [
+       "control"
+      ]
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Done.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "live": {
+           "$ref": "#/components/schemas/Shown"
+          },
+          "next": {
+           "$ref": "#/components/schemas/Shown"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "The reference wasn't found.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Not possible now: the live screen isn't open, nothing is in Next, or Voice Verses is in practice.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "504": {
+      "description": "Voice Verses didn't answer.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/live/logo": {
+   "post": {
+    "summary": "Show the logo",
+    "description": "",
+    "tags": [
+     "Live"
+    ],
+    "security": [
+     {
+      "key": [
+       "control"
+      ]
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Done.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "ok": {
+           "type": "boolean"
+          },
+          "live": {
+           "$ref": "#/components/schemas/Shown"
+          },
+          "next": {
+           "$ref": "#/components/schemas/Shown"
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "The reference wasn't found.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Not possible now: the live screen isn't open, nothing is in Next, or Voice Verses is in practice.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "504": {
+      "description": "Voice Verses didn't answer.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/services": {
+   "get": {
+    "summary": "Services and their order",
+    "tags": [
+     "Services"
+    ],
+    "security": [
+     {
+      "key": [
+       "read"
+      ]
+     }
+    ],
+    "parameters": [
+     {
+      "name": "date",
+      "in": "query",
+      "schema": {
+       "type": "string",
+       "format": "date"
+      },
+      "description": "Only services on this day (YYYY-MM-DD)"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Services (templates are left out).",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "services": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/Service"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/events": {
+   "get": {
+    "summary": "Follow events as they happen (Server-Sent Events, or upgrade to a WebSocket)",
+    "tags": [
+     "Events"
+    ],
+    "security": [
+     {
+      "key": [
+       "read"
+      ]
+     },
+     {
+      "keyQuery": [
+       "read"
+      ]
+     }
+    ],
+    "description": "Each event is a CloudEvents 1.0 envelope (see asyncapi.json). As Server-Sent Events, each has `event:` set to its name. A WebSocket on the same address sends each as a text message.",
+    "parameters": [
+     {
+      "name": "types",
+      "in": "query",
+      "schema": {
+       "type": "string"
+      },
+      "description": "Comma-separated names or patterns, e.g. live.*,speech.heard (default: everything)"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "An event stream.",
+      "content": {
+       "text/event-stream": {
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/webhooks": {
+   "get": {
+    "summary": "This device's webhooks",
+    "tags": [
+     "Webhooks"
+    ],
+    "security": [
+     {
+      "key": [
+       "read"
+      ]
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Webhooks.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "webhooks": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/Webhook"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "summary": "Send events to an address as they happen",
+    "tags": [
+     "Webhooks"
+    ],
+    "security": [
+     {
+      "key": [
+       "read"
+      ]
+     }
+    ],
+    "description": "Each event is POSTed as application/cloudevents+json, signed: X-VoiceVerses-Signature is sha256=<hex HMAC-SHA256 of the body with the secret>. Three tries per event, in order. After 20 failed events in a row the webhook is paused (shown in Settings). At most 10 per device.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "required": [
+         "url"
+        ],
+        "properties": {
+         "url": {
+          "type": "string",
+          "format": "uri"
+         },
+         "types": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          },
+          "default": [
+           "*"
+          ]
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Created. Keep the secret: it is shown only now.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "allOf": [
+          {
+           "$ref": "#/components/schemas/Webhook"
+          },
+          {
+           "type": "object",
+           "properties": {
+            "secret": {
+             "type": "string"
+            }
+           }
+          }
+         ]
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "Not a usable address.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/webhooks/{id}": {
+   "delete": {
+    "summary": "Stop a webhook",
+    "tags": [
+     "Webhooks"
+    ],
+    "security": [
+     {
+      "key": [
+       "read"
+      ]
+     }
+    ],
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Stopped."
+     },
+     "404": {
+      "description": "No such webhook for this device.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired: no key, or a removed key.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "securitySchemes": {
+   "key": {
+    "type": "http",
+    "scheme": "bearer",
+    "description": "The key received when pairing"
+   },
+   "keyQuery": {
+    "type": "apiKey",
+    "in": "query",
+    "name": "key",
+    "description": "Event streams only"
+   }
+  },
+  "schemas": {
+   "Error": {
+    "type": "object",
+    "properties": {
+     "error": {
+      "type": "object",
+      "properties": {
+       "code": {
+        "type": "string"
+       },
+       "message": {
+        "type": "string",
+        "description": "Plain words for the person using the other app"
+       }
+      }
+     }
+    }
+   },
+   "Reference": {
+    "type": "object",
+    "required": [
+     "reference"
+    ],
+    "properties": {
+     "reference": {
+      "type": "string",
+      "examples": [
+       "John 3:16"
+      ]
+     }
+    }
+   },
+   "Shown": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "verse",
+       "slide",
+       "logo",
+       "none"
+      ]
+     },
+     "reference": {
+      "type": "string"
+     },
+     "title": {
+      "type": "string"
+     }
+    }
+   },
+   "Device": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "scopes": {
+      "type": "array",
+      "items": {
+       "enum": [
+        "read",
+        "control",
+        "write"
+       ]
+      }
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "lastUsed": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "format": "date-time"
+     },
+     "webhooks": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/Webhook"
+      }
+     }
+    }
+   },
+   "Webhook": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "url": {
+      "type": "string"
+     },
+     "types": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "failures": {
+      "type": "integer"
+     },
+     "paused": {
+      "type": "boolean"
+     }
+    }
+   },
+   "Module": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "version": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "answers": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "emits": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "listens": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "Service": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "date": {
+      "type": "string",
+      "format": "date"
+     },
+     "type": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "parts": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "items": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "properties": {
+           "id": {
+            "type": "string"
+           },
+           "name": {
+            "type": "string"
+           },
+           "slides": {
+            "type": "integer"
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

@@ -409,6 +409,16 @@ The autopilot that learns how a church runs its service. Approved mock-up: `docs
 - ProPresenter (`src/modules/proPresenter.ts`) follows `live.changed` from its own window: a verse is sent, a slide is sent (linked song words) or clears, the logo and Clear clear. The ProPresenter page's own buttons still call it directly.
 - The operator window exposes `window.__voiceVersesBus` (`recent()`, `modules()`), read-only, for checks and support.
 
+## 8j. Other apps and devices: the local API (1.19.5, D34)
+
+- Settings → Other apps and devices (In the booth), desktop app only. Off by default. Turning it on serves the API at `http://<address>:<network port>/api/v1` (47100 unless changed in Screens) and announces `_voiceverses._tcp` with Bonjour (TXT `api=1`, `path=/api/v1`, `version`). The network screens keep their own switch; each part answers only while its switch is on.
+- **Pair a device:** "See what's on the screens" (always) and "Control the screens" (switch, on by default), then Show a pairing code. The code has six digits, works once and for 5 minutes, five wrong codes use it up, and five wrong codes a minute from one address mean a minute's wait. The device receives a key `vv1_…` (32 random bytes); only its SHA-256 is saved. Scopes: `read`, `control`, `write` (write has no requests until the service package, step 2.3).
+- **Paired:** each device with what it may do and when it was last used, its webhooks (stopped ones marked), Remove and Stop sending. Removing ends its key, streams and webhooks at once.
+- **Requests:** `GET /api/v1` (open), `/openapi.json`, `/asyncapi.json` (open), `POST /pair` (open), `GET /me`, `/modules`, `/live`, `/services?date=`, `/events` (SSE or WebSocket, `?types=` patterns, `?key=` allowed here only), `POST /live/show|next|take|advance|back|clear|logo`, `GET|POST /webhooks`, `DELETE /webhooks/{id}`. Errors are `{ error: { code, message } }` with words a volunteer can read. CORS is open (keys, not cookies). Bodies up to 64 KB.
+- **Commands** go to the operator's window and are answered by the module that owns them (`src/core/commands.ts`: `answer`, `ask`): the live screen answers `live.*` while it is open; `services.list` is answered from the saved services. Live commands are refused while practising. No answer within 6 s is a 504.
+- **Events** are the bus's CloudEvents, passed on unchanged; practice events never leave the window. Webhooks: POSTed as `application/cloudevents+json`, signed `X-VoiceVerses-Signature: sha256=<HMAC-SHA256 hex>`, three tries (0, 2, 10 s) in order, stopped after 20 failed events in a row, 10 per device.
+- Described for developers in `docs/api/README.md`, `electron/api-spec/openapi.json` and `asyncapi.json`.
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:
@@ -476,6 +486,7 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `voice-verses-samples` | When the sample services were first added (they are never added again by themselves) |
 | `voice-verses-motion`, `voice-verses-motion-slow` | Moving backgrounds on this computer (`auto`/`full`/`still`); when and how slowly this computer drew them, if it was too slow |
 | `voice-verses-network`, `voice-verses-propresenter` | Network outputs and ProPresenter connection |
+| `voice-verses-api` | `{ enabled }`: Settings → Other apps and devices (1.19.5). Paired devices (a hash of each key, scopes, webhooks) are in `api-devices.json` in the app's data folder, not here |
 | `voice-verses-mode`, `voice-verses-ask-first`, `voice-verses-last-service` | App mode, ask-before-showing, last opened service |
 | `voice-verses-countdown-setup` | Countdown defaults |
 | `cornerstone-bible-version`, `cornerstone-custom-bible` | Translation in use; an imported Bible |

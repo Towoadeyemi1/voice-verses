@@ -1,0 +1,939 @@
+{
+ "asyncapi": "3.0.0",
+ "info": {
+  "title": "Voice Verses events",
+  "version": "1.0.0",
+  "x-app-version": "1.19.4",
+  "description": "Events Voice Verses sends while it runs, as CloudEvents 1.0. Follow them at /api/v1/events (Server-Sent Events or WebSocket, with ?types=live.* to choose), or have them POSTed to a webhook. A change that would break a reader gets a new type (….v2) beside the old one. Events made while the operator practises are never sent."
+ },
+ "servers": {
+  "booth": {
+   "host": "{host}:{port}",
+   "protocol": "ws",
+   "pathname": "/api/v1/events",
+   "variables": {
+    "host": {
+     "default": "voice-verses.local"
+    },
+    "port": {
+     "default": "47100"
+    }
+   },
+   "security": [
+    {
+     "$ref": "#/components/securitySchemes/key"
+    }
+   ]
+  }
+ },
+ "channels": {
+  "events": {
+   "address": "/api/v1/events",
+   "messages": {
+    "live_changed": {
+     "$ref": "#/components/messages/live_changed"
+    },
+    "next_changed": {
+     "$ref": "#/components/messages/next_changed"
+    },
+    "countdown_changed": {
+     "$ref": "#/components/messages/countdown_changed"
+    },
+    "alert_changed": {
+     "$ref": "#/components/messages/alert_changed"
+    },
+    "listening_started": {
+     "$ref": "#/components/messages/listening_started"
+    },
+    "listening_stopped": {
+     "$ref": "#/components/messages/listening_stopped"
+    },
+    "speech_heard": {
+     "$ref": "#/components/messages/speech_heard"
+    },
+    "verse_found": {
+     "$ref": "#/components/messages/verse_found"
+    },
+    "suggestion_offered": {
+     "$ref": "#/components/messages/suggestion_offered"
+    },
+    "service_updated": {
+     "$ref": "#/components/messages/service_updated"
+    },
+    "service_deleted": {
+     "$ref": "#/components/messages/service_deleted"
+    },
+    "media_updated": {
+     "$ref": "#/components/messages/media_updated"
+    },
+    "media_deleted": {
+     "$ref": "#/components/messages/media_deleted"
+    },
+    "bible_changed": {
+     "$ref": "#/components/messages/bible_changed"
+    },
+    "module_registered": {
+     "$ref": "#/components/messages/module_registered"
+    }
+   }
+  }
+ },
+ "operations": {
+  "receive_live_changed": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/live_changed"
+    }
+   ]
+  },
+  "receive_next_changed": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/next_changed"
+    }
+   ]
+  },
+  "receive_countdown_changed": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/countdown_changed"
+    }
+   ]
+  },
+  "receive_alert_changed": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/alert_changed"
+    }
+   ]
+  },
+  "receive_listening_started": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/listening_started"
+    }
+   ]
+  },
+  "receive_listening_stopped": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/listening_stopped"
+    }
+   ]
+  },
+  "receive_speech_heard": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/speech_heard"
+    }
+   ]
+  },
+  "receive_verse_found": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/verse_found"
+    }
+   ]
+  },
+  "receive_suggestion_offered": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/suggestion_offered"
+    }
+   ]
+  },
+  "receive_service_updated": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/service_updated"
+    }
+   ]
+  },
+  "receive_service_deleted": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/service_deleted"
+    }
+   ]
+  },
+  "receive_media_updated": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/media_updated"
+    }
+   ]
+  },
+  "receive_media_deleted": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/media_deleted"
+    }
+   ]
+  },
+  "receive_bible_changed": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/bible_changed"
+    }
+   ]
+  },
+  "receive_module_registered": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/module_registered"
+    }
+   ]
+  }
+ },
+ "components": {
+  "securitySchemes": {
+   "key": {
+    "type": "httpBearerToken",
+    "description": "The key received when pairing (or ?key=)"
+   }
+  },
+  "schemas": {
+   "CloudEvent": {
+    "type": "object",
+    "required": [
+     "specversion",
+     "id",
+     "source",
+     "type",
+     "time",
+     "data"
+    ],
+    "properties": {
+     "specversion": {
+      "const": "1.0"
+     },
+     "id": {
+      "type": "string"
+     },
+     "source": {
+      "type": "string",
+      "examples": [
+       "voiceverses://app/live"
+      ]
+     },
+     "type": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string",
+      "description": "The short name, e.g. live.changed"
+     },
+     "time": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "datacontenttype": {
+      "const": "application/json"
+     },
+     "data": {
+      "type": "object"
+     }
+    }
+   }
+  },
+  "messages": {
+   "live_changed": {
+    "name": "live.changed",
+    "title": "live.changed",
+    "summary": "What the screens show changed: a verse, a slide, the logo, or nothing.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.live.changed.v1"
+        },
+        "name": {
+         "const": "live.changed"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "kind": {
+           "enum": [
+            "verse",
+            "slide",
+            "logo",
+            "clear"
+           ]
+          },
+          "reference": {
+           "type": "string"
+          },
+          "translation": {
+           "type": "string"
+          },
+          "text": {
+           "type": "string"
+          },
+          "verse": {
+           "type": "object",
+           "properties": {
+            "book": {
+             "type": "string"
+            },
+            "chapter": {
+             "type": "integer"
+            },
+            "verse": {
+             "type": "integer"
+            },
+            "text": {
+             "type": "string"
+            }
+           }
+          },
+          "slide": {
+           "type": "object",
+           "properties": {
+            "id": {
+             "type": "string"
+            },
+            "type": {
+             "type": "string"
+            },
+            "title": {
+             "type": "string"
+            },
+            "songTitle": {
+             "type": "string"
+            },
+            "sectionLabel": {
+             "type": "string"
+            },
+            "content": {
+             "type": "string"
+            }
+           }
+          }
+         },
+         "required": [
+          "kind"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "next_changed": {
+    "name": "next.changed",
+    "title": "next.changed",
+    "summary": "What waits in Next changed.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.next.changed.v1"
+        },
+        "name": {
+         "const": "next.changed"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "kind": {
+           "enum": [
+            "verse",
+            "slide",
+            "none"
+           ]
+          },
+          "reference": {
+           "type": "string"
+          },
+          "title": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "kind"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "countdown_changed": {
+    "name": "countdown.changed",
+    "title": "countdown.changed",
+    "summary": "Countdowns on the screens changed.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.countdown.changed.v1"
+        },
+        "name": {
+         "const": "countdown.changed"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "running": {
+           "type": "integer"
+          }
+         },
+         "required": [
+          "running"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "alert_changed": {
+    "name": "alert.changed",
+    "title": "alert.changed",
+    "summary": "Alerts on the screens changed.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.alert.changed.v1"
+        },
+        "name": {
+         "const": "alert.changed"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "count": {
+           "type": "integer"
+          },
+          "text": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "count"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "listening_started": {
+    "name": "listening.started",
+    "title": "listening.started",
+    "summary": "Listening started.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.listening.started.v1"
+        },
+        "name": {
+         "const": "listening.started"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "engine": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "engine"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "listening_stopped": {
+    "name": "listening.stopped",
+    "title": "listening.stopped",
+    "summary": "Listening stopped.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.listening.stopped.v1"
+        },
+        "name": {
+         "const": "listening.stopped"
+        },
+        "data": {
+         "type": "object",
+         "properties": {},
+         "required": []
+        }
+       }
+      }
+     ]
+    }
+   },
+   "speech_heard": {
+    "name": "speech.heard",
+    "title": "speech.heard",
+    "summary": "A finished sentence heard from the preacher (never sound).",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.speech.heard.v1"
+        },
+        "name": {
+         "const": "speech.heard"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "text": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "text"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "verse_found": {
+    "name": "verse.found",
+    "title": "verse.found",
+    "summary": "Detection found a verse; it went to the screens or waits in Next.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.verse.found.v1"
+        },
+        "name": {
+         "const": "verse.found"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "reference": {
+           "type": "string"
+          },
+          "went": {
+           "enum": [
+            "screens",
+            "next"
+           ]
+          }
+         },
+         "required": [
+          "reference",
+          "went"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "suggestion_offered": {
+    "name": "suggestion.offered",
+    "title": "suggestion.offered",
+    "summary": "A verse, song or new singing was offered to the operator.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.suggestion.offered.v1"
+        },
+        "name": {
+         "const": "suggestion.offered"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "kind": {
+           "type": "string"
+          },
+          "reference": {
+           "type": "string"
+          },
+          "title": {
+           "type": "string"
+          },
+          "score": {
+           "type": "number"
+          }
+         },
+         "required": [
+          "kind"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "service_updated": {
+    "name": "service.updated",
+    "title": "service.updated",
+    "summary": "A service or template was saved.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.service.updated.v1"
+        },
+        "name": {
+         "const": "service.updated"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string"
+          },
+          "name": {
+           "type": "string"
+          },
+          "date": {
+           "type": "string"
+          },
+          "type": {
+           "type": "string"
+          },
+          "template": {
+           "type": "boolean"
+          }
+         },
+         "required": [
+          "id",
+          "name",
+          "date",
+          "template"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "service_deleted": {
+    "name": "service.deleted",
+    "title": "service.deleted",
+    "summary": "A service was deleted.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.service.deleted.v1"
+        },
+        "name": {
+         "const": "service.deleted"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "id"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "media_updated": {
+    "name": "media.updated",
+    "title": "media.updated",
+    "summary": "A song, picture or video was saved.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.media.updated.v1"
+        },
+        "name": {
+         "const": "media.updated"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string"
+          },
+          "kind": {
+           "type": "string"
+          },
+          "name": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "id",
+          "kind",
+          "name"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "media_deleted": {
+    "name": "media.deleted",
+    "title": "media.deleted",
+    "summary": "A song, picture or video was deleted.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.media.deleted.v1"
+        },
+        "name": {
+         "const": "media.deleted"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "id"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "bible_changed": {
+    "name": "bible.changed",
+    "title": "bible.changed",
+    "summary": "The translation on the screens changed.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.bible.changed.v1"
+        },
+        "name": {
+         "const": "bible.changed"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "translation": {
+           "type": "string"
+          },
+          "label": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "translation",
+          "label"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "module_registered": {
+    "name": "module.registered",
+    "title": "module.registered",
+    "summary": "A module started.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.module.registered.v1"
+        },
+        "name": {
+         "const": "module.registered"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string"
+          },
+          "name": {
+           "type": "string"
+          },
+          "version": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "id",
+          "name",
+          "version"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   }
+  }
+ }
+}

@@ -675,6 +675,45 @@ PROPRESENTER = {
 _drop("settings", "settings-5-propresenter")
 _insert_after("screens", PROPRESENTER)
 
+DEVICES = {
+    "id": "devices",
+    "title": "Other apps and devices",
+    "intro": "A Stream Deck, a phone, or your church’s own apps (a dashboard, Planning Center, a captioning tool) can use Voice Verses over the church network. Each one is paired once, with a code shown on this computer, so only devices someone in the booth paired can use it. It needs the desktop app, and it works without the internet.",
+    "figures": [
+        {
+            "img": "devices-1-on",
+            "caption": "Turn it on",
+            "steps": [
+                "Settings → **Other apps and devices**: switch it on. Switch it off and no other app can use Voice Verses (the network screens have their own switch).",
+                "**The address** other apps use. Most find Voice Verses on the network by themselves.",
+                "**Control the screens**: on, the device you pair next can show verses, Take, go forward or back, Clear and show the logo. Off, it can only see what’s on and follow what happens.",
+                "**Show a pairing code**.",
+            ],
+        },
+        {
+            "img": "devices-2-code",
+            "caption": "Pair a device",
+            "steps": [
+                "Type these six digits in the other app. The code works once, for five minutes.",
+                "**Stop** if you change your mind.",
+            ],
+        },
+        {
+            "img": "devices-3-paired",
+            "caption": "What is paired",
+            "steps": [
+                "Each paired device, what it may do, and when it last used Voice Verses. Places it sends events to are listed under it, with **Stop sending**.",
+                "**Remove** ends that device’s access at once. To pair it again, show a new code.",
+            ],
+        },
+    ],
+    "points": [
+        "A remote **Take** does exactly what the Take button does. While you practise in Training, other apps can’t change the screens.",
+        "For the people who make the apps: the page links to **the guide for developers** (the API, its events and webhooks).",
+    ],
+}
+_insert_after("propresenter", DEVICES)
+
 _settings = _sec("settings")["figures"]
 _settings.insert([f["img"] for f in _settings].index("settings-3-listening") + 1, {
     "img": "settings-3b-engine",
@@ -805,6 +844,7 @@ FEATURES = [
     ("ProPresenter: a slide with Voice Verses’ NDI picture", "propresenter"),
     ("ProPresenter: the message; stage message; Why isn’t it on the screens?", "propresenter"),
     ("ProPresenter found on the network; type the address", "propresenter"),
+    ("Other apps and devices: pairing, control, the API for developers", "devices"),
     ("Features and presets", "settings"),
     ("Microphone, desk channel and sound check", "settings"),
     ("Speech engines: on this computer, browser, OpenAI", "settings"),

@@ -7,6 +7,8 @@ import * as proPresenter from './propresenter.js';
 import * as linkedText from './linkedText.js';
 import { keepAwake, outputWindowOptions, trackOutputWindow } from './outputs.js';
 import * as network from './network.js';
+import * as api from './api.js';
+import { readFileSync } from 'fs';
 import * as screens from './screens.js';
 import * as decklink from './decklink.js';
 import * as ndi from './ndi.js';
@@ -156,6 +158,17 @@ handle('network:has-media', (id) => network.hasMedia(id));
 handle('network:put-media', (id, mime, bytes) => network.putMedia(id, mime, bytes));
 listen('network:publish', (state) => network.publish(state));
 
+// The local API (1.19.5, D33): other apps and devices on the church network, paired with a code
+handle('api:configure', (options) => network.configureApi(options ?? {}));
+handle('api:status', async () => ({ ...network.apiStatus(), ...(await api.overview()) }));
+handle('api:pair-start', (scopes) => api.startPairing(scopes));
+handle('api:pair-stop', () => api.stopPairing());
+handle('api:remove-device', (id) => api.removeDevice(String(id)));
+handle('api:remove-webhook', (deviceId, hookId) => api.removeWebhook(String(deviceId), String(hookId)));
+handle('api:reply', (id, answer) => api.reply(String(id), answer));
+listen('api:event', (event) => api.onEvent(event));
+listen('api:modules', (list) => api.setModules(list));
+
 handle('screens:displays', () => screens.listDisplays());
 handle('screens:get', () => screens.getConfig());
 handle('screens:set', (config) => screens.setConfig(config));
@@ -205,8 +218,31 @@ function createAppWindow(route, options) {
   return win;
 }
 
+/** The API's description documents, served at /api/v1/openapi.json and asyncapi.json. */
+function apiSpec(name) {
+  try {
+    return JSON.parse(readFileSync(join(__dirname, 'api-spec', name), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 app.whenReady().then(async () => {
   await library.initLibrary();
+  await api.init({
+    storePath: join(app.getPath('userData'), 'api-devices.json'),
+    version: app.getVersion(),
+    spec: { openapi: apiSpec('openapi.json'), asyncapi: apiSpec('asyncapi.json') },
+    // Commands go to the operator's window, which answers through api:reply
+    sendCommand: (message) => {
+      if (!mainWindow || mainWindow.isDestroyed()) return false;
+      mainWindow.webContents.send('api:command', message);
+      return true;
+    },
+    onChange: (detail) => {
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('api:changed', detail ?? {});
+    },
+  });
   if (process.platform === 'darwin') {
     // Prompt for microphone access up front so the first "Start listening" works
     await systemPreferences.askForMediaAccess('microphone').catch(() => false);
