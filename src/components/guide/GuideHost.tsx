@@ -40,7 +40,8 @@ function cardPlace(box: Box | null, height: number, prefer?: 'above'): React.CSS
   const left = Math.min(Math.max(16, box.x + box.w / 2 - CARD_W / 2), vw - CARD_W - 16);
   const top = (y: number) => Math.min(Math.max(16, y), vh - height - 70);
   if (prefer === 'above' && box.y - 16 - height > 16) return { left, top: box.y - 16 - height };
-  if (box.x + box.w / 2 > vw * 0.6 && box.x - 24 - CARD_W > 16) return { left: box.x - 24 - CARD_W, top: top(box.y + box.h / 2 - height / 2) };
+  // Beside: level with its top when it is taller than the card (a monitor), else centred on it
+  if (box.x + box.w / 2 > vw * 0.6 && box.x - 24 - CARD_W > 16) return { left: box.x - 24 - CARD_W, top: top(box.h > height ? box.y : box.y + box.h / 2 - height / 2) };
   if (box.y + box.h + 16 + height < vh - 60) return { left, top: box.y + box.h + 16 };
   if (box.y - 16 - height > 16) return { left, top: box.y - 16 - height };
   const beside = box.x - 16 - CARD_W > 16 ? box.x - 16 - CARD_W : Math.min(box.x + box.w + 16, vw - CARD_W - 16);

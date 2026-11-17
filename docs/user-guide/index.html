@@ -1,0 +1,378 @@
+<title>Voice Verses Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a contents rail beside one reading column; each step list sits beside or under its picture. */
+:root {
+  --bg: #f6f3ee; --panel: #ffffff; --ink: #1d1b20; --ink-2: #5a5560; --line: #e4ded5;
+  --mark: #ffb020; --mark-ink: #1a1204; --mark-soft: #fdf0d6; --link: #8a5a00;
+  --live: #e0392f; --next: #1f9d50;
+  --display: "Newsreader", "New York", "Iowan Old Style", Georgia, serif;
+  --body: "Figtree", -apple-system, "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e0d10; --panel: #19171c; --ink: #f4f1f6; --ink-2: #b2abb7; --line: #2c2830;
+    --mark-soft: #3a2a0e; --link: #ffc65a; --live: #ff5a4f; --next: #34d06e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e0d10; --panel: #19171c; --ink: #f4f1f6; --ink-2: #b2abb7; --line: #2c2830;
+  --mark-soft: #3a2a0e; --link: #ffc65a; --live: #ff5a4f; --next: #34d06e; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16.5px/1.6 var(--body); }
+a { color: var(--link); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 40px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; gap: 24px; } }
+.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; display: flex; flex-direction: column; gap: 2px; font-size: 14.5px; }
+@media (max-width: 900px) { .toc { position: static; flex-direction: row; flex-wrap: wrap; gap: 6px; } .toc a { padding: 6px 10px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); } .toc .k { display: none; } }
+.toc .k { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 8px; }
+.toc a { color: var(--ink-2); text-decoration: none; padding: 5px 0; }
+.toc a:hover { color: var(--ink); }
+main { min-width: 0; display: flex; flex-direction: column; gap: 56px; }
+header.top { display: flex; flex-direction: column; gap: 12px; }
+header.top .kicker { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--link); }
+h1 { margin: 0; font: 600 clamp(38px, 5vw, 56px)/1.05 var(--display); letter-spacing: -.01em; text-wrap: balance; }
+header.top p { margin: 0; font-size: 19px; color: var(--ink-2); max-width: 62ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 14.5px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.num { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--mark); color: var(--mark-ink); font: 800 14px/28px var(--body); text-align: center; box-shadow: 0 0 0 2px var(--panel); }
+section { display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 20px; }
+h2 { margin: 0; font: 600 32px/1.15 var(--display); text-wrap: balance; }
+.intro { margin: 0; font-size: 18px; color: var(--ink-2); max-width: 66ch; }
+.fig { display: flex; flex-direction: column; gap: 18px; padding: 18px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
+.fig figure { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.fig img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--line); cursor: zoom-in; }
+.fig figcaption { font-size: 14px; color: var(--ink-2); }
+.fig h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; min-width: 0; }
+@media (max-width: 760px) { ol.steps { grid-template-columns: 1fr; } }
+ol.steps.one { grid-template-columns: 1fr; max-width: 72ch; }
+ol.steps li { display: flex; gap: 12px; align-items: flex-start; }
+ol.steps li > span:last-child { min-width: 0; padding-top: 2px; }
+.plain { margin: 0; }
+.know { margin: 0; padding: 16px 20px; border-radius: 14px; background: var(--mark-soft); display: flex; flex-direction: column; gap: 6px; }
+.know b.t { font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.know ul, .bul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; max-width: 72ch; }
+.tablewrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 15.5px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+th { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 700; white-space: nowrap; }
+.trouble td:first-child { white-space: normal; width: 34%; }
+kbd { font: 600 14px var(--body); padding: 2px 7px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
+footer { color: var(--ink-2); font-size: 14.5px; }
+dialog.zoom { padding: 0; border: 0; background: transparent; max-width: 96vw; max-height: 96vh; }
+dialog.zoom::backdrop { background: rgba(0,0,0,.8); }
+dialog.zoom img { display: block; max-width: 96vw; max-height: 92vh; border-radius: 10px; }
+dialog.zoom p { margin: 8px 0 0; text-align: center; color: #fff; font-size: 14px; }
+a:focus-visible, img:focus-visible, button:focus-visible { outline: 3px solid var(--mark); outline-offset: 3px; }
+</style>
+<div class="wrap">
+<nav class="toc" aria-label="Contents"><span class="k">Contents</span>
+<a href="#start">Before you start</a>
+<a href="#setup">1. Set up your booth (the first time)</a>
+<a href="#live">2. The live screen at a glance</a>
+<a href="#demo">3. Watch the demo</a>
+<a href="#verse">4. Put a verse on the screens yourself</a>
+<a href="#listening">5. Let it listen</a>
+<a href="#songs">6. Songs and slides</a>
+<a href="#countdowns">7. Countdowns and alerts</a>
+<a href="#booth-check">8. Is everything ready?</a>
+<a href="#settings">9. Settings, page by page</a>
+<a href="#spirit">10. spirit: let it run the service</a>
+<a href="#planning">11. Plan your services</a>
+<a href="#pages">12. Media, Looks, Screens and Presenter</a>
+<a href="#training">13. Training</a>
+<a href="#room">14. What the room sees</a>
+<a href="#keyboard">Keyboard</a><a href="#trouble">When something goes wrong</a></nav>
+<main>
+<header class="top">
+<span class="kicker">Voice Verses 1.19.1 · for the booth</span>
+<h1>Voice Verses Guide</h1>
+<p>How to use every part of Voice Verses, step by step. The numbers in each picture match the numbered steps under it.</p>
+<div class="legend"><span><i class="num" aria-hidden="true">1</i>Numbered marker: the step with the same number</span><span><i class="dot" style="background:var(--live)"></i>Red: Live, what the room sees</span><span><i class="dot" style="background:var(--next)"></i>Green: Next, what goes up when you press Take</span></div>
+</header>
+<section id="start"><h2>Before you start</h2>
+<p class="intro">Voice Verses listens to the preacher and puts the right Bible verse on your screens by itself. It also runs songs, slides, pictures, videos, countdowns and the order of service.</p>
+<ul class="bul"><li>Use the <b>desktop app</b> in church (Mac or Windows). It is one download: listening, the Bibles (KJV, WEB, ASV) and the screens all work without the internet.</li><li><b>Red always means Live</b> (what the room sees now). <b>Green always means Next</b> (what goes up when you press Take).</li><li>Not sure? Nothing you try in <b>Training</b> reaches the room. See <a href="#training">Training</a>.</li></ul>
+</section>
+<section id="setup"><h2>1. Set up your booth (the first time)</h2>
+<p class="intro">The first time Voice Verses opens on a computer, it looks for your microphone, screens and ProPresenter, and asks you to check each one. It takes about five minutes.</p>
+<div class="fig">
+<figure><img src="img/setup-1-found.jpg" alt="Set up your booth: what Voice Verses found" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Set up your booth: what Voice Verses found</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>The preacher’s microphone.</b> Voice Verses listens to every input and picks the one with sound. Ask someone to speak into the pulpit microphone; the bar moves.</span></li><li><span class="num" aria-hidden="true">2</span><span>Press <b>Looks right</b> if it found the right one. Press <b>Listen again</b> to look again, or <b>Change</b> to pick the input and the desk channel yourself (for example the channel called APOSTLE).</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Screens.</b> Each output (projector, stream lower third, stage) shows the number of the screen it goes to. Press <b>Identify screens</b> to put a big number on every screen in the room, then <b>Looks right</b>.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>ProPresenter.</b> If you use it, Voice Verses finds it on this computer or the network: press <b>Yes, that’s it</b>. This only remembers where it is; it does not start sending anything. If you don’t use ProPresenter, press <b>We don’t use ProPresenter</b>.</span></li><li><span class="num" aria-hidden="true">5</span><span><b>Your services.</b> Tick the services your church holds (Sunday service, Midweek, Friday Night Prayers…). Each one gets a ready-made order of service. Press <b>Looks right</b>.</span></li><li><span class="num" aria-hidden="true">6</span><span><b>Try the demo</b> plays a two-minute practice sermon, explained step by step. Nothing reaches the room.</span></li><li><span class="num" aria-hidden="true">7</span><span><b>Finish later</b> closes it. You can open it again any time from Settings → Booth check → <b>Set up your booth</b>.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/setup-2-confirmed.jpg" alt="All four confirmed" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>All four confirmed</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>Try the demo</b> to see Voice Verses at work.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Done</b> takes you to the live screen.</span></li></ol>
+</div></div>
+</section>
+<section id="live"><h2>2. The live screen at a glance</h2>
+<p class="intro">Everything for the service happens on this one screen. It is the same every Sunday.</p>
+<div class="fig">
+<figure><img src="img/live-1-tour.jpg" alt="The live screen" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>The live screen</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>The service.</b> Click its name for the other pages (Plan services, Media, Looks, Screens, Training, Settings).</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Start listening.</b> Voice Verses starts hearing the preacher. While it listens, a level meter moves and <b>Mute</b> stops it hearing for a moment.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Auto / Ask first.</b> <i>Auto</i>: a verse the preacher says outright goes straight up. <i>Ask first</i>: it waits in Next until you press Take.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Booth check.</b> <i>Ready</i> (grey tick) or <i>n to check</i> (amber). Click it to see what needs a look.</span></li><li><span class="num" aria-hidden="true">5</span><span><b>Search</b> (⌘K on a Mac, Ctrl+K on Windows): a verse, a song, a part of the service or an action.</span></li><li><span class="num" aria-hidden="true">6</span><span><b>Settings</b> (the gear).</span></li><li><span class="num" aria-hidden="true">7</span><span><b>The order of service.</b> Each part is as wide as its time. Click a part to load it.</span></li><li><span class="num" aria-hidden="true">8</span><span><b>spirit</b> shows what it will get ready next. <b>Pause</b> (or the P key) stops it doing anything by itself.</span></li><li><span class="num" aria-hidden="true">9</span><span><b>When I pick a slide:</b> <i>Goes live</i> shows it at once; <i>Waits in Next</i> (the usual choice) puts it in Next first.</span></li><li><span class="num" aria-hidden="true">10</span><span><b>Live</b> (red): what the room sees now.</span></li><li><span class="num" aria-hidden="true">11</span><span><b>Take</b> (Space bar): puts Next on the screens.</span></li><li><span class="num" aria-hidden="true">12</span><span><b>Next</b> (green): what goes up when you press Take.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/live-2-welcome.jpg" alt="Before anything is on the screens" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Before anything is on the screens</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Start listening</b> when the service begins.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Watch the demo</b>: a two-minute sermon and hymn, explained aloud with a pointer.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Find a verse, song or item</b> opens Search.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Training</b>: short lessons on these real screens.</span></li><li><span class="num" aria-hidden="true">5</span><span><b>Today’s order</b>: click any part to load its slides.</span></li><li><span class="num" aria-hidden="true">6</span><span><b>Show a verse</b>: quick buttons for well-known verses.</span></li></ol>
+</div></div>
+</section>
+<section id="demo"><h2>3. Watch the demo</h2>
+<p class="intro">The demo plays a short sermon and a hymn through the real listening engine. A voice says what is happening, and a pointer shows where.</p>
+<div class="fig">
+<figure><img src="img/demo-1-heard.jpg" alt="The demo explains each step" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>The demo explains each step</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>The card</b> says what is happening; the same words are spoken. The speaker button turns the voice off.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Stop the demo</b> ends it at any time.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/demo-2-reading.jpg" alt="Following the reading" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Following the reading</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>The verse being read</b>, large, with the word being read underlined.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Heard</b>: the last words Voice Verses heard.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Live</b>: the verse went up because the preacher said “John chapter 3 verse 16”.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Next</b>: the following verse is ready, in case the preacher reads on. It goes up when this verse ends.</span></li></ol>
+</div></div>
+</section>
+<section id="verse"><h2>4. Put a verse on the screens yourself</h2>
+<p class="intro">Three steps: find it, check it in Next, press Take.</p>
+<div class="fig">
+<figure><img src="img/verse-1-search.jpg" alt="Search" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Search</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span>Press <b>⌘K</b> (Ctrl+K on Windows), or click the magnifying glass. Type the verse: <i>John 3:16</i>, <i>Psalm 23</i>, <i>Romans 8:28-39</i>.</span></li><li><span class="num" aria-hidden="true">2</span><span>Press <b>Return</b>, or click <b>Show John 3:16</b>.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/verse-2-next.jpg" alt="The verse waits in Next" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>The verse waits in Next</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Next</b> shows exactly how it will look on the projector.</span></li><li><span class="num" aria-hidden="true">2</span><span>Press <b>Take</b> (or the Space bar) to put it on the screens.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>When I pick a slide</b> decides whether picking goes straight to the screens (<i>Goes live</i>) or waits in Next (<i>Waits in Next</i>).</span></li><li><span class="num" aria-hidden="true">4</span><span>The verse also shows large here, with the rest of the chapter underneath to pick from.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/verse-3-live.jpg" alt="On the screens" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>On the screens</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Live</b> (red) now shows John 3:16, and so does the room.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Clear</b> (Esc) takes the words off the screens.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Logo</b> shows the church logo on every screen.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>KJV ▾</b> changes the translation of everything on screen and in Next.</span></li></ol>
+</div></div>
+<div class="know"><b class="t">Good to know</b><ul><li>Press <b>→</b> for the next verse and <b>←</b> for the one before.</li></ul></div>
+</section>
+<section id="listening"><h2>5. Let it listen</h2>
+<p class="intro">Press Start listening and the preacher does the work.</p>
+<div class="fig">
+<figure><img src="img/demo-3-suggestion.jpg" alt="A suggestion" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>A suggestion</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>The ring</b> shows how much of the verse’s wording was heard.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Why</b> it was suggested, in plain words (most of it quoted, in today’s plan, the book was mentioned…).</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Show now</b> puts it straight on the screens.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Use</b> puts it in Next, to check first. The × dismisses it. Click the bar to see every suggestion of the last few minutes.</span></li></ol>
+</div></div>
+<div class="know"><b class="t">Good to know</b><ul><li><b>Said outright</b> (“John 3:16”, “John chapter 3 verse 16”, “Romans 8 from verse 28”): in <i>Auto</i> it goes straight up; in <i>Ask first</i> it waits in Next.</li><li><b>Read aloud</b>: each verse goes up as the reader gets to it, and the next one waits in Next.</li><li><b>Named without a verse</b> (“turn to Isaiah 53”): the chapter loads and waits until the preacher reads or names a verse.</li><li><b>Quoted or told in their own words</b>: offered as a <b>suggestion</b>. It never goes up by itself unless it is word for word (99% sure).</li><li><b>During songs</b>, press <b>♪ Song</b> so verses stay off the screen unless a reference is said outright.</li></ul></div>
+</section>
+<section id="songs"><h2>6. Songs and slides</h2>
+<p class="intro">Songs, announcements and pictures come from the order of service.</p>
+<div class="fig">
+<figure><img src="img/song-1-strip.jpg" alt="Load a part of the service" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Load a part of the service</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span>Click the part in the <b>order of service</b> (here, the hymn <i>Holy, Holy, Holy</i>).</span></li><li><span class="num" aria-hidden="true">2</span><span>Its <b>slides</b> appear along the bottom. Click one to pick it; double-click to show it at once.</span></li><li><span class="num" aria-hidden="true">3</span><span>The first slide waits in <b>Next</b>.</span></li><li><span class="num" aria-hidden="true">4</span><span>Press <b>Take</b> (Space) to show it, then Space again for each slide.</span></li><li><span class="num" aria-hidden="true">5</span><span><b>See all slides</b> shows them as a grid.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/song-2-live.jpg" alt="A song on the screens" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>A song on the screens</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Live · V1.1</b>: the slide on the screens, framed red.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Next · V1.2</b>: the slide that comes next, framed green.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>The pencil</b> (Quick edit) fixes a word or changes the look, even during the service.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>♪ Song</b>: while the church sings, the words follow the singers, and verses stay off the screen.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/song-3-quick-edit.jpg" alt="Quick edit" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Quick edit</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span>Change the section name, the words or the <b>look</b>, and see how the room will see it. Press <b>Save</b>. For the full designer, press <b>Open the full designer</b>.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/song-4-grid.jpg" alt="Every slide as a grid" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Every slide as a grid</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>Show the words large</b> goes back to the normal view.</span></li></ol>
+</div></div>
+<div class="know"><b class="t">Good to know</b><ul><li>The worship leader can call parts of the song out loud: “Verse two!”, “Back to the chorus”. Voice Verses goes there.</li><li>New words that are in no song are offered as a new song, and kept as a draft afterwards.</li></ul></div>
+</section>
+<section id="countdowns"><h2>7. Countdowns and alerts</h2>
+<p class="intro">Both buttons are at the top of the live screen and every other page.</p>
+<div class="fig">
+<figure><img src="img/tools-1-countdown.jpg" alt="Countdown" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Countdown</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Quick start</b>: before the service, until the service starts, a sermon timer (stage only), and more.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Length of time</b> (5 minutes) or <b>Until a time</b> (10:00).</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Message</b> above the numbers, such as “Service begins in”.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Show it on</b>: all screens, the projector, the stage monitor or the stream; full screen or small in the corner.</span></li><li><span class="num" aria-hidden="true">5</span><span><b>Turn yellow with</b> 1 minute left; <b>Blink</b> when yellow and red. It turns red at zero, and the stage shows how far over it is.</span></li><li><span class="num" aria-hidden="true">6</span><span><b>Start</b>. Several countdowns can run at once, each on its own screens.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/tools-2-alert.jpg" alt="Alert: a message over whatever is on screen" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Alert: a message over whatever is on screen</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>For the room</b>: nursery, children’s church, car lights, move a car, seats at the front.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>For the stage only</b>: five minutes, please wrap up, speak up, microphone.</span></li><li><span class="num" aria-hidden="true">3</span><span>Type the <b>child number</b> or number plate (or write any message).</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Show it on</b>: which screens.</span></li><li><span class="num" aria-hidden="true">5</span><span><b>Hide it</b>: until you clear it, or after 15 seconds to 2 minutes.</span></li><li><span class="num" aria-hidden="true">6</span><span><b>Amber</b> and <b>Blink</b> make it stand out. The preview shows how the projector will look; the button under it shows the alert. While one is up, the Alert button turns amber with an × to clear it.</span></li></ol>
+</div></div>
+</section>
+<section id="booth-check"><h2>8. Is everything ready?</h2>
+<p class="intro">The booth check looks at the microphone, the screens, ProPresenter, the Bible and today’s service every minute.</p>
+<div class="fig">
+<figure><img src="img/tools-3-booth-check.jpg" alt="The booth check light" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>The booth check light</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>Ready</b> (grey tick) or <b>n to check</b> (amber). Click it.</span></li><li><span class="num" aria-hidden="true">2</span><span>Each check, with a button that takes you straight to the fix.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-1-booth.jpg" alt="Settings → Booth check" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Settings → Booth check</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span>The <b>booth check</b> at the top of Settings.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Set up your booth</b> finds everything again.</span></li></ol>
+</div></div>
+<div class="know"><b class="t">Good to know</b><ul><li>During the service, a problem (a screen unplugged, no sound for 20 seconds) shows as an amber warning under the top bar, with its fix button.</li></ul></div>
+</section>
+<section id="settings"><h2>9. Settings, page by page</h2>
+<p class="intro">Open Settings with the gear. Everything saves as you change it; there is no Save button to forget.</p>
+<div class="fig">
+<figure><img src="img/settings-2-features.jpg" alt="Features: what Voice Verses does by itself" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Features: what Voice Verses does by itself</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Features</b> in the sidebar.</span></li><li><span class="num" aria-hidden="true">2</span><span>Choose <b>Essentials</b>, <b>Recommended</b> or <b>Everything</b>.</span></li><li><span class="num" aria-hidden="true">3</span><span>Or switch each feature on or off. A verse said outright always goes up, whatever is off.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-3-listening.jpg" alt="Listening: the microphone" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Listening: the microphone</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Listening</b> in the sidebar.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Input</b>: the microphone or the sound desk’s USB feed.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Sound check</b>: speak and the bar moves. If the desk sends many channels, click the preacher’s channel (its meter moves when they speak).</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-4-screens.jpg" alt="Screens and outputs" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Screens and outputs</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Screens and outputs</b> in the sidebar.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Click a screen</b> in the picture of the room.</span></li><li><span class="num" aria-hidden="true">3</span><span>Choose what it <b>shows</b>: Projector, Lower third, Stage monitor or Nothing. It opens there by itself, every time.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Identify screens</b> puts a big number on every screen.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-5-propresenter.jpg" alt="ProPresenter (optional)" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>ProPresenter (optional)</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>ProPresenter</b> in the sidebar.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>ProPresenter on your network</b>: press <b>Connect</b> beside yours. The <b>Send verses</b> switch at the top turns sending on or off.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>What ProPresenter shows</b>: its look, also on its stage screens, <b>Send a test verse</b>, <b>Clear it</b> and <b>Why isn’t it on the screens?</b></span></li><li><span class="num" aria-hidden="true">4</span><span><b>Not in the list?</b> Three steps to switch on ProPresenter’s network setting, or type its address yourself.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-6-bible.jpg" alt="Bible translations" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Bible translations</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Bible</b> in the sidebar.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>On this computer</b>: KJV, ASV, WEB, or your own. Always works, no internet needed.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Over the internet</b>: ESV, NLT and API.Bible translations (NKJV, NIV, CSB…), each with a free key from its publisher.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-7-songs.jpg" alt="Songs and CCLI" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Songs and CCLI</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>Songs and CCLI</b> in the sidebar.</span></li><li><span class="num" aria-hidden="true">2</span><span>Your <b>CCLI licence number</b>, shown small on each song’s first slide with its writers and copyright.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-8-logo.jpg" alt="Logo" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Logo</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>Logo</b> in the sidebar. <b>Choose a picture</b>; a transparent PNG looks best. The Logo button shows it on every screen.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-9-library.jpg" alt="Library and backup" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Library and backup</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>Library and backup</b> in the sidebar. <b>Choose folder</b> inside iCloud Drive, Dropbox, OneDrive or Google Drive to back up your services and share them between computers.</span></li></ol>
+</div></div>
+</section>
+<section id="spirit"><h2>10. spirit: let it run the service</h2>
+<p class="intro">spirit learns how your church runs its service, gets the next thing ready, and earns your trust one move at a time. It never puts a verse up that wasn’t said.</p>
+<div class="fig">
+<figure><img src="img/settings-10-spirit.jpg" alt="How spirit runs" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>How spirit runs</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>How spirit runs</b> in the sidebar.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>How much spirit does</b>: <i>Off</i>; <i>Ready in Next</i> (it gets things ready and you press Take); <i>Hands-free</i> (only for moves that have been right 10 times in a row).</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Your last service</b>: what spirit got right, what you chose, what you corrected.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>What spirit knows</b>.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-11-moves.jpg" alt="What spirit does" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>What spirit does</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>What spirit does</b> in the sidebar.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Spoken cues</b>: moments and sermon points.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Before and after the service</b>: the countdown into the next part, and more coming soon.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Songs</b>: the next song when one ends.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/settings-12-cues.jpg" alt="Cues: teach spirit your church’s words" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Cues: teach spirit your church’s words</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Cues</b> in the sidebar. At the top, fill in the sentence: <i>When the preacher says</i> “as the ushers make their way” <i>get</i> Offering <i>ready</i>, then press <b>Teach spirit</b>.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Prayer</b>: the phrases spirit already knows for prayer (“let us pray”, “bow your heads”…).</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Giving</b>: “tithes and offerings”, “receive the offering”…</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Welcome</b>, and below it every other moment of the service, each with its phrases.</span></li></ol>
+</div></div>
+<div class="know"><b class="t">Good to know</b><ul><li>spirit also learns by watching: when the same words keep coming before the same part, it suggests them as a new cue.</li><li>If spirit gets something wrong, press <b>Not this</b> beside Next and say why (wrong part, not now, never for these words). It remembers.</li><li><b>Pause</b> (P) on the live screen hands everything back to you at once.</li><li>When listening stops, <b>How it went</b> shows spirit’s score, with <b>Just this once</b> to undo a correction.</li></ul></div>
+</section>
+<section id="planning"><h2>11. Plan your services</h2>
+<p class="intro">Open <b>Services</b> from the page bar (or the service name on the live screen).</p>
+<div class="fig">
+<figure><img src="img/pages-1-services.jpg" alt="Services" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Services</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span>The <b>page bar</b>: Live, Services, Media, Looks, Screens, Training, Settings. Pick a day in the calendar; its services show with <b>Edit</b> and <b>Present</b>. <b>New service</b> is at the top right.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/pages-2-templates.jpg" alt="Templates and ready-made orders" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Templates and ready-made orders</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>New template</b>: your own order of service for a type of service, from a ready-made order, a service you have, or nothing.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Ready-made orders</b>: one for every type of service. <b>Use for</b> the chosen day, or <b>Make it a template</b>.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/pages-3-builder.jpg" alt="The service editor" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>The service editor</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>Type of service</b> (Sunday service, Communion Sunday, Friday Night Prayers…). spirit learns each type separately.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Save as a template</b> keeps this service as a starting point for next time.</span></li></ol>
+</div></div>
+<div class="know"><b class="t">Good to know</b><ul><li>Add parts with the tiles on the left: <b>Scripture</b>, <b>Song</b>, <b>Announcement</b>, <b>Picture</b>, <b>Video</b>, <b>Countdown</b>. Drag to reorder.</li><li><b>Copy for next Sunday</b> (on the Services page) makes a fresh copy of a service.</li><li><b>Present</b> opens the service as a list of slides, with Live and Next beside it.</li></ul></div>
+</section>
+<section id="pages"><h2>12. Media, Looks, Screens and Presenter</h2>
+<div class="fig">
+<figure><img src="img/pages-4-media.jpg" alt="Media" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Media</h3>
+<p class="plain">Pictures, videos and songs. <b>Add files</b> takes pictures, videos and SongSelect song files (.usr or .txt) with their writers, copyright and CCLI number. Songs here are recognised when the church sings them.</p>
+</div></div>
+<div class="fig">
+<figure><img src="img/pages-5-looks.jpg" alt="Looks" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Looks</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span>Three tabs: <b>Design a look</b> (the designer), <b>Which screen uses what</b>, and <b>Colour teams and themes</b>. <b>Backgrounds</b> has moving backgrounds and 40 samples; <b>Starter looks</b> has ready-made designs.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/pages-6-screens.jpg" alt="Screens" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Screens</h3>
+<p class="plain"><b>Right now</b>: what each screen shows. Below it, the same settings as Settings → Screens and outputs.</p>
+</div></div>
+<div class="fig">
+<figure><img src="img/pages-7-presenter.jpg" alt="Presenter" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Presenter</h3>
+<p class="plain">Every slide of the service by section. Click one to show it; <b>Start presenting</b> and <b>Clear to Logo</b> at the top.</p>
+</div></div>
+</section>
+<section id="training"><h2>13. Training</h2>
+<p class="intro">Short lessons on the real screens, in practice: nothing reaches the projector, the stream, the stage or ProPresenter.</p>
+<div class="fig">
+<figure><img src="img/training-1-page.jpg" alt="Training" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Training</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>Training</b> in the page bar (or the Training button on the live screen).</span></li><li><span class="num" aria-hidden="true">2</span><span><b>Show me</b>: Voice Verses does each step, with a pointer and a voice.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>Let me try</b>: you do each step; it waits and checks.</span></li><li><span class="num" aria-hidden="true">4</span><span><b>Watch</b>: the demo, explained aloud.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/training-2-show-me.jpg" alt="Show me" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Show me</h3>
+<ol class="steps"><li><span class="num" aria-hidden="true">1</span><span><b>The step</b>, on a card beside the control. <b>Back</b>, <b>Pause</b>, and <b>Let me try this step</b>.</span></li><li><span class="num" aria-hidden="true">2</span><span><b>The speaker</b> turns the voice on or off. The × (or Esc) leaves the lesson.</span></li><li><span class="num" aria-hidden="true">3</span><span><b>End practice</b> on the violet band stops the lesson.</span></li></ol>
+</div></div>
+<div class="fig">
+<figure><img src="img/training-3-let-me-try.jpg" alt="Let me try" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>Let me try</h3>
+<ol class="steps one"><li><span class="num" aria-hidden="true">1</span><span><b>The lit control</b> is the one to click.</span></li><li><span class="num" aria-hidden="true">2</span><span>Click somewhere else and it says what you clicked, and nothing changes. After two tries it offers <b>Show me this step</b>.</span></li></ol>
+</div></div>
+</section>
+<section id="room"><h2>14. What the room sees</h2>
+<div class="fig">
+<figure><img src="img/outputs-1-projector.jpg" alt="The projector" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>The projector</h3>
+<p class="plain">Scripture, songs and slides in their look, with countdowns and alerts on top.</p>
+</div></div>
+<div class="fig">
+<figure><img src="img/outputs-2-stage.jpg" alt="The stage monitor" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>The stage monitor</h3>
+<p class="plain">The current verse or slide, what is coming next, the clock and any stage countdown or alert.</p>
+</div></div>
+<div class="fig">
+<figure><img src="img/outputs-3-lower-third.jpg" alt="The stream lower third" loading="lazy" width="1440" height="900" tabindex="0"><figcaption>Click the picture to see it full size.</figcaption></figure>
+<div><h3>The stream lower third</h3>
+<p class="plain">The verse on a green key colour for the stream switcher. Over NDI it goes see-through.</p>
+</div></div>
+</section>
+<section id="keyboard"><h2>Keyboard</h2><div class="tablewrap"><table><thead><tr><th>Key</th><th>What it does</th></tr></thead><tbody>
+<tr><td><kbd>Space or Return</kbd></td><td>Take: put Next on the screens</td></tr><tr><td><kbd>Esc</kbd></td><td>Clear the words off the screens</td></tr><tr><td><kbd>→ and ←</kbd></td><td>Next or previous verse or slide</td></tr><tr><td><kbd>⌘K (Mac), Ctrl+K (Windows)</kbd></td><td>Search</td></tr><tr><td><kbd>P</kbd></td><td>Pause or resume spirit</td></tr><tr><td><kbd>Double-click a slide</kbd></td><td>Show it now</td></tr>
+</tbody></table></div></section>
+<section id="trouble"><h2>When something goes wrong</h2><div class="tablewrap"><table class="trouble"><thead><tr><th>If…</th><th>Do this</th></tr></thead><tbody>
+<tr><td>Nothing happens when the preacher speaks</td><td>Look at the booth check light. In Settings → Listening, check the input and speak: the bar must move. With a desk feed, click the preacher’s channel.</td></tr><tr><td>A screen is black or on the wrong display</td><td>Settings → Screens and outputs → Identify screens, then click the screen and choose what it shows.</td></tr><tr><td>A wrong verse was suggested</td><td>Press × on the suggestion. Suggestions never go up by themselves. Switch to Ask first if you want every verse to wait in Next.</td></tr><tr><td>spirit got the wrong part ready</td><td>Press Not this beside Next and say why. Press P to pause spirit.</td></tr><tr><td>ProPresenter’s message covers its screens</td><td>In ProPresenter, Hide the “Voice Verses” message; Voice Verses stops sending until you choose Send again. To stop for good: Settings → ProPresenter → Send verses off.</td></tr><tr><td>Something went up by mistake</td><td>Press Esc to clear, or the Logo button.</td></tr><tr><td>You want to practise</td><td>Training → Your first Sunday → Let me try. Nothing reaches the room.</td></tr>
+</tbody></table></div></section>
+<footer>Pictures from Voice Verses 1.19.1 with its sample service, the King James Version and public-domain hymns.</footer>
+</main></div>
+<dialog class="zoom" id="zoom" aria-label="Picture"><img alt=""><p>Click anywhere to close</p></dialog>
+<script>
+const zoom = document.getElementById('zoom');
+const big = zoom.querySelector('img');
+document.querySelectorAll('.fig img').forEach((img) => {
+  const open = () => { big.src = img.src; big.alt = img.alt; zoom.showModal(); };
+  img.addEventListener('click', open);
+  img.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+});
+zoom.addEventListener('click', () => zoom.close());
+</script>
