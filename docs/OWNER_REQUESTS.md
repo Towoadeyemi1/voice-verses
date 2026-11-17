@@ -443,7 +443,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 (17 Nov 2026.) No: the guide was written from the main screens, not checked against the spec, and the three ProPresenter ways agreed earlier had not been built.
 - ✅ 1.19.3 **ProPresenter's three ways** in Settings → ProPresenter (D32): a slide with linked text (files in a folder, shareable with another computer; Write a test verse; also song words), a slide with Voice Verses' picture over NDI, and the message. Each with its steps in ProPresenter, and checked by the booth check. Checked by `tools/e2e/propresenter-routes.cjs`.
-- ⏳ The guide checked against every feature in the spec (a coverage list the guide's build checks), designing looks in full, the three ProPresenter ways, and every missing feature.
+- ✅ The guide checked against every feature in the spec: 17 sections and 68 numbered pictures, with new sections for **designing looks** (the designer, backgrounds, transitions, starter looks, which screen uses what, colour teams and themes, a slide's own look), **screens** (network, NDI, DeckLink, screen shapes, stage layouts) and **ProPresenter's three ways**, plus the library, Move on by time, Not this, the speech engines, test with a recording, the AI assistant, AI slides, import and export, lyrics and the desktop app. The guide ends with **Every feature, and where to find it**; `tools/guide/build.py` stops if a feature in that list has no section.
 
 ## Process
 

@@ -10,7 +10,19 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from content import KEYS, SECTIONS, SUBTITLE, TITLE, TROUBLE, VERSION  # noqa: E402
+from content import FEATURES, KEYS, SECTIONS, SUBTITLE, TITLE, TROUBLE, VERSION  # noqa: E402
+
+# Sections are numbered here, so adding one never means renumbering by hand ("Before you start" has no number)
+for _i, _s in enumerate(SECTIONS):
+    if _s["id"] != "start":
+        _s["title"] = f"{_i}. {_s['title']}"
+EXTRA = {"keyboard": "Keyboard", "trouble": "When something goes wrong"}
+TITLES = {s["id"]: s["title"] for s in SECTIONS} | EXTRA
+
+# Every feature must point at a section that exists: the guide can't quietly leave one out
+_bad = [f for f, sid in FEATURES if sid not in TITLES]
+if _bad:
+    sys.exit("Features with no section: " + "; ".join(_bad))
 
 OUT = os.path.join(os.path.dirname(__file__), "../../docs/user-guide")
 
@@ -29,7 +41,7 @@ def markdown() -> str:
     out = [f"# {TITLE}", "", f"{SUBTITLE} (Version {VERSION}.)", "", "## Contents", ""]
     for s in SECTIONS:
         out.append(f"- [{s['title']}](#{s['id']})")
-    out += ["- [Keyboard](#keyboard)", "- [When something goes wrong](#trouble)", ""]
+    out += ["- [Keyboard](#keyboard)", "- [When something goes wrong](#trouble)", "- [Every feature, and where to find it](#features)", ""]
     for s in SECTIONS:
         out += [f'<a id="{s["id"]}"></a>', "", f"## {s['title']}", ""]
         if s.get("intro"):
@@ -50,6 +62,8 @@ def markdown() -> str:
     out += [f"| {k} | {v} |" for k, v in KEYS] + [""]
     out += ['<a id="trouble"></a>', "", "## When something goes wrong", "", "| If… | Do this |", "| --- | --- |"]
     out += [f"| {k} | {v} |" for k, v in TROUBLE] + [""]
+    out += ['<a id="features"></a>', "", "## Every feature, and where to find it", "", "| Feature | In this guide |", "| --- | --- |"]
+    out += [f"| {f} | [{TITLES[sid]}](#{sid}) |" for f, sid in FEATURES] + [""]
     out += ["---", "", "The pictures are made by `tools/guide/capture.cjs` from the real app with its sample service; the words are in `tools/guide/content.py`. Run both again when the app changes.", ""]
     return "\n".join(out)
 
@@ -150,7 +164,7 @@ def page() -> str:
     h.append('<nav class="toc" aria-label="Contents"><span class="k">Contents</span>')
     for s in SECTIONS:
         h.append(f'<a href="#{s["id"]}">{html.escape(s["title"])}</a>')
-    h.append('<a href="#keyboard">Keyboard</a><a href="#trouble">When something goes wrong</a></nav>')
+    h.append('<a href="#keyboard">Keyboard</a><a href="#trouble">When something goes wrong</a><a href="#features">Every feature</a></nav>')
     h.append("<main>")
     h.append('<header class="top">')
     h.append(f'<span class="kicker">Voice Verses {VERSION} · for the booth</span>')
@@ -184,6 +198,9 @@ def page() -> str:
     h.append("</tbody></table></div></section>")
     h.append('<section id="trouble"><h2>When something goes wrong</h2><div class="tablewrap"><table class="trouble"><thead><tr><th>If…</th><th>Do this</th></tr></thead><tbody>')
     h.append("".join(f"<tr><td>{html.escape(k)}</td><td>{html.escape(v)}</td></tr>" for k, v in TROUBLE))
+    h.append("</tbody></table></div></section>")
+    h.append('<section id="features"><h2>Every feature, and where to find it</h2><div class="tablewrap"><table class="trouble"><thead><tr><th>Feature</th><th>In this guide</th></tr></thead><tbody>')
+    h.append("".join(f'<tr><td>{html.escape(f)}</td><td><a href="#{sid}">{html.escape(TITLES[sid])}</a></td></tr>' for f, sid in FEATURES))
     h.append("</tbody></table></div></section>")
     h.append(f"<footer>Pictures from Voice Verses {VERSION} with its sample service, the King James Version and public-domain hymns.</footer>")
     h.append("</main></div>")

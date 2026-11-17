@@ -1,10 +1,11 @@
+import re
 # The user guide's words. build.py turns them into docs/user-guide/README.md and index.html.
 # Each figure's numbered steps match the numbered markers in its picture (tools/guide/capture.cjs).
 # Plain words, from the volunteer's side of the screen. "spirit" always has a small s.
 
 TITLE = "Voice Verses Guide"
 SUBTITLE = "How to use every part of Voice Verses, step by step. The numbers in each picture match the numbered steps under it."
-VERSION = "1.19.1"
+VERSION = "1.19.3"
 
 SECTIONS = [
     {
@@ -451,4 +452,385 @@ TROUBLE = [
     ("ProPresenter’s message covers its screens", "In ProPresenter, Hide the “Voice Verses” message; Voice Verses stops sending until you choose Send again. To stop for good: Settings → ProPresenter → Send verses off."),
     ("Something went up by mistake", "Press Esc to clear, or the Logo button."),
     ("You want to practise", "Training → Your first Sunday → Let me try. Nothing reaches the room."),
+]
+
+# ---- Added after the owner's check (1.19.3): every feature, with ProPresenter's three ways and designing looks ----
+
+def _sec(sid):
+    return next(s for s in SECTIONS if s["id"] == sid)
+
+
+def _drop(sid, img):
+    sec = _sec(sid)
+    sec["figures"] = [f for f in sec["figures"] if f["img"] != img]
+
+
+def _insert_after(sid, section):
+    SECTIONS.insert(SECTIONS.index(_sec(sid)) + 1, section)
+
+
+_sec("live")["figures"] += [
+    {
+        "img": "live-3-more",
+        "caption": "The library, moving on by time, and spirit",
+        "steps": [
+            "**Library** (top left): the Bible, your songs and your services, to pick from during the service.",
+            "**Move on by time**: when a part’s time is up, the next part loads by itself (into Next, or on screen if picking a slide goes live). The sermon, a verse on screen and a song being sung never move on by themselves.",
+            "**Pause** (or the P key): spirit stops getting things ready by itself until you press it again.",
+        ],
+    },
+    {
+        "img": "live-4-library",
+        "caption": "The library",
+        "steps": ["Three tabs: **Bible** (type a reference; *History* shows what was on screen), **Songs** (your song library) and **Service** (today’s services, coming up and earlier, each part with its slides). Click anything to pick it."],
+    },
+]
+_sec("live")["points"] = [
+    "**Several services on the same day** sit side by side before the order of service; one click switches between them.",
+    "The window can be any size: on a wide monitor the library stays open as a column on the left.",
+]
+
+_sec("spirit")["figures"].insert(0, {
+    "img": "live-5-not-this",
+    "caption": "When spirit gets something wrong",
+    "steps": [
+        "spirit put **Blessed Assurance** in Next because the last slide of the song before it went up. Next says why.",
+        "**Not this** tells spirit it was wrong.",
+        "Say why in one tap: **Wrong part**, **Not now** or **Never for these words**. spirit remembers.",
+    ],
+})
+
+LOOKS = {
+    "id": "looks",
+    "title": "Design how things look",
+    "intro": "A **look** is the design for one kind of thing on one screen: scripture on the projector, songs on the stream, and so on. Change a look and every slide that uses it changes, on the screens straight away. Open **Looks** from the page bar.",
+    "figures": [
+        {
+            "img": "pages-5-looks",
+            "caption": "Looks",
+            "steps": [
+                "Three tabs: **Design a look**, **Which screen uses what**, and **Colour teams and themes**. Click a look in the row to design it.",
+                "**Backgrounds**: moving backgrounds made by the app, and 40 ready-made samples.",
+                "**Starter looks**: ready-made designs to add and change.",
+                "**New look** starts one from nothing.",
+            ],
+        },
+        {
+            "img": "looks-1-designer",
+            "caption": "The designer",
+            "steps": [
+                "**On this slide**: click the part to change (Background, Main text, Reference / title, Logo, Transition). **Text**, **Shape** and **Picture** at the bottom add your own layers.",
+                "Try it with a **short verse**, a **long verse**, a **song** or an **announcement**, so it works for all of them.",
+                "**Undo** and **Redo** (⌘Z and ⇧⌘Z).",
+                "**Duplicate** makes a copy to change. **Reset** puts a built-in look back as it came.",
+            ],
+        },
+        {
+            "img": "looks-2-background",
+            "caption": "Change the background",
+            "steps": [
+                "Click **Background**.",
+                "Choose **Colour**, **Gradient**, **Moving**, **Picture** or **Video**. Moving backgrounds are drawn by the app in your team’s colours, with a speed (0 is still). A picture or video can be dimmed and blurred so the words stay readable.",
+            ],
+        },
+        {
+            "img": "looks-3-backgrounds",
+            "caption": "Backgrounds",
+            "steps": ["**In your colours** (they follow your colour team) or **Samples (40)**. Pick one, choose what it goes behind on the projector (**Scripture**, **Songs**, **Announcements**, **Countdowns**), then press **Use**."],
+        },
+        {
+            "img": "looks-4-starters",
+            "caption": "Starter looks",
+            "steps": ["Tabs for Scripture, Songs, Announcements, Countdowns and Lower thirds. **Add** copies one into your looks; **Use on projector** puts it to work straight away."],
+        },
+        {
+            "img": "looks-5-assign",
+            "caption": "Which screen uses what",
+            "steps": ["For each screen (the projector, the lower third for the stream, the stage), choose the look for **Scripture**, **Songs**, **Announcements** and **Countdowns**."],
+        },
+        {
+            "img": "looks-6-teams",
+            "caption": "Colour teams and themes",
+            "steps": ["**Colour team**: five colours every look can use. Change the team and every look changes with it. **Change with the month** picks the team for the season (Advent purple in December, Easter in April). **More colour teams** adds Christmas, Lent, Youth and others; **New team** makes your own. **Themes** set every look and a colour team in one click (**Use this theme**)."],
+        },
+        {
+            "img": "pages-3b-slide-menu",
+            "caption": "One slide, its own look",
+            "steps": ["In the service editor, open a slide’s **⋮** menu and choose **Design…**"],
+        },
+        {
+            "img": "pages-3c-slide-design",
+            "caption": "Designing one slide",
+            "steps": ["The same designer, for this slide. At the bottom, choose where it applies: **This slide**, or every slide of that kind (for example **Every announcements slide**)."],
+        },
+    ],
+    "points": [
+        "**Move and resize**: drag the text box to move it, and its corners to resize it. Pink guide lines show when things line up.",
+        "**The text panel** on the right: font, largest size (long verses shrink to fit), bold, italic, underline and highlight, colours (the team’s colours or any), alignment, up or down, line and letter spacing, shadow and outline, a box behind the text, and where it sits.",
+        "**Single words**: select words in the text and use the bold, italic, underline, highlight or colour buttons.",
+        "**Transitions**: click *Transition* in the list: dissolve, through black, lift, zoom, push or cut, from 0.2 to 3 seconds. A slide in a service can have its own.",
+        "**During the service**: Quick edit (the pencil on a slide, or Edit above Live) changes a slide’s words or look on the spot.",
+        "Slow computer? Settings → Screens and outputs → *Moving backgrounds on this computer* can keep them still.",
+    ],
+}
+_insert_after("booth-check", LOOKS)
+
+SCREENS = {
+    "id": "screens",
+    "title": "Screens: projector, stream and stage",
+    "intro": "Voice Verses puts each output on its screen by itself, every time. Open Settings → **Screens and outputs** (or the **Screens** page).",
+    "figures": [
+        next(f for f in _sec("settings")["figures"] if f["img"] == "settings-4-screens"),
+        {
+            "img": "settings-4b-network",
+            "caption": "Screens on the network",
+            "steps": ["Click **On the network** in the picture of the room and switch **Share** on. Any browser on the church network can then show an output: a smart TV, a tablet on stage, another computer, or OBS and vMix as a browser source. The addresses it shows can be copied; the port is 47100."],
+        },
+        {
+            "img": "settings-4c-ndi",
+            "caption": "NDI® on the network",
+            "steps": ["Click **NDI on the network**. Each output can be an NDI source for vMix, OBS, TriCaster, NDI converters and ProPresenter; the lower third goes see-through. It needs the free **NDI Runtime** on this computer (NDI Tools, from ndi.video/tools)."],
+        },
+        {
+            "img": "settings-4d-outputs",
+            "caption": "Each output, and where it goes",
+            "steps": ["Every output with its picture, where it is shown, its **screen shape** (match the screen, 16:9, 16:10, 4:3, ultrawide or your own size) and **Send it somewhere else too**: one output can go to a screen and a DeckLink port and the network at once."],
+        },
+        {
+            "img": "settings-4e-ways",
+            "caption": "Ways to connect a screen",
+            "steps": ["**Ways to connect a screen**: a display cable (HDMI, DisplayPort, USB‑C, AirPlay), **Blackmagic DeckLink** (SDI straight into the switcher; choose the video format your switcher uses and press *Show test colours*), the network, ProPresenter and NDI. Each says whether it is ready."],
+        },
+        {
+            "img": "outputs-2b-stage-settings",
+            "caption": "The stage monitor’s own settings",
+            "steps": ["On the stage monitor, move the mouse and click the gear. **Start from a layout** (Classic, Large words, Preacher, Singers or High contrast), then change colours and sizes."],
+        },
+    ],
+    "points": [
+        "Esc on an output that sits on your own screen turns it off.",
+        "If a screen is unplugged, its output comes back by itself when it is plugged in again, and the booth check says so meanwhile.",
+        "An HDMI-to-SDI converter on a spare video output works too, like any other screen.",
+    ],
+}
+_drop("settings", "settings-4-screens")
+_insert_after("looks", SCREENS)
+
+PROPRESENTER = {
+    "id": "propresenter",
+    "title": "ProPresenter: three ways to connect",
+    "intro": "ProPresenter is optional: Voice Verses’ own screens keep working whichever way you choose, and nothing is sent while you practise. Open Settings → **ProPresenter** and choose how the words get there.",
+    "figures": [
+        {
+            "img": "pp-1-linked",
+            "caption": "Way 1: a slide with linked text (recommended for most churches)",
+            "steps": [
+                "Choose **A slide with linked text**. Your team keeps control: they put the slide up and take it down, and each screen keeps its own look.",
+                "**Send the words to ProPresenter**: on for the service.",
+                "**Also song words**: song slides go there too, if you want.",
+                "**The folder** where Voice Verses writes the words. **Show the files** opens it. If ProPresenter is on another computer, press **Choose another folder** and pick a folder both computers can see (a shared folder, or a Dropbox, iCloud or OneDrive folder).",
+                "**Write a test verse** writes John 3:16 now (even with sending off), so you can link the text box and see it. **Clear it** empties it.",
+            ],
+        },
+        {
+            "img": "pp-2-linked-steps",
+            "caption": "Way 1, in ProPresenter (once)",
+            "steps": ["The page lists the six steps: **make a slide** called “Voice Verses” with a text box; select the text box → **Format → Linked Text → File** → choose **verse.txt** (or *verse-and-reference.txt*; a second box can show *reference.txt*); press **Write a test verse** here and the box shows John 3:16; give it the look you want on each screen; in the service, **put the slide up** when the reading starts, and its words follow Voice Verses."],
+        },
+        {
+            "img": "pp-3-ndi",
+            "caption": "Way 2: a slide with Voice Verses’ picture",
+            "steps": [
+                "Choose **A slide with Voice Verses’ picture**. ProPresenter shows exactly what Voice Verses draws: verses, songs, slides and countdowns, with the same look on every screen.",
+                "Switch on **Send the projector over NDI**. This computer needs the free NDI Runtime (NDI Tools, from ndi.video/tools).",
+                "In ProPresenter, once: **Settings → Inputs**, add an NDI input and choose “… (Voice Verses Projector)”; then make a slide whose background is that input, and put it up when the reading starts.",
+            ],
+        },
+        {
+            "img": "pp-4-message",
+            "caption": "Way 3: a message over everything",
+            "steps": [
+                "Choose **A message over everything**. It is the quickest to set up, but the message shows over every screen whose Look has Messages on.",
+                "Switch **Send verses** on. Under it, **ProPresenter on your network** lists every ProPresenter found; press **Connect** beside yours. Voice Verses makes the “Voice Verses” message with a lower-third theme.",
+            ],
+        },
+        {
+            "img": "pp-5-message-more",
+            "caption": "Way 3: what ProPresenter shows",
+            "steps": [
+                "**Also on ProPresenter’s stage screens** sends a stage message as well.",
+                "**Send a test verse**, then **Clear it**.",
+                "**Why isn’t it on the screens?** lists what ProPresenter says (the message, its layers and the Look on each screen) and what to change.",
+            ],
+        },
+    ],
+    "points": [
+        "**Which way?** Linked text if your team runs ProPresenter and wants its own looks and control. The NDI picture if you want Voice Verses’ look (and songs and slides) inside ProPresenter. The message only for a quick start.",
+        "**Clear** (Esc), the **Logo**, or a song or slide going up takes Voice Verses’ verse off ProPresenter (linked text: the files are emptied).",
+        "With the message: if someone presses **Hide** in ProPresenter, Voice Verses stops sending and offers **Send again**.",
+        "**ProPresenter not found?** In ProPresenter: Settings → Network → Enable Network, on the same network. Or type its address (Not in the list? → Type the address yourself).",
+        "The booth check checks the way you chose: the folder, the NDI picture, or the message.",
+    ],
+}
+_drop("settings", "settings-5-propresenter")
+_insert_after("screens", PROPRESENTER)
+
+_settings = _sec("settings")["figures"]
+_settings.insert([f["img"] for f in _settings].index("settings-3-listening") + 1, {
+    "img": "settings-3b-engine",
+    "caption": "Listening: how speech is heard",
+    "steps": ["**How speech is heard**: *On this computer* (recommended: offline and private), *The browser* (the web version only) or *OpenAI* (over the internet, with your own key)."],
+})
+_settings.insert([f["img"] for f in _settings].index("settings-3b-engine") + 1, {
+    "img": "settings-3c-ai",
+    "plain": True,
+    "caption": "Listening: test a recording, and the AI assistant",
+    "steps": ["**Test with a recording**: choose a recorded service (MP3, M4A or WAV) and see every verse Voice Verses would have shown. **AI verse assistant** (optional): with Claude, OpenAI, Ollama or LM Studio on your own computer, or another compatible server, it also recognises verses quoted or described instead of named. Keys are kept in the computer’s own keychain, never in the web version."],
+})
+_settings.append({
+    "img": "settings-9b-desktop",
+    "caption": "Desktop app",
+    "steps": ["**Desktop app** in the sidebar: downloads for Mac (Apple chip or Intel) and Windows. Each is one installer with everything, the offline speech engine included. A new version is offered when it comes out."],
+})
+
+_planning = _sec("planning")
+_planning["figures"][0] = {
+    "img": "pages-1-services",
+    "caption": "Services",
+    "steps": [
+        "The **page bar**: Live, Services, Media, Looks, Screens, Training, Settings. Pick a day in the calendar; its services show under it.",
+        "**New service**.",
+        "**Import** a service saved to a file (from another computer or church).",
+        "**Copy for next Sunday** makes a fresh copy.",
+        "**Save to a file**, to send or keep.",
+        "**Present** opens it to run; **Edit** opens the editor.",
+    ],
+}
+_planning["figures"][2] = {
+    "img": "pages-3-builder",
+    "caption": "The service editor",
+    "steps": [
+        "**Type of service** (Sunday service, Communion Sunday, Friday Night Prayers…). spirit learns each type separately.",
+        "**Save as a template** keeps this service as a starting point for next time.",
+        "**Present** runs it.",
+        "**Save**.",
+    ],
+}
+_planning["figures"] += [
+    {
+        "img": "pages-3d-add",
+        "caption": "Add to a part",
+        "steps": [
+            "Click a part in the order, then **Add to “…”**: Scripture, Song, Announcement, Picture, Video or Blank. Drag parts and slides to reorder; each part has a timer for the timeline.",
+            "**Make with AI** turns the bulletin or sermon notes into slides.",
+        ],
+    },
+    {
+        "img": "pages-3e-ai-slides",
+        "caption": "Make slides with AI (optional)",
+        "steps": ["**Announcements from a bulletin** or **Sermon points from notes**: paste the words, press **Write the slides**, check them, then **Add slides to this item**. It needs an AI provider (Settings → Listening → AI verse assistant); it keeps your dates, times and places as written."],
+    },
+]
+_planning["points"] = [
+    "A part can have its own **countdown** that starts with its first slide (the Countdown before the service does this).",
+    "**Remove samples** takes away the sample services and songs the app came with.",
+]
+
+_pages = _sec("pages")
+_pages["title"] = "Media, the Screens page and Presenter"
+_pages["figures"] = [
+    {
+        "img": "pages-4-media",
+        "caption": "Media",
+        "steps": [
+            "**Add files**: pictures, videos, and SongSelect songs (.usr or .txt), kept with their writers, copyright and CCLI number.",
+            "Show **Everything**, **Pictures**, **Videos** or **Songs**, or search by name.",
+            "**Lyrics** opens a song’s words.",
+        ],
+    },
+    {
+        "img": "pages-4b-lyrics",
+        "caption": "A song’s words",
+        "steps": ["Start each section with its name (Verse 1, Chorus, Bridge) and leave a blank line between sections. **Save lyrics**. Songs in your library are recognised when the church sings them."],
+    },
+] + [f for f in _pages["figures"] if f["img"] in ("pages-6-screens", "pages-7-presenter")]
+
+# Settings section now covers only what isn't elsewhere
+_sec("settings")["intro"] = "Open Settings with the gear. Everything saves as you change it; there is no Save button to forget. Screens and ProPresenter have their own sections above."
+
+# Section titles are numbered by build.py
+for _s in SECTIONS:
+    _s["title"] = re.sub(r"^\d+\.\s*", "", _s["title"])
+
+
+# ---- Every feature, and where the guide teaches it (build.py checks each section exists) ----
+
+FEATURES = [
+    ("Set up your booth on a new computer; open again from Booth check", "setup"),
+    ("The live screen: Live, Next, Take, Clear, Logo", "live"),
+    ("When I pick a slide: Goes live / Waits in Next", "live"),
+    ("Auto / Ask first", "live"),
+    ("Library: Bible, songs, services; History", "live"),
+    ("Several services on one day", "live"),
+    ("Move on by time", "live"),
+    ("The narrated demo", "demo"),
+    ("Search (⌘K) for verses, songs, parts and actions", "verse"),
+    ("Translation switch (KJV ▾) on the live screen", "verse"),
+    ("Next and previous verse with the arrow keys", "verse"),
+    ("Listening: verses said outright, read aloud, ranges, a chapter waiting for its verse", "listening"),
+    ("Suggestions for quotes and stories, with how sure and why; all suggestions", "listening"),
+    ("Song mode (♪ Song)", "songs"),
+    ("Songs follow the singers; worship leader’s cues; new singing captured", "songs"),
+    ("Slide strip, grid, double-click to show", "songs"),
+    ("Quick edit during the service", "songs"),
+    ("Countdowns (several, per screen, yellow and red, blink)", "countdowns"),
+    ("Alerts (nursery, car, stage notes)", "countdowns"),
+    ("Booth check and warnings during the service", "booth-check"),
+    ("Looks: the designer (text, layers, shapes, pictures, undo)", "looks"),
+    ("Backgrounds: colour, gradient, moving, picture, video; the gallery and samples", "looks"),
+    ("Transitions", "looks"),
+    ("Starter looks", "looks"),
+    ("Which screen uses what", "looks"),
+    ("Colour teams, change with the month, themes", "looks"),
+    ("A slide’s own look", "looks"),
+    ("Formatting single words", "looks"),
+    ("Screens and outputs: each output on its display; Identify screens", "screens"),
+    ("Screen shapes and ultrawide", "screens"),
+    ("Screens on the network (browsers, smart TVs, OBS, vMix)", "screens"),
+    ("NDI® output", "screens"),
+    ("Blackmagic DeckLink SDI output", "screens"),
+    ("Stage monitor layouts and settings", "screens"),
+    ("Moving backgrounds on a slow computer", "looks"),
+    ("ProPresenter: a slide with linked text", "propresenter"),
+    ("ProPresenter: a slide with Voice Verses’ NDI picture", "propresenter"),
+    ("ProPresenter: the message; stage message; Why isn’t it on the screens?", "propresenter"),
+    ("ProPresenter found on the network; type the address", "propresenter"),
+    ("Features and presets", "settings"),
+    ("Microphone, desk channel and sound check", "settings"),
+    ("Speech engines: on this computer, browser, OpenAI", "settings"),
+    ("Test with a recording", "settings"),
+    ("AI verse assistant (Claude, OpenAI, Ollama, LM Studio, compatible)", "settings"),
+    ("Bible translations: KJV, ASV, WEB, your own; ESV, NLT, API.Bible", "settings"),
+    ("CCLI licence number", "settings"),
+    ("Church logo", "settings"),
+    ("Library folder and backup across computers", "settings"),
+    ("Desktop app downloads and updates", "settings"),
+    ("spirit: how much it does, what it does, cues, Not this, Pause, How it went", "spirit"),
+    ("Moments on cue and sermon points", "spirit"),
+    ("Services: calendar, new, import, save to a file, copy for next Sunday", "planning"),
+    ("Service templates, ready-made orders, types of service", "planning"),
+    ("The service editor: parts, slides, timers, reorder", "planning"),
+    ("Make slides with AI", "planning"),
+    ("Media: pictures, videos, SongSelect import, lyrics", "pages"),
+    ("Presenter", "pages"),
+    ("Training: Show me, Let me try, practice", "training"),
+    ("What the projector, stage and stream show", "room"),
+    ("Keyboard", "keyboard"),
+    ("When something goes wrong", "trouble"),
+]
+
+TROUBLE = [
+    (k, "Choose A slide with linked text in Settings → ProPresenter: your team then puts the verse slide up and takes it down. For now, Hide the message in ProPresenter: Voice Verses stops sending until you choose Send again.")
+    if k.startswith("ProPresenter’s message") else (k, v)
+    for k, v in TROUBLE
 ]
