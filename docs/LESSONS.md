@@ -160,6 +160,10 @@ Check this list before debugging. Add every new mistake that cost time.
 - **A word before a book ate the book's number.** "Then 1 Cor 13:4" matched "Then 1" as a failed book first and consumed the "1". When a pattern match turns out not to be the thing, resume just after the word, not after the whole match (`importers/references.ts`).
 - **Long text in a grid pushed a column off the dialog.** `1fr` columns have an automatic minimum the width of their content; a long verse preview widened its column. Use `minmax(0, 1fr)` and `min-w-0` where text should shorten.
 
+## Releases
+
+- **The Mac installer for v1.19.7 was never built.** GitHub's `macos-latest` job waited 15 minutes for a Mac and was cancelled without running a step, and the same again on re-runs, while Windows built in 6 minutes and GitHub reported no outage. Nothing in the code had changed. Ask for a named image (`macos-15`) rather than `latest`, which moves to new images. A re-run uses the workflow saved with the tag, so a workflow fix needs a new release tag.
+
 ## Hardware
 
 - **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).

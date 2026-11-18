@@ -84,7 +84,7 @@ All promised, none built yet. Do them in this order after design 4:
 2. ⏳ On-screen messages, and layers (props) that stay up across slides
 3. ⏳ Several timers at once
 4. ⏳ A stage-display layout editor; the preacher's outline on the stage monitor
-5. ⏳ PowerPoint import
+5. ✅ PowerPoint import (1.19.7, Add from a file: .pptx as words, PDF as pictures)
 6. ⏳ CCLI usage reporting
 7. ⏳ Verses on phones (QR code)
 8. ⏳ Live captions and translation
@@ -462,7 +462,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ **Approved** (17 Nov 2026, "Approved."): the design page (event bus, module registry, local API, service package, pairing with scoped keys, the build order, CCCG both ways). Recorded as D33 and `docs/architecture/README.md`.
 - ✅ 1.19.4 **Step 2.1, the bus and the registry:** nine modules register with manifests; what the screens show, Next, listening, what was heard, verses found, suggestions, services, songs and media and the Bible translation are announced as events; ProPresenter now follows the bus instead of being called by the live screen (so it also follows Presenter and the playlist). Nothing changes on screen. Checked by `tools/checks/bus-check.ts` (CI) and `tools/e2e/event-bus.cjs`.
 - ✅ 1.19.5 **Step 2.2, the local API v1** ("Start"): Settings → Other apps and devices turns it on; a device pairs once with a six-digit code and gets its own key (see only, or see and control); paired devices show a verse, put one in Next, Take, go forward or back, Clear and show the logo; they follow every event as it happens (Server-Sent Events, WebSocket or signed webhooks); Voice Verses announces itself on the network (Bonjour); removing a device ends its key at once. For developers: `docs/api/README.md`, OpenAPI and AsyncAPI. Checked by `tools/checks/api-check.mjs` (CI) and `tools/e2e/local-api.cjs`.
-- ⏳ Next: step 2.3, the service package (expected scriptures feeding detection and Next) and importers (PowerPoint, PDF, Word, SongSelect).
+- ✅ Step 2.3 done: the service package (1.19.6) and Add from a file (1.19.7), below.
 
 ## "Please continue with 2.3"
 
