@@ -54,6 +54,8 @@ export interface EventMap {
   'service.deleted': { id: string };
   'media.updated': { id: string; kind: string; name: string };
   'media.deleted': { id: string };
+  /** A service package arrived (1.19.6) and became, or updated, a service */
+  'package.received': { serviceId: string; name: string; date: string; from: string; created: boolean; warnings: number };
   /** The translation on the screens changed */
   'bible.changed': { translation: string; label: string };
   /** A module started and told the registry what it does */

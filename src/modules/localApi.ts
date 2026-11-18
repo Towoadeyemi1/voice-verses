@@ -14,6 +14,9 @@ import { listModules } from '@/core/registry';
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { loadNetworkSettings } from '@/lib/networkPublisher';
 import type { Service } from '@/types/service';
+import { toast } from 'sonner';
+import { CommandError } from '@/core/commands';
+import { PackageError, packageFromService, receivePackage } from '@/lib/servicePackage';
 
 const SETTINGS_KEY = 'voice-verses-api';
 
@@ -78,6 +81,26 @@ export function startLocalApiModule(): void {
     const date = typeof body.date === 'string' ? body.date : null;
     const services = (await ServiceStorage.getServices()).filter((s) => !s.isTemplate && (!date || day(s.date) === date));
     return { services: services.map(serviceSummary) };
+  });
+
+  // A service package sent in (1.19.6): becomes, or updates, a service of that day
+  answer('services.receive', async (body) => {
+    try {
+      const got = await receivePackage(body.package, { app: typeof body.app === 'string' ? body.app : undefined });
+      toast.success(`${got.service.name} ${got.created ? 'arrived' : 'was updated'} from ${got.service.from?.app ?? 'another app'}`, {
+        description: got.warnings.length ? `${got.warnings.length} thing${got.warnings.length === 1 ? '' : 's'} to check: ${got.warnings[0]}` : 'It is in Services, ready for its day.',
+        duration: 10_000,
+      });
+      return { serviceId: got.service.id, created: got.created, songsAdded: got.songsAdded, warnings: got.warnings };
+    } catch (error) {
+      if (error instanceof PackageError) throw new CommandError(400, error.message);
+      throw error;
+    }
+  });
+  answer('services.package', async (body) => {
+    const service = (await ServiceStorage.getServices()).find((s) => s.id === body.id);
+    if (!service) throw new CommandError(404, 'No such service.');
+    return packageFromService(service);
   });
 
   api.onCommand(async ({ id, command, body }) => {

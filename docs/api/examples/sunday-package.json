@@ -1,0 +1,38 @@
+{
+  "package": "1.0",
+  "id": "cccg-2026-11-22-0900",
+  "service": { "name": "Sunday Celebration", "date": "2026-11-22", "time": "09:00", "type": "Sunday service" },
+  "source": { "app": "CCCG Dashboard", "updatedAt": "2026-11-20T18:02:00Z" },
+  "order": [
+    { "part": "Countdown", "minutes": 5 },
+    { "part": "Worship", "minutes": 20, "songs": ["amazing-grace", "Holy, Holy, Holy"] },
+    { "part": "Announcements", "minutes": 5, "announcements": ["youth-night"] },
+    { "part": "The Word", "minutes": 40, "scriptures": ["John 3:16"], "slides": [{ "title": "Point 1", "text": "Grace finds us where we are" }, { "title": "Point 2", "text": "Grace changes how we live" }], "notes": "Three points on grace." },
+    { "part": "Offering", "minutes": 5 }
+  ],
+  "expectedScriptures": [
+    { "reference": "Romans 5:8", "part": "The Word" },
+    { "reference": "Ephesians 2:8-9" },
+    { "reference": "Titus 2:11" }
+  ],
+  "songs": [
+    {
+      "id": "amazing-grace",
+      "title": "Amazing Grace",
+      "writers": "John Newton",
+      "copyright": "Public Domain",
+      "lyrics": "Verse 1\nAmazing grace! how sweet the sound,\nThat saved a wretch like me!\nI once was lost, but now am found,\nWas blind, but now I see.\n\nVerse 2\n'Twas grace that taught my heart to fear,\nAnd grace my fears relieved;\nHow precious did that grace appear\nThe hour I first believed!"
+    },
+    {
+      "title": "Holy, Holy, Holy",
+      "writers": "Reginald Heber, John B. Dykes",
+      "copyright": "Public Domain",
+      "lyrics": "Verse 1\nHoly, holy, holy! Lord God Almighty!\nEarly in the morning our song shall rise to Thee;\nHoly, holy, holy, merciful and mighty!\nGod in three Persons, blessed Trinity!"
+    }
+  ],
+  "announcements": [
+    { "id": "youth-night", "title": "Youth night", "text": "Friday at 7pm in the main hall." },
+    { "title": "Prayer meeting", "text": "Wednesday at 6:30pm." }
+  ],
+  "notes": "Theme: grace."
+}

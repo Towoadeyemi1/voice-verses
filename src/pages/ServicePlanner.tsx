@@ -18,6 +18,7 @@ import { colorFor } from '@/components/live/ServiceTimeline';
 import { useLibraryUpdated } from '@/hooks/use-library-updated';
 import { SERVICE_EXPORT_EXTENSION, exportService, importService } from '@/lib/library/files';
 import { addSamples, removeSamples, SAMPLES_CHANGED } from '@/lib/samples/seed';
+import { looksLikePackage, receivePackage } from '@/lib/servicePackage';
 
 const shortDay = (d: Date) => d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
 
@@ -150,7 +151,25 @@ const ServicePlanner = () => {
     if (!file) return;
 
     try {
-      const imported = importService(await file.text());
+      const text = await file.text();
+      // A service package (1.19.6), e.g. saved from the CCCG Dashboard or Planning Center
+      let parsed: unknown = null;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        // Not JSON: importService says so below
+      }
+      if (looksLikePackage(parsed)) {
+        const got = await receivePackage(parsed, { app: 'a file' });
+        await loadServices();
+        setSelectedDate(got.service.date);
+        toast.success(`${got.created ? 'Added' : 'Updated'} “${got.service.name}”`, {
+          description: got.warnings.length ? `${got.warnings.length} thing${got.warnings.length === 1 ? '' : 's'} to check: ${got.warnings.join(' ')}` : got.songsAdded ? `${got.songsAdded} new song${got.songsAdded === 1 ? '' : 's'} added to the library.` : undefined,
+          duration: got.warnings.length ? 15_000 : 5_000,
+        });
+        return;
+      }
+      const imported = importService(text);
       const exists = services.some(s => s.id === imported.id);
       // Importing next to the original keeps both instead of overwriting
       const service: Service = exists
@@ -309,6 +328,11 @@ const ServicePlanner = () => {
                           <span className="flex items-center gap-2 text-[17px] font-semibold min-w-0">
                             <span className="truncate">{service.name.replace(/^Sample: /, '')}</span>
                             {service.sample && <span className="flex-shrink-0 h-6 px-2 rounded-full bg-primary/20 text-[12px] font-semibold grid place-items-center">Sample</span>}
+                            {service.from && (
+                              <span className="flex-shrink-0 h-6 px-2 rounded-full bg-muted text-[12px] font-semibold text-muted-foreground grid place-items-center" title={`Received ${new Date(service.from.receivedAt).toLocaleString()}`} data-service-from>
+                                From {service.from.app}
+                              </span>
+                            )}
                           </span>
                           <span className="block text-sm text-muted-foreground">
                             {service.startTime} · {items} item{items === 1 ? '' : 's'}

@@ -111,6 +111,11 @@ jobs:
       - name: "CHECK 11: Local API (pairing, keys, commands, events, webhooks, Bonjour)"
         run: node tools/checks/api-check.mjs
 
+      - name: "CHECK 12: Service packages"
+        run: |
+          npx esbuild tools/checks/package-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/package-check.cjs --log-level=error
+          node /tmp/package-check.cjs
+
       - name: QA Summary
         if: success()
         run: |

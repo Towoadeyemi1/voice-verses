@@ -3,7 +3,7 @@
  "info": {
   "title": "Voice Verses local API",
   "version": "1.0.0",
-  "x-app-version": "1.19.4",
+  "x-app-version": "1.19.6",
   "description": "Control Voice Verses and follow what it does from other apps and devices on the church network. Turn it on in Voice Verses: Settings → Other apps and devices. The address is shown there (port 47100 unless changed), and Voice Verses announces itself with Bonjour as _voiceverses._tcp.\n\nPair once: Voice Verses shows a six-digit code; POST it to /pair and keep the key you receive. Send the key as `Authorization: Bearer <key>` on every request (event streams also accept `?key=`, for browsers' EventSource and WebSocket). Each key is allowed some of: read, control, write.\n\nLive events are described in asyncapi.json.",
   "license": {
    "name": "See the Voice Verses repository"
@@ -1309,6 +1309,161 @@
      }
     }
    }
+  },
+  "/packages": {
+   "post": {
+    "summary": "Send in a service package",
+    "tags": [
+     "Services"
+    ],
+    "security": [
+     {
+      "key": [
+       "write"
+      ]
+     }
+    ],
+    "description": "Becomes a service on its day (or updates the one the same id made before). Songs with words also go into the church's song library. Expected scriptures become scripture slides in their part (the sermon if none is named), so detection finds them more easily; a verse still goes on screen by itself only when said outright or 99% sure. Up to 4 MB.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ServicePackage"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "A new service.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Received"
+        }
+       }
+      }
+     },
+     "200": {
+      "description": "The service it made before, updated.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Received"
+        }
+       }
+      }
+     },
+     "400": {
+      "description": "Not a package Voice Verses can read; the message says what is wrong.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "413": {
+      "description": "Larger than 4 MB.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/services/{id}/package": {
+   "get": {
+    "summary": "A service as a package",
+    "tags": [
+     "Services"
+    ],
+    "security": [
+     {
+      "key": [
+       "read"
+      ]
+     }
+    ],
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "The package.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ServicePackage"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "No such service.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "401": {
+      "description": "Not paired.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     },
+     "403": {
+      "description": "This device isn't allowed to do this.",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Error"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
@@ -1522,6 +1677,303 @@
         }
        }
       }
+     }
+    }
+   },
+   "ServicePackage": {
+    "type": "object",
+    "required": [
+     "package",
+     "service"
+    ],
+    "description": "Everything one service needs. See docs/api/service-package.md.",
+    "properties": {
+     "package": {
+      "type": "string",
+      "pattern": "^1\\.\\d+$",
+      "examples": [
+       "1.0"
+      ]
+     },
+     "id": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Your own id for this service: a later package with the same id (from the same app) updates it."
+     },
+     "service": {
+      "type": "object",
+      "required": [
+       "name",
+       "date"
+      ],
+      "properties": {
+       "name": {
+        "type": "string",
+        "maxLength": 200
+       },
+       "date": {
+        "type": "string",
+        "format": "date"
+       },
+       "time": {
+        "type": "string",
+        "pattern": "^\\d{1,2}:\\d{2}$"
+       },
+       "type": {
+        "type": "string",
+        "maxLength": 80
+       }
+      }
+     },
+     "source": {
+      "type": "object",
+      "required": [
+       "app"
+      ],
+      "properties": {
+       "app": {
+        "type": "string",
+        "maxLength": 80
+       },
+       "updatedAt": {
+        "type": "string",
+        "maxLength": 40
+       },
+       "url": {
+        "type": "string",
+        "maxLength": 500
+       }
+      }
+     },
+     "order": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+       "type": "object",
+       "required": [
+        "part"
+       ],
+       "properties": {
+        "part": {
+         "type": "string",
+         "maxLength": 120
+        },
+        "minutes": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 600
+        },
+        "songs": {
+         "type": "array",
+         "items": {
+          "type": "string",
+          "maxLength": 200
+         },
+         "description": "Song ids or titles from `songs`, or titles in the church's library"
+        },
+        "scriptures": {
+         "type": "array",
+         "items": {
+          "type": "string",
+          "maxLength": 60
+         },
+         "examples": [
+          [
+           "John 3:16",
+           "Romans 8:28-30"
+          ]
+         ]
+        },
+        "announcements": {
+         "type": "array",
+         "items": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "slides": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "required": [
+           "text"
+          ],
+          "properties": {
+           "title": {
+            "type": "string",
+            "maxLength": 200
+           },
+           "text": {
+            "type": "string",
+            "maxLength": 4000
+           }
+          }
+         }
+        },
+        "media": {
+         "type": "array",
+         "items": {
+          "type": "string",
+          "maxLength": 120
+         }
+        },
+        "notes": {
+         "type": "string",
+         "maxLength": 4000
+        }
+       }
+      }
+     },
+     "expectedScriptures": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+       "type": "object",
+       "required": [
+        "reference"
+       ],
+       "properties": {
+        "reference": {
+         "type": "string",
+         "maxLength": 60
+        },
+        "part": {
+         "type": "string",
+         "maxLength": 120
+        }
+       }
+      }
+     },
+     "songs": {
+      "type": "array",
+      "maxItems": 60,
+      "items": {
+       "type": "object",
+       "required": [
+        "title"
+       ],
+       "properties": {
+        "id": {
+         "type": "string",
+         "maxLength": 120
+        },
+        "title": {
+         "type": "string",
+         "maxLength": 200
+        },
+        "writers": {
+         "type": "string",
+         "maxLength": 400
+        },
+        "copyright": {
+         "type": "string",
+         "maxLength": 400
+        },
+        "ccli": {
+         "type": "string",
+         "maxLength": 20
+        },
+        "lyrics": {
+         "type": "string",
+         "maxLength": 20000,
+         "description": "Sections separated by blank lines, each starting with its name (Verse 1, Chorus)"
+        },
+        "arrangement": {
+         "type": "array",
+         "items": {
+          "type": "string",
+          "maxLength": 60
+         }
+        }
+       }
+      }
+     },
+     "announcements": {
+      "type": "array",
+      "maxItems": 60,
+      "items": {
+       "type": "object",
+       "required": [
+        "title"
+       ],
+       "properties": {
+        "id": {
+         "type": "string",
+         "maxLength": 120
+        },
+        "title": {
+         "type": "string",
+         "maxLength": 200
+        },
+        "text": {
+         "type": "string",
+         "maxLength": 4000
+        },
+        "image": {
+         "type": "string",
+         "maxLength": 120
+        }
+       }
+      }
+     },
+     "media": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+       "type": "object",
+       "required": [
+        "id",
+        "kind",
+        "url"
+       ],
+       "properties": {
+        "id": {
+         "type": "string",
+         "maxLength": 120
+        },
+        "kind": {
+         "enum": [
+          "image",
+          "video",
+          "presentation",
+          "document"
+         ]
+        },
+        "url": {
+         "type": "string",
+         "description": "http(s), or a data:image (png, jpeg, gif, webp)"
+        },
+        "name": {
+         "type": "string",
+         "maxLength": 200
+        }
+       }
+      }
+     },
+     "notes": {
+      "type": "string",
+      "maxLength": 20000
+     }
+    }
+   },
+   "Received": {
+    "type": "object",
+    "properties": {
+     "serviceId": {
+      "type": "string"
+     },
+     "created": {
+      "type": "boolean"
+     },
+     "songsAdded": {
+      "type": "integer"
+     },
+     "warnings": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "What couldn't be used, in plain words (a song without words, a reference not found)"
      }
     }
    }

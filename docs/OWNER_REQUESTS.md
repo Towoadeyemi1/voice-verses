@@ -464,6 +464,12 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.19.5 **Step 2.2, the local API v1** ("Start"): Settings → Other apps and devices turns it on; a device pairs once with a six-digit code and gets its own key (see only, or see and control); paired devices show a verse, put one in Next, Take, go forward or back, Clear and show the logo; they follow every event as it happens (Server-Sent Events, WebSocket or signed webhooks); Voice Verses announces itself on the network (Bonjour); removing a device ends its key at once. For developers: `docs/api/README.md`, OpenAPI and AsyncAPI. Checked by `tools/checks/api-check.mjs` (CI) and `tools/e2e/local-api.cjs`.
 - ⏳ Next: step 2.3, the service package (expected scriptures feeding detection and Next) and importers (PowerPoint, PDF, Word, SongSelect).
 
+## "Please continue with 2.3"
+
+(18 Nov 2026.)
+- ✅ 1.19.6 **The service package** (D35, `docs/api/service-package.md`): one document per service (order and lengths, songs with words and credits, the scriptures expected, announcements, pictures, notes). It arrives from another app over the network (an app paired with **Send in services**) or as a file (**Services → Import**), and becomes a service on its day, marked "From …"; sending it again updates that service. The scriptures expected become scripture slides in the sermon: detection finds them more easily (never enough to go up by itself), and loading them puts the first in Next. Songs go into the song library too. Any service goes back out as a package. Checked by `tools/checks/package-check.ts` (CI) and `tools/e2e/service-package.cjs`.
+- ⏳ Next in 2.3: **Add from a file** in a service: PowerPoint, PDF (Keynote and Google Slides saved as PDF), Word or text sermon notes (scriptures and points found in them). New screen, so a mock-up first for the owner's yes. SongSelect files already import in Media.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
