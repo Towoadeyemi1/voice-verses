@@ -442,7 +442,21 @@ const esc = async (win) => {
   await win.waitForTimeout(500);
   await btn(win, /Make with AI/).scrollIntoViewIfNeeded().catch(() => {});
   await win.waitForTimeout(400);
-  await shot(win, 'pages-3d-add', [m(win.locator('main').getByText(/^Add to “/).first(), 1, 'tl'), m(btn(win, /Make with AI/), 2, 'tr')]);
+  await shot(win, 'pages-3d-add', [m(win.locator('main').getByText(/^Add to “/).first(), 1, 'tl'), m(btn(win, /Make with AI/), 2, 'tr'), m(win.locator('[data-add-from-file-button]'), 3, 'tr')]);
+  // Add from a file (1.19.7): sermon notes (KJV only), reviewed before they are added
+  const notesFile = path.join(OUT, 'Sermon notes - Grace.txt');
+  fs.writeFileSync(notesFile, '# Grace that keeps\nText: Ephesians 2:8-9 and Titus 2:11.\n## Grace finds us where we are\nLike Noah in Genesis 6, we were found by grace. Romans 5:8 shows it.\n## Grace changes how we live\n## Grace keeps us to the end\n');
+  await win.locator('[data-add-from-file-input]').setInputFiles(notesFile);
+  await win.locator('[data-add-confirm]').waitFor({ timeout: 15000 }).catch(() => {});
+  await win.waitForTimeout(700);
+  await shot(win, 'pages-3f-from-file', [
+    m(win.locator('[data-add-from-file] section[aria-label="Scriptures"]'), 1, 'tl'),
+    m(win.locator('[data-add-verse="Genesis 6"]'), 2, 'r'),
+    m(win.locator('[data-add-from-file] section[aria-label="Points"]'), 3, 'tr'),
+    m(win.locator('[data-add-from-file] section[aria-label="The rest of the notes"]'), 4, 'tr'),
+    m(win.locator('[data-add-confirm]'), 5, 'tr'),
+  ]);
+  await esc(win);
   await btn(win, /Make with AI/).click().catch(() => {});
   await win.waitForTimeout(800);
   await shot(win, 'pages-3e-ai-slides', [m(win.getByRole('dialog').last(), 1, 'tl')]);

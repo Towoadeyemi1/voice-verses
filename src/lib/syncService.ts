@@ -24,6 +24,8 @@ export type SyncMessage = {
     allSlides?: Slide[];
     /** The next few slides of the service, for the confidence monitor */
     upcoming?: Slide[];
+    /** Notes for the stage monitor only: the slide's own, else its part's (1.19.7) */
+    notes?: string;
     logoUrl?: string;
     /** The first running countdown, or null (for screens from older versions) */
     countdown?: Countdown | null;

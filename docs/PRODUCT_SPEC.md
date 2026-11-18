@@ -429,6 +429,35 @@ The autopilot that learns how a church runs its service. Approved mock-up: `docs
 - Services page: a "From <app>" pill on services that came in a package.
 - Settings → Other apps and devices: **Send in services** when pairing (scope `write`, off by default).
 
+## 8l. Add from a file and stage notes (1.19.7, D36)
+
+- **Where:**
+  - Service editor → Add panel: **From a file** (`[data-add-from-file-button]`). It adds to the section of the chosen part, else the chosen section, else the last.
+  - Each section card takes a dropped file (gold ring while over it).
+  - An empty section offers **Add from a file**.
+- **Accepts** `.pdf`, `.pptx`, `.docx`, `.txt`, `.md` up to 150 MB. Refusals, in plain words:
+  - `.ppt`, `.doc`, `.key`, `.pages`: save it as PDF or `.pptx`/`.docx` first;
+  - a password-protected or damaged file;
+  - nothing found in it.
+- **PDF** (`importers/pdf.ts`, pdf.js 4.10, worker loaded on demand):
+  - each page drawn at up to 1920 px wide as JPEG (0.82), at most 150 pages, with its text kept;
+  - **As pictures: exactly as made** (default) or **As words, in your church’s look** (an announcement slide per page: first line as title, the rest as words).
+- **PowerPoint** (`importers/office.ts`, fflate):
+  - slides in the presentation's order, hidden slides left out;
+  - for each slide: its title, its words (without slide number, date or footer), its biggest picture (png/jpeg/gif/webp/bmp under 12 MB) and its speaker notes;
+  - always **as words**: an announcement slide with the picture behind; a slide that is only a picture becomes a picture slide;
+  - the screen explains that an exact copy needs a PDF;
+  - **Notes to the stage monitor** (on by default) keeps speaker notes as each slide's notes.
+- **Sermon notes** (Word, text, Markdown):
+  - **Scriptures** are the written references (`importers/references.ts`: capitalised book names and abbreviations, ranges, lists like "Romans 8:28, 31", Roman numerals, one-chapter books). Each is shown with its first words in the current translation; a chapter alone starts unticked.
+  - **Points** are headings (Word Heading 1–3, Markdown `##`) and numbered lines (Word numbering at the top level; "1.", "2)", "IV.", "Point 3:"), up to 12 and 120 characters each. The title and lines that are only a reference are left out.
+  - **The rest of the notes** (on by default) is the whole text, up to 8,000 characters, as the first added part's notes.
+- **What is added:** new parts at the end of the section:
+  - the presentation (named after the file) and a **Scripture** part for the references written on it;
+  - or **Scripture** (a slide a verse, as with a service package) and **Points** (announcement slides "Point n").
+  - A message says what was added; the service is saved with **Save**.
+- **Stage notes:** when a slide goes live, `SLIDE_UPDATE.data.notes` carries its own notes, else its part's presenter notes. The stage monitor shows them under the slide ("Notes"), never the projector or stream.
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:

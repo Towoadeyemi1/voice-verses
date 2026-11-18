@@ -201,6 +201,17 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Decision:** One JSON document per service (`src/lib/servicePackage.ts`, `docs/api/service-package.md`), version `1.x`, checked with zod, received over the local API (`POST /api/v1/packages`, scope `write`) or as a file (Services → Import). It becomes an ordinary service of its day: parts, songs as credited lyric slides (and in the song library), announcements, pictures, notes, and part lengths shared by their items. A sender's `id` updates the service it made before. **Expected scriptures become scripture slides in their part** (the sermon if none is named), so they feed the existing "today's plan" context in detection (+0.12 a verse, +0.06 its chapter, capped at 0.98) and loading the part puts the first in Next; detection itself is unchanged. Anything unusable is reported back in plain words, and the rest is used.
 - **Why:** A service is the one thing every part of the app already understands (the live screen, the timeline, spirit, Predictive Next, the stage), so a package that becomes a service needs no second path. Putting expected scriptures in as slides makes them visible and editable by the operator, and reuses a context boost that already respects rule 1, rather than a new, hidden way for a verse to go up. Updating by the sender's id lets a dashboard re-send as plans change without filling the calendar with copies.
 
+### D36. Add from a file: read in the app, reviewed before adding; PDF for an exact copy
+- **Context:** Step 2.3b. Preachers prepare in PowerPoint, Keynote, Google Slides and Word; the owner wants those to come into a service, with the scriptures expected, without anything else to install. The mock-up (`Add from a file`, four screens) was approved ("Build it").
+- **Decision:** The service editor's Add panel has **From a file** (and each section takes a dropped file). The file is read on the computer:
+  - PDF pages are drawn by pdf.js (loaded only when a PDF is added) as pictures, exactly as made, or kept as words.
+  - PowerPoint (.pptx) and Word (.docx) are unzipped (fflate) and read for their words, pictures, speaker notes, headings and numbering.
+  - Text and Markdown are read as they are.
+  - A review screen shows what was found, and the operator unticks what isn't for the screens. Written references become scripture slides (a chapter alone starts unticked), points become slides, and the notes go to the stage monitor.
+  - Older .ppt/.doc and Keynote files get a message on how to save them as PDF or .pptx/.docx.
+  - Speaker and part notes now reach the stage monitor (`SLIDE_UPDATE.data.notes`).
+- **Why:** Drawing a PowerPoint exactly as made needs PowerPoint (or LibreOffice) on the computer, against one download and older Macs (D27). Every presentation app saves a PDF that pdf.js draws faithfully offline, so PDF is the exact way and .pptx the editable way, and the screen says so. A review step keeps a wrong guess (a chapter mentioned in passing, a heading that isn't a point) off the screens. That serves rule 1, and the operator stays in charge.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

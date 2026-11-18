@@ -468,7 +468,15 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 (18 Nov 2026.)
 - ✅ 1.19.6 **The service package** (D35, `docs/api/service-package.md`): one document per service (order and lengths, songs with words and credits, the scriptures expected, announcements, pictures, notes). It arrives from another app over the network (an app paired with **Send in services**) or as a file (**Services → Import**), and becomes a service on its day, marked "From …"; sending it again updates that service. The scriptures expected become scripture slides in the sermon: detection finds them more easily (never enough to go up by itself), and loading them puts the first in Next. Songs go into the song library too. Any service goes back out as a package. Checked by `tools/checks/package-check.ts` (CI) and `tools/e2e/service-package.cjs`.
-- ⏳ Next in 2.3: **Add from a file** in a service: PowerPoint, PDF (Keynote and Google Slides saved as PDF), Word or text sermon notes (scriptures and points found in them). New screen, so a mock-up first for the owner's yes. SongSelect files already import in Media.
+- ✅ Mock-up **Add from a file** (four screens, design canvas) approved: "Build it" (18 Nov 2026).
+- ✅ 1.19.7 **Add from a file** (D36): in the service editor, **From a file** (or drop a file on a section) adds a presentation or the sermon notes.
+  - **PDF:** each page as a picture, exactly as made, or as words in the church's look. This is also the way in for Keynote and Google Slides.
+  - **PowerPoint:** words and pictures in the church's look, with speaker notes for the stage.
+  - **Word or text notes:** the scriptures written in them (each with its words; a chapter mentioned in passing starts unticked), the points (each a slide), and the rest for the stage monitor.
+  - A review screen lets the operator untick anything first. Older files are refused with how to save them again.
+  - Notes now show on the stage monitor under the live slide, which they never did before.
+  - Checked by `tools/checks/import-check.ts` (CI) and `tools/e2e/add-from-file.cjs` (a real PDF, PowerPoint and Word file).
+- ⏳ Next: step 2.4, connectors (CCCG Dashboard once its documentation is in hand, or it builds to ours; Planning Center).
 
 ## Process
 

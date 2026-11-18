@@ -310,9 +310,11 @@ export const LiveWorkspace = () => {
   /** Sends a slide to the screens, with the few after it for the stage monitor. */
   const broadcastSlide = (slide: Slide, c: Collection | null): number => {
     const index = c?.kind === 'slides' ? c.slides.findIndex((s) => s.id === slide.id) : -1;
+    // The preacher's notes go to the stage monitor only: this slide's, else its part's
+    const notes = slide.slideNotes?.trim() || partOf(slide.id)?.item.presenterNotes?.trim() || undefined;
     syncService.broadcast({
       type: 'SLIDE_UPDATE',
-      data: { slide, index, slideIndex: index, upcoming: c?.kind === 'slides' && index >= 0 ? c.slides.slice(index + 1, index + 4) : [], timestamp: new Date() },
+      data: { slide, index, slideIndex: index, upcoming: c?.kind === 'slides' && index >= 0 ? c.slides.slice(index + 1, index + 4) : [], notes, timestamp: new Date() },
     });
     return index;
   };

@@ -116,6 +116,26 @@ const localDate = (day: string) => {
 /** The part the sermon is in, for expected scriptures that don't name one. */
 const SERMON = /word|sermon|message|preach|teaching|bible/i;
 
+/**
+ * A written reference as scripture slides, a verse per slide: "John 3:16", "Romans 8:28-30"
+ * (at most 30 verses), "Psalm 23" (a chapter alone: its first verse). None if not in the Bible.
+ */
+export async function scriptureSlidesFor(reference: string, newId: () => string): Promise<ScriptureSlide[]> {
+  const ref = reference.replace(/[–—]/g, '-').trim();
+  let verses = /[:.]\s*\d+\s*-\s*\d+$/.test(ref) || /^\D*\d*\s*\D+\s+\d+$/.test(ref) ? await BibleParser.parseReferenceRange(ref).catch(() => []) : [];
+  if (!verses.length) {
+    const one = await BibleParser.parseReference(ref).catch(() => null);
+    verses = one ? [one] : [];
+  }
+  const chapterOnly = !/[:.]\s*\d+/.test(ref);
+  return (chapterOnly ? verses.slice(0, 1) : verses.slice(0, 30)).map((v) => ({
+    id: newId(),
+    type: 'scripture',
+    title: chapterOnly ? `${v.book} ${v.chapter}` : `${v.book} ${v.chapter}:${v.verse}`,
+    verse: v,
+  }));
+}
+
 export interface Received {
   service: Service;
   created: boolean;
@@ -196,23 +216,9 @@ export async function receivePackage(input: unknown, how: { app?: string } = {})
 
   // Scripture: each reference as slides, a verse per slide (a chapter alone: its first verse)
   const scriptureSlides = async (reference: string): Promise<ScriptureSlide[]> => {
-    const ref = reference.replace(/[–—]/g, '-').trim();
-    let verses = /[:.]\s*\d+\s*-\s*\d+$/.test(ref) || /^\D*\d*\s*\D+\s+\d+$/.test(ref) ? await BibleParser.parseReferenceRange(ref).catch(() => []) : [];
-    if (!verses.length) {
-      const one = await BibleParser.parseReference(ref).catch(() => null);
-      verses = one ? [one] : [];
-    }
-    if (!verses.length) {
-      warnings.push(`Couldn’t find “${reference}” in the Bible.`);
-      return [];
-    }
-    const chapterOnly = !/[:.]\s*\d+/.test(ref);
-    return (chapterOnly ? verses.slice(0, 1) : verses.slice(0, 30)).map((v) => ({
-      id: newId('slide'),
-      type: 'scripture',
-      title: chapterOnly ? `${v.book} ${v.chapter}` : `${v.book} ${v.chapter}:${v.verse}`,
-      verse: v,
-    }));
+    const slides = await scriptureSlidesFor(reference, () => newId('slide'));
+    if (!slides.length) warnings.push(`Couldn’t find “${reference}” in the Bible.`);
+    return slides;
   };
 
   // Expected scriptures go to the part they name, else the sermon
