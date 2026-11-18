@@ -114,7 +114,7 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 - ✅ 1.19.4 The event bus and module registry (D33, `docs/architecture/`): step 2.1 of the approved architecture.
 - ✅ 1.19.5 Step 2.2: the local API v1 on the network server (D34, `docs/api/README.md`): pairing with a six-digit code and scoped keys, modules, live control (show, next, take, clear, logo), events over WebSocket/SSE, signed webhooks, Bonjour, OpenAPI and AsyncAPI (D27, D33). For a Stream Deck, a phone or another app.
 - ✅ 1.19.6 Step 2.3a: the service package (D35, `docs/api/service-package.md`): over the API or as a file, expected scriptures feeding detection and Next.
-- ⏳ Step 2.3b: Add from a file: PowerPoint, PDF, Word and text sermon notes (mock-up first). SongSelect already imports in Media. Step 2.4: connectors (CCCG Dashboard, Planning Center, the open church feed). Step 2.5: sermon preparation, mock-up first.
+- ✅ 1.19.7 Step 2.3b: Add from a file (D36): PDF, PowerPoint, Word and text sermon notes, reviewed before adding; notes on the stage monitor. Step 2.4: connectors (CCCG Dashboard, Planning Center, the open church feed). Step 2.5: sermon preparation, mock-up first.
 
 **Phase 1: make it beautiful and smooth (1.5.x)**
 - ✅ 1.5.0 Built-in motion and still backgrounds, generated in the app so they work offline with no copyright issues: soft gradients, light rays, bokeh, aurora and paper textures in the colour team's colours.

@@ -660,6 +660,17 @@ Open **Services** from the page bar (or the service name on the live screen).
 
 1. Click a part in the order, then **Add to “…”**: Scripture, Song, Announcement, Picture, Video or Blank. Drag parts and slides to reorder; each part has a timer for the timeline.
 2. **Make with AI** turns the bulletin or sermon notes into slides.
+3. **From a file** adds a presentation or the sermon notes to the section (or drop the file on a section).
+
+### Add from a file: a presentation or the sermon notes
+
+![Add from a file: a presentation or the sermon notes](img/pages-3f-from-file.jpg)
+
+1. **Scriptures** written in the notes, each with its first words. They go in as scripture slides, so listening finds them more easily (a verse still goes up by itself only when it is said outright), and loading them puts the first in Next.
+2. A chapter alone (“like Noah in Genesis 6”) is often mentioned in passing, so it starts unticked. Tick it if it is read.
+3. **Points**: the headings and numbered lines. Each becomes a slide.
+4. **The rest of the notes** go to the stage monitor during the sermon, for the preacher. Never to the projector or the stream.
+5. **Add** puts them in the section as parts. Then **Save** the service.
 
 ### Make slides with AI (optional)
 
@@ -671,6 +682,8 @@ Open **Services** from the page bar (or the service name on the live screen).
 
 - A part can have its own **countdown** that starts with its first slide (the Countdown before the service does this).
 - **Remove samples** takes away the sample services and songs the app came with.
+- **From a file**, a presentation: a **PDF** comes in as pictures, exactly as made (Keynote and Google Slides: save as PDF), or as words in your church’s look. A **PowerPoint** (.pptx) comes in as words and pictures in your look, with its speaker notes for the stage; for an exact copy, save it as PDF first. Untick any pages you don’t want. Scriptures written on the slides go in too.
+- **Notes on the stage monitor**: a slide’s own notes, or its part’s, show on the stage monitor under the slide while it is up (the notes button on a part or slide). Never on the projector or the stream.
 
 <a id="pages"></a>
 
@@ -844,6 +857,8 @@ The verse on a green key colour for the stream switcher. Over NDI it goes see-th
 | Service templates, ready-made orders, types of service | [15. Plan your services](#planning) |
 | The service editor: parts, slides, timers, reorder | [15. Plan your services](#planning) |
 | Make slides with AI | [15. Plan your services](#planning) |
+| Add from a file: PDF, PowerPoint, Word or text sermon notes | [15. Plan your services](#planning) |
+| Notes on the stage monitor (a slide’s or its part’s) | [15. Plan your services](#planning) |
 | Media: pictures, videos, SongSelect import, lyrics | [16. Media, the Screens page and Presenter](#pages) |
 | Presenter | [16. Media, the Screens page and Presenter](#pages) |
 | Training: Show me, Let me try, practice | [17. Training](#training) |

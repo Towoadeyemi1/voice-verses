@@ -74,7 +74,7 @@ flowchart LR
 
 1. ✅ **The bus and the registry** (1.19.4). Today's parts announce on the bus; ProPresenter follows it.
 2. ✅ **The local API v1** (1.19.5, D34; `docs/api/README.md`). On the server Voice Verses already runs for network screens. Pairing with a six-digit code and scoped keys (`read`, `control`, `write`), `GET /api/v1/modules`, services and packages, `POST /api/v1/live/show|next|take|clear|logo`, events over WebSocket or Server-Sent Events with a filter (`live.*`), signed webhooks, Bonjour/mDNS (`_voiceverses._tcp`), described in OpenAPI and AsyncAPI. Network screens stay read-only and separate.
-3. **The service package** (✅ 1.19.6, D35: the package, over the API and as a file; ⏳ importers next). One document per service (order, expected scriptures, songs with credits, announcements, media, notes). Expected scriptures make detection surer and put the first ready in Next; rule 1 stands. Importers: PowerPoint, PDF, Word or text notes, SongSelect.
+3. **The service package** (✅ 1.19.6, D35: the package, over the API and as a file; ✅ 1.19.7, D36: Add from a file). One document per service (order, expected scriptures, songs with credits, announcements, media, notes). Expected scriptures make detection surer and put the first ready in Next; rule 1 stands. Importers: PowerPoint, PDF, Word or text notes, SongSelect.
 4. **Connectors.** CCCG Dashboard (their API, or they build to our spec) and Planning Center; the open church feed for any church's own app. Settings → Connections.
 5. **Sermon preparation.** Mock-up first; a client of the API, with optional AI from any provider (rule 3).
 

@@ -58,6 +58,8 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [currentVerse, setCurrentVerse] = useState<BibleVerse | null>(null);
   const [nextItems, setNextItems] = useState<{ ref: string; snippet: string }[]>([]);
+  /** The preacher's notes for what is on screen (stage only) */
+  const [notes, setNotes] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const { countdowns, now } = useCountdowns();
   const stageCountdowns = countdowns.filter((c) => c.confidence);
@@ -80,6 +82,7 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
       if (message.type === 'SLIDE_UPDATE') {
         const slide = message.data.slide ?? null;
         setCurrentSlide(slide);
+        setNotes(slide ? (message.data.notes ?? null) : null);
         if (slide?.type === 'scripture' && slide.verse) verse = slide.verse;
         // In a service, "next" is the next slide in the service, not the next verse in the Bible
         const index = message.data.slideIndex ?? message.data.index ?? -1;
@@ -88,6 +91,7 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
       } else if (message.type === 'VERSE_UPDATE' && message.data.verse !== undefined) {
         verse = message.data.verse ?? null;
         setCurrentSlide(null);
+        setNotes(null);
         if (verse) {
           for (let i = 1; i <= settings.nextVerseCount; i++) {
             const nextVerse = await BibleParser.getVerse(verse.book, verse.chapter, verse.verse + i);
@@ -100,6 +104,7 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
         }
       } else if (message.type === 'LOGO') {
         setCurrentSlide(null);
+        setNotes(null);
       } else {
         return;
       }
@@ -241,6 +246,18 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
               </div>
             )}
           </div>
+          {notes && (
+            <div
+              className="mt-4 rounded-lg px-5 py-3 max-h-[30%] overflow-auto whitespace-pre-line"
+              style={{ backgroundColor: `${settings.textColor}12`, color: settings.textColor, fontSize: `${settings.nextVerseFontSize}px` }}
+              data-stage-notes
+            >
+              <span className="font-bold mr-2" style={{ color: settings.accentColor }}>
+                Notes
+              </span>
+              {notes}
+            </div>
+          )}
         </div>
 
         {/* Next items sidebar - Yellow/Gold colored */}

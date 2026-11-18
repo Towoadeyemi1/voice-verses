@@ -116,6 +116,11 @@ jobs:
           npx esbuild tools/checks/package-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/package-check.cjs --log-level=error
           node /tmp/package-check.cjs
 
+      - name: "CHECK 13: Add from a file (references, PowerPoint, Word, notes)"
+        run: |
+          npx esbuild tools/checks/import-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/import-check.cjs --log-level=error
+          node /tmp/import-check.cjs
+
       - name: QA Summary
         if: success()
         run: |

@@ -11,13 +11,15 @@ import { Service, Slide, ScriptureSlide, LyricsSlide, ImageSlide, VideoSlide, An
 import { ServiceStorage } from '@/lib/serviceStorage';
 import { BibleParser } from '@/lib/bibleParser';
 import { BibleVerse } from '@/types/bible';
-import { Book, Music, Image as ImageIcon, Film, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings, Sparkles, Palette, Monitor } from 'lucide-react';
+import { Book, Music, Image as ImageIcon, Film, Plus, Trash2, Save, Copy, ChevronDown, ChevronRight, FolderPlus, FilePlus, GripVertical, Upload, StickyNote, MessageSquare, FileQuestion, Pencil, MoreVertical, Settings, Sparkles, Palette, Monitor, FileUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { SlideConfiguration } from '@/components/SlideConfiguration';
 import { CountdownConfiguration } from '@/components/CountdownConfig';
 import { ManualSearch } from '@/components/ManualSearch';
 import { LyricsEditor } from '@/components/LyricsEditor';
 import { AiSlidesDialog } from '@/components/AiSlidesDialog';
+import { AddFromFileDialog } from '@/components/service-builder/AddFromFileDialog';
+import { ADD_FROM_FILE_ACCEPT } from '@/lib/importers';
 import { DesignSlideDialog } from '@/components/designer/DesignSlideDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -85,6 +87,9 @@ const ServiceBuilder = () => {
   const [scriptureReference, setScriptureReference] = useState('');
   const [showLyricsEditor, setShowLyricsEditor] = useState(false);
   const [showAiSlides, setShowAiSlides] = useState(false);
+  /** Add from a file (1.19.7): the file being reviewed, and the section it goes into */
+  const [addFile, setAddFile] = useState<{ file: File; sectionId: string } | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [designing, setDesigning] = useState<{ slide: Slide; sectionId: string; subsectionId: string } | null>(null);
   const [editingLyricsContext, setEditingLyricsContext] = useState<{ sectionId: string; subsectionId: string; songTitle: string } | null>(null);
   const [media, setMedia] = useState<MediaItem[]>([]);
@@ -830,6 +835,39 @@ const ServiceBuilder = () => {
   if (!service) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
 
   const selectedPart = service.sections?.flatMap((sec) => sec.subsections).find((sub) => sub.id === selectedSubsection);
+  // Add from a file goes into the section of the chosen part (else the chosen section, else the last)
+  const fileSection =
+    service.sections?.find((sec) => sec.subsections.some((sub) => sub.id === selectedSubsection)) ?? service.sections?.find((sec) => sec.id === selectedSection) ?? service.sections?.at(-1);
+  const chooseFile = (sectionId: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) setAddFile({ file, sectionId });
+  };
+  const fileDrop = (sectionId: string) => ({
+    onDragOver: (e: React.DragEvent) => {
+      if (!e.dataTransfer.types.includes('Files')) return;
+      e.preventDefault();
+      setDropTarget(sectionId);
+    },
+    onDragLeave: (e: React.DragEvent) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropTarget(null);
+    },
+    onDrop: (e: React.DragEvent) => {
+      const file = e.dataTransfer.files?.[0];
+      setDropTarget(null);
+      if (!file) return;
+      e.preventDefault();
+      setAddFile({ file, sectionId });
+    },
+  });
+  const addParts = (sectionId: string, parts: ServiceSubsection[], summary: string) => {
+    if (!parts.length) return;
+    setService((prev) => (prev ? { ...prev, sections: prev.sections.map((sec) => (sec.id === sectionId ? { ...sec, subsections: [...sec.subsections, ...parts] } : sec)) } : prev));
+    setSelectedSection(sectionId);
+    setSelectedSubsection(parts[0].id);
+    const name = service.sections.find((sec) => sec.id === sectionId)?.name ?? 'the service';
+    toast.success(`Added to ${name}`, { description: `${summary}. Save the service to keep them.` });
+  };
   const when = new Date(service.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
@@ -920,7 +958,7 @@ const ServiceBuilder = () => {
                   </button>
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="grid grid-cols-3 gap-2 mt-2">
                 <Button variant="secondary" disabled={!selectedSubsection} onClick={() => setShowAiSlides(true)}>
                   <Sparkles className="w-4 h-4" />
                   Make with AI
@@ -932,7 +970,15 @@ const ServiceBuilder = () => {
                     <Input id="file-upload" type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} />
                   </label>
                 </Button>
+                <Button variant="secondary" disabled={!fileSection} asChild={!!fileSection} title={fileSection ? `A presentation (PDF, PowerPoint) or sermon notes (Word, text), added to ${fileSection.name}` : 'Add a section first'}>
+                  <label className="cursor-pointer" data-add-from-file-button>
+                    <FileUp className="w-4 h-4" />
+                    From a file
+                    <Input type="file" accept={ADD_FROM_FILE_ACCEPT} className="hidden" onChange={fileSection ? chooseFile(fileSection.id) : undefined} data-add-from-file-input />
+                  </label>
+                </Button>
               </div>
+              <p className="m-0 mt-2 text-[13px] text-muted-foreground">From a file: a presentation (PDF or PowerPoint; Keynote and Google Slides saved as PDF) or the sermon notes (Word or text). Or drop the file on a section.</p>
               {selectedSubsection && (
                 <div className="mt-5">
                   <p className="m-0 mb-2 text-sm font-semibold">Find a verse</p>
@@ -1003,7 +1049,11 @@ const ServiceBuilder = () => {
                     {service.sections.map((section) => (
                       <SortableSection key={section.id} id={section.id}>
                         <Collapsible open={!section.collapsed} onOpenChange={() => toggleSectionCollapse(section.id)}>
-                          <Card className={`overflow-hidden ${selectedSection === section.id ? 'ring-1 ring-foreground/30' : ''} ${activeId === section.id ? 'ring-2 ring-foreground/50' : ''}`}>
+                          <Card
+                            className={`overflow-hidden ${selectedSection === section.id ? 'ring-1 ring-foreground/30' : ''} ${activeId === section.id ? 'ring-2 ring-foreground/50' : ''} ${dropTarget === section.id ? 'ring-2 ring-primary' : ''}`}
+                            {...fileDrop(section.id)}
+                            data-section-drop={section.name}
+                          >
                             <div className="p-4 border-l-4" style={{ borderLeftColor: colorFor(section.name) }}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 flex-1">
@@ -1043,10 +1093,20 @@ const ServiceBuilder = () => {
                                 {section.subsections.length === 0 ? (
                                   <div className="text-center py-7 rounded-xl bg-muted/40">
                                     <p className="m-0 text-sm text-muted-foreground mb-3">No parts in this section yet</p>
-                                    <Button onClick={() => handleAddSubsection(section.id)} variant="secondary" size="sm">
-                                      <FilePlus className="w-4 h-4" />
-                                      Add a part
-                                    </Button>
+                                    <div className="flex flex-wrap justify-center gap-2">
+                                      <Button onClick={() => handleAddSubsection(section.id)} variant="secondary" size="sm">
+                                        <FilePlus className="w-4 h-4" />
+                                        Add a part
+                                      </Button>
+                                      <Button variant="ghost" size="sm" asChild>
+                                        <label className="cursor-pointer">
+                                          <FileUp className="w-4 h-4" />
+                                          Add from a file
+                                          <Input type="file" accept={ADD_FROM_FILE_ACCEPT} className="hidden" onChange={chooseFile(section.id)} />
+                                        </label>
+                                      </Button>
+                                    </div>
+                                    <p className="m-0 mt-3 text-[13px] text-muted-foreground">Or drop a presentation or the sermon notes here</p>
                                   </div>
                                 ) : (
                                 <>
@@ -1264,6 +1324,16 @@ const ServiceBuilder = () => {
           />
         );
       })()}
+      <AddFromFileDialog
+        file={addFile?.file ?? null}
+        sectionName={service.sections.find((sec) => sec.id === addFile?.sectionId)?.name ?? ''}
+        serviceName={service.name}
+        onClose={() => setAddFile(null)}
+        onAdd={(parts, summary) => {
+          if (addFile) addParts(addFile.sectionId, parts, summary);
+          setAddFile(null);
+        }}
+      />
       <AiSlidesDialog
         open={showAiSlides}
         onClose={() => setShowAiSlides(false)}

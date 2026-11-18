@@ -154,6 +154,12 @@ Check this list before debugging. Add every new mistake that cost time.
 - **A verse Voice Verses kept re-sending beat the operator's Hide in ProPresenter.** Two people (or two apps) driving one output must notice each other: before sending, check whether what was sent is still showing (`/v1/status/layers`); if someone hid it, stop and offer Send again. Clear what you put up when your own screens clear, and only that.
 - **"Best-suited theme" meant a full-screen scripture theme.** For a message over other content, prefer a lower third.
 
+## Add from a file (1.19.7)
+
+- **Presenter notes were saved but never shown.** The service editor had "Presenter notes" on parts and slides since early versions, but the stage monitor never read them, and the 1.19.6 package docs promised notes "on the stage monitor". A field the UI can fill isn't a feature until something shows it: trace every saved field to where it is used (1.19.7: `SLIDE_UPDATE.data.notes`, shown by `ConfidenceScreen`).
+- **A word before a book ate the book's number.** "Then 1 Cor 13:4" matched "Then 1" as a failed book first and consumed the "1". When a pattern match turns out not to be the thing, resume just after the word, not after the whole match (`importers/references.ts`).
+- **Long text in a grid pushed a column off the dialog.** `1fr` columns have an automatic minimum the width of their content; a long verse preview widened its column. Use `minmax(0, 1fr)` and `min-w-0` where text should shorten.
+
 ## Hardware
 
 - **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).
