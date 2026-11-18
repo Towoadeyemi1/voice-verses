@@ -374,7 +374,8 @@ const esc = async (win) => {
     m(win.locator('#api-switch'), 1, 'tr'),
     m(win.locator('.st-row:has([data-api-address])'), 2, 'r'),
     m(win.getByRole('switch', { name: 'Allow it to control the screens' }), 3, 'tr'),
-    m(win.locator('[data-api-pair-start]'), 4, 'tr'),
+    m(win.getByRole('switch', { name: 'Allow it to send in services' }), 4, 'tr'),
+    m(win.locator('[data-api-pair-start]'), 5, 'tr'),
   ]);
   await win.locator('[data-api-pair-start]').click();
   await win.waitForTimeout(700);

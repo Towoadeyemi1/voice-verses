@@ -419,6 +419,16 @@ The autopilot that learns how a church runs its service. Approved mock-up: `docs
 - **Events** are the bus's CloudEvents, passed on unchanged; practice events never leave the window. Webhooks: POSTed as `application/cloudevents+json`, signed `X-VoiceVerses-Signature: sha256=<HMAC-SHA256 hex>`, three tries (0, 2, 10 s) in order, stopped after 20 failed events in a row, 10 per device.
 - Described for developers in `docs/api/README.md`, `electron/api-spec/openapi.json` and `asyncapi.json`.
 
+## 8k. Service packages (1.19.6, D35)
+
+- `src/lib/servicePackage.ts`: `parsePackage` (zod; `package` `1.x`; plain-words errors), `receivePackage(input, { app })`, `packageFromService(service)`. Format in `docs/api/service-package.md`; example `docs/api/examples/sunday-package.json`.
+- Arrives by `POST /api/v1/packages` (scope `write`, up to 4 MB, answered in the operator's window as `services.receive`, 30 s) or **Services → Import** (any `.json` with `package` and `service`; a `.voiceverses.json` service file still imports as before). The operator sees "<name> arrived from <app>" (or "was updated"), with the first thing to check.
+- Becomes a service: `name`, local `date`, `startTime` (`time`, else the previous one, else 10:00), `type` (else guessed), `from: { app, id, updatedAt, receivedAt }`, `notes`. Each `order` part is a section; its items, in this order: each song (lyric slides with credits and the CCLI licence), its scriptures and the expected ones (one item, a slide per verse, ranges up to 30, a chapter alone as its first verse), its slides of words, each announcement, its pictures; an empty part gets one empty item. The part's `minutes` are shared by its items; its `notes` go to the first item's stage notes. Expected scriptures without a part go to the sermon (name matching word/sermon/message/preach/teaching/bible), else to a part "Scriptures expected"; announcements in no part get a part "Announcements".
+- Songs with words go into the song library unless the same CCLI number or title is there; a song named by title is found in the library. Unusable things (a song without words, a reference not in the Bible, a missing picture, a video or presentation) are listed in `warnings`.
+- The same `id` from the same app updates that service (same id, new contents); otherwise a new service. Publishes `package.received`.
+- Services page: a "From <app>" pill on services that came in a package.
+- Settings → Other apps and devices: **Send in services** when pairing (scope `write`, off by default).
+
 ## 9. Keys, AI and privacy
 
 - Keys for OpenAI, Anthropic, ESV, NLT and API.Bible:

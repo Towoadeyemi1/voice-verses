@@ -120,6 +120,21 @@ answerWith = (msg) => ({ ok: true, result: { services: [{ id: 's1', name: 'Sunda
 check('services by date', (await call('/services?date=2026-11-22', { key: readKey })).json?.services?.[0]?.date === '2026-11-22');
 check('a bad date: 400', (await call('/services?date=next-sunday', { key: readKey })).status === 400);
 
+// Service packages (1.19.6)
+answerWith = (msg) => (msg.command === 'services.receive' ? { ok: true, result: { serviceId: 's9', created: true, songsAdded: 1, warnings: [] } } : { ok: true, result: { package: '1.0', service: { name: 'Sunday', date: '2026-11-22' }, order: [] } });
+check('a device without write can’t send a package', (await call('/packages', { method: 'POST', key: controlKey, body: { package: '1.0' } })).status === 403);
+api.resetLimits();
+view = await api.startPairing(['write']);
+const writeKey = (await call('/pair', { method: 'POST', body: { code: view.pairing.code, name: 'CCCG Dashboard' } })).json.key;
+const sent = await call('/packages', { method: 'POST', key: writeKey, body: { package: '1.0', service: { name: 'Sunday', date: '2026-11-22' }, songs: [{ title: 'Long', lyrics: 'x'.repeat(200_000) }] } });
+check('a device with write sends a package (larger than 64 KB is fine)', sent.status === 201 && sent.json.serviceId === 's9' && commands.at(-1).command === 'services.receive' && commands.at(-1).body.app === 'CCCG Dashboard', JSON.stringify(sent.json));
+answerWith = () => ({ ok: false, status: 400, message: 'This isn’t a service package Voice Verses can read (service.date: Required).' });
+const bad = await call('/packages', { method: 'POST', key: writeKey, body: { package: '1.0' } });
+check('a broken package comes back with what is wrong', bad.status === 400 && /service\.date/.test(bad.json.error.message));
+answerWith = () => ({ ok: true, result: { package: '1.0', service: { name: 'Sunday', date: '2026-11-22' }, order: [] } });
+const out = await call('/services/s9/package', { key: readKey });
+check('a service as a package', out.status === 200 && out.json.package === '1.0' && commands.at(-1).command === 'services.package' && commands.at(-1).body.id === 's9');
+
 // Events over Server-Sent Events
 const ev = (name, data, extra = {}) => ({ specversion: '1.0', id: crypto.randomUUID(), source: 'voiceverses://app/live', type: `org.voiceverses.${name}.v1`, name, time: new Date().toISOString(), datacontenttype: 'application/json', data, ...extra });
 const sse = await fetch(`${base}/events?types=live.*&key=${encodeURIComponent(readKey)}`);
@@ -197,6 +212,7 @@ const fromCode = [...readFileSync(new URL('../../src/core/events.ts', import.met
 const fromSpec = Object.values(spec.asyncapi.components.messages).map((m) => m.name).sort();
 check('asyncapi.json lists every event in events.ts', fromCode.join() === fromSpec.join(), `${fromCode.join()} vs ${fromSpec.join()}`);
 const livePaths = Object.keys(spec.openapi.paths).filter((p) => p.startsWith('/live/')).map((p) => p.slice(6)).sort();
+check('openapi.json describes packages', !!spec.openapi.paths['/packages']?.post && !!spec.openapi.components.schemas.ServicePackage);
 check('openapi.json lists every live action', livePaths.join() === 'advance,back,clear,logo,next,show,take', livePaths.join());
 
 // Bonjour

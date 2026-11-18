@@ -687,6 +687,7 @@ DEVICES = {
                 "Settings → **Other apps and devices**: switch it on. Switch it off and no other app can use Voice Verses (the network screens have their own switch).",
                 "**The address** other apps use. Most find Voice Verses on the network by themselves.",
                 "**Control the screens**: on, the device you pair next can show verses, Take, go forward or back, Clear and show the logo. Off, it can only see what’s on and follow what happens.",
+                "**Send in services**: on for an app that plans your services (the CCCG Dashboard, Planning Center, your church’s own app). It can send a whole service for any day: the order, songs with their credits, the scriptures expected and announcements.",
                 "**Show a pairing code**.",
             ],
         },
@@ -709,7 +710,9 @@ DEVICES = {
     ],
     "points": [
         "A remote **Take** does exactly what the Take button does. While you practise in Training, other apps can’t change the screens.",
-        "For the people who make the apps: the page links to **the guide for developers** (the API, its events and webhooks).",
+        "A service sent in appears in **Services** on its day, marked **From** and the app’s name, and you see a message when it arrives. Sending it again updates it. Its scriptures expected are in the sermon, so detection finds them more easily, and loading them puts the first verse in Next.",
+        "A service saved as a file by another app (a **service package**, .json) imports with **Services → Import**.",
+        "For the people who make the apps: the page links to **the guide for developers** (the API, its events, webhooks and the service package).",
     ],
 }
 _insert_after("propresenter", DEVICES)
@@ -845,6 +848,7 @@ FEATURES = [
     ("ProPresenter: the message; stage message; Why isn’t it on the screens?", "propresenter"),
     ("ProPresenter found on the network; type the address", "propresenter"),
     ("Other apps and devices: pairing, control, the API for developers", "devices"),
+    ("Services sent in by other apps, or imported as a package file", "devices"),
     ("Features and presets", "settings"),
     ("Microphone, desk channel and sound check", "settings"),
     ("Speech engines: on this computer, browser, OpenAI", "settings"),

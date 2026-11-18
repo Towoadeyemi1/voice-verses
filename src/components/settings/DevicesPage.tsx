@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Code2, KeyRound, Network, Smartphone, Webhook } from 'lucide-react';
+import { CalendarPlus, Code2, KeyRound, Network, Smartphone, Webhook } from 'lucide-react';
 import { toast } from 'sonner';
 import { desktop, type ApiScope, type ApiStatus } from '@/lib/desktop';
 import { DOWNLOAD_PAGE_URL } from '@/lib/releases';
@@ -19,7 +19,8 @@ function ago(iso: string | null): string {
   return `used ${new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`;
 }
 
-const allowed = (scopes: ApiScope[]) => (scopes.includes('control') ? 'Can see what’s on and control the screens' : 'Can see what’s on');
+const allowed = (scopes: ApiScope[]) =>
+  ['Can see what’s on', scopes.includes('control') ? 'control the screens' : '', scopes.includes('write') ? 'send in services' : ''].filter(Boolean).join(scopes.includes('control') && scopes.includes('write') ? ', ' : ' and ').replace(/, (send in services)$/, ' and $1');
 
 /**
  * Settings → Other apps and devices (the local API, 1.19.5, D33): turn it on, pair a device
@@ -29,6 +30,7 @@ export function DevicesPage() {
   const api = desktop?.api;
   const [status, setStatus] = useState<ApiStatus | null>(null);
   const [control, setControl] = useState(true);
+  const [write, setWrite] = useState(false);
   const [busy, setBusy] = useState(false);
   const [, tick] = useState(0);
 
@@ -88,7 +90,7 @@ export function DevicesPage() {
   };
 
   const showCode = async () => {
-    await api.startPairing(control ? ['read', 'control'] : ['read']);
+    await api.startPairing(['read', ...(control ? (['control'] as const) : []), ...(write ? (['write'] as const) : [])]);
     await refresh();
   };
 
@@ -157,6 +159,9 @@ export function DevicesPage() {
                 </Row>
                 <Row lead={<Sq tint="orange" icon={KeyRound} />} title="Control the screens" desc="Show a verse, put one in Next, Take, go forward or back, Clear, and the logo.">
                   <Toggle checked={control} onChange={setControl} label="Allow it to control the screens" />
+                </Row>
+                <Row lead={<Sq tint="blue" icon={CalendarPlus} />} title="Send in services" desc="The order of service, songs with their credits, the scriptures expected and announcements, for any day. A service it sent before is updated.">
+                  <Toggle checked={write} onChange={setWrite} label="Allow it to send in services" />
                 </Row>
                 <div className="st-row-actions">
                   <button type="button" className="st-btn primary" onClick={() => void showCode()} data-api-pair-start>

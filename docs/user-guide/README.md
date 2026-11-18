@@ -482,7 +482,8 @@ A Stream Deck, a phone, or your church’s own apps (a dashboard, Planning Cente
 1. Settings → **Other apps and devices**: switch it on. Switch it off and no other app can use Voice Verses (the network screens have their own switch).
 2. **The address** other apps use. Most find Voice Verses on the network by themselves.
 3. **Control the screens**: on, the device you pair next can show verses, Take, go forward or back, Clear and show the logo. Off, it can only see what’s on and follow what happens.
-4. **Show a pairing code**.
+4. **Send in services**: on for an app that plans your services (the CCCG Dashboard, Planning Center, your church’s own app). It can send a whole service for any day: the order, songs with their credits, the scriptures expected and announcements.
+5. **Show a pairing code**.
 
 ### Pair a device
 
@@ -501,7 +502,9 @@ A Stream Deck, a phone, or your church’s own apps (a dashboard, Planning Cente
 **Good to know**
 
 - A remote **Take** does exactly what the Take button does. While you practise in Training, other apps can’t change the screens.
-- For the people who make the apps: the page links to **the guide for developers** (the API, its events and webhooks).
+- A service sent in appears in **Services** on its day, marked **From** and the app’s name, and you see a message when it arrives. Sending it again updates it. Its scriptures expected are in the sermon, so detection finds them more easily, and loading them puts the first verse in Next.
+- A service saved as a file by another app (a **service package**, .json) imports with **Services → Import**.
+- For the people who make the apps: the page links to **the guide for developers** (the API, its events, webhooks and the service package).
 
 <a id="settings"></a>
 
@@ -824,6 +827,7 @@ The verse on a green key colour for the stream switcher. Over NDI it goes see-th
 | ProPresenter: the message; stage message; Why isn’t it on the screens? | [11. ProPresenter: three ways to connect](#propresenter) |
 | ProPresenter found on the network; type the address | [11. ProPresenter: three ways to connect](#propresenter) |
 | Other apps and devices: pairing, control, the API for developers | [12. Other apps and devices](#devices) |
+| Services sent in by other apps, or imported as a package file | [12. Other apps and devices](#devices) |
 | Features and presets | [13. Settings, page by page](#settings) |
 | Microphone, desk channel and sound check | [13. Settings, page by page](#settings) |
 | Speech engines: on this computer, browser, OpenAI | [13. Settings, page by page](#settings) |

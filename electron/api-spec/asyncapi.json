@@ -3,7 +3,7 @@
  "info": {
   "title": "Voice Verses events",
   "version": "1.0.0",
-  "x-app-version": "1.19.4",
+  "x-app-version": "1.19.6",
   "description": "Events Voice Verses sends while it runs, as CloudEvents 1.0. Follow them at /api/v1/events (Server-Sent Events or WebSocket, with ?types=live.* to choose), or have them POSTed to a webhook. A change that would break a reader gets a new type (….v2) beside the old one. Events made while the operator practises are never sent."
  },
  "servers": {
@@ -74,6 +74,9 @@
     },
     "module_registered": {
      "$ref": "#/components/messages/module_registered"
+    },
+    "package_received": {
+     "$ref": "#/components/messages/package_received"
     }
    }
   }
@@ -241,6 +244,17 @@
    "messages": [
     {
      "$ref": "#/channels/events/messages/module_registered"
+    }
+   ]
+  },
+  "receive_package_received": {
+   "action": "receive",
+   "channel": {
+    "$ref": "#/channels/events"
+   },
+   "messages": [
+    {
+     "$ref": "#/channels/events/messages/package_received"
     }
    ]
   }
@@ -927,6 +941,62 @@
           "id",
           "name",
           "version"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   },
+   "package_received": {
+    "name": "package.received",
+    "title": "package.received",
+    "summary": "A service package arrived and became, or updated, a service.",
+    "contentType": "application/cloudevents+json",
+    "payload": {
+     "allOf": [
+      {
+       "$ref": "#/components/schemas/CloudEvent"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "type": {
+         "const": "org.voiceverses.package.received.v1"
+        },
+        "name": {
+         "const": "package.received"
+        },
+        "data": {
+         "type": "object",
+         "properties": {
+          "serviceId": {
+           "type": "string"
+          },
+          "name": {
+           "type": "string"
+          },
+          "date": {
+           "type": "string",
+           "format": "date"
+          },
+          "from": {
+           "type": "string"
+          },
+          "created": {
+           "type": "boolean"
+          },
+          "warnings": {
+           "type": "integer"
+          }
+         },
+         "required": [
+          "serviceId",
+          "name",
+          "date",
+          "from",
+          "created",
+          "warnings"
          ]
         }
        }

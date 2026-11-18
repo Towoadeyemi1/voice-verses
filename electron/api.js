@@ -22,6 +22,8 @@ export const SCOPES = ['read', 'control', 'write'];
 const PAIR_MINUTES = 5;
 const PAIR_TRIES = 5;
 const BODY_LIMIT = 64 * 1024;
+/** A service package can carry songs' words and small pictures */
+const PACKAGE_LIMIT = 4 * 1024 * 1024;
 const ANSWER_MS = 6000;
 const MAX_DEVICES = 50;
 const MAX_HOOKS = 10;
@@ -209,13 +211,13 @@ function deliver(device, hook, event) {
 // ---- Commands to the operator's window -----------------------------------------------------
 
 /** Asks the operator's window to do something; resolves with { ok, status?, message?, result? }. */
-function ask(command, body) {
+function ask(command, body, ms = ANSWER_MS) {
   return new Promise((resolve) => {
     const id = crypto.randomUUID();
     const timer = setTimeout(() => {
       pending.delete(id);
       resolve({ ok: false, status: 504, message: 'Voice Verses did not answer. Is the app open?' });
-    }, ANSWER_MS);
+    }, ms);
     pending.set(id, { resolve, timer });
     const sent = sendCommand?.({ id, command, body: body ?? {} });
     if (!sent) {
@@ -250,13 +252,13 @@ function json(res, code, value) {
 
 const problem = (res, code, error, message) => json(res, code, { error: { code: error, message } });
 
-function readBody(req) {
+function readBody(req, limit = BODY_LIMIT) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
     req.on('data', (c) => {
       size += c.length;
-      if (size > BODY_LIMIT) {
+      if (size > limit) {
         reject(Object.assign(new Error('Too large'), { status: 413 }));
         req.destroy();
       } else chunks.push(c);
@@ -404,6 +406,22 @@ export async function handle(req, res, pathname) {
       if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return problem(res, 400, 'bad_date', 'Give the date as YYYY-MM-DD.');
       const answer = await ask('services.list', { date });
       return answer.ok ? json(res, 200, answer.result) : problem(res, answer.status ?? 500, 'no_answer', answer.message);
+    }
+
+    // Service packages (1.19.6): send one in, or get a service as one
+    if (path === '/api/v1/packages') {
+      if (method !== 'POST') return problem(res, 405, 'method', 'Use POST.');
+      if (!may('write')) return forbid('write');
+      const body = await readBody(req, PACKAGE_LIMIT);
+      const answer = await ask('services.receive', { package: body, app: device.name }, 30_000);
+      return answer.ok ? json(res, answer.result?.created ? 201 : 200, answer.result) : problem(res, answer.status ?? 400, 'not_used', answer.message);
+    }
+    const packagePath = /^\/api\/v1\/services\/([\w-]+)\/package$/.exec(path);
+    if (packagePath) {
+      if (method !== 'GET') return problem(res, 405, 'method', 'Use GET.');
+      if (!may('read')) return forbid('read');
+      const answer = await ask('services.package', { id: packagePath[1] });
+      return answer.ok ? json(res, 200, answer.result) : problem(res, answer.status ?? 404, 'not_found', answer.message);
     }
 
     const live = /^\/api\/v1\/live\/([a-z]+)$/.exec(path);

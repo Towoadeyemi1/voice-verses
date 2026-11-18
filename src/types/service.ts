@@ -125,6 +125,10 @@ export interface Service {
   templateName?: string;
   serviceLogo?: string; // URL or base64 data of service logo
   updatedAt?: string; // ISO time of the last local edit, used to sync the library folder
+  /** Where it came from, when another app sent it as a service package (1.19.6) */
+  from?: { app: string; id?: string; updatedAt?: string; receivedAt: string };
+  /** Notes for the service (e.g. the sermon's), from a package */
+  notes?: string;
   // Legacy support
   slides?: Slide[];
 }

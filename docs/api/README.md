@@ -52,7 +52,7 @@ What a key may do (its scopes):
 | --- | --- |
 | `read` | What is on (`/live`), the modules, the services, events and webhooks. Every key has it. |
 | `control` | `/live/show`, `/next`, `/take`, `/advance`, `/back`, `/clear`, `/logo`. Chosen by the operator when pairing. |
-| `write` | Sending things in (service packages, from the next version). |
+| `write` | Sending in services: `POST /packages`. Chosen by the operator when pairing (**Send in services**). |
 
 The operator can remove a device at any time. Its key stops working at once, and its event streams and webhooks stop.
 
@@ -103,7 +103,7 @@ This works as Server-Sent Events. A WebSocket upgrade on the same address sends 
 }
 ```
 
-The events are `live.changed`, `next.changed`, `countdown.changed`, `alert.changed`, `listening.started`, `listening.stopped`, `speech.heard`, `verse.found`, `suggestion.offered`, `service.updated`, `service.deleted`, `media.updated`, `media.deleted`, `bible.changed` and `module.registered`. The fields of each are in `asyncapi.json`.
+The events are `live.changed`, `next.changed`, `countdown.changed`, `alert.changed`, `listening.started`, `listening.stopped`, `speech.heard`, `verse.found`, `suggestion.offered`, `service.updated`, `service.deleted`, `package.received`, `media.updated`, `media.deleted`, `bible.changed` and `module.registered`. The fields of each are in `asyncapi.json`.
 
 How events behave:
 - A change that would break a reader gets a new type (`….v2`) beside the old one.
@@ -143,7 +143,20 @@ const ok = crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(req.headers
 GET /api/v1/services?date=2026-11-22
 ```
 
-This returns each service of that day with its order: parts and their items, with the number of slides in each. Templates are left out. Sending a whole service in (a *service package*: the order, the scriptures expected, songs with credits, announcements, media) comes in the next version.
+This returns each service of that day with its order: parts and their items, with the number of slides in each. Templates are left out.
+
+### Sending a service in
+
+```http
+POST /api/v1/packages
+Authorization: Bearer vv1_…   (paired with Send in services)
+
+{ "package": "1.0", "id": "your-id", "service": { "name": "Sunday Celebration", "date": "2026-11-22" }, "order": [ … ], … }
+```
+
+A *service package* holds everything one service needs: the order, songs with their words and credits, the scriptures expected, announcements, pictures and notes. It becomes a service on its day. Sending the same `id` again updates that service. The format, what Voice Verses does with each part, and what comes back are in [service-package.md](service-package.md), with an [example](examples/sunday-package.json).
+
+`GET /api/v1/services/{id}/package` gives any service back as a package.
 
 ## How it is built
 
