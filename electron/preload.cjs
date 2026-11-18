@@ -12,10 +12,17 @@ contextBridge.exposeInMainWorld('voiceVerses', {
   platform: process.platform,
   getVersion: () => invoke('app:version'),
   setListening: (listening) => invoke('power:listening', listening),
-  onUpdateAvailable: (callback) => {
-    const listener = (_event, info) => callback(info);
-    ipcRenderer.on('app:update-available', listener);
-    return () => ipcRenderer.removeListener('app:update-available', listener);
+  // Updates (1.19.9): ask for the state when a window opens, then follow it
+  updates: {
+    state: () => invoke('app:update-state'),
+    check: () => invoke('app:update-check'),
+    download: () => invoke('app:update-download'),
+    install: () => invoke('app:update-install'),
+    onState: (callback) => {
+      const listener = (_event, state) => callback(state);
+      ipcRenderer.on('app:update-state', listener);
+      return () => ipcRenderer.removeListener('app:update-state', listener);
+    },
   },
   secrets: {
     has: (name) => invoke('secrets:has', name),

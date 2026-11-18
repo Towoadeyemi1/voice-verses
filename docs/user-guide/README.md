@@ -571,7 +571,7 @@ Open Settings with the gear. Everything saves as you change it; there is no Save
 
 ![Desktop app](img/settings-9b-desktop.jpg)
 
-1. **Desktop app** in the sidebar: downloads for Mac (Apple chip or Intel) and Windows. Each is one installer with everything, the offline speech engine included. A new version is offered when it comes out.
+1. **Desktop app** in the sidebar. **Updates** at the top: the version on this computer and whether a newer one is out. Voice Verses looks when it opens and every 4 hours; **Check now** looks at once. On Windows it downloads by itself, then **Restart to update** (or it installs when you quit). On a Mac, **Download** puts the new installer in Downloads, then **Open the installer**: quit Voice Verses, drag it to Applications and choose Replace. A new version also shows beside Desktop app in this list, with a message. Below: downloads for Mac (Apple chip or Intel) and Windows, each one installer with everything, the offline speech engine included.
 
 <a id="spirit"></a>
 
@@ -850,7 +850,7 @@ The verse on a green key colour for the stream switcher. Over NDI it goes see-th
 | CCLI licence number | [13. Settings, page by page](#settings) |
 | Church logo | [13. Settings, page by page](#settings) |
 | Library folder and backup across computers | [13. Settings, page by page](#settings) |
-| Desktop app downloads and updates | [13. Settings, page by page](#settings) |
+| Desktop app downloads and updates (Check now, Restart to update, Open the installer) | [13. Settings, page by page](#settings) |
 | spirit: how much it does, what it does, cues, Not this, Pause, How it went | [14. spirit: let it run the service](#spirit) |
 | Moments on cue and sermon points | [14. spirit: let it run the service](#spirit) |
 | Services: calendar, new, import, save to a file, copy for next Sunday | [15. Plan your services](#planning) |

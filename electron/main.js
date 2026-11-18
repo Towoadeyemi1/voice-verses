@@ -13,7 +13,7 @@ import * as screens from './screens.js';
 import * as decklink from './decklink.js';
 import * as ndi from './ndi.js';
 import * as speech from './speech/index.js';
-import { initUpdates } from './updates.js';
+import { checkForUpdates, downloadInstaller, initUpdates, installUpdate, updateState } from './updates.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -184,6 +184,11 @@ handle('ndi:set', (config) => ndi.setConfig(config));
 handle('ndi:status', () => ndi.getStatus());
 
 handle('app:version', () => app.getVersion());
+// Updates (1.19.9): the state, Check now, download this Mac's installer, Restart to update / Open the installer
+handle('app:update-state', () => updateState());
+handle('app:update-check', () => checkForUpdates());
+handle('app:update-download', () => downloadInstaller());
+handle('app:update-install', () => installUpdate());
 // While listening, the computer must not sleep (it would stop hearing the preacher)
 handle('power:listening', (listening, event) => {
   const reason = `listening-${event.sender.id}`;

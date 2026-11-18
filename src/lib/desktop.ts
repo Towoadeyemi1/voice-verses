@@ -47,6 +47,24 @@ export interface ProPresenterThemeSlide {
   label: string;
 }
 
+/**
+ * Updates (1.19.9, electron/updates.js). `how`: "restart" installs by itself (Windows, a signed
+ * Mac); "installer" means the operator opens the downloaded installer (an unsigned Mac).
+ */
+export interface UpdateState {
+  status: 'unsupported' | 'idle' | 'checking' | 'latest' | 'available' | 'downloading' | 'ready' | 'downloaded' | 'error';
+  current: string;
+  how?: 'restart' | 'installer';
+  version?: string;
+  percent?: number;
+  error?: string;
+  checkedAt?: number;
+  /** The release page */
+  page?: string;
+  /** The downloaded installer (unsigned Mac) */
+  file?: string;
+}
+
 /** What Settings → Other apps and devices shows (the local API, 1.19.5) */
 export type ApiScope = 'read' | 'control' | 'write';
 export interface ApiWebhook {
@@ -147,7 +165,13 @@ export interface DesktopBridge {
   /** Keeps the computer and screens awake while listening */
   setListening(listening: boolean): Promise<void>;
   /** A newer version exists but this build can't install it itself (unsigned macOS build) */
-  onUpdateAvailable(callback: (info: { version: string; url: string }) => void): () => void;
+  updates: {
+    state(): Promise<UpdateState>;
+    check(): Promise<UpdateState>;
+    download(): Promise<UpdateState>;
+    install(): Promise<boolean>;
+    onState(callback: (state: UpdateState) => void): () => void;
+  };
   secrets: {
     has(name: SecretName): Promise<boolean>;
     set(name: SecretName, value: string): Promise<void>;

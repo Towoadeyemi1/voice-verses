@@ -131,6 +131,8 @@
 .vvs .st-state.warn { background: var(--s-warn-soft); color: var(--s-warn); }
 .vvs .st-spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--s-fill-2); border-top-color: var(--s-accent); animation: st-spin .9s linear infinite; flex: none; }
 @keyframes st-spin { to { transform: rotate(360deg); } }
+.vvs .st-progress { height: 6px; border-radius: 3px; background: var(--s-fill-2); overflow: hidden; margin: 10px 4px 0; }
+.vvs .st-progress > span { display: block; height: 100%; background: var(--s-accent); transition: width .3s; }
 
 /* Hero cards (ProPresenter, Booth check) */
 .vvs .st-hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px; border-radius: 16px; background: radial-gradient(70% 140% at 0% 0%, var(--s-accent-soft), transparent 60%), var(--s-surface); }

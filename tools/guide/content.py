@@ -732,7 +732,7 @@ _settings.insert([f["img"] for f in _settings].index("settings-3b-engine") + 1, 
 _settings.append({
     "img": "settings-9b-desktop",
     "caption": "Desktop app",
-    "steps": ["**Desktop app** in the sidebar: downloads for Mac (Apple chip or Intel) and Windows. Each is one installer with everything, the offline speech engine included. A new version is offered when it comes out."],
+    "steps": ["**Desktop app** in the sidebar. **Updates** at the top: the version on this computer and whether a newer one is out. Voice Verses looks when it opens and every 4 hours; **Check now** looks at once. On Windows it downloads by itself, then **Restart to update** (or it installs when you quit). On a Mac, **Download** puts the new installer in Downloads, then **Open the installer**: quit Voice Verses, drag it to Applications and choose Replace. A new version also shows beside Desktop app in this list, with a message. Below: downloads for Mac (Apple chip or Intel) and Windows, each one installer with everything, the offline speech engine included."],
 })
 
 _planning = _sec("planning")
@@ -872,7 +872,7 @@ FEATURES = [
     ("CCLI licence number", "settings"),
     ("Church logo", "settings"),
     ("Library folder and backup across computers", "settings"),
-    ("Desktop app downloads and updates", "settings"),
+    ("Desktop app downloads and updates (Check now, Restart to update, Open the installer)", "settings"),
     ("spirit: how much it does, what it does, cues, Not this, Pause, How it went", "spirit"),
     ("Moments on cue and sermon points", "spirit"),
     ("Services: calendar, new, import, save to a file, copy for next Sunday", "planning"),

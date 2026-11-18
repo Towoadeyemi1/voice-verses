@@ -164,6 +164,8 @@ Check this list before debugging. Add every new mistake that cost time.
 
 - **The Mac installer for v1.19.7 was never built.** GitHub's `macos-latest` job waited 15 minutes for a Mac and was cancelled without running a step, and the same again on re-runs, while Windows built in 6 minutes and GitHub reported no outage. Nothing in the code had changed. Ask for a named image (`macos-15`) rather than `latest`, which moves to new images. A re-run uses the workflow saved with the tag, so a workflow fix needs a new release tag.
 
+- **Users weren't told about new versions.** The update check ran once, as the window was still loading, and sent its answer once: if the window wasn't listening yet, the notice was lost. Windows showed nothing at all (it updated only on quit), and there was no place in the app to check. Keep the state in the main process and let each window ask for it when it opens; check again on a timer (booth computers stay on for days); always give a visible place and a button (1.19.9).
+
 ## Hardware
 
 - **"No signal" on the ProPresenter computer:** it has no microphone; its only inputs are a DeckLink's virtual audio devices, silent without SDI-embedded sound. "Default input" hid which device it was. Name the device behind Default, and say plainly when an input belongs to a video card (`isVideoCardInput`).

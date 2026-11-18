@@ -19,6 +19,8 @@ import { SpiritPage, useSpirit } from './settings/SpiritPage';
 import { CuesPage } from './settings/CuesPage';
 import { MovesPage } from './settings/MovesPage';
 import { DevicesPage } from './settings/DevicesPage';
+import { UpdatesSection } from './settings/UpdatesSection';
+import { useUpdates } from '@/hooks/use-updates';
 import { MOVES, moveCanBeHandsFree, moveTrust, noticed } from '@/lib/spirit';
 import { List, Ring, Row, Section, Sq, Tint } from './settings/kit';
 import { BoothCheckItem, needsAttention, runBoothCheck } from '@/lib/boothCheck';
@@ -112,6 +114,7 @@ export const SettingsPanel = ({
   const earnedMoves = MOVES.filter((m) => m.works && moveTrust(spirit, m.id).level !== 'handsfree' && moveCanBeHandsFree(spirit, m.id)).length;
   const navigate = useNavigate();
   const [pane, setPane] = useState<Pane>(initial === 'network' ? 'screens' : initial);
+  const update = useUpdates();
   const [bibleVersion, setBibleVersion] = useState<BibleVersionType>('kjv');
   const [ccliLicense, setCcliLicense] = useState<string>(() => readSettings().ccliLicense || '');
   const [language, setLanguage] = useState<string>(() => localStorage.getItem('transcription_language') || 'en');
@@ -170,6 +173,11 @@ export const SettingsPanel = ({
                   <span className="name">{p.label}</span>
                   {badge(p.id) > 0 && <span className="st-badge" aria-label={`${badge(p.id)} to check`}>{badge(p.id)}</span>}
                   {p.id === 'moves' && earnedMoves > 0 && <span className="st-badge" style={{ color: 'var(--s-accent)', background: 'var(--s-accent-soft)' }}>{earnedMoves} earned</span>}
+                  {p.id === 'app' && update && ['available', 'ready', 'downloaded'].includes(update.status) && (
+                    <span className="st-badge" style={{ color: 'var(--s-accent)', background: 'var(--s-accent-soft)' }} data-update-badge>
+                      {update.version}
+                    </span>
+                  )}
                   {p.id === 'cues' && newNoticed > 0 && <span className="st-badge" style={{ color: 'var(--s-accent)', background: 'var(--s-accent-soft)' }}>{newNoticed} new</span>}
                 </button>
               ))}
@@ -282,6 +290,7 @@ export const SettingsPanel = ({
 
         {pane === 'app' && (
           <div className="st-page">
+            <UpdatesSection />
             <p className="st-hint">
               The desktop app is the way to run Voice Verses in church: listening runs on the computer with no internet or key needed, keys stay in the system keychain,
               outputs open on their screens by themselves, and the library can be kept in a folder. This website works too, with the browser’s speech recognition.
