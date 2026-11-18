@@ -478,6 +478,18 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
   - Checked by `tools/checks/import-check.ts` (CI) and `tools/e2e/add-from-file.cjs` (a real PDF, PowerPoint and Word file).
 - ⏳ Next: step 2.4, connectors (CCCG Dashboard once its documentation is in hand, or it builds to ours; Planning Center).
 
+## "When I publish new releases, the users having previous versions do not get a notification and a place to update from their app."
+
+(18 Nov 2026.) Right: the app checked once, as its window was opening, and the notice was often lost; Windows showed nothing (it only updated on quit); there was no place to check.
+- ✅ 1.19.9 **Updates that people see** (`electron/updates.js`):
+  - The app looks for a new version when it opens and every 4 hours.
+  - **Settings → Desktop app → Updates** shows the version and **Check now**, and the new version appears beside Desktop app in the Settings list, with a message.
+  - **Windows:** it downloads by itself, then **Restart to update** (or installs on quit).
+  - **Mac** (not yet signed by Apple): **Download** gets the right installer for that Mac (Apple chip or Intel), checks it, then **Open the installer** with the steps.
+  - Checked by `tools/e2e/updates.cjs` against a pretend update server.
+- ⚠ Copies older than 1.19.9 can't be fixed from here: each needs 1.19.9 (or later) downloaded once by hand. After that, updates show up by themselves.
+- ⏳ Signing (Apple Developer account, Windows certificate) would let Macs install updates by themselves too.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

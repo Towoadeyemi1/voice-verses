@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, ExternalLink } from 'lucide-react';
 import { DOWNLOAD_PAGE_URL, INSTALLERS, RELEASES_REPO, installerUrl } from '@/lib/releases';
+import { desktop } from '@/lib/desktop';
 
 type Platform = 'mac' | 'windows' | 'other';
 
@@ -59,6 +60,8 @@ export const DesktopDownloads = () => {
   }, [platform]);
 
   useEffect(() => {
+    // In the desktop app, Settings → Desktop app → Updates knows the versions (1.19.9)
+    if (desktop) return;
     fetch(`https://api.github.com/repos/${RELEASES_REPO}/releases/latest`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {

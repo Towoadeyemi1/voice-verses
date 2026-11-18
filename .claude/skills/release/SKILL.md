@@ -19,7 +19,8 @@ Claude sessions can't push tags (blocked), so the owner publishes:
    - If a run failed, read its job logs. A run that never starts usually means Actions billing; ask the owner to check their payment method.
 5. The website deploys from `main` by itself (`deploy-pages.yml`).
 6. **Tell the owner:**
-   - Installed apps update on next quit. An unsigned Mac build shows an update notice with a download link instead.
+   - Installed apps (1.19.9 and later) find the release within 4 hours, or at once with Settings → Desktop app → Updates → Check now. Windows downloads it and offers Restart to update (or installs on quit). An unsigned Mac downloads its installer to Downloads and offers Open the installer.
+   - Copies older than 1.19.9 had an update notice that was often lost: their users must download 1.19.9 or later once by hand.
    - Intel Macs need the `x64` build; the download page picks it automatically.
 
 Signing and notarising need the owner's Apple Developer account (organisation enrolment recommended) and a Windows certificate. The secrets are optional in the workflow.

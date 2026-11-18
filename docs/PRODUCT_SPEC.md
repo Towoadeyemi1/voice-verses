@@ -477,7 +477,12 @@ The autopilot that learns how a church runs its service. Approved mock-up: `docs
   - `Voice-Verses-mac-x64.dmg`
   - `Voice-Verses-Setup-win-x64.exe`
 - The download page detects the Mac's chip.
-- `electron-updater` installs updates silently on quit. An unsigned Mac build can't self-update, so it shows a notice with a link instead.
+- **Updates** (`electron/updates.js`, 1.19.9):
+  - Looks for a newer release when the app opens, then every 4 hours, and on **Check now** (Settings → Desktop app → Updates). The window asks for the state when it opens (`app:update-state`), so an answer that arrives first is never lost.
+  - Windows and a signed Mac: `electron-updater` downloads in the background (progress shown), then **Restart to update**, or it installs on quit.
+  - An unsigned Mac can't install by itself. **Download** fetches this Mac's installer (`Voice-Verses-mac-<arch>.dmg`) to Downloads as `…-<version>.dmg`, checked against the SHA-512 in `latest-mac.yml` (a mismatch is deleted and said). Then **Open the installer**, with the steps (quit, drag to Applications, Replace).
+  - A message once per version and step (available, downloaded, ready), and the new version shown beside **Desktop app** in the Settings list. Nothing restarts or opens by itself.
+  - Tests use a local feed: `VOICE_VERSES_UPDATE_FEED` and `VOICE_VERSES_UPDATE_MODE` (`tools/e2e/updates.cjs`).
 - Signing secrets are optional in CI and need the owner's Apple Developer account and a Windows certificate.
 
 ## 11. Pages and settings (1.4.2)

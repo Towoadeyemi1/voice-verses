@@ -25,7 +25,7 @@ import { seedSamplesOnce } from "./lib/samples/seed";
 import { startNetworkPublisher } from "./lib/networkPublisher";
 import NotFound from "./pages/NotFound";
 import { librarySync } from "./lib/library/librarySync";
-import { desktop } from "./lib/desktop";
+import { desktop, type UpdateState } from "./lib/desktop";
 import { isDisplayWindow } from "./lib/appUrl";
 import { toast } from "sonner";
 import { HelpAssistant } from "./components/HelpAssistant";
@@ -47,13 +47,38 @@ const App = () => {
     startNetworkPublisher();
     // The first time the app opens: sample services and songs, so it shows what it does
     void seedSamplesOnce();
-    return desktop?.onUpdateAvailable(({ version, url }) => {
-      toast(`Voice Verses ${version} is available`, {
-        description: 'Download it and replace the app in Applications when convenient.',
-        duration: Infinity,
-        action: { label: 'Download', onClick: () => window.open(url, '_blank') },
-      });
-    });
+    // Updates (1.19.9): a message once per version and step; Settings → Desktop app → Updates has the rest
+    const updates = desktop?.updates;
+    if (!updates) return;
+    const told = new Set<string>();
+    const tell = (s: UpdateState) => {
+      const key = `${s.status}:${s.version}`;
+      if (!s.version || told.has(key)) return;
+      if (s.status === 'ready') {
+        told.add(key);
+        toast(`Voice Verses ${s.version} is ready`, {
+          description: 'Restart to update now, or it installs the next time you quit. Your services and settings stay.',
+          duration: Infinity,
+          action: { label: 'Restart to update', onClick: () => void updates.install() },
+        });
+      } else if (s.status === 'available' && s.how === 'installer') {
+        told.add(key);
+        toast(`Voice Verses ${s.version} is available`, {
+          description: 'Download it now; you install it between services. Settings → Desktop app shows how.',
+          duration: Infinity,
+          action: { label: 'Download', onClick: () => void updates.download() },
+        });
+      } else if (s.status === 'downloaded') {
+        told.add(key);
+        toast(`Voice Verses ${s.version} is downloaded`, {
+          description: 'Quit Voice Verses, open the installer and drag the app to Applications (Replace).',
+          duration: Infinity,
+          action: { label: 'Open the installer', onClick: () => void updates.install() },
+        });
+      }
+    };
+    updates.state().then(tell).catch(() => {});
+    return updates.onState(tell);
   }, []);
 
   return (
