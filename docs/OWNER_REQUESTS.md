@@ -490,6 +490,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ⚠ Copies older than 1.19.9 can't be fixed from here: each needs 1.19.9 (or later) downloaded once by hand. After that, updates show up by themselves.
 - ⏳ Signing (Apple Developer account, Windows certificate) would let Macs install updates by themselves too.
 
+## "We are running ProPresenter in parallel on the Mac computer, and all we want is run Voice Verses on that computer too, but select its projector output as the Decimator, as the DeckLink Duo card has only 3 outputs that have been exhausted."
+
+(25 Nov 2026.) Yes, this works with what is built: Settings → Screens and outputs → Projector on the eGPU's HDMI display (extended, 1920×1080), into a Decimator set to the switcher's format, down the balcony SDI cable to the switcher input that was Camera 1.
+- ⚠ That computer has no microphone (2 Nov): Voice Verses needs the preacher's sound there (a USB audio interface or adapter fed from the desk), or it listens on the iMac and the ProPresenter computer only shows the network projector page full screen on the eGPU display.
+- ⚠ ProPresenter must not use the eGPU display.
+- ⏳ The owner's team re-patches the switcher input and tests.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
