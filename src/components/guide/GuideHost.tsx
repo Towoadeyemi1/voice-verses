@@ -216,6 +216,8 @@ export function GuideHost() {
           if (s.click && now) {
             setTap((t) => t + 1);
             await wait(250);
+            // A press before the click: tabs switch on the press, not the click
+            now.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }));
             now.click();
           }
           if (s.type && now) await typeInto(now, s.type, alive);

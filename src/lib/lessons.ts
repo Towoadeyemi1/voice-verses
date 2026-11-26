@@ -6,7 +6,7 @@
  * Every lesson has its own automatic test (tools/e2e/training.cjs), so a change
  * to the screens can't break one unnoticed.
  */
-import type { GuideStep, Lesson } from '@/lib/guide';
+import { find, type GuideStep, type Lesson } from '@/lib/guide';
 import { loadSpirit, removeCue, updateSpirit } from '@/lib/spirit';
 
 /** Said when a step is done and has nothing of its own to say */
@@ -134,7 +134,7 @@ const teachCue: GuideStep[] = [
 
 // ---- Songs and slides (1.19.17) ------------------------------------------------------------
 
-const find = (selector: string) => document.querySelector(selector);
+// `find` is the visible one: the wide-screen Library column is in the page, hidden, on a smaller window
 /** The slide on the screens, in the strip (its key), so the next Take can be seen to move on */
 const liveSlide = () => find('[aria-label="Slides"] [role="listitem"]:has([data-state="live"])')?.getAttribute('data-key') ?? '';
 let firstLive = '';

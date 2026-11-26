@@ -415,7 +415,7 @@ SECTIONS = [
                     "**Show me**: Voice Verses does each step, with a pointer and a voice.",
                     "**Let me try**: you do each step; it waits and checks.",
                     "**Watch**: the demo, explained aloud.",
-                    "Lessons by who they are for: **Everyone** (your first Sunday, the demo, when something goes wrong), **Setting up** (set up your booth, screens and outputs) and **Before Sunday** (plan a service from a template, teach spirit a cue). Let me try in *Plan a service* plans a real service; delete it from the day if you don’t want it.",
+                    "Lessons by who they are for: **Everyone** (your first Sunday, the demo, when something goes wrong), **Setting up** (set up your booth, screens and outputs) and **Before Sunday** (plan a service from a template, songs and slides, teach spirit a cue). Let me try in *Plan a service* plans a real service; delete it from the day if you don’t want it. In *Songs and slides*, Quick edit is opened and then cancelled, so no song changes unless you press Save yourself.",
                 ],
             },
             {
@@ -727,6 +727,7 @@ DEVICES = {
         },
     ],
     "points": [
+        "**A Stream Deck:** add the Voice Verses module to Bitfocus Companion (the file **voice-verses-companion.tgz** comes with each release) and type the pairing code in its connection. Its ready-made buttons Take, Clear, show the logo, go back and forward and show a verse; Take lights green while something waits in Next, Clear red while something is on the screens. Step by step: [Stream Deck buttons](../integrations/stream-deck.md).",
         "A remote **Take** does exactly what the Take button does. While you practise in Training, other apps can’t change the screens.",
         "A service sent in appears in **Services** on its day, marked **From** and the app’s name, and you see a message when it arrives. Sending it again updates it. Its scriptures expected are in the sermon, so detection finds them more easily, and loading them puts the first verse in Next.",
         "A service saved as a file by another app (a **service package**, .json) imports with **Services → Import**.",
