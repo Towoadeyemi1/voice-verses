@@ -316,7 +316,7 @@ SECTIONS = [
                 "caption": "Bible translations",
                 "steps": [
                     "**Bible** in the sidebar.",
-                    "**On this computer**: KJV, ASV, WEB, or your own. Always works, no internet needed.",
+                    "**On this computer**: KJV, ASV, WEB, or your own. Always works, no internet needed. **Your own** → **Add a Bible file** takes a Bible in OSIS, USFX, Zefania or USFM (a file, or the .zip eBible.org gives you) or JSON, and shows it by its own short name. Only add a Bible your church may use: public domain, or licensed to you.",
                     "**Over the internet**: ESV, NLT and API.Bible translations (NKJV, NIV, CSB…), each with a free key from its publisher.",
                 ],
             },

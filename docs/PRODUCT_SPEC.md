@@ -111,6 +111,7 @@ The checks in `tools/speech-eval/detector-check.ts` cover all of the above and r
 ## 4. Bibles
 
 - **Bundled (offline):** KJV (with italics shown and margin notes removed), WEB, ASV. Loaded lazily.
+- **The church's own Bible file** (1.19.15, `lib/bibleFiles.ts`; Settings → Bible → Your own → Add a Bible file): OSIS XML (container or milestone verses), USFX XML, Zefania XML, USFM (one book, several joined, or a .zip as eBible.org shares them) and JSON (the built-in shape, BibleSuperSearch's), in UTF-8 or UTF-16. Read on the computer into the 66 books in order; footnotes, cross-references, headings and Strong's numbers are left out; the translators' added words become `{word}` (italics, like the built-in KJV); a verse across paragraphs is joined with a space; books outside the 66 are left out and counted. Its name and short name come from the file (Digital Bible Library metadata in eBible.org zips, the copyright page's title, OSIS `osisWork`, Zefania `title`/`identifier`), else from the file name. The Bible is kept in IndexedDB (`files` → `custom-bible`; an older one in localStorage is still read), its name in `cornerstone-custom-bible-info`; the screens, the Settings card and the live screen's translation switch use its short name. A book it lacks comes from the KJV. A message says how many verses were read and what was left out. Checked in CI by `tools/checks/bible-files.ts` and end to end by `tools/e2e/bible-file.cjs` (a whole KJV-text Bible as a USFM .zip). Tested on eBible.org's WEB (USFX) and KJV (USFM): every verse of the 66 books read.
 - **Online, licensed, chapter at a time** (`src/lib/onlineBibles.ts`):
   - Text is cached in memory for the session only and never stored on disk.
   - **API.Bible** (`rest.api.bible/v1`, header `api-key`):
@@ -550,7 +551,7 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `voice-verses-api` | `{ enabled }`: Settings → Other apps and devices (1.19.5). Paired devices (a hash of each key, scopes, webhooks) are in `api-devices.json` in the app's data folder, not here |
 | `voice-verses-mode`, `voice-verses-ask-first`, `voice-verses-last-service` | App mode, ask-before-showing, last opened service |
 | `voice-verses-countdown-setup` | Countdown defaults |
-| `cornerstone-bible-version`, `cornerstone-custom-bible` | Translation in use; an imported Bible |
+| `cornerstone-bible-version`, `cornerstone-custom-bible-info` | Translation in use; the church's own Bible's name and short name (the Bible itself is in IndexedDB `files` → `custom-bible`; `cornerstone-custom-bible` held it before 1.19.15) |
 | `cornerstone-confidence-settings` | Stage monitor colours and sizes |
 | `cornerstone-settings`, `cornerstone-services`, `cornerstone-media` | Legacy settings and fallbacks |
 | `apibible-key`, `apibible-versions`, `apibible-device`, `cornerstone-esv-api-key`, `cornerstone-nlt-api-key` | Online Bibles (web build; desktop uses safeStorage for keys) |

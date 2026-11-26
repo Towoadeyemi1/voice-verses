@@ -529,6 +529,11 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 (26 Nov 2026.) Today Move on by time puts the next part's first slide straight on the screens (when picking a slide goes live), and spirit at Hands-free puts the next part live 3 seconds after a countdown or cue, without clearing to the logo first.
 - ⏳ Every move the app makes by itself from one part of the service to the next: when not sure the next part has begun (the time is up, a countdown ended, the last slide of a song), the screens go to the logo, the next part waits in Next, and the operator is asked "Has <part> started?" (Show it, Space | Not yet: what was on screen comes back). Sure only when it hears the part begin (its cue, its song's words, its scripture read); only then may a move that earned Hands-free go straight to the screens. The clock alone never puts anything on the screens. Mock-up first.
 
+## Bible files and more free translations (from "What are the items that involves development that can be done right now?", 26 Nov 2026)
+
+- ✅ 1.19.15 **Add a Bible file**: Settings → Bible → Your own reads OSIS, USFX, Zefania, USFM (a file, or eBible.org's .zip) and JSON on the computer, names it from the file, keeps it in the database (a whole Bible no longer fits the old place), and shows it by its short name on the screens and the live screen's translation switch. Tested on eBible.org's WEB and KJV files.
+- ⏳ Several Bibles side by side (more than one of your own), and a list of free translations to add with one click: needs a mock-up of the Bible page first.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always

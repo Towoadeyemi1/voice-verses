@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { BibleParser } from '@/lib/bibleParser';
+import { BibleParser, customBibleInfo } from '@/lib/bibleParser';
 import { chosenApiBibles } from '@/lib/onlineBibles';
 import { BIBLE_VERSIONS, BibleVersionType } from '@/types/bibleVersion';
 
@@ -17,10 +17,13 @@ function versionChoices(): Choice[] {
   const current = BibleParser.getVersion();
   const built = BIBLE_VERSIONS.filter((v) => {
     if (v.isOffline && v.id !== 'custom') return true;
-    if (v.id === 'custom') return !!localStorage.getItem('cornerstone-custom-bible') || current === 'custom';
+    if (v.id === 'custom') return !!customBibleInfo() || current === 'custom';
     // ESV and NLT need their key, set in Settings → Bible
     return v.id === current || !!BibleParser.getApiKey(v.id as 'esv' | 'nlt');
-  }).map((v) => ({ id: v.id, short: v.name, name: v.fullName.replace(' (Online)', ''), online: !v.isOffline }));
+  }).map((v) =>
+    // The church's own Bible goes by its own name ("WEB", "World English Bible Classic")
+    v.id === 'custom' ? { id: v.id, short: customBibleInfo()?.abbreviation ?? v.name, name: customBibleInfo()?.name ?? v.fullName, online: false } : { id: v.id, short: v.name, name: v.fullName.replace(' (Online)', ''), online: !v.isOffline },
+  );
   const api = chosenApiBibles().map((b) => ({ id: `api:${b.id}` as BibleVersionType, short: b.abbreviation, name: b.name, online: true }));
   return [...built, ...api];
 }

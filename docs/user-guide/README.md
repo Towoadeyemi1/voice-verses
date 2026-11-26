@@ -554,7 +554,7 @@ Open Settings with the gear. Everything saves as you change it; there is no Save
 ![Bible translations](img/settings-6-bible.jpg)
 
 1. **Bible** in the sidebar.
-2. **On this computer**: KJV, ASV, WEB, or your own. Always works, no internet needed.
+2. **On this computer**: KJV, ASV, WEB, or your own. Always works, no internet needed. **Your own** → **Add a Bible file** takes a Bible in OSIS, USFX, Zefania or USFM (a file, or the .zip eBible.org gives you) or JSON, and shows it by its own short name. Only add a Bible your church may use: public domain, or licensed to you.
 3. **Over the internet**: ESV, NLT and API.Bible translations (NKJV, NIV, CSB…), each with a free key from its publisher.
 
 ### Songs and CCLI
