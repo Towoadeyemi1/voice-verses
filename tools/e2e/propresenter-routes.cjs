@@ -6,7 +6,7 @@
 //  - the NDI way says what this computer needs; the booth check checks the way chosen.
 const fs = require('fs');
 const path = require('path');
-const { OUT, launch, check, done } = require('./lib.cjs');
+const { OUT, launch, check, done, answerVoice } = require('./lib.cjs');
 
 const DOCS = path.join(OUT, 'pp-routes-docs');
 const FOLDER = path.join(DOCS, 'Voice Verses', 'ProPresenter');
@@ -109,6 +109,7 @@ const until = async (win, test, ms = 15000) => {
   await win.evaluate(() => (location.hash = '#/training'));
   await win.waitForTimeout(1200);
   await win.locator('[data-lesson="first-sunday"] [data-lesson-show]').click();
+  await answerVoice(win);
   await until(win, async () => /John 3:16/.test(await win.locator('[data-label-detail="live"]').innerText()), 40000);
   check('a Training lesson in practice writes nothing for ProPresenter', read('verse.txt') === '', JSON.stringify(read('verse.txt')));
   await win.locator('[data-guide-leave]').click();

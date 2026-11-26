@@ -79,6 +79,13 @@ const stageSize = (page) =>
     return t ? `${t.style.width} x ${t.style.height}` : 'none';
   });
 
+/** "Hear the guide?" asked before a lesson or the demo (1.19.13): answer Words only (or Play the voice) */
+async function answerVoice(win, play = false) {
+  const button = win.locator(play ? '[data-ask-voice-yes]' : '[data-ask-voice-no]');
+  await button.waitFor({ timeout: 8000 });
+  await button.click();
+}
+
 let failures = 0;
 function check(label, ok, detail = '') {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${detail ? `  (${detail})` : ''}`);
@@ -86,4 +93,4 @@ function check(label, ok, detail = '') {
 }
 const done = () => { console.log(failures ? `\n${failures} failed` : '\nall passed'); process.exit(failures ? 1 : 0); };
 
-module.exports = { ROOT, OUT, launch, setBounds, plugInSecondDisplay, showVerse, seedMedia, stageSize, check, done };
+module.exports = { ROOT, OUT, launch, setBounds, plugInSecondDisplay, showVerse, seedMedia, stageSize, answerVoice, check, done };

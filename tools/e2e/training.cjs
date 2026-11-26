@@ -6,7 +6,7 @@
 //  - "When something goes wrong" opens the booth check light's list;
 //  - Watch the demo: narrated, the pointer on what is happening, in practice; End practice stops it.
 // The voice is off here (no voices under Xvfb); the pace is the same as reading it.
-const { OUT, launch, check, done } = require('./lib.cjs');
+const { OUT, launch, check, done, answerVoice } = require('./lib.cjs');
 
 const until = async (win, test, ms = 20000) => {
   for (let t = 0; t < ms; t += 200) {
@@ -41,6 +41,7 @@ const centre = async (win, sel) => {
   // Show me: Your first Sunday
   const roomBefore = await room(win);
   await win.locator('[data-lesson="first-sunday"] [data-lesson-show]').click();
+  await answerVoice(win);
   check('Show me goes to the live screen, in practice', await until(win, async () => (await win.locator('[data-guide-card]').count()) === 1 && (await win.locator('[data-practice-band]').count()) === 1, 8000));
   check('…pointing at Live, then Next', await until(win, async () => /Red is Live/.test(await say(win)), 10000));
   await win.screenshot({ path: `${OUT}/training-2-live.png` });
@@ -61,6 +62,7 @@ const centre = async (win, sel) => {
   await win.evaluate(() => (location.hash = '#/training'));
   await win.waitForTimeout(1200);
   await win.locator('[data-lesson="first-sunday"] [data-lesson-try]').click();
+  await answerVoice(win);
   check('Let me try waits for you at Search', await until(win, async () => /click Search/.test(await say(win)), 25000));
   check('…saying so', /Waiting for you/.test(await win.locator('[data-guide-card]').innerText()));
   const settings = await centre(win, '[data-guide="settings"]');
@@ -90,6 +92,7 @@ const centre = async (win, sel) => {
   await win.evaluate(() => (location.hash = '#/training'));
   await win.waitForTimeout(1200);
   await win.locator('[data-lesson="booth-check"] [data-lesson-show]').click();
+  await answerVoice(win);
   check('“When something goes wrong” opens the booth check’s list', await until(win, async () => (await win.locator('[data-booth-check-list]').count()) === 1, 20000));
   await win.screenshot({ path: `${OUT}/training-7-booth.png` });
   check('…and finishes', await until(win, async () => (await win.locator('[data-guide-card]').count()) === 0, 30000));
@@ -98,6 +101,7 @@ const centre = async (win, sel) => {
   await win.evaluate(() => (location.hash = '#/training'));
   await win.waitForTimeout(1200);
   await win.locator('[data-lesson="demo"] [data-lesson-show]').click();
+  await answerVoice(win);
   check('Watch the demo plays it in practice, narrated', await until(win, async () => (await win.locator('[data-guide-narration]').count()) === 1 && (await win.locator('[data-practice-band]').count()) === 1, 10000));
   check('…pointing at what is heard', await until(win, async () => /What Voice Verses hears/.test(await win.locator('[data-guide-narration]').innerText().catch(() => '')), 15000));
   check('…with the pointer on the screen', (await win.locator('.vv-guide .pointer').count()) === 1);

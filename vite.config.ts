@@ -52,7 +52,8 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // The guide's recorded voice (public/voice, about 0.6 MB) works offline too
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}', 'voice/*.mp3'],
         globIgnores: ['**/node_modules/**/*'],
         maximumFileSizeToCacheInBytes: 25 * 1024 * 1024,
         runtimeCaching: [

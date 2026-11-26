@@ -22,6 +22,9 @@ export type DemoStep =
 
 const at = (name: string) => `[data-guide="${name}"]`;
 
+/** Said at the end of the demo when some of what it showed is switched off (the card names them) */
+export const DEMO_FEATURES_OFF = 'Some of what you saw is switched off for your church. You can switch it on in Settings, Features.';
+
 export const DEMO_STEPS: DemoStep[] = [
   { kind: 'caption', text: 'This is a short demo. Watch the pointer: it shows where each thing happens.', wait: 200 },
   { kind: 'caption', text: 'The preacher calls a verse. What Voice Verses hears appears here.', target: at('heard'), wait: 200 },

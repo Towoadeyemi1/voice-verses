@@ -35,3 +35,12 @@
   .vv-guide .pointer, .vv-guide .spot, .vv-guide .card { transition: none; }
   .vv-guide .spot.waiting, .vv-guide .pointer.beckon svg, .vv-guide .pointer span.tap { animation: none; }
 }
+
+/* "Hear the guide?" (1.19.13): asked before a lesson or the demo, every time */
+.vv-guide .card.ask { width: 440px; gap: 10px; padding: 22px 22px 18px; transition: none; }
+.vv-guide .ask-icon { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--s-accent-soft, rgba(240,180,74,.16)); color: var(--s-accent, #f0b44a); }
+.vv-guide .ask-icon svg { width: 22px; height: 22px; }
+.vv-guide .ask-title { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+.vv-guide .ask-text { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--s-ink-2); }
+.vv-guide .ask-row { justify-content: flex-end; margin-top: 6px; }
+.vv-guide .ask-row .st-btn svg { width: 16px; height: 16px; }

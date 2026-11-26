@@ -5,7 +5,7 @@
 // Pictures go to docs/user-guide/img/. Only sample services, KJV and public-domain hymns appear.
 const fs = require('fs');
 const path = require('path');
-const { OUT, launch, plugInSecondDisplay } = require('../e2e/lib.cjs');
+const { OUT, launch, plugInSecondDisplay, answerVoice } = require('../e2e/lib.cjs');
 
 const IMG = path.resolve(__dirname, '../../docs/user-guide/img');
 fs.mkdirSync(IMG, { recursive: true });
@@ -139,6 +139,7 @@ const esc = async (win) => {
 
   // ---- 3. The narrated demo ----
   await btn(win, /Watch the demo/).click();
+  await answerVoice(win);
   await until(win, async () => /What Voice Verses hears/.test(await win.locator('[data-guide-narration]').innerText()), 15000);
   await win.waitForTimeout(1200);
   await shot(win, 'demo-1-heard', [m(win.locator('[data-guide-narration]'), 1, 'tr'), m(win.locator('[data-demo]'), 2, 'tl')]);
@@ -546,6 +547,10 @@ const esc = async (win) => {
     m(win.locator('[data-lesson="demo"] [data-lesson-show]'), 4, 'tl'),
   ]);
   await win.locator('[data-lesson="first-sunday"] [data-lesson-show]').click();
+  await win.locator('[data-ask-voice]').waitFor({ timeout: 8000 });
+  await win.waitForTimeout(500);
+  await shot(win, 'training-1b-hear-the-guide', [m(win.locator('[data-ask-voice-no]'), 1, 'bl'), m(win.locator('[data-ask-voice-yes]'), 2, 'br')]);
+  await answerVoice(win);
   await until(win, async () => /Red is Live/.test(await win.locator('[data-guide-say]').innerText()), 15000);
   await win.waitForTimeout(1200);
   await shot(win, 'training-2-show-me', [
@@ -557,6 +562,7 @@ const esc = async (win) => {
   await win.waitForTimeout(800);
   await go(win, '#/training', 1200);
   await win.locator('[data-lesson="first-sunday"] [data-lesson-try]').click();
+  await answerVoice(win);
   await until(win, async () => /click Search/.test(await win.locator('[data-guide-say]').innerText()), 30000);
   const s = await win.locator('[data-guide="settings"]').boundingBox();
   await win.mouse.click(s.x + s.width / 2, s.y + s.height / 2);

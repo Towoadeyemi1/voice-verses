@@ -135,12 +135,17 @@ const Training = () => {
             <b>Practice</b>
             <p>Every lesson runs in practice. Live, Next and Take work as usual, but nothing reaches the projector, stream, stage or ProPresenter.</p>
             <span className="tr-band">Practice: nothing goes to the room</span>
-            <span className="small">The voice is your computer’s own, so it works offline. Turn it off on any lesson card.</span>
+            <span className="small">
+              Each lesson asks first whether to play the guide’s voice: choose Words only if this computer’s sound goes to the room. During a service the guide is never heard. The voice is recorded in Voice Verses, so it works offline.
+            </span>
+            <span className="small" data-voice-credit>
+              The guide’s voice was made with Kyutai’s Pocket TTS (CC BY 4.0), from a voice Kyutai shares freely (CC0).
+            </span>
           </div>
           <div className="tr-box">
             <b>Stuck during a service?</b>
             <p>
-              Every warning has a button that takes you straight to the fix. <b>When something goes wrong</b> shows where.
+              Every warning has <b>Show me the fix</b>: the right page opens with the one thing to change lit up. <b>When something goes wrong</b> shows where.
             </p>
           </div>
           <div className="tr-box">

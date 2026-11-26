@@ -405,7 +405,7 @@ SECTIONS = [
     {
         "id": "training",
         "title": "13. Training",
-        "intro": "Short lessons on the real screens, in practice: nothing reaches the projector, the stream, the stage or ProPresenter.",
+        "intro": "Short lessons on the real screens, in practice: nothing reaches the projector, the stream, the stage or ProPresenter. Each lesson and the demo first asks whether to play the guide’s voice. During a service the guide is never heard.",
         "figures": [
             {
                 "img": "training-1-page",
@@ -415,6 +415,14 @@ SECTIONS = [
                     "**Show me**: Voice Verses does each step, with a pointer and a voice.",
                     "**Let me try**: you do each step; it waits and checks.",
                     "**Watch**: the demo, explained aloud.",
+                ],
+            },
+            {
+                "img": "training-1b-hear-the-guide",
+                "caption": "Hear the guide?",
+                "steps": [
+                    "**Words only**: the lesson shows each step on its card, silently. Choose it if this computer’s sound goes to the room. Esc does the same.",
+                    "**Play the voice**: each step is also said aloud, in the guide’s recorded voice.",
                 ],
             },
             {

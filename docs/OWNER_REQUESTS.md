@@ -502,14 +502,31 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 ## "Also the demo voice is crazy robotic"
 
 (26 Nov 2026.) The guide spoke with the computer's built-in voice (speechSynthesis), which on many computers is an old robotic one.
-- ⏳ A natural voice that works offline, through the speech engine Voice Verses already ships (sherpa-onnx), about 100 MB more in the installer; the computer's own voice stays as the fallback (and in the web version).
-- Samples (26 Nov): Kokoro (4 voices) and Pocket. "Pocket would have been my pick." Pocket copies a voice from a short recording, so only recordings anyone may use: Kyutai's CC0 voices (donated voices, their own recordings, LibriVox readers) or CC BY with credit (Alba MacKenna). Seven sent; Caro (CC0, LibriVox) was heard word for word by Voice Verses' own recognition. 💬 Waiting on the owner's pick.
+- A natural voice that works offline (Kokoro or Pocket through sherpa-onnx). The computer's own voice stays as the fallback for a line with no recording.
+- Samples (26 Nov): Kokoro (4 voices) and Pocket. "Pocket would have been my pick." Pocket copies a voice from a short recording, so only recordings anyone may use: Kyutai's CC0 voices (donated voices, their own recordings, LibriVox readers) or CC BY with credit (Alba MacKenna). Seven sent; Caro (CC0, LibriVox) was heard word for word by Voice Verses' own recognition.
+- "The C-developer voice sounds good, but you said it will add additional 100mb, how slow will that make the app?" Measured: about 600 MB of memory and the processor each time it spoke. "What is the best approach?" Recording every line ahead.
+- "Are the commas, full stop and breaks used well." Not quite in the samples: colons muddled the words. Spoken lines now use full stops and commas only, with a pause between sentences.
+- "Recorded voice should only come out during training, never when a service is ongoing. There should be a default request to allow audio play when a demo or training is played or selected before users can hear."
+- ✅ 1.19.13 (D37): every line of the lessons and the demo recorded ahead in voice C (Kyutai Pocket TTS, CC0 voice "developer-1"), each heard word for word by Voice Verses' own speech recognition before it was kept; 42 sentences, about 0.6 MB; CI fails if a line has no recording.
+- ✅ 1.19.13: heard only in a lesson or the demo, after **Hear the guide?** (Play the voice | Words only; Esc is Words only), every time; never while listening to a real microphone; Show me the fix is words only. Checked by `tools/e2e/guide-voice.cjs`.
 
 ## "The part of the preview and live is great, but some could want the 3 screens rather than just one live. Is there a way to add a toggle to switch it from 1 live screen to the 3 screens or as many as added? And still look very aesthetically beautiful and awesome."
 
 (26 Nov 2026.)
 - ✅ Mock-up (`docs/design/all-screens.html`), approved: "The screen design is great".
 - ✅ 1.19.12 **One screen | Every screen**, a switch beside Live. Every screen shows each output that is on (projector, stream lower third, stage monitor), live and in its own shape, with where it goes; one is big and a click makes another big; on a wide monitor they sit like a switcher's multiview. An output on no screen says so, with Choose where it goes. Kept for next time. Checked by `tools/e2e/every-screen.cjs`.
+
+## "I want all my exotic design principles, security, test, architecture principles and others that has gone into this app to be used in all projects in my Claude as the foundation for all my work and app design and development. I also want a comprehensive documentation, maybe an md file that I can download and give other projects and they will lay all the foundation needed and that has been used in this project."
+
+(26 Nov 2026.)
+- ✅ `docs/FOUNDATION.md`: every principle in a form any project can use (working with the owner, product, design, writing, accessibility, architecture, security and licensing, testing, documentation, shipping, performance, AI, teaching, lessons), with Voice Verses as worked examples, a short version for places where only a short text fits, and a starter kit (CLAUDE.md, OWNER_REQUESTS, DECISIONS, LESSONS, DESIGN_SYSTEM, CI, skills). Also packaged as a Skill (`foundation`).
+- ⚠ A session can't change the owner's Claude settings: the owner adds it (Claude Code: `~/.claude/CLAUDE.md` on each computer; Claude.ai: project knowledge, personal preferences with the short version, or the Skill).
+- Keep it current: when a rule here changes or a lesson applies beyond this app, update FOUNDATION.md too.
+
+## "Do you know it is safe to clear to logo first when spirit or any automation is running the service until they are sure the next segment has actually kicked off, as sometimes it might not follow the time schedule accurately. If unsure, actual user/pilot engagement should be requested."
+
+(26 Nov 2026.) Today Move on by time puts the next part's first slide straight on the screens (when picking a slide goes live), and spirit at Hands-free puts the next part live 3 seconds after a countdown or cue, without clearing to the logo first.
+- ⏳ Every move the app makes by itself from one part of the service to the next: when not sure the next part has begun (the time is up, a countdown ended, the last slide of a song), the screens go to the logo, the next part waits in Next, and the operator is asked "Has <part> started?" (Show it, Space | Not yet: what was on screen comes back). Sure only when it hears the part begin (its cue, its song's words, its scripture read); only then may a move that earned Hands-free go straight to the screens. The clock alone never puts anything on the screens. Mock-up first.
 
 ## Process
 

@@ -6,7 +6,7 @@
 //  - End practice brings this screen back to what the room shows; Settings → Booth check opens it again.
 // Uses any short recording for the microphone (default: /tmp/vv-e2e/moments.wav).
 const path = require('path');
-const { OUT, launch, plugInSecondDisplay, check, done } = require('./lib.cjs');
+const { OUT, launch, plugInSecondDisplay, check, done, answerVoice } = require('./lib.cjs');
 const audio = process.argv[2] || path.join(OUT, 'moments.wav');
 
 const until = async (win, test, ms = 15000) => {
@@ -69,6 +69,7 @@ const body = (page) => page.evaluate(() => document.body.innerText);
   // 5 · Try it, in practice
   const roomBefore = await win.evaluate(() => localStorage.getItem('voice-verses-live'));
   await win.locator('[data-setup-demo]').click();
+  await answerVoice(win);
   await win.waitForTimeout(600);
   check('Try the demo closes the sheet and starts practice', (await sheet.count()) === 0 && (await win.locator('[data-practice-band]').count()) === 1);
   const shown = await until(win, async () => /For God so loved the world/.test(await body(win)), 15000);
