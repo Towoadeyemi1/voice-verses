@@ -140,7 +140,7 @@ The three marked **Build first** (moment autopilot, worship voice cues and sermo
 - CCLI reporting.
 
 **Phase 5: control and broadcast (1.9.x)**
-- Stream Deck, MIDI and OSC, and a phone remote.
+- ✅ Stream Deck through Bitfocus Companion (1.19.16, `docs/integrations/stream-deck.md`). Still to come: MIDI and OSC, and a phone remote.
 - NDI in and out, and recording and streaming.
 - DeckLink key and fill, which needs the owner's computer through Remote Control.
 - Planning Center.
