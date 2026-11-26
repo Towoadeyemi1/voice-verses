@@ -164,6 +164,11 @@ Check this list before debugging. Add every new mistake that cost time.
 
 - **The demo narrated Predictive Next and Singing something new, but nothing appeared.** Since 1.14.0 both are off unless switched on (the owner's "Recommended"), and the demo used the church's own switches. The sample test caught it (two checks failed for weeks, called "pre-existing"). A demo shows what the app can do: give its own detector the features it narrates, and say which are off for this church. A test failing on main is still a bug to trace, not background noise.
 
+## Show me the fix (1.19.11)
+
+- **The light landed where the control had been.** The fix scrolled the control into view smoothly and lit it at once, so the spotlight, the card and the pointer were placed against the old position; the card then covered the very control it was about. Wait for the scroll before lighting a control, and keep the pointer following it as the spotlight does.
+- **A fix that cleared closed Settings under the volunteer.** "Back to the live screen in 2 seconds" fired even after they had gone on to another Settings page (the features test caught it). Going somewhere else means they are doing something else: end the fix quietly and leave them where they are.
+
 ## Releases
 
 - **The Mac installer for v1.19.7 was never built.** GitHub's `macos-latest` job waited 15 minutes for a Mac and was cancelled without running a step, and the same again on re-runs, while Windows built in 6 minutes and GitHub reported no outage. Nothing in the code had changed. Ask for a named image (`macos-15`) rather than `latest`, which moves to new images. A re-run uses the workflow saved with the tag, so a workflow fix needs a new release tag.

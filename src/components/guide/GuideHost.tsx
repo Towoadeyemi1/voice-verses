@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pause, Play, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, Pause, Play, Volume2, VolumeX, X, Check } from 'lucide-react';
 import '@/components/settings/settings.css';
 import './guide.css';
 import { find, GuideMode, GuideStep, Lesson, lessonAsked, NARRATE, Narration, pressKey, saveProgress, setVoiceOn, speak, START_LESSON, stopSpeaking, typeInto, until, voiceOn } from '@/lib/guide';
@@ -81,7 +81,12 @@ export function GuideHost() {
   // Follow the spotlit control as the page moves (a dialog opening, a list scrolling)
   useEffect(() => {
     if (!lesson && !narration) return;
-    const follow = () => setBox(boxOf(find(target.current)));
+    const follow = () => {
+      const b = boxOf(find(target.current));
+      setBox(b);
+      // A narration's pointer stays on its control too (a lesson moves the pointer itself)
+      if (!lessonRef.current && b) setPointer((p) => (p && (Math.abs(p.x - (b.x + b.w / 2)) > 4 || Math.abs(p.y - (b.y + b.h / 2)) > 4) ? { x: b.x + b.w / 2, y: b.y + b.h / 2 } : p));
+    };
     follow();
     const timer = window.setInterval(follow, 120);
     return () => window.clearInterval(timer);
@@ -256,7 +261,7 @@ export function GuideHost() {
 
   // A lesson started on another page continues on the right page; leaving the app's pages ends nothing
   useEffect(() => {
-    if (narration && pathname !== '/') setNarration(null);
+    if (narration && pathname !== '/' && !narration.anywhere) setNarration(null);
   }, [pathname, narration]);
 
   if (!lesson && !narration) return null;
@@ -301,7 +306,7 @@ export function GuideHost() {
         ) : (
           <div className="dim" style={{ inset: 0, background: dim }} onClick={missed} />
         ))}
-      {box && <div className={`spot ${trying ? 'waiting' : ''}`} style={{ left: box.x, top: box.y, width: box.w, height: box.h }} aria-hidden="true" />}
+      {box && <div className={`spot ${trying ? 'waiting' : ''}`} style={{ left: box.x, top: box.y, width: box.w, height: box.h }} aria-hidden="true" data-guide-spotlight />}
 
       {pointer && (
         <div className={`pointer ${trying ? 'beckon' : ''}`} style={{ transform: `translate(${pointer.x}px, ${pointer.y}px)` }} aria-hidden="true">
@@ -385,7 +390,16 @@ export function GuideHost() {
               {voice ? <Volume2 /> : <VolumeX />}
             </button>
           </div>
-          <b className="say">{narration.say}</b>
+          <b className={`say ${narration.done ? 'done' : ''}`} data-guide-say>
+            {narration.done && <Check className="tick" aria-hidden="true" />}
+            {narration.say}
+          </b>
+          {narration.note && <span className="note">{narration.note}</span>}
+          {narration.action && (
+            <button type="button" className="st-btn primary" onClick={() => narration.action!.run()} data-guide-action>
+              {narration.action.label}
+            </button>
+          )}
         </div>
       ) : null}
     </div>,

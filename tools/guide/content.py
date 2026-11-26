@@ -248,7 +248,7 @@ SECTIONS = [
                 "caption": "The booth check light",
                 "steps": [
                     "**Ready** (grey tick) or **n to check** (amber). Click it.",
-                    "Each check, with a button that takes you straight to the fix.",
+                    "Each check, with **Show me the fix**: the right Settings page opens with the one thing to change lit up and said in one line.",
                 ],
             },
             {
@@ -256,8 +256,17 @@ SECTIONS = [
                 "caption": "Settings → Booth check",
                 "steps": ["The **booth check** at the top of Settings.", "**Set up your booth** finds everything again."],
             },
+            {
+                "img": "tools-4-show-me-the-fix",
+                "caption": "Show me the fix",
+                "steps": ["The one thing to change, lit up on the right page.", "What to do, in one line (also said aloud). Listening carries on; **Esc** goes back."],
+            },
         ],
-        "points": ["During the service, a problem (a screen unplugged, no sound for 20 seconds) shows as an amber warning under the top bar, with its fix button."],
+        "points": [
+            "During the service, a problem (a screen unplugged, no sound for 20 seconds) shows as an amber warning under the top bar, with **Show me the fix** and **Not now**.",
+            "Listening carries on while you fix it. When the check passes you see a tick, and you are back on the live screen 2 seconds later. **Esc** goes back at any time.",
+            "For the microphone, **Do it for me** listens to every input and chooses the one with the preacher’s sound.",
+        ],
     },
     {
         "id": "settings",

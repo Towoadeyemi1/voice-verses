@@ -29,6 +29,9 @@ import { predictNext } from '@/lib/predictNext';
 import type { ScriptureHint } from '@/speech/scriptureHints';
 import { plainVerseText, verseReference } from '@/lib/verseText';
 import { publish } from '@/core/bus';
+import { showMeTheFix } from '@/lib/fixGuide';
+import { findSound } from '@/lib/boothSetup';
+import { runBoothCheck } from '@/lib/boothCheck';
 import { answer, CommandError } from '@/core/commands';
 import { hasSecret } from '@/lib/secrets';
 import { desktop } from '@/lib/desktop';
@@ -51,6 +54,8 @@ import {
   getEngineDisplayName,
   ISpeechProvider,
   loadSpeechSettings,
+  saveSpeechSettings,
+  SPEECH_INPUT_CHANGED,
   VerseDetectionController,
 } from '@/speech';
 import type { Passage } from '@/speech/VerseDetectionController';
@@ -167,6 +172,8 @@ export const LiveWorkspace = () => {
   const [songMode, setSongMode] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [listening, setListening] = useState(false);
+  const listeningRef = useRef(false);
+  listeningRef.current = listening;
   const [connecting, setConnecting] = useState(false);
   const [volume, setVolume] = useState(0);
   const [muted, setMuted] = useState(false);
@@ -1133,12 +1140,39 @@ export const LiveWorkspace = () => {
     setShowSettings(true);
   };
   /** A Fix button in the booth check or a warning */
-  const fixBooth = (fix: BoothFix) => {
+  // Show me the fix (1.19.11): the right Settings page, the one control lit up, and back here once fixed
+  const showSettingsRef = useRef(showSettings);
+  showSettingsRef.current = showSettings;
+  const [settingsKey, setSettingsKey] = useState(0);
+  const fixCleared = async (id?: string): Promise<boolean> => {
+    if (!id) return false;
+    // No sound for 20 seconds: fixed when the preacher is heard again
+    if (id === 'silent') return listeningRef.current && Date.now() - lastSound.current < 3000;
+    const found = (await runBoothCheck({ service, serviceIsToday: !!service && todays.some((s) => s.id === service.id) })).find((c) => c.id === id);
+    return !found || found.state === 'ok';
+  };
+  /** "Do it for me": listen to every input and use the one with the preacher's sound */
+  const useTheSound = async (): Promise<boolean> => {
+    const found = await findSound(1500).catch(() => null);
+    if (!found?.best) return false;
+    saveSpeechSettings({ audioDevice: found.best.deviceId, audioDeviceName: found.best.label, audioChannel: found.best.channel });
+    setSettingsKey((k) => k + 1);
+    return true;
+  };
+  const fixBooth = (fix: BoothFix, item?: { id: string }) => {
     if (fix.action === 'microphone') void desktop?.microphone?.openSettings();
     else if (fix.action === 'plan') navigate('/service-planner');
     else if (fix.pane) {
-      setSettingsPane(fix.pane);
-      setShowSettings(true);
+      void showMeTheFix(fix, {
+        open: (pane) => {
+          setSettingsPane(pane);
+          setShowSettings(true);
+        },
+        isOpen: () => showSettingsRef.current,
+        close: () => setShowSettings(false),
+        check: () => fixCleared(item?.id),
+        doIt: fix.doIt === 'findSound' ? useTheSound : undefined,
+      });
     }
   };
 
@@ -1191,6 +1225,18 @@ export const LiveWorkspace = () => {
   };
 
   useEffect(() => () => stopListening(true), []);
+  // A different input or channel chosen while listening (Settings, or Show me the fix): switch to it
+  const relisten = useRef<() => void>(() => {});
+  relisten.current = () => {
+    if (!listeningRef.current) return;
+    stopListening(true);
+    void startListening();
+  };
+  useEffect(() => {
+    const onChange = () => relisten.current();
+    window.addEventListener(SPEECH_INPUT_CHANGED, onChange);
+    return () => window.removeEventListener(SPEECH_INPUT_CHANGED, onChange);
+  }, []);
 
   const toggleSong = () => {
     if (controller.current) controller.current.setSongMode(!songMode);
@@ -1903,7 +1949,7 @@ export const LiveWorkspace = () => {
           <DialogTitle className="sr-only">Settings</DialogTitle>
           <SettingsPanel
             onClose={() => setShowSettings(false)}
-            key={settingsPane}
+            key={`${settingsPane}-${settingsKey}`}
             initial={settingsPane}
             service={service}
             serviceIsToday={!!service && todays.some((s) => s.id === service.id)}

@@ -347,8 +347,13 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   - ProPresenter, when switched on: reachable, and the message ready.
   - Bible: an online translation while offline (verses come from a Bible on the computer).
   - Today's service: planned and loaded.
-  - Each problem has a Fix button: the right Settings page, the computer's microphone settings, or Plan a service.
-- **Warnings during the service** (`Guardian`): every 5 seconds, screens, DeckLink ports and ProPresenter are checked again, and the microphone is watched while listening (no sound for 20 seconds, unless muted). A problem shows as an amber warning below the top bar with its Fix button. A warning can be closed; it comes back only if it clears and happens again.
+  - Each problem has a fix: **Show me the fix** when it is on a Settings page, else the computer's microphone settings or Plan a service.
+- **Warnings during the service** (`Guardian`): every 5 seconds, screens, DeckLink ports and ProPresenter are checked again, and the microphone is watched while listening (no sound for 20 seconds, unless muted). A problem shows as an amber warning below the top bar with **Show me the fix** and **Not now**. Not now hides it; it comes back only if it clears and happens again.
+- **Show me the fix** (1.19.11, `lib/fixGuide.ts`, approved mock-up `docs/design/training/`, screen 6), from a warning, the booth check light or the Booth check page:
+  - Settings opens on the right page, scrolls to the one control (`BoothFixInfo.target`: the projector's card, the DeckLink or NDI port, `#mic-device`, the speech engine, the ProPresenter way, the Bible), waits for the scroll, then lights it with the guide's spotlight and pointer and says one line (`say`, also aloud): e.g. "The projector's screen isn't connected. Check its cable, or choose another screen for it here." "Listening carries on. Esc goes back."
+  - **Do it for me** where Voice Verses can (`doIt: 'findSound'`, the microphone): listens to every input for 1.5 s (`findSound`), saves the loudest (input, and channel on a desk feed), and listening restarts on it (`SPEECH_INPUT_CHANGED`). If none has sound: "No input has the preacher's sound right now. Check the desk channel and the cable, then choose it here."
+  - The check runs again every 1.5 s (the booth check item, or for "no sound" a sound in the last 3 s). When it passes: "✓ The projector is showing again." (`solved`), then back to the live screen 2 seconds later.
+  - Esc (closing Settings) ends it at any time. Going to another Settings page ends it quietly and stays there. It gives up after 5 minutes.
 
 ## 8e. spirit (1.17.0, `lib/spirit.ts`, D29)
 

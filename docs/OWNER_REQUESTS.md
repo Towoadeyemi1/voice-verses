@@ -338,6 +338,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ 1.19.0 **Set up your booth** opens by itself the first time Voice Verses starts on a computer (never for a church already using it), and from Settings → Booth check any time. It listens to every input and finds the one with sound (the loudest channel on a desk feed), suggests the projector on a second screen, looks for ProPresenter on this computer and the network ("Yes, that's it" only remembers where it is; it never switches sending on), and keeps the church's types of service (listed first in Services). Each is confirmed or changed.
 - ✅ 1.19.0 **Practice mode** (D31): the demo after set-up runs on the real live screen, but nothing reaches the projector, stream, stage, DeckLink, NDI, network screens or ProPresenter, and spirit learns nothing. A violet band says so, with End practice; ending it puts this screen back as it was, so nothing from practice waits in Next. Checked by `tools/e2e/booth-setup.cjs`.
 - ⏳ Next: the Training page with Your first Sunday (Show me and Let me try), then Show me the fix on warnings.
+- ✅ 1.19.11 **Show me the fix** on every warning, the booth check light and the Booth check page: the right Settings page with the one control lit up and one line said aloud, **Do it for me** for the microphone (finds the input with the preacher's sound), a tick when it is fixed and back to the live screen 2 seconds later. Listening carries on; Esc goes back. Checked by `tools/e2e/show-me-the-fix.cjs` (a projector screen unplugged and plugged back in; an input that isn't connected).
 
 "The demo does not look good without an explanatory voice, and a visible mouse arrow or pointer clicking and navigating the screen. It looks confusing and no one can understand what is happening. Also I did not see the training tab, or is it not supposed to be part of it?"
 
@@ -497,6 +498,16 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - The DeckLink Duo's three outputs stay with ProPresenter (projector, lower third, confidence); in Voice Verses choose the eGPU HDMI screen, never a DeckLink port.
 - ⚠ ProPresenter must not use the eGPU display.
 - ⏳ The owner's team re-patches the switcher input and tests.
+
+## "Also the demo voice is crazy robotic"
+
+(26 Nov 2026.) The guide spoke with the computer's built-in voice (speechSynthesis), which on many computers is an old robotic one.
+- ⏳ A natural voice that works offline: a neural voice (Kokoro) through the speech engine Voice Verses already ships (sherpa-onnx), about 100 MB more in the installer. Samples to the owner first; the computer's own voice stays as the fallback (and in the web version).
+
+## "The part of the preview and live is great, but some could want the 3 screens rather than just one live. Is there a way to add a toggle to switch it from 1 live screen to the 3 screens or as many as added? And still look very aesthetically beautiful and awesome."
+
+(26 Nov 2026.)
+- ⏳ Mock-up first (`docs/design/all-screens.html`): a switch above Live, **One screen | Every screen**. Every screen shows each output that is on (projector, stream lower third, stage monitor, and wherever each goes) as its own live picture, with Take and Next as now.
 
 ## Process
 

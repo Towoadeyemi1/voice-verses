@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AlertCircle, Check, Mic, MonitorUp, RefreshCw, Wand2, X } from 'lucide-react';
+import { AlertCircle, Check, Mic, MonitorUp, RefreshCw, Wand2 } from 'lucide-react';
 import { showBoothSetup } from '@/lib/boothSetup';
 import { BoothCheckItem, needsAttention, runBoothCheck } from '@/lib/boothCheck';
 import type { BoothFix } from '@/components/live/BoothCheck';
@@ -13,7 +13,7 @@ const GROUPS: { title: string; ids: (id: string) => boolean }[] = [
 ];
 
 /** Settings → Booth check: everything the service needs, each with a Fix button. */
-export function BoothCheckPage({ service, serviceIsToday, onFix }: { service?: { name: string } | null; serviceIsToday?: boolean; onFix: (fix: BoothFix) => void }) {
+export function BoothCheckPage({ service, serviceIsToday, onFix }: { service?: { name: string } | null; serviceIsToday?: boolean; onFix: (fix: BoothFix, item: { id: string }) => void }) {
   const [items, setItems] = useState<BoothCheckItem[] | null>(null);
   const [checking, setChecking] = useState(false);
   const [at, setAt] = useState<Date | null>(null);
@@ -79,8 +79,8 @@ export function BoothCheckPage({ service, serviceIsToday, onFix }: { service?: {
               {list.map((item) => (
                 <Row key={item.id} lead={<Mark state={item.state} />} title={item.label} desc={item.detail} attention={item.state !== 'ok'} data-check={item.id} data-state={item.state}>
                   {item.fix && item.state !== 'ok' && (
-                    <button type="button" className="st-btn soft" onClick={() => onFix(item.fix!)}>
-                      {item.fix.label}
+                    <button type="button" className="st-btn soft" onClick={() => onFix(item.fix!, item)} data-show-fix={item.id}>
+                      {item.fix.pane ? 'Show me the fix' : item.fix.label}
                     </button>
                   )}
                 </Row>
@@ -105,8 +105,8 @@ export function BoothCheckPage({ service, serviceIsToday, onFix }: { service?: {
           <div className="st-mini">
             <span className="st-cap">During the service (Settings → Features → Warnings)</span>
             {[
-              { icon: MonitorUp, label: 'Projector', text: 'its display was unplugged. Plug it back in, or choose another screen.', fix: 'Screens' },
-              { icon: Mic, label: 'Microphone', text: 'no sound for 20 seconds. Check the desk channel.', fix: 'Listening' },
+              { icon: MonitorUp, label: 'Projector', text: 'its display was unplugged. Plug it back in, or choose another screen.' },
+              { icon: Mic, label: 'Microphone', text: 'no sound for 20 seconds. Check the desk channel.' },
             ].map((b) => (
               <div key={b.label} className="flex items-center gap-3 pl-3.5 pr-2 py-2 rounded-[14px]" style={{ background: 'var(--s-raised)', boxShadow: 'var(--s-lift), inset 0 0 0 1px rgba(245,165,36,.45)' }}>
                 <span className="st-st warn">
@@ -115,11 +115,11 @@ export function BoothCheckPage({ service, serviceIsToday, onFix }: { service?: {
                 <span className="flex-1 min-w-0 text-[13.5px]">
                   <b>{b.label}:</b> {b.text}
                 </span>
-                <span className="st-btn soft" aria-hidden="true">
-                  {b.fix}
+                <span className="st-btn primary" aria-hidden="true">
+                  Show me the fix
                 </span>
-                <span className="st-iconbtn" aria-hidden="true">
-                  <X />
+                <span className="st-btn ghost" aria-hidden="true">
+                  Not now
                 </span>
               </div>
             ))}

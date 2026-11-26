@@ -107,4 +107,10 @@ export function saveSpeechSettings(settings: Partial<SpeechSettings>): void {
   };
 
   localStorage.setItem('cornerstone-settings', JSON.stringify(updated));
+  // A different input or channel: listening that is running switches to it (1.19.11)
+  if (updated.audioDevice !== current.audioDevice || updated.audioChannel !== current.audioChannel) {
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event(SPEECH_INPUT_CHANGED));
+  }
 }
+
+export const SPEECH_INPUT_CHANGED = 'voice-verses-speech-input-changed';

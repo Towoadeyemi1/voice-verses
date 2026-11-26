@@ -14,6 +14,35 @@ import type { Pane } from '@/components/SettingsPanel';
 
 export type CheckState = 'ok' | 'warn' | 'problem';
 
+/**
+ * What fixes a warning. With `pane`, "Show me the fix" (1.19.11) opens that Settings page,
+ * lights up `target` and says `say`; `doIt` offers "Do it for me"; `solved` is said once the
+ * check passes again, and the live screen comes back.
+ */
+export interface BoothFixInfo {
+  label: string;
+  pane?: Pane;
+  action?: 'microphone' | 'plan';
+  /** The one control to change (a selector on that Settings page) */
+  target?: string;
+  /** One short line: what to change */
+  say?: string;
+  /** Said when it is fixed */
+  solved?: string;
+  /** Voice Verses can do it: listen to every input and choose the one with the preacher */
+  doIt?: 'findSound';
+}
+
+/** The fix for "can't hear the preacher" (the input, or no sound for 20 seconds) */
+export const LISTENING_FIX: BoothFixInfo = {
+  label: 'Listening settings',
+  pane: 'listening',
+  target: '#mic-device',
+  say: 'Choose the input the preacher is on. Its bar moves when the preacher speaks.',
+  solved: 'Hearing the preacher again.',
+  doIt: 'findSound',
+};
+
 export interface BoothCheckItem {
   id: string;
   /** What is checked, e.g. "Projector" */
@@ -22,7 +51,7 @@ export interface BoothCheckItem {
   /** What was found, from the operator's side */
   detail: string;
   /** What fixes it: a Settings page, the computer's microphone settings, or planning a service */
-  fix?: { label: string; pane?: Pane; action?: 'microphone' | 'plan' };
+  fix?: BoothFixInfo;
   /** Also watched during the service (a screen or port that stops) */
   live?: boolean;
 }
@@ -54,14 +83,14 @@ async function microphoneChecks(): Promise<BoothCheckItem[]> {
   }
   const named = inputs.filter((d) => d.label);
   if (!inputs.length) {
-    items.push({ id: 'mic', label: 'Microphone', state: 'problem', detail: 'No microphone or sound input is connected.', fix: { label: 'Listening settings', pane: 'listening' } });
+    items.push({ id: 'mic', label: 'Microphone', state: 'problem', detail: 'No microphone or sound input is connected.', fix: { ...LISTENING_FIX, say: 'Connect the sound from the desk, then choose it here.', doIt: undefined } });
   } else if (audioDeviceName && named.length && !named.some((d) => d.label === audioDeviceName)) {
     items.push({
       id: 'mic',
       label: 'Microphone',
       state: 'warn',
       detail: `“${audioDeviceName}” is not connected, so the computer’s default input will be used.`,
-      fix: { label: 'Choose the input', pane: 'listening' },
+      fix: { ...LISTENING_FIX, label: 'Choose the input' },
     });
   } else {
     items.push({ id: 'mic', label: 'Microphone', state: 'ok', detail: audioDeviceName ? `Listening to “${audioDeviceName}”.` : 'Listening to the computer’s default input.' });
@@ -71,7 +100,11 @@ async function microphoneChecks(): Promise<BoothCheckItem[]> {
 
 async function speechCheck(): Promise<BoothCheckItem> {
   const { speechEngine } = loadSpeechSettings();
-  const base = { id: 'speech', label: 'Speech recognition', fix: { label: 'Listening settings', pane: 'listening' as Pane } };
+  const base = {
+    id: 'speech',
+    label: 'Speech recognition',
+    fix: { label: 'Listening settings', pane: 'listening' as Pane, target: '[role="radiogroup"][aria-label="Speech engine"]', say: 'Choose how Voice Verses hears speech here.', solved: 'Speech recognition is ready.' },
+  };
   if (speechEngine === 'builtin') {
     const ok = await desktop?.speech.isAvailable().catch(() => false);
     return ok
@@ -99,7 +132,18 @@ async function screenChecks(): Promise<BoothCheckItem[]> {
     desktop.ndi?.availability().catch(() => null) ?? Promise.resolve(null),
   ]);
   const items: BoothCheckItem[] = [];
-  const fix = { label: 'Screens settings', pane: 'screens' as Pane };
+  const fix: BoothFixInfo = { label: 'Screens settings', pane: 'screens' };
+  const screenFix = (output: ScreenOutput, how: 'display' | 'decklink' | 'ndi'): BoothFixInfo => ({
+    ...fix,
+    target: how === 'display' ? `[data-output="${output}"]` : how === 'decklink' ? `[data-decklink-output="${output}"]` : `[data-ndi-output="${output}"]`,
+    say:
+      how === 'display'
+        ? `The ${OUTPUT_NAMES[output].toLowerCase()}’s screen isn’t connected. Check its cable, or choose another screen for it here.`
+        : how === 'decklink'
+          ? `The ${OUTPUT_NAMES[output].toLowerCase()}’s DeckLink port isn’t sending. Check the port and its format here.`
+          : `The ${OUTPUT_NAMES[output].toLowerCase()} isn’t going out over NDI. Check it here.`,
+    solved: `The ${OUTPUT_NAMES[output].toLowerCase()} is showing again.`,
+  });
   for (const output of Object.keys(OUTPUT_NAMES) as ScreenOutput[]) {
     const label = OUTPUT_NAMES[output];
     const display = config?.[output];
@@ -116,7 +160,7 @@ async function screenChecks(): Promise<BoothCheckItem[]> {
               label: `${label} (NDI)`,
               state: 'problem',
               detail: ndiAvail && !ndiAvail.available ? 'NDI is on, but the free NDI Runtime isn’t on this computer. Install NDI Tools from ndi.video.' : 'NDI is on, but it isn’t sending.',
-              fix,
+              fix: screenFix(output, 'ndi'),
               live: true,
             },
       );
@@ -127,14 +171,14 @@ async function screenChecks(): Promise<BoothCheckItem[]> {
       items.push(
         found
           ? { id: `screen-${output}`, label, state: 'ok', detail: `On ${found.label || 'its display'}.`, live: true }
-          : { id: `screen-${output}`, label, state: 'problem', detail: 'Its display is not connected. Check the cable, or choose another display.', fix, live: true },
+          : { id: `screen-${output}`, label, state: 'problem', detail: 'Its display is not connected. Check the cable, or choose another display.', fix: screenFix(output, 'display'), live: true },
       );
     }
     if (port) {
       items.push(
         sdi?.state === 'sending'
           ? { id: `sdi-${output}`, label: `${label} (DeckLink)`, state: 'ok', detail: `Sending to ${port.device}.`, live: true }
-          : { id: `sdi-${output}`, label: `${label} (DeckLink)`, state: 'problem', detail: sdi?.state === 'error' ? sdi.message : `${port.device} is not sending.`, fix, live: true },
+          : { id: `sdi-${output}`, label: `${label} (DeckLink)`, state: 'problem', detail: sdi?.state === 'error' ? sdi.message : `${port.device} is not sending.`, fix: screenFix(output, 'decklink'), live: true },
       );
     }
   }
@@ -144,7 +188,7 @@ async function screenChecks(): Promise<BoothCheckItem[]> {
       label: 'Screens',
       state: 'warn',
       detail: displays.length > 1 ? 'No output is on a screen yet: the projector is not set to any display.' : 'Only this computer’s own screen is connected. Connect the projector or switcher.',
-      fix,
+      fix: { ...fix, target: '[data-output="projection"]', say: 'Choose the screen for the projector here.', solved: 'The projector has a screen.' },
     });
   }
   return items;
@@ -153,7 +197,14 @@ async function screenChecks(): Promise<BoothCheckItem[]> {
 async function proPresenterCheck(): Promise<BoothCheckItem | null> {
   const settings = loadProPresenterSettings();
   if (!desktop) return null;
-  const base = { id: 'propresenter', label: 'ProPresenter', fix: { label: 'ProPresenter settings', pane: 'propresenter' as Pane }, live: true };
+  const target = settings.route === 'linked' ? '[data-pp-linked]' : settings.route === 'ndi' ? '[data-pp-route="ndi"]' : '[data-propresenter-status]';
+  const say =
+    settings.route === 'linked'
+      ? 'Check the folder ProPresenter reads: Choose another folder, or Use the default.'
+      : settings.route === 'ndi'
+        ? 'Switch on Send the projector over NDI here.'
+        : 'Check that ProPresenter is open with Network turned on, then press Find and set up.';
+  const base = { id: 'propresenter', label: 'ProPresenter', fix: { label: 'ProPresenter settings', pane: 'propresenter' as Pane, target, say, solved: 'ProPresenter is connected again.' }, live: true };
   // A slide with Voice Verses' picture (1.19.3): the projector must be going out over NDI
   if (settings.route === 'ndi') {
     const status = await withTimeout(desktop.ndi?.status() ?? Promise.reject(new Error('no NDI')), 4000).catch(() => null);
@@ -189,7 +240,7 @@ function bibleCheck(): BoothCheckItem {
       label: 'Bible',
       state: 'warn',
       detail: `${name} needs the internet, and this computer is offline. Verses will come from a Bible on this computer instead.`,
-      fix: { label: 'Bible settings', pane: 'bible' },
+      fix: { label: 'Bible settings', pane: 'bible', target: '[data-version="kjv"]', say: 'While there’s no internet, choose a Bible on this computer: KJV, ASV or WEB.', solved: 'The Bible is on this computer.' },
     };
   return { id: 'bible', label: 'Bible', state: 'ok', detail: BibleParser.isOnline(version) ? `${name}, over the internet.` : `${name}, on this computer.` };
 }

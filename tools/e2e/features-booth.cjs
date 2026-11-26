@@ -89,7 +89,7 @@ const features = (win) => win.evaluate(() => JSON.parse(localStorage.getItem('vo
   const warning = win.locator('[data-guardian-warning="screen-projection"]');
   check('unplugging the projector warns on the live screen', (await warning.count()) === 1, (await warning.textContent().catch(() => '')) || '');
   await win.screenshot({ path: `${OUT}/features-4-guardian.png` });
-  await warning.getByRole('button', { name: 'Close this warning' }).click();
+  await warning.getByRole('button', { name: 'Not now' }).click();
   await win.waitForTimeout(6000);
   check('a closed warning stays closed while the problem lasts', (await warning.count()) === 0);
 

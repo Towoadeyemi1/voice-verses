@@ -184,6 +184,14 @@ export interface Narration {
   click?: boolean;
   /** A small label over the card ("Demo") */
   label?: string;
+  /** A smaller second line ("Listening carries on. Esc goes back.") */
+  note?: string;
+  /** A button on the card ("Do it for me") */
+  action?: { label: string; run: () => void };
+  /** Shown with a tick: the fix worked */
+  done?: boolean;
+  /** Stays on any page (Show me the fix from Settings), not only the live screen */
+  anywhere?: boolean;
 }
 
 /**
