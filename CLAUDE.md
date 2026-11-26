@@ -18,6 +18,7 @@ Read these before changing anything:
 | [`docs/REBUILD.md`](docs/REBUILD.md) | The order to build it from nothing, with a check after each stage. |
 | [`docs/user-guide/`](docs/user-guide/README.md) | How to use every feature, with numbered screenshots, for churches. Rebuild it when the UI changes: `tools/guide/capture.cjs`, then `python3 tools/guide/build.py`. |
 | `.claude/skills/*` | Step-by-step procedures: testing in Electron, shipping a change, releasing, detection work, design review, rebuilding. |
+| [`docs/FOUNDATION.md`](docs/FOUNDATION.md) | The owner's foundation for every project, drawn from this one. When a rule changes here, or a lesson applies beyond this app, update it too. |
 
 ## The people and the setting
 

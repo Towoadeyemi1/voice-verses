@@ -516,6 +516,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ✅ Mock-up (`docs/design/all-screens.html`), approved: "The screen design is great".
 - ✅ 1.19.12 **One screen | Every screen**, a switch beside Live. Every screen shows each output that is on (projector, stream lower third, stage monitor), live and in its own shape, with where it goes; one is big and a click makes another big; on a wide monitor they sit like a switcher's multiview. An output on no screen says so, with Choose where it goes. Kept for next time. Checked by `tools/e2e/every-screen.cjs`.
 
+## "I want all my exotic design principles, security, test, architecture principles and others that has gone into this app to be used in all projects in my Claude as the foundation for all my work and app design and development. I also want a comprehensive documentation, maybe an md file that I can download and give other projects and they will lay all the foundation needed and that has been used in this project."
+
+(26 Nov 2026.)
+- ✅ `docs/FOUNDATION.md`: every principle in a form any project can use (working with the owner, product, design, writing, accessibility, architecture, security and licensing, testing, documentation, shipping, performance, AI, teaching, lessons), with Voice Verses as worked examples, a short version for places where only a short text fits, and a starter kit (CLAUDE.md, OWNER_REQUESTS, DECISIONS, LESSONS, DESIGN_SYSTEM, CI, skills). Also packaged as a Skill (`foundation`).
+- ⚠ A session can't change the owner's Claude settings: the owner adds it (Claude Code: `~/.claude/CLAUDE.md` on each computer; Claude.ai: project knowledge, personal preferences with the short version, or the Skill).
+- Keep it current: when a rule here changes or a lesson applies beyond this app, update FOUNDATION.md too.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
