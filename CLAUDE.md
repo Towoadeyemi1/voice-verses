@@ -24,7 +24,7 @@ Read these before changing anything:
 - **Who uses it:** church volunteers in a dark sound/media booth, under time pressure, often with little training. The owner's church also distributes it to other churches.
 - **The owner's booth:**
   - A 2020 Intel iMac 27" (macOS Tahoe) runs Logic. The desk feeds it over USB, with the preacher on a channel named "APOSTLE", and a Focusrite Scarlett 4i4 handles output.
-  - A separate ProPresenter computer (a Mac mini) has a Blackmagic eGPU (a free HDMI port) and a DeckLink Duo whose outputs are all in use (25 Nov 2026). It has no microphone: Voice Verses there needs the preacher's sound fed in (USB interface, or SDI with embedded sound).
+  - A separate ProPresenter computer (a Mac mini) has a Blackmagic eGPU (a free HDMI port) and a DeckLink Duo whose three outputs ProPresenter uses (projector, lower third, confidence). Since 26 Nov 2026 it has its own Focusrite (the iMac has a spare) for the preacher's sound: Voice Verses there listens through it (Settings → Listening, the APOSTLE channel). Voice Verses must not take the DeckLink ports.
   - Plan (25 Nov 2026): run Voice Verses on the ProPresenter computer alongside ProPresenter, with its Projector output on the eGPU's HDMI → a Decimator (HDMI to SDI, set to the switcher's format) → the balcony SDI cable → the switcher input that was Camera 1 (the old PTZ).
   - A Blackmagic switcher has 2 free inputs and an aux out to the projector.
   - There are confidence TVs on stage.

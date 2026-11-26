@@ -493,7 +493,8 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 ## "We are running ProPresenter in parallel on the Mac computer, and all we want is run Voice Verses on that computer too, but select its projector output as the Decimator, as the DeckLink Duo card has only 3 outputs that have been exhausted."
 
 (25 Nov 2026.) Yes, this works with what is built: Settings → Screens and outputs → Projector on the eGPU's HDMI display (extended, 1920×1080), into a Decimator set to the switcher's format, down the balcony SDI cable to the switcher input that was Camera 1.
-- ⚠ That computer has no microphone (2 Nov): Voice Verses needs the preacher's sound there (a USB audio interface or adapter fed from the desk), or it listens on the iMac and the ProPresenter computer only shows the network projector page full screen on the eGPU display.
+- ✅ Sound (26 Nov): the ProPresenter computer has its own Focusrite (the iMac got a spare), so Voice Verses listens there: Settings → Listening → the Focusrite, the channel carrying APOSTLE. ProPresenter and Voice Verses can share it.
+- The DeckLink Duo's three outputs stay with ProPresenter (projector, lower third, confidence); in Voice Verses choose the eGPU HDMI screen, never a DeckLink port.
 - ⚠ ProPresenter must not use the eGPU display.
 - ⏳ The owner's team re-patches the switcher input and tests.
 
