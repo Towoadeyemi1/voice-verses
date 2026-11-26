@@ -6,10 +6,25 @@
       "file": "34655342.mp3",
       "ms": 1915
     },
+    "38115844": {
+      "text": "To change how every song looks, open Looks.",
+      "file": "38115844.mp3",
+      "ms": 2150
+    },
     "58059841": {
       "text": "That was the demo.",
       "file": "58059841.mp3",
       "ms": 899
+    },
+    "70820729": {
+      "text": "Change a look, and every slide that uses it changes.",
+      "file": "70820729.mp3",
+      "ms": 2161
+    },
+    "83472812": {
+      "text": "The first slide is on Live.",
+      "file": "83472812.mp3",
+      "ms": 1575
     },
     "0170d2ad": {
       "text": "Now worship.",
@@ -46,6 +61,11 @@
       "file": "0c059f65.mp3",
       "ms": 1333
     },
+    "0cc72d20": {
+      "text": "Each press moves on one.",
+      "file": "0cc72d20.mp3",
+      "ms": 1236
+    },
     "0dbbec28": {
       "text": "This is the live screen.",
       "file": "0dbbec28.mp3",
@@ -81,6 +101,11 @@
       "file": "1cfd7451.mp3",
       "ms": 2501
     },
+    "24fa6a64": {
+      "text": "Each part, like a verse or the chorus, becomes its own slides.",
+      "file": "24fa6a64.mp3",
+      "ms": 2831
+    },
     "257c5f7c": {
       "text": "Type the verse: John 3:16.",
       "file": "257c5f7c.mp3",
@@ -90,6 +115,11 @@
       "text": "One click puts it on the screens.",
       "file": "28c93af3.mp3",
       "ms": 1835
+    },
+    "2c5b3cf9": {
+      "text": "Click Songs.",
+      "file": "2c5b3cf9.mp3",
+      "ms": 774
     },
     "2da0a3c0": {
       "text": "During a service, a warning appears with the same button.",
@@ -110,6 +140,11 @@
       "text": "A cue is one sentence.",
       "file": "35491f38.mp3",
       "ms": 1347
+    },
+    "36bf4d4a": {
+      "text": "For more, Open the full designer.",
+      "file": "36bf4d4a.mp3",
+      "ms": 1673
     },
     "39ba1403": {
       "text": "You can switch it on in Settings, Features.",
@@ -176,6 +211,11 @@
       "file": "5caf41cb.mp3",
       "ms": 745
     },
+    "61eefd5d": {
+      "text": "On the live screen, open the Library.",
+      "file": "61eefd5d.mp3",
+      "ms": 1717
+    },
     "65481e41": {
       "text": "This is your room.",
       "file": "65481e41.mp3",
@@ -185,6 +225,11 @@
       "text": "Each output has its own card.",
       "file": "6d181467.mp3",
       "ms": 1698
+    },
+    "6e0fdfc5": {
+      "text": "Your songs are kept in Media.",
+      "file": "6e0fdfc5.mp3",
+      "ms": 1631
     },
     "710d707c": {
       "text": "On the live screen, Every screen shows each output at once.",
@@ -201,10 +246,25 @@
       "file": "759a3427.mp3",
       "ms": 2114
     },
+    "7c8dd4fe": {
+      "text": "To see every slide at once, press See all slides.",
+      "file": "7c8dd4fe.mp3",
+      "ms": 2265
+    },
+    "7e58fa85": {
+      "text": "Lyrics opens the song’s words.",
+      "file": "7e58fa85.mp3",
+      "ms": 1498
+    },
     "855b2f7c": {
       "text": "Verses go up as the preacher reads them.",
       "file": "855b2f7c.mp3",
       "ms": 1961
+    },
+    "85899ad8": {
+      "text": "Cancel closes it, and nothing changes.",
+      "file": "85899ad8.mp3",
+      "ms": 2309
     },
     "89bc4727": {
       "text": "Clear takes the words off the screens.",
@@ -215,6 +275,11 @@
       "text": "The stage monitor shows the preacher what is on, what is next, and the time.",
       "file": "8acaab5c.mp3",
       "ms": 3672
+    },
+    "8c3ae016": {
+      "text": "Press Take to put the first slide on the screens.",
+      "file": "8c3ae016.mp3",
+      "ms": 2115
     },
     "8ce9a719": {
       "text": "Each type of service has a ready-made order, with a time for each part.",
@@ -301,15 +366,35 @@
       "file": "b0f13fbf.mp3",
       "ms": 1696
     },
+    "ba010192": {
+      "text": "Pick a song.",
+      "file": "ba010192.mp3",
+      "ms": 713
+    },
     "bd4f4cc1": {
       "text": "This is Services.",
       "file": "bd4f4cc1.mp3",
       "ms": 1057
     },
+    "c18fc712": {
+      "text": "Change the words above, or pick another look here.",
+      "file": "c18fc712.mp3",
+      "ms": 2286
+    },
+    "c500aff7": {
+      "text": "Its slides appear along the bottom.",
+      "file": "c500aff7.mp3",
+      "ms": 1718
+    },
     "c62ecc46": {
       "text": "Your plans for the day are here.",
       "file": "c62ecc46.mp3",
       "ms": 1406
+    },
+    "c6c62f89": {
+      "text": "You see the slide as the room will.",
+      "file": "c6c62f89.mp3",
+      "ms": 1711
     },
     "c7bf230c": {
       "text": "The verse went straight up on Live, because it was said outright.",
@@ -331,6 +416,11 @@
       "file": "ca1839a0.mp3",
       "ms": 1469
     },
+    "caec7cd5": {
+      "text": "The next slide is on Live.",
+      "file": "caec7cd5.mp3",
+      "ms": 1433
+    },
     "cc0202ce": {
       "text": "Identify screens shows a big number on each screen, so you know which is which.",
       "file": "cc0202ce.mp3",
@@ -350,6 +440,11 @@
       "text": "One tap teaches it.",
       "file": "d692e9d6.mp3",
       "ms": 1203
+    },
+    "d821a251": {
+      "text": "To add one from SongSelect, download its words, then press Add files.",
+      "file": "d821a251.mp3",
+      "ms": 3936
     },
     "e1eb6cb5": {
       "text": "spirit knows it now.",
@@ -381,10 +476,20 @@
       "file": "e5309a46.mp3",
       "ms": 1507
     },
+    "e799cbf6": {
+      "text": "To fix a word, press the pencil on the slide.",
+      "file": "e799cbf6.mp3",
+      "ms": 2353
+    },
     "e927f37b": {
       "text": "That is your first Sunday.",
       "file": "e927f37b.mp3",
       "ms": 1254
+    },
+    "ee2413e5": {
+      "text": "Press Take again for the next slide.",
+      "file": "ee2413e5.mp3",
+      "ms": 1449
     },
     "f0279fed": {
       "text": "John 3:16 is waiting in Next.",

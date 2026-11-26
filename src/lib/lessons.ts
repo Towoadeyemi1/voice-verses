@@ -151,7 +151,7 @@ const songs: GuideStep[] = [
   },
   {
     target: '[data-edit-lyrics]',
-    say: 'Lyrics opens a song’s words. Each part, like a verse or the chorus, becomes its own slides.',
+    say: 'Lyrics opens the song’s words. Each part, like a verse or the chorus, becomes its own slides.',
     watchOnly: true,
   },
   {
@@ -219,7 +219,7 @@ const songs: GuideStep[] = [
   },
   {
     target: '[data-see-all]',
-    say: 'See all slides shows every slide at once.',
+    say: 'To see every slide at once, press See all slides.',
     watchOnly: true,
   },
   {
