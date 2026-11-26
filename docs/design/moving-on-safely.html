@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moving On Safely</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* Mock-up for the owner (26 Nov 2026): "it is safe to clear to logo first when spirit or any
+   automation is running the service until they are sure the next segment has actually kicked off…
+   If unsure, actual user/pilot engagement should be requested."
+   The live screen as built (1.19.x). When the app moves on by itself and isn't sure the next part has
+   begun, the screens go to the logo, the next part waits in Next, and a card above Take asks. Text is
+   KJV or written for this mock-up. */
+:root {
+  --bg: #f1eee9; --surface: #f8f6f2; --raised: #ffffff;
+  --ink: #1c1b1f; --ink-2: rgba(28,27,31,.62); --ink-3: rgba(28,27,31,.42);
+  --hair: rgba(28,27,31,.08); --fill: rgba(28,27,31,.055); --glass: rgba(248,246,242,.78);
+  --accent: #d9961f; --accent-ink: #2a1d04; --accent-tint: rgba(217,150,31,.15);
+  --live: #ff3b30; --next: #1fa84b;
+  --take-a: #fbfaf7; --take-b: #ece8e1; --take-ink: #1c1b1f;
+  --glow: .1;
+  --lift: 0 1px 2px rgba(20,15,30,.05), 0 8px 28px rgba(20,15,30,.08);
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Figtree", "Segoe UI Variable Text", system-ui, sans-serif;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Figtree", "Segoe UI Variable Display", system-ui, sans-serif;
+  --word: "Newsreader", "New York", "Iowan Old Style", Georgia, serif;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #111013; --surface: #18171b; --raised: #211f25;
+  --ink: #f5f3f7; --ink-2: rgba(245,243,247,.64); --ink-3: rgba(245,243,247,.4);
+  --hair: rgba(255,255,255,.07); --fill: rgba(255,255,255,.055); --glass: rgba(24,23,27,.74);
+  --accent: #f0b44a; --accent-tint: rgba(240,180,74,.15);
+  --live: #ff453a; --next: #30d158;
+  --take-a: #35333b; --take-b: #29272e; --take-ink: #f5f3f7;
+  --glow: .22;
+  --lift: 0 1px 1px rgba(0,0,0,.3), 0 12px 36px rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111013; --surface: #18171b; --raised: #211f25;
+    --ink: #f5f3f7; --ink-2: rgba(245,243,247,.64); --ink-3: rgba(245,243,247,.4);
+    --hair: rgba(255,255,255,.07); --fill: rgba(255,255,255,.055); --glass: rgba(24,23,27,.74);
+    --accent: #f0b44a; --accent-tint: rgba(240,180,74,.15);
+    --live: #ff453a; --next: #30d158;
+    --take-a: #35333b; --take-b: #29272e; --take-ink: #f5f3f7;
+    --glow: .22;
+    --lift: 0 1px 1px rgba(0,0,0,.3), 0 12px 36px rgba(0,0,0,.4);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: #0b0a0c; color: var(--ink); font: 15px/1.45 var(--ui); -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+svg { flex-shrink: 0; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* The window, drawn at a real size and scaled to fit this page */
+.viewport { position: fixed; inset: 0 0 64px 0; overflow: hidden; }
+.window { position: absolute; left: 50%; top: 50%; width: var(--w); height: var(--h); transform: translate(-50%, -50%) scale(var(--s)); transform-origin: center; border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08); flex-shrink: 0; }
+
+.app { position: relative; height: 100%; background: var(--bg); display: grid; grid-template-rows: 64px auto auto minmax(0, 1fr); overflow: hidden; }
+.ambient { position: absolute; inset: 0; pointer-events: none; opacity: var(--glow);
+  background: radial-gradient(40% 55% at 84% 38%, #ff8a3d, transparent 70%), radial-gradient(35% 45% at 70% 98%, #ffb020, transparent 70%); }
+.app > *:not(.ambient) { position: relative; }
+
+/* Top bar */
+.top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; padding: 0 22px; }
+.who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.who .mark { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #7b5cff, #c86bff); display: grid; place-items: center; color: #fff; font: 700 15px var(--display); }
+.who b { display: block; font: 600 15px/1.2 var(--display); }
+.who span { font-size: 13px; color: var(--ink-3); }
+.status { display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 6px 0 14px; border-radius: 21px; background: var(--glass); box-shadow: 0 0 0 1px var(--hair); font-size: 14px; font-weight: 500; }
+.wave { display: inline-flex; gap: 2.5px; align-items: center; height: 16px; }
+.wave i { width: 3px; height: 40%; border-radius: 2px; background: var(--next); animation: wv 1s ease-in-out infinite; }
+.wave i:nth-child(2) { animation-delay: .12s; } .wave i:nth-child(3) { animation-delay: .24s; } .wave i:nth-child(4) { animation-delay: .36s; }
+@keyframes wv { 50% { height: 100%; } }
+.seg { display: inline-flex; padding: 3px; border-radius: 16px; background: var(--fill); }
+.seg button { height: 30px; padding: 0 12px; border-radius: 13px; font-size: 13px; font-weight: 600; color: var(--ink-3); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.14); }
+.seg i { width: 7px; height: 7px; border-radius: 50%; }
+.right { display: flex; justify-content: end; align-items: center; gap: 8px; }
+.pill { height: 38px; padding: 0 13px; border-radius: 12px; background: var(--fill); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.ready { color: var(--ink-2); }
+.clock { text-align: right; line-height: 1.15; margin-left: 6px; }
+.clock b { display: block; font: 600 20px var(--display); }
+.clock span { font-size: 12.5px; color: var(--ink-3); }
+
+/* The order of service */
+.order { display: flex; gap: 4px; padding: 4px 22px 10px; overflow: hidden; }
+.part { flex-shrink: 0; height: 44px; border-radius: 11px; padding: 0 13px; display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; white-space: nowrap; background: color-mix(in oklab, var(--c) 18%, transparent); }
+.part::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+.part small { font-weight: 500; color: var(--ink-3); font-size: 12.5px; }
+.part.past { opacity: .45; }
+.part.current { background: var(--c); color: #fff; }
+.part.current::before { background: #fff; }
+.part.current small { color: rgba(255,255,255,.78); }
+.spirit { display: flex; align-items: center; gap: 12px; padding: 0 22px 8px; font-size: 13.5px; color: var(--ink-3); }
+.spirit b { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px 0 6px; border-radius: 16px; background: var(--fill); color: var(--ink); font-weight: 600; }
+.orb { width: 20px; height: 20px; border-radius: 50%; background: conic-gradient(from 200deg, #ff7a59, #ffd36e, #7ee0c3, #8c7bff, #ff7a59); }
+
+/* Body: what is being said, and the screens */
+.body { display: grid; grid-template-columns: minmax(0, 1fr) var(--col); min-height: 0; }
+.wide .body { grid-template-columns: 300px minmax(0, 1fr) var(--col); }
+.library { display: none; }
+.wide .library { display: flex; flex-direction: column; gap: 3px; padding: 10px 10px 24px 22px; }
+.library .search { height: 40px; border-radius: 12px; background: var(--fill); display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--ink-3); font-size: 14px; margin-bottom: 8px; }
+.library h3 { margin: 14px 8px 6px; font: 600 13px var(--ui); color: var(--ink-3); }
+.library button { text-align: left; padding: 9px 10px; border-radius: 10px; font-size: 14px; color: var(--ink-2); display: flex; justify-content: space-between; }
+.library button.sel { background: var(--accent-tint); color: var(--ink); font-weight: 600; }
+.library button em { font-style: normal; color: var(--ink-3); font-size: 13px; }
+
+.now { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 14px; padding: 18px 40px 24px; min-height: 0; }
+.now-head { display: flex; align-items: center; gap: 14px; }
+.now-head h1 { margin: 0; font: 700 30px/1.1 var(--display); letter-spacing: -.025em; }
+.now-head .sub { color: var(--ink-3); font-size: 14px; }
+.steps { display: flex; gap: 6px; margin-left: auto; }
+.step { min-width: 36px; height: 36px; padding: 0 10px; border-radius: 18px; font-size: 14px; font-weight: 600; background: var(--fill); color: var(--ink-2); }
+.step.done { background: transparent; color: var(--ink-3); }
+.step.live { background: var(--live); color: #fff; }
+.step.next { background: transparent; box-shadow: inset 0 0 0 2px var(--next); color: var(--ink); }
+.said { align-self: center; }
+.said p { margin: 0; font: 400 clamp(34px, calc(var(--wpx) * .026), 58px)/1.3 var(--word); letter-spacing: -.012em; max-width: 26ch; color: var(--ink-3); }
+.said p em { font-style: normal; color: var(--ink); }
+.said p u { color: var(--ink); text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 8px; }
+.said .then { margin-top: 26px; font: 400 20px/1.45 var(--word); color: var(--ink-3); max-width: 46ch; }
+.said .then b { font: 600 13px var(--ui); color: var(--next); margin-right: 8px; }
+.heard { display: flex; align-items: center; gap: 10px; font-size: 14.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+
+/* The screens column */
+.screens { display: flex; flex-direction: column; gap: 10px; padding: 6px 22px 20px 6px; min-height: 0; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 8px; min-height: 34px; }
+.row .t { font-size: 13.5px; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
+.row .end { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+.label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; min-height: 36px; }
+.label .dot { width: 8px; height: 8px; border-radius: 50%; }
+.label .ref { color: var(--ink-3); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.label .end { margin-left: auto; display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.tbtn { height: 36px; padding: 0 10px; border-radius: 10px; font-size: 13.5px; font-weight: 600; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.tbtn:hover { background: var(--fill); color: var(--ink); }
+.tbtn kbd { font: 600 11px var(--ui); color: var(--ink-3); }
+
+/* The new switch: One screen | Every screen */
+.view { display: inline-flex; padding: 3px; border-radius: 12px; background: var(--fill); margin-right: 4px; }
+.view button { height: 30px; padding: 0 10px; border-radius: 9px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
+.view button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.16); }
+.view .w { display: none; }
+.wide .view .w { display: inline; }
+.view button { min-width: 36px; justify-content: center; }
+.view .n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--fill); font-size: 11.5px; display: inline-grid; place-items: center; }
+.view button[aria-pressed="true"] .n { background: color-mix(in oklab, var(--live) 18%, transparent); color: var(--live); }
+
+/* A picture of an output */
+.screen { container-type: inline-size; position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; color: #fff; background: #000; }
+.screen.live { box-shadow: 0 0 0 2px var(--live), 0 18px 50px -24px var(--live); }
+.screen.next { box-shadow: 0 0 0 2px var(--next); }
+.slide { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  background: radial-gradient(60% 70% at 50% 40%, #1d2a4d, #0a0d1a 75%); }
+.slide .txt { font: 400 4.3cqw/1.34 var(--word); padding: 0 9cqw; text-shadow: 0 2px 14px rgba(0,0,0,.45); }
+.slide .ref { display: block; margin-top: 2cqw; font: 600 2.3cqw var(--ui); letter-spacing: .05em; color: #f0b44a; }
+.slide.welcome { background: radial-gradient(18% 25% at 25% 30%, rgba(255,190,90,.5), transparent 70%), radial-gradient(14% 22% at 72% 62%, rgba(255,170,70,.4), transparent 70%), radial-gradient(70% 80% at 50% 50%, #1a2240, #090b16 80%); }
+.slide.welcome .big { font: 600 5cqw var(--display); }
+.slide.welcome .big small { display: block; font: 500 2.6cqw var(--ui); opacity: .8; margin-top: 1cqw; }
+/* The lower third, see-through: drawn over a camera picture so the band reads as it will on the stream */
+.cam { position: absolute; inset: 0; background: radial-gradient(22% 42% at 52% 40%, #c49a78, transparent 70%), radial-gradient(40% 30% at 50% 100%, #4a2d22, transparent 70%), linear-gradient(180deg, #2b2220, #120d0c); }
+.cam::after { content: ""; position: absolute; left: 41%; top: 22%; width: 18%; height: 78%; border-radius: 45% 45% 10% 10%; background: linear-gradient(#5a4236, #2a1e19); opacity: .75; }
+.band { position: absolute; left: 5cqw; right: 18cqw; bottom: 7cqw; padding: 2.2cqw 3.6cqw; border-left: 1.2cqw solid #f0b44a; background: rgba(12,12,16,.86); text-align: left; font: 400 3.4cqw/1.3 var(--word); z-index: 1; }
+.band b { display: block; font: 600 2.2cqw var(--ui); color: #f0b44a; letter-spacing: .04em; margin-top: .8cqw; }
+/* The stage monitor: what is on, what is next, the clock and the time left */
+.stage { position: absolute; inset: 0; background: #000; display: grid; grid-template-rows: auto 1fr auto; padding: 3.6cqw 4.4cqw; font-family: var(--ui); }
+.stage .hd { display: flex; justify-content: space-between; font: 600 2.6cqw var(--ui); color: rgba(255,255,255,.6); }
+.stage .hd b { color: #fff; font-size: 3.4cqw; }
+.stage .cur { align-self: center; font: 500 4.3cqw/1.3 var(--ui); }
+.stage .ft { display: flex; justify-content: space-between; align-items: end; gap: 3cqw; font: 500 2.6cqw/1.3 var(--ui); color: rgba(255,255,255,.62); }
+.stage .ft b { color: #ffd60a; font-weight: 600; }
+.stage .left { font: 700 5.4cqw var(--display); color: #fff; }
+.screen .bar { position: absolute; left: 0; bottom: 0; height: 4px; width: 62%; background: var(--live); z-index: 2; }
+
+/* Every screen */
+.wall { display: grid; gap: 10px; }
+.wall .others { display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); gap: 10px; }
+/* A wide window: like a switcher's multiview, the big one on the left and the others stacked beside it */
+.wide .wall { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: start; }
+.wide .wall .others { grid-template-columns: minmax(0, 1fr); }
+.tile { position: relative; cursor: pointer; transition: transform .25s ease; }
+.tile .screen.live { box-shadow: 0 0 0 1.5px var(--live); }
+.tile.big .screen.live { box-shadow: 0 0 0 2px var(--live), 0 18px 50px -24px var(--live); }
+.tile:not(.big):hover { transform: translateY(-2px); }
+.tag { position: absolute; left: 8px; top: 8px; z-index: 3; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; border-radius: 13px; background: rgba(10,10,14,.66); backdrop-filter: blur(10px); color: #fff; font: 600 12.5px var(--ui); }
+.tag i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px rgba(255,69,58,.25); }
+.where { position: absolute; right: 8px; top: 8px; z-index: 3; display: flex; gap: 4px; }
+.where span { height: 24px; padding: 0 8px; border-radius: 12px; background: rgba(10,10,14,.6); backdrop-filter: blur(10px); color: rgba(255,255,255,.86); font: 600 11.5px/24px var(--ui); }
+.tile.small .where, .tile.small .tag { display: none; }
+.cap { display: none; align-items: center; gap: 6px; margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; }
+.cap i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); flex-shrink: 0; }
+.cap small { font-weight: 500; color: var(--ink-3); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; }
+.tile.small .cap { display: flex; }
+.tile.off .cap i { background: var(--ink-3); }
+.tile.big .tag { left: 12px; top: 12px; height: 30px; font-size: 13.5px; padding: 0 12px 0 10px; }
+.tile.big .where { right: 12px; top: 12px; }
+.tile.off .screen { box-shadow: inset 0 0 0 1.5px var(--hair); background: var(--surface); }
+.tile.off .tag i { background: var(--ink-3); box-shadow: none; }
+.tile.off .empty { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 4px; color: var(--ink-3); font-size: 13px; text-align: center; padding: 0 12px; }
+.tile.off .empty b { color: var(--accent); font-weight: 600; }
+.tile.off .tag { background: var(--fill); color: var(--ink-2); backdrop-filter: none; }
+.hint { font-size: 13px; color: var(--ink-3); text-align: center; margin-top: -2px; }
+
+/* Take: the quiet raised button as built */
+.take { height: 56px; flex-shrink: 0; border-radius: 16px; background: linear-gradient(var(--take-a), var(--take-b)); color: var(--take-ink); display: flex; align-items: center; justify-content: center; gap: 10px; font: 600 17px var(--display); letter-spacing: -.01em; box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 0 0 1px var(--hair), 0 12px 28px -14px rgba(0,0,0,.6); }
+.take svg { color: var(--next); }
+.take kbd { font: 600 12px var(--ui); padding: 2px 7px; border-radius: 6px; background: var(--fill); color: var(--ink-3); }
+
+/* Next: full size with one screen; beside its words with every screen */
+.nextrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: center; }
+.nextrow .info { display: grid; gap: 4px; align-content: center; }
+.nextrow .info .label { min-height: 0; }
+.nextrow .info p { margin: 0; font-size: 13.5px; color: var(--ink-3); }
+.nextrow .info .acts { display: flex; gap: 2px; margin-top: 4px; margin-left: -10px; }
+.wide .nextrow { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+
+.chips { display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: 12px; background: var(--fill); font-size: 13.5px; font-weight: 500; color: var(--ink-2); }
+.chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+
+.nextfull { display: contents; }
+.mode-one .wall, .mode-one .nextrow { display: none; }
+.mode-all .single, .mode-all .chips, .mode-all .nextfull, .mode-all .nextfull > * { display: none; }
+
+/* Mock-up controls (not part of the app) */
+.demo { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 10; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; border-radius: 16px; background: rgba(28,27,32,.92); color: #f4f2f6; box-shadow: 0 12px 34px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.08); font: 12.5px var(--ui); max-width: calc(100vw - 24px); overflow-x: auto; }
+.demo .tag2 { color: rgba(255,255,255,.55); white-space: nowrap; }
+.demo .grp { display: flex; gap: 2px; padding: 2px; border-radius: 11px; background: rgba(255,255,255,.08); }
+.demo button { height: 30px; padding: 0 11px; border-radius: 9px; white-space: nowrap; color: rgba(255,255,255,.72); font-weight: 600; }
+.demo button[aria-pressed="true"] { background: rgba(255,255,255,.16); color: #fff; }
+@media (prefers-reduced-motion: reduce) { .wave i { animation: none; } .tile { transition: none; } }
+
+/* ---- Moving on safely ---- */
+.logo-slide { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(60% 70% at 50% 45%, #1b1730, #08070c 78%); }
+.logo-slide .mk { display: grid; place-items: center; gap: 1.6cqw; color: #fff; }
+.logo-slide .mk span { width: 11cqw; height: 11cqw; border-radius: 3cqw; background: linear-gradient(135deg, #7b5cff, #c86bff); display: grid; place-items: center; font: 700 6cqw var(--display); }
+.logo-slide .mk b { font: 600 3cqw var(--display); letter-spacing: .02em; opacity: .9; }
+.notice { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; background: radial-gradient(18% 25% at 25% 30%, rgba(255,190,90,.45), transparent 70%), radial-gradient(70% 80% at 50% 50%, #2a1f14, #0d0906 80%); }
+.notice .big { font: 600 5.4cqw var(--display); }
+.notice .big small { display: block; font: 500 2.8cqw var(--ui); opacity: .85; margin-top: 1.2cqw; }
+.prayer { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; background: radial-gradient(40% 50% at 50% 40%, rgba(45,212,191,.28), transparent 70%), radial-gradient(70% 80% at 50% 50%, #0d2624, #050b0b 80%); }
+.prayer .big { font: 400 5.6cqw/1.3 var(--word); }
+.prayer .big small { display: block; font: 600 2.4cqw var(--ui); letter-spacing: .05em; color: #7ee0c3; margin-top: 1.6cqw; }
+
+.ask { border-radius: 16px; background: var(--raised); box-shadow: var(--lift), inset 0 0 0 1.5px color-mix(in oklab, var(--accent) 55%, transparent); padding: 14px 14px 12px 16px; display: grid; gap: 4px; }
+.ask .kick { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+.ask .kick .orb { width: 16px; height: 16px; }
+.ask h3 { margin: 0; font: 700 19px/1.25 var(--display); letter-spacing: -0.01em; }
+.ask p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+.ask .acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+.btn2 { height: 38px; padding: 0 14px; border-radius: 11px; font-size: 14px; font-weight: 600; background: var(--fill); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.btn2.primary { background: var(--accent); color: var(--accent-ink); }
+.btn2 kbd { font: 600 11px var(--ui); padding: 1px 6px; border-radius: 5px; background: rgba(0,0,0,.14); }
+.heardnote { display: flex; align-items: center; gap: 10px; border-radius: 14px; background: var(--raised); box-shadow: var(--lift); padding: 10px 10px 10px 14px; font-size: 13.5px; }
+.heardnote .orb { width: 16px; height: 16px; flex-shrink: 0; }
+.heardnote .txt { flex: 1; min-width: 0; color: var(--ink-2); }
+.heardnote .txt b { color: var(--ink); }
+.waitnote { font-size: 13px; color: var(--ink-3); margin-top: -4px; }
+.part.ready { box-shadow: inset 0 0 0 2px var(--next); }
+.part .tag3 { font-size: 11.5px; font-weight: 700; padding: 2px 7px; border-radius: 8px; background: rgba(0,0,0,.18); }
+.app [data-in]:not(.shown) { display: none !important; }
+.notes-now h2 { margin: 0; font: 400 clamp(34px, calc(var(--wpx) * .026), 58px)/1.3 var(--word); letter-spacing: -.012em; max-width: 24ch; }
+.notes-now .then { margin-top: 26px; font: 400 20px/1.45 var(--word); color: var(--ink-3); }
+.notes-now .then b { font: 600 13px var(--ui); color: var(--next); margin-right: 8px; }
+</style>
+</head>
+<body>
+<div class="viewport"><div class="window" id="win"><div class="app state-a" id="app">
+  <div class="ambient"></div>
+
+  <header class="top">
+    <div class="who"><span class="mark">G</span><div><b>Sunday Celebration</b><span>Sunday, 29 November</span></div></div>
+    <div class="status">
+      <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span>Listening</span>
+      <span class="seg"><button aria-pressed="true">Auto</button><button aria-pressed="false">Ask first</button></span>
+    </div>
+    <div class="right">
+      <span class="pill ready"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Ready</span>
+      <span class="pill">Alert</span>
+      <span class="pill">Countdown</span>
+      <div class="clock"><b class="num">10:31</b><span class="num">ends 12:10</span></div>
+    </div>
+  </header>
+
+  <nav class="order" aria-label="Order of service">
+    <span class="part past" style="--c:#7b8fb8">Countdown <small class="num">10:00</small></span>
+    <span class="part past" style="--c:#e8a23a">Welcome <small class="num">10:05</small></span>
+    <span class="part past" style="--c:#8c6bff">Holy, Holy, Holy <small class="num">10:10</small></span>
+    <span class="part past" style="--c:#8c6bff">Amazing Grace <small class="num">10:18</small></span>
+    <span class="part current" data-in="ab" style="--c:#e0a030">Notices <span class="tag3" data-in="a">time up</span><span class="tag3" data-in="b">waiting for you</span></span>
+    <span class="part past" data-in="c" style="--c:#e0a030">Notices <small class="num">10:27</small></span>
+    <span class="part ready" data-in="ab" style="--c:#2fb3a0">Prayer <small class="num">10:31</small></span>
+    <span class="part current" data-in="c" style="--c:#2fb3a0">Prayer <small class="num">10:31</small></span>
+    <span class="part" style="--c:#2fb37a">Offering <small class="num">10:36</small></span>
+    <span class="part" style="--c:#3e7be0">Reading: John 3 <small class="num">10:42</small></span>
+  </nav>
+  <div class="spirit"><b><span class="orb"></span>spirit · Sunday service</b>
+    <span data-in="a">Notices had 4 minutes. Prayer is ready, waiting for you to say it has started.</span>
+    <span data-in="b">Waiting for you to move on. Prayer is ready in Next.</span>
+    <span data-in="c">Heard the prayer begin, so Prayer is on the screens.</span>
+  </div>
+
+  <main class="body">
+    <aside class="library">
+      <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Find a verse, song or item <span style="margin-left:auto;font-size:12px">⌘K</span></div>
+      <h3>This service</h3>
+      <button class="sel">Notices <em>3</em></button>
+      <button>Prayer <em>1</em></button>
+      <button>Offering <em>2</em></button>
+      <h3>Songs</h3>
+      <button>Holy, Holy, Holy <em>4</em></button>
+      <button>Amazing Grace <em>6</em></button>
+    </aside>
+
+    <section class="now">
+      <div class="now-head">
+        <h1 data-in="ab">Notices</h1><h1 data-in="c">Prayer</h1>
+        <span class="sub" data-in="ab">3 slides · the last one</span><span class="sub" data-in="c">1 slide</span>
+      </div>
+      <div class="said notes-now">
+        <h2 data-in="ab">Youth night, Friday at 7pm in the main hall. Everyone aged 11 to 18 welcome.</h2>
+        <h2 data-in="c">Let us pray.</h2>
+        <p class="then" data-in="ab"><b>NEXT</b>Prayer</p>
+        <p class="then" data-in="c"><b>NEXT</b>Offering</p>
+      </div>
+      <div class="heard"><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span data-in="ab">“…and don’t forget to sign up at the welcome desk after the service…”</span>
+        <span data-in="c">“…would you bow your heads with me, let us pray…”</span>
+      </div>
+    </section>
+
+    <section class="screens" aria-label="Screens">
+      <div class="row">
+        <span class="t">When I pick a slide</span>
+        <span class="end seg"><button aria-pressed="false"><i style="background:var(--live)"></i>Goes live</button><button aria-pressed="true"><i style="background:var(--next)"></i>Waits in Next</button></span>
+      </div>
+
+      <div class="label">
+        <span class="dot" style="background:var(--live)"></span>Live
+        <span class="ref" data-in="a">Logo · until Prayer starts</span><span class="ref" data-in="b">Notices · Youth night</span><span class="ref" data-in="c">Prayer</span>
+        <span class="end"><button class="tbtn">Logo</button><button class="tbtn">Clear <kbd>Esc</kbd></button></span>
+      </div>
+      <div class="screen live">
+        <div class="logo-slide" data-in="a"><div class="mk"><span>G</span><b>GRACE CHURCH</b></div></div>
+        <div class="notice" data-in="b"><div class="big">Youth night<small>Friday at 7pm in the main hall</small></div></div>
+        <div class="prayer" data-in="c"><div class="big">Let us pray<small>PRAYER</small></div></div>
+      </div>
+
+      <!-- Not sure: ask -->
+      <div class="ask" data-in="a" role="dialog" aria-labelledby="ask-t">
+        <span class="kick"><span class="orb"></span>Moving on · Notices had 4 minutes</span>
+        <h3 id="ask-t">Has Prayer started?</h3>
+        <p>The screens show the logo until you say. Show it does what Take does. If spirit hears the prayer begin, it asks again.</p>
+        <div class="acts"><button class="btn2" data-go="b">Not yet</button><button class="btn2 primary" data-go="c">Show it <kbd>Space</kbd></button></div>
+      </div>
+      <!-- Not yet -->
+      <p class="waitnote" data-in="b">Notices is back on the screens. Prayer waits in Next until you press Take.</p>
+      <!-- Sure: heard it -->
+      <div class="heardnote" data-in="c"><span class="orb"></span><span class="txt"><b>Heard “let us pray”.</b> Prayer is on the screens.</span><button class="btn2" data-go="b">Undo</button></div>
+
+      <button class="take" data-in="bc"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Take<kbd>Space</kbd></button>
+
+      <div class="label"><span class="dot" style="background:var(--next)"></span>Next
+        <span class="ref" data-in="ab">Prayer · waiting for Take</span><span class="ref" data-in="c">Offering · waiting for Take</span>
+        <span class="end"><button class="tbtn">Edit</button></span></div>
+      <div class="screen next">
+        <div class="prayer" data-in="ab"><div class="big">Let us pray<small>PRAYER</small></div></div>
+        <div class="notice" data-in="c" style="background: radial-gradient(40% 50% at 50% 40%, rgba(74,222,128,.25), transparent 70%), radial-gradient(70% 80% at 50% 50%, #0f2414, #050a06 80%);"><div class="big">Offering<small>Give online at the welcome desk</small></div></div>
+      </div>
+    </section>
+  </main>
+</div></div></div>
+
+<div class="demo" role="toolbar" aria-label="Mock-up controls">
+  <span class="tag2">What happened</span>
+  <span class="grp"><button data-state="a" aria-pressed="true">Time is up (not sure)</button><button data-state="b">Not yet</button><button data-state="c">Heard it begin (sure)</button></span>
+  <span class="tag2">Window</span>
+  <span class="grp"><button data-size="1440x900" aria-pressed="true">Laptop</button><button data-size="2560x1440">2560</button></span>
+  <span class="tag2">Look</span>
+  <span class="grp"><button data-theme="dark" aria-pressed="true">Dark</button><button data-theme="light">Light</button></span>
+</div>
+
+<script>
+const app = document.getElementById('app');
+const win = document.getElementById('win');
+function fit() {
+  const [w, h] = document.querySelector('[data-size][aria-pressed="true"]').dataset.size.split('x').map(Number);
+  win.style.setProperty('--w', w + 'px');
+  win.style.setProperty('--h', h + 'px');
+  app.style.setProperty('--wpx', w + 'px');
+  app.style.setProperty('--col', w >= 2400 ? '760px' : '480px');
+  app.classList.toggle('wide', w >= 1900);
+  const vw = window.innerWidth - 24, vh = window.innerHeight - 88;
+  win.style.setProperty('--s', Math.min(vw / w, vh / h, 1));
+}
+const press = (group, btn) => document.querySelectorAll(group).forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+const setState = (st) => {
+  app.classList.remove('state-a', 'state-b', 'state-c');
+  app.classList.add('state-' + st);
+  document.querySelectorAll('[data-in]').forEach((el) => el.classList.toggle('shown', el.dataset.in.includes(st)));
+  press('[data-state]', document.querySelector(`[data-state="${st}"]`));
+};
+document.querySelectorAll('[data-state]').forEach((b) => b.addEventListener('click', () => setState(b.dataset.state)));
+document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => setState(b.dataset.go)));
+document.querySelectorAll('[data-size]').forEach((b) => b.addEventListener('click', () => { press('[data-size]', b); fit(); }));
+document.querySelectorAll('[data-theme]').forEach((b) => b.addEventListener('click', () => { press('[data-theme]', b); document.documentElement.dataset.theme = b.dataset.theme; }));
+window.addEventListener('keydown', (e) => { if (e.code === 'Space' && app.classList.contains('state-a')) { e.preventDefault(); setState('c'); } });
+window.addEventListener('resize', fit);
+document.documentElement.dataset.theme = 'dark';
+setState('a');
+fit();
+</script>
+</body>
+</html>
