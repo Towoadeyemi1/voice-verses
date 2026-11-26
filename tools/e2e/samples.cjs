@@ -23,7 +23,7 @@ const { OUT, launch, check, done } = require('./lib.cjs');
   // The demo is narrated (1.19.1): about two minutes; no voices under Xvfb
   await win.evaluate(() => localStorage.setItem('voice-verses-guide-voice', 'off'));
   await win.getByRole('button', { name: /Watch the demo/ }).click();
-  const seen = new Set(); let predicted = ''; let newSong = false; let shotVerse = false; let shotSong = false;
+  const seen = new Set(); let predicted = ''; let newSong = false; let shotVerse = false; let shotSong = false; let namedOff = '';
   for (let i = 0; i < 400; i++) {
     await win.waitForTimeout(500);
     const live = await win.evaluate(() => { const m = JSON.parse(localStorage.getItem('voice-verses-live') || 'null'); const v = m?.data?.verse; const s = m?.data?.slide; return v ? `${v.book} ${v.chapter}:${v.verse}` : s ? `${s.songTitle || s.title} · ${s.sectionLabel ?? ''}` : ''; });
@@ -31,6 +31,7 @@ const { OUT, launch, check, done } = require('./lib.cjs');
     const text = await win.evaluate(() => document.body.innerText);
     if (/likely next/.test(text) && !predicted) predicted = (text.match(/Romans \d+:\d+ · likely next/) || [''])[0];
     if (/Singing something new/.test(text)) newSong = true;
+    if (/switched off for your church/.test(text) && !namedOff) namedOff = (text.match(/[^\n]*switched off for your church[^\n]*/) || [''])[0];
     if (live === 'John 3:17' && !shotVerse) { shotVerse = true; await win.screenshot({ path: `${OUT}/tour-2-live-verse.png` }); }
     if (/Refrain/.test(live) && !shotSong) { shotSong = true; await win.screenshot({ path: `${OUT}/tour-3-live-song.png` }); }
     if (!(await win.locator('[data-demo]').count())) break;
@@ -41,6 +42,8 @@ const { OUT, launch, check, done } = require('./lib.cjs');
   check('demo: the quoted verse found', seen.has('Romans 5:8'), order);
   check('demo: song followed and cued to Verse 2 and the Refrain', [...seen].some((s) => s.includes('Verse 2')) && [...seen].some((s) => s.includes('Refrain')), order);
   check('demo: new singing offered', newSong);
+  // 1.19.10: features this church has off are on for the demo, and named at the end
+  check('demo: says which of the features it showed are off here, and where to switch them on', /Predictive Next/.test(namedOff) && /Singing something new/.test(namedOff) && /Settings/.test(namedOff), namedOff);
 
   // Every page, with content
   const pages = [['#/service-planner', 'tour-4-services'], ['#/media-library', 'tour-6-media'], ['#/templates', 'tour-7-looks'], ['#/display-manager', 'tour-8-screens'], ['#/settings', 'tour-9-settings']];

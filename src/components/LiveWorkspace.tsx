@@ -34,7 +34,7 @@ import { hasSecret } from '@/lib/secrets';
 import { desktop } from '@/lib/desktop';
 import { loadSendMode, saveSendMode, SendMode } from '@/lib/sendMode';
 import { ClickMode, loadAutoAdvance, loadClickMode, saveAutoAdvance, saveClickMode } from '@/lib/clickMode';
-import { detectionFeatures, FEATURES_CHANGED, loadFeatures } from '@/lib/features';
+import { detectionFeatures, FEATURES, FEATURES_CHANGED, loadFeatures } from '@/lib/features';
 import { Countdown, countdownFromConfig, startCountdown, stopCountdown } from '@/lib/countdown';
 import type { BibleVersionType } from '@/types/bibleVersion';
 import { showLogo } from '@/lib/showLogo';
@@ -910,6 +910,12 @@ export const LiveWorkspace = () => {
     setDemo({ caption: 'Starting the demo', mode: sendMode, practice });
     setSendMode('auto');
     const detector = createDetector();
+    // The demo shows everything it narrates, for the demo only: features this church has
+    // switched off (Settings → Features) are on in the demo, and named at the end
+    const own = detectionFeatures();
+    const shown = { readAlong: true, quotes: true, predictiveNext: true, songRecognition: true, worshipCues: true, newSongs: true } as const;
+    detector.setFeatures({ ...own, ...shown });
+    const off = FEATURES.filter((f) => f.id in shown && !own[f.id as keyof typeof own]).map((f) => f.title);
     for (const step of DEMO_STEPS) {
       if (demoRun.current !== run) return;
       if (step.kind === 'caption') {
@@ -945,6 +951,11 @@ export const LiveWorkspace = () => {
         }
       }
       if (!(await wait(step.wait))) return;
+    }
+    if (demoRun.current === run && off.length) {
+      const say = `${off.join(' and ')} ${off.length === 1 ? 'is' : 'are'} switched off for your church. Switch ${off.length === 1 ? 'it' : 'them'} on in Settings, Features, to use ${off.length === 1 ? 'it' : 'them'}.`;
+      setDemo((d) => (d ? { ...d, caption: say } : d));
+      await narrate({ target: '[data-guide="settings"]', say, label: practice ? 'Demo · practice' : 'Demo' });
     }
     if (demoRun.current === run) stopDemo(true);
   };

@@ -304,6 +304,7 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
   - Blessed Assurance followed, with "Verse two!" and "Back to the chorus";
   - new lines offered as a new song.
   A bar shows each step with Stop the demo. Starting to listen stops it.
+  - The demo's detector has every feature it shows switched on (read along, quotes, Predictive Next, song recognition, worship cues, Singing something new), for the demo only; the church's Settings → Features are not changed. If any of those are off for the church, the demo ends by naming them and pointing at Settings (1.19.10).
 - The overrun ("N min over") shows only on the service's day, for the church's own services, and up to 90 minutes.
 
 ## 8c. Countdowns, alerts and screens (1.8.0)
