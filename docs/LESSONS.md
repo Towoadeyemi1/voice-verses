@@ -174,6 +174,12 @@ Check this list before debugging. Add every new mistake that cost time.
 - **Putting a verse in `voice-verses-live` changes the output windows, not the operator's own Live.** Storage events reach other windows only; a test of the live screen must put the verse up the way a volunteer does (Search, Return, Take).
 - **The pretend second display holds the main window to its size.** After `plugInSecondDisplay`, `setBounds` to 2560 wide did nothing. Test wide layouts before plugging in the pretend display.
 
+## The guide's voice (1.19.13)
+
+- **The voice mumbled as it started each sentence** ("Um", "I'll", "Odd"), and the first word was often lost. Starting each take with a throwaway "Okay." and cutting at the pause after it fixed it; a pause found late is a comma inside the sentence, so such a take is thrown away.
+- **The speech recognition misses a word that starts at once.** Checking a trimmed take reported fumbles that weren't there; give it half a second of quiet either side before trusting a "wrong" result. It also writes numbers as words ("three sixteen" for 3:16): compare numbers as numbers.
+- **Colons muddle a spoken line** ("Red is Live: it is…" came out as "Bread is live"). Spoken lines use full stops and commas only.
+
 ## Releases
 
 - **The Mac installer for v1.19.7 was never built.** GitHub's `macos-latest` job waited 15 minutes for a Mac and was cancelled without running a step, and the same again on re-runs, while Windows built in 6 minutes and GitHub reported no outage. Nothing in the code had changed. Ask for a named image (`macos-15`) rather than `latest`, which moves to new images. A re-run uses the workflow saved with the tag, so a workflow fix needs a new release tag.

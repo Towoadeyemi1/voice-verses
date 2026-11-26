@@ -212,6 +212,13 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
   - Speaker and part notes now reach the stage monitor (`SLIDE_UPDATE.data.notes`).
 - **Why:** Drawing a PowerPoint exactly as made needs PowerPoint (or LibreOffice) on the computer, against one download and older Macs (D27). Every presentation app saves a PDF that pdf.js draws faithfully offline, so PDF is the exact way and .pptx the editable way, and the screen says so. A review step keeps a wrong guess (a chapter mentioned in passing, a heading that isn't a point) off the screens. That serves rule 1, and the operator stays in charge.
 
+### D37. The guide's voice is recorded ahead, heard only in training, after asking
+- **Context:** The owner found the computer's own voice "crazy robotic" and picked a natural voice (voice C: Kyutai's Pocket TTS copying the CC0 voice "developer-1"). Making speech on the computer would add about 100 MB to the installer and use about 600 MB of memory and the processor each time it spoke. The owner then asked that the voice be heard only during training, never during a service, and only after a request to play it.
+- **Decision:**
+  - Every sentence of the lessons and the demo is recorded ahead (`tools/voice/record.cjs`) and shipped as small MP3 files (`public/voice/`, about 0.6 MB). Each take is kept only when Voice Verses' own speech recognition hears it word for word and its length is natural; a throwaway "Okay." starts each take and is cut off, because the voice mumbles as it starts. CI fails if a line has no recording.
+  - The guide is heard only in a lesson or the demo, after "Hear the guide?" is answered Play the voice, each time. While listening to a real microphone it is silent, and Show me the fix is words only.
+- **Why:** Nothing is made during a service, so listening never competes with the voice, and the installer barely grows. The web version gets the same voice. A take the voice fumbled is caught before it ships, not in front of a volunteer. A booth computer's sound may go to the room, so it asks every time.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.

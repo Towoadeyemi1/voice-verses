@@ -65,7 +65,8 @@ import { SettingsPanel, type Pane } from './SettingsPanel';
 import { BoothSetup } from './booth-setup/BoothSetup';
 import { boothSetupAsked, opensByItself, SHOW_BOOTH_SETUP } from '@/lib/boothSetup';
 import { PRACTICE_CHANGED, practising, setPractice } from '@/lib/practice';
-import { narrate } from '@/lib/guide';
+import { askForVoice, narrate, setServiceOn, setTrainingVoice } from '@/lib/guide';
+import { DEMO_FEATURES_OFF } from '@/lib/demoScript';
 import { PLAY_DEMO } from './guide/GuideHost';
 import { BoothCheckLight, Guardian, type BoothFix } from './live/BoothCheck';
 import { ApiKeyDialog } from './ApiKeyDialog';
@@ -179,6 +180,8 @@ export const LiveWorkspace = () => {
   const [songMode, setSongMode] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [listening, setListening] = useState(false);
+  // The guide is never heard while a service is on (owner, 26 Nov 2026)
+  useEffect(() => setServiceOn(listening), [listening]);
   const listeningRef = useRef(false);
   listeningRef.current = listening;
   const [connecting, setConnecting] = useState(false);
@@ -901,6 +904,7 @@ export const LiveWorkspace = () => {
   const stopDemo = (finished = false) => {
     demoRun.current++;
     demoRef.current = null;
+    setTrainingVoice(false);
     void narrate(null);
     setDemo((d) => {
       if (d) setSendMode(d.mode);
@@ -922,6 +926,10 @@ export const LiveWorkspace = () => {
     const wait = (ms: number) => new Promise<boolean>((done) => window.setTimeout(() => done(demoRun.current === run), ms));
     if (practice) setPractice(true, 'the demo');
     setDemo({ caption: 'Starting the demo', mode: sendMode, practice });
+    // "Hear the guide?" first, every time: nothing is heard until someone says so
+    const heard = await askForVoice();
+    if (demoRun.current !== run) return;
+    setTrainingVoice(heard);
     setSendMode('auto');
     const detector = createDetector();
     // The demo shows everything it narrates, for the demo only: features this church has
@@ -969,7 +977,8 @@ export const LiveWorkspace = () => {
     if (demoRun.current === run && off.length) {
       const say = `${off.join(' and ')} ${off.length === 1 ? 'is' : 'are'} switched off for your church. Switch ${off.length === 1 ? 'it' : 'them'} on in Settings, Features, to use ${off.length === 1 ? 'it' : 'them'}.`;
       setDemo((d) => (d ? { ...d, caption: say } : d));
-      await narrate({ target: '[data-guide="settings"]', say, label: practice ? 'Demo · practice' : 'Demo' });
+      // Said the same way whichever are off, so it has its recording
+      await narrate({ target: '[data-guide="settings"]', say, spoken: DEMO_FEATURES_OFF, label: practice ? 'Demo · practice' : 'Demo' });
     }
     if (demoRun.current === run) stopDemo(true);
   };

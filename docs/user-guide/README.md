@@ -728,7 +728,7 @@ Every slide of the service by section. Click one to show it; **Start presenting*
 
 ## 17. Training
 
-Short lessons on the real screens, in practice: nothing reaches the projector, the stream, the stage or ProPresenter.
+Short lessons on the real screens, in practice: nothing reaches the projector, the stream, the stage or ProPresenter. Each lesson and the demo first asks whether to play the guide’s voice. During a service the guide is never heard.
 
 ### Training
 
@@ -738,6 +738,13 @@ Short lessons on the real screens, in practice: nothing reaches the projector, t
 2. **Show me**: Voice Verses does each step, with a pointer and a voice.
 3. **Let me try**: you do each step; it waits and checks.
 4. **Watch**: the demo, explained aloud.
+
+### Hear the guide?
+
+![Hear the guide?](img/training-1b-hear-the-guide.jpg)
+
+1. **Words only**: the lesson shows each step on its card, silently. Choose it if this computer’s sound goes to the room. Esc does the same.
+2. **Play the voice**: each step is also said aloud, in the guide’s recorded voice.
 
 ### Show me
 

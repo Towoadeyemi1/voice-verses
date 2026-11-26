@@ -1,6 +1,7 @@
 /**
  * Show me the fix (1.19.11, the approved Training mock-up, screen 6): a warning's fix as one
- * thing lit up on the right Settings page, said aloud, with "Do it for me" where Voice Verses
+ * thing lit up on the right Settings page, in one line (shown, never said aloud: a service may be
+ * on, 1.19.13), with "Do it for me" where Voice Verses
  * can; as soon as the check passes, "✓ Hearing the preacher again", and back to the live screen
  * in 2 seconds (unless the volunteer has moved on to another page, where it just ends). Esc
  * (closing Settings) goes back at any time. Listening carries on throughout.

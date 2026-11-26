@@ -4,8 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Pause, Play, Volume2, VolumeX, X, Check } from 'lucide-react';
 import '@/components/settings/settings.css';
 import './guide.css';
-import { find, GuideMode, GuideStep, Lesson, lessonAsked, NARRATE, Narration, pressKey, saveProgress, setVoiceOn, speak, START_LESSON, stopSpeaking, typeInto, until, voiceOn } from '@/lib/guide';
-import { lessonById } from '@/lib/lessons';
+import { ASK_VOICE, askForVoice, find, GuideMode, GuideStep, Lesson, lessonAsked, NARRATE, Narration, pressKey, saveProgress, setTrainingVoice, setVoiceOn, speak, START_LESSON, stopSpeaking, typeInto, until, voiceOn } from '@/lib/guide';
+import { lessonById, THATS_IT } from '@/lib/lessons';
 import { PRACTICE_CHANGED, practising, setPractice } from '@/lib/practice';
 
 export const PLAY_DEMO = 'voice-verses-play-demo';
@@ -103,10 +103,38 @@ export function GuideHost() {
 
   // ---- Running a lesson ---------------------------------------------------------------------
 
+  /** "Hear the guide?": waiting for an answer */
+  const [ask, setAsk] = useState<{ answer: (yes: boolean) => void } | null>(null);
+  useEffect(() => {
+    const onAsk = (e: Event) => setAsk({ answer: (e as CustomEvent<{ answer: (yes: boolean) => void }>).detail.answer });
+    window.addEventListener(ASK_VOICE, onAsk);
+    return () => window.removeEventListener(ASK_VOICE, onAsk);
+  }, []);
+  const answerAsk = (yes: boolean) => {
+    if (yes) setVoiceOn(true);
+    ask?.answer(yes);
+    setAsk(null);
+  };
+  // Esc is Words only (and doesn't also clear the screens or end the lesson)
+  useEffect(() => {
+    if (!ask) return;
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      ask.answer(false);
+      setAsk(null);
+    };
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
+  }, [ask]);
+
   const lessonRef = useRef<Lesson | null>(null);
   lessonRef.current = lesson;
   const end = useCallback((finished: boolean) => {
     run.current++;
+    setTrainingVoice(false);
+    setAsk(null);
     stopSpeaking();
     const l = lessonRef.current;
     lessonRef.current = null;
@@ -175,8 +203,8 @@ export function GuideHost() {
         if (!alive()) return;
         const said = typeof s.doneSay === 'function' ? s.doneSay() : s.doneSay;
         if (said || !show) {
-          setSuccess(said ?? 'That’s it.');
-          await speak(said ?? 'That’s it.');
+          setSuccess(said ?? THATS_IT);
+          await speak(said ?? THATS_IT);
         }
         await wait(450);
       }
@@ -203,7 +231,13 @@ export function GuideHost() {
       setLesson(l);
       setMode(m);
       setPaused(false);
-      void go(l, m, from);
+      // "Hear the guide?" first, every time: nothing is heard until someone says so
+      void askForVoice().then((yes) => {
+        if (lessonRef.current !== l) return;
+        setTrainingVoice(yes);
+        setVoice(voiceOn());
+        void go(l, m, from);
+      });
     },
     [end, go, navigate],
   );
@@ -263,6 +297,38 @@ export function GuideHost() {
   useEffect(() => {
     if (narration && pathname !== '/' && !narration.anywhere) setNarration(null);
   }, [pathname, narration]);
+
+  if (ask)
+    return createPortal(
+      <div className="vv-guide" data-guide-overlay="ask" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="dim" style={{ inset: 0, background: 'rgba(8,7,10,.62)' }} />
+        <div
+          className="vvs card ask"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ask-voice-title"
+          data-ask-voice
+          style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+        >
+          <span className="ask-icon" aria-hidden="true">
+            <Volume2 />
+          </span>
+          <b id="ask-voice-title" className="ask-title">
+            Hear the guide?
+          </b>
+          <p className="ask-text">It speaks through this computer’s sound. If this computer’s sound goes to the room, choose Words only.</p>
+          <div className="row ask-row">
+            <button type="button" className="st-btn" onClick={() => answerAsk(false)} data-ask-voice-no>
+              Words only
+            </button>
+            <button type="button" className="st-btn primary" autoFocus onClick={() => answerAsk(true)} data-ask-voice-yes>
+              <Volume2 /> Play the voice
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body,
+    );
 
   if (!lesson && !narration) return null;
 

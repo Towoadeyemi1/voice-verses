@@ -100,6 +100,11 @@ jobs:
           npx esbuild tools/speech-eval/detector-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/detector-check.cjs --log-level=error
           node /tmp/detector-check.cjs
 
+      - name: "CHECK 8b: Every line of the guide has its recording"
+        run: |
+          npx esbuild tools/voice/check-lines.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/voice-lines.cjs --log-level=error
+          node /tmp/voice-lines.cjs
+
       - name: "CHECK 9: ProPresenter client"
         run: node tools/propresenter-check.mjs
 

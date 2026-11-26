@@ -26,15 +26,15 @@ function loadBig(): ScreenOutput {
 }
 
 const Label = ({ tone, title, detail, children }: { tone: 'live' | 'next'; title: string; detail?: string; children?: React.ReactNode }) => (
-  <div className="flex items-center gap-2 text-sm font-semibold min-h-[30px]">
+  <div className="flex items-center gap-2 text-sm font-semibold min-h-[30px] whitespace-nowrap">
     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: `hsl(var(--${tone}))` }} />
-    {title}
+    <span className="flex-shrink-0">{title}</span>
     {detail && (
-      <span className="font-medium text-muted-foreground truncate" data-label-detail={tone} title={detail}>
+      <span className="font-medium text-muted-foreground truncate min-w-0" data-label-detail={tone} title={detail}>
         {detail}
       </span>
     )}
-    <span className="ml-auto flex items-center gap-1">{children}</span>
+    <span className="ml-auto flex items-center gap-1 flex-shrink-0">{children}</span>
   </div>
 );
 
@@ -291,7 +291,7 @@ export const ScreensColumn = ({
         >
           {v === 'one' ? <RectangleHorizontal className="w-4 h-4" /> : <LayoutPanelTop className="w-4 h-4" />}
           <span className="hidden min-[1900px]:inline">{v === 'one' ? 'One screen' : 'Every screen'}</span>
-          {v === 'all' && <span className={`min-w-[18px] h-[18px] px-1 rounded-full text-[11.5px] grid place-items-center ${view === 'all' ? 'bg-[hsl(var(--live)/0.18)] text-[hsl(var(--live))]' : 'bg-muted'}`}>{onCount}</span>}
+          {v === 'all' && onCount > 0 && <span className={`min-w-[18px] h-[18px] px-1 rounded-full text-[11.5px] grid place-items-center ${view === 'all' ? 'bg-[hsl(var(--live)/0.18)] text-[hsl(var(--live))]' : 'bg-muted'}`}>{onCount}</span>}
         </button>
       ))}
     </div>

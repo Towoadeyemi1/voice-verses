@@ -502,8 +502,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 ## "Also the demo voice is crazy robotic"
 
 (26 Nov 2026.) The guide spoke with the computer's built-in voice (speechSynthesis), which on many computers is an old robotic one.
-- ⏳ A natural voice that works offline, through the speech engine Voice Verses already ships (sherpa-onnx), about 100 MB more in the installer; the computer's own voice stays as the fallback (and in the web version).
-- Samples (26 Nov): Kokoro (4 voices) and Pocket. "Pocket would have been my pick." Pocket copies a voice from a short recording, so only recordings anyone may use: Kyutai's CC0 voices (donated voices, their own recordings, LibriVox readers) or CC BY with credit (Alba MacKenna). Seven sent; Caro (CC0, LibriVox) was heard word for word by Voice Verses' own recognition. 💬 Waiting on the owner's pick.
+- A natural voice that works offline (Kokoro or Pocket through sherpa-onnx). The computer's own voice stays as the fallback for a line with no recording.
+- Samples (26 Nov): Kokoro (4 voices) and Pocket. "Pocket would have been my pick." Pocket copies a voice from a short recording, so only recordings anyone may use: Kyutai's CC0 voices (donated voices, their own recordings, LibriVox readers) or CC BY with credit (Alba MacKenna). Seven sent; Caro (CC0, LibriVox) was heard word for word by Voice Verses' own recognition.
+- "The C-developer voice sounds good, but you said it will add additional 100mb, how slow will that make the app?" Measured: about 600 MB of memory and the processor each time it spoke. "What is the best approach?" Recording every line ahead.
+- "Are the commas, full stop and breaks used well." Not quite in the samples: colons muddled the words. Spoken lines now use full stops and commas only, with a pause between sentences.
+- "Recorded voice should only come out during training, never when a service is ongoing. There should be a default request to allow audio play when a demo or training is played or selected before users can hear."
+- ✅ 1.19.13 (D37): every line of the lessons and the demo recorded ahead in voice C (Kyutai Pocket TTS, CC0 voice "developer-1"), each heard word for word by Voice Verses' own speech recognition before it was kept; 42 sentences, about 0.6 MB; CI fails if a line has no recording.
+- ✅ 1.19.13: heard only in a lesson or the demo, after **Hear the guide?** (Play the voice | Words only; Esc is Words only), every time; never while listening to a real microphone; Show me the fix is words only. Checked by `tools/e2e/guide-voice.cjs`.
 
 ## "The part of the preview and live is great, but some could want the 3 screens rather than just one live. Is there a way to add a toggle to switch it from 1 live screen to the 3 screens or as many as added? And still look very aesthetically beautiful and awesome."
 

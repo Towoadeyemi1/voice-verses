@@ -1,6 +1,6 @@
 // A fresh install: sample services and songs are added, the live screen opens on today's service
 // (never blank), the demo plays through the real detector, and every page is photographed with content.
-const { OUT, launch, check, done } = require('./lib.cjs');
+const { OUT, launch, check, done, answerVoice } = require('./lib.cjs');
 
 (async () => {
   const { app, win, errors } = await launch('samples');
@@ -23,6 +23,7 @@ const { OUT, launch, check, done } = require('./lib.cjs');
   // The demo is narrated (1.19.1): about two minutes; no voices under Xvfb
   await win.evaluate(() => localStorage.setItem('voice-verses-guide-voice', 'off'));
   await win.getByRole('button', { name: /Watch the demo/ }).click();
+  await answerVoice(win);
   const seen = new Set(); let predicted = ''; let newSong = false; let shotVerse = false; let shotSong = false; let namedOff = '';
   for (let i = 0; i < 400; i++) {
     await win.waitForTimeout(500);

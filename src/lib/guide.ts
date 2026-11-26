@@ -5,9 +5,11 @@
  * each step; Let me try: you do it and it checks) and by the demo, which it
  * narrates.
  *
- * The voice is the computer's own (speechSynthesis): on a Mac or Windows it
- * works offline. Without a voice, the words still show on the card.
+ * The voice (1.19.13): each line recorded ahead in one natural voice (lib/voiceLines.ts),
+ * else the computer's own. It is heard only in a lesson or the demo, after "Hear the
+ * guide?" each time, and never while a service is on. The words always show on the card.
  */
+import { recordingOf, sentencesOf } from '@/lib/voiceLines';
 
 // ---- Lessons --------------------------------------------------------------------------------
 
@@ -26,6 +28,8 @@ export interface GuideStep {
   done?: () => boolean;
   /** Said when it is done ("John 3:16 is on Live") */
   doneSay?: string | (() => string);
+  /** Every line a `doneSay` function can return, so each is recorded ahead (tools/voice) */
+  sayings?: string[];
   /** Leave this step out when true (e.g. the verse already went live) */
   skip?: () => boolean;
   /** Only watched, never done by the volunteer (Let me try plays it like Show me) */
@@ -118,7 +122,7 @@ export const setVoiceOn = (on: boolean) => {
   if (!on) stopSpeaking();
 };
 
-/** Clear, natural voices that come with Macs and Windows, best first. */
+/** The computer's own voices, best first: used only for a line with no recording. */
 const PREFERRED = ['Samantha', 'Ava', 'Allison', 'Daniel', 'Serena', 'Karen', 'Moira', 'Microsoft Aria', 'Microsoft Jenny', 'Microsoft Guy', 'Microsoft Zira', 'Google UK English Female', 'Google US English'];
 
 function bestVoice(): SpeechSynthesisVoice | null {
@@ -132,6 +136,50 @@ function bestVoice(): SpeechSynthesisVoice | null {
   return voices.find((v) => v.localService && v.default) ?? voices.find((v) => v.localService) ?? voices[0];
 }
 
+// ---- When the guide may be heard (owner, 26 Nov 2026) ---------------------------------------
+// Only in Training's lessons and the demo, and only after "Hear the guide?" is answered with
+// Play the voice, each time one starts. Never while a service is on (listening to a real
+// microphone): Show me the fix during a service is words only.
+
+let trainingVoice = false;
+let serviceOn = false;
+
+/** The lesson or demo now playing may be heard (the answer to "Hear the guide?") */
+export function setTrainingVoice(on: boolean): void {
+  trainingVoice = on;
+  if (!on) stopSpeaking();
+}
+
+/** Listening to a real microphone: the guide is silent until it stops */
+export function setServiceOn(on: boolean): void {
+  serviceOn = on;
+  if (on) stopSpeaking();
+}
+
+export const audible = () => trainingVoice && !serviceOn && voiceOn();
+
+export const ASK_VOICE = 'voice-verses-ask-voice';
+
+/**
+ * "Hear the guide?" before a lesson or the demo: resolves true for Play the voice, false
+ * for Words only. Asked every time (the computer's sound may go to the room).
+ */
+export function askForVoice(): Promise<boolean> {
+  return new Promise((resolve) => {
+    let answered = false;
+    const answer = (yes: boolean) => {
+      if (answered) return;
+      answered = true;
+      resolve(yes);
+    };
+    window.dispatchEvent(new CustomEvent(ASK_VOICE, { detail: { answer } }));
+    // No guide on this page to ask: words only
+    window.setTimeout(() => {
+      if (!document.querySelector('[data-ask-voice]')) answer(false);
+    }, 1500);
+  });
+}
+
 let speaking: { cancel: () => void } | null = null;
 
 export function stopSpeaking(): void {
@@ -140,25 +188,76 @@ export function stopSpeaking(): void {
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
 }
 
+const GAP_MS = 320;
+
+/** Plays the recordings of a line, sentence by sentence, with a short pause between. */
+function playRecordings(urls: string[], finish: () => void): () => void {
+  let stopped = false;
+  let audio: HTMLAudioElement | null = null;
+  let gap = 0;
+  const next = (i: number) => {
+    if (stopped) return;
+    if (i >= urls.length) return finish();
+    audio = new Audio(urls[i]);
+    audio.onended = () => {
+      gap = window.setTimeout(() => next(i + 1), GAP_MS);
+    };
+    audio.onerror = () => next(i + 1);
+    void audio.play().catch(() => finish());
+  };
+  next(0);
+  return () => {
+    stopped = true;
+    window.clearTimeout(gap);
+    audio?.pause();
+  };
+}
+
+/** Missing recordings are named once each in the console (tools/voice collects them) */
+const reported = new Set<string>();
+
 /**
- * Says a line and resolves when it has been said (or after about as long as
- * reading it takes, with the voice off or missing, so the pace is the same).
+ * Says a line (and resolves when it has been said): its recordings in the guide's voice,
+ * else the computer's own voice. When the guide can't be heard (not in a lesson or the demo,
+ * Words only, the speaker off, or a service on), it waits about as long as reading it takes,
+ * so the pace is the same.
  */
 export function speak(text: string): Promise<void> {
   stopSpeaking();
   const reading = 900 + text.split(/\s+/).length * 330;
   return new Promise((resolve) => {
     let finished = false;
+    let cancelPlay: (() => void) | null = null;
     const finish = () => {
       if (finished) return;
       finished = true;
       window.clearTimeout(fallback);
+      cancelPlay?.();
       resolve();
     };
+    const sentences = sentencesOf(text);
+    const recordings = sentences.map((s) => recordingOf(s));
+    const recorded = recordings.every(Boolean);
+    const playing = recorded ? recordings.reduce((ms, r) => ms + (r?.ms ?? 0) + GAP_MS, 0) : reading * 2;
     // Never wait forever on a voice that doesn't say when it has finished
-    const fallback = window.setTimeout(finish, voiceOn() ? reading * 2 + 2000 : reading);
+    const fallback = window.setTimeout(finish, audible() ? playing + 2500 : reading);
     speaking = { cancel: finish };
-    if (!voiceOn() || typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') return;
+    if (!recorded) {
+      for (const s of sentences.filter((_, i) => !recordings[i]))
+        if (!reported.has(s)) {
+          reported.add(s);
+          console.info(`[voice] no recording: ${s}`);
+        }
+    }
+    if (!audible()) return;
+    if (recorded) {
+      cancelPlay = playRecordings(
+        recordings.map((r) => r!.url),
+        finish,
+      );
+      return;
+    }
+    if (typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') return;
     const u = new SpeechSynthesisUtterance(text);
     const voice = bestVoice();
     if (voice) u.voice = voice;
@@ -180,6 +279,8 @@ export const NARRATE = 'voice-verses-narrate';
 export interface Narration {
   target?: string;
   say: string;
+  /** Said instead of `say` when the words on the card change but the line should not (so it has its recording) */
+  spoken?: string;
   /** The pointer clicks the target */
   click?: boolean;
   /** A small label over the card ("Demo") */
@@ -204,7 +305,7 @@ export function narrate(n: Narration | null): Promise<void> {
     stopSpeaking();
     return Promise.resolve();
   }
-  return speak(n.say);
+  return speak(n.spoken ?? n.say);
 }
 
 // ---- Doing a step for the volunteer ---------------------------------------------------------

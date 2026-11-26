@@ -8,6 +8,9 @@
  */
 import type { GuideStep, Lesson } from '@/lib/guide';
 
+/** Said when a step is done and has nothing of its own to say */
+export const THATS_IT = 'That’s it.';
+
 const text = (selector: string) => document.querySelector(selector)?.textContent ?? '';
 const onLive = (ref: string) => text('[data-label-detail="live"]').includes(ref);
 const inNext = (ref: string) => text('[data-label-detail="next"]').includes(ref);
@@ -26,6 +29,7 @@ const firstSunday: GuideStep[] = [
     key: 'Enter',
     done: () => !paletteOpen() && (inNext('John 3:16') || onLive('John 3:16')),
     doneSay: () => (onLive('John 3:16') ? 'John 3:16 is on Live.' : 'John 3:16 is waiting in Next.'),
+    sayings: ['John 3:16 is on Live.', 'John 3:16 is waiting in Next.'],
   },
   {
     target: '[data-guide="take"]',
