@@ -523,6 +523,11 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ⚠ A session can't change the owner's Claude settings: the owner adds it (Claude Code: `~/.claude/CLAUDE.md` on each computer; Claude.ai: project knowledge, personal preferences with the short version, or the Skill).
 - Keep it current: when a rule here changes or a lesson applies beyond this app, update FOUNDATION.md too.
 
+## "Do you know it is safe to clear to logo first when spirit or any automation is running the service until they are sure the next segment has actually kicked off, as sometimes it might not follow the time schedule accurately. If unsure, actual user/pilot engagement should be requested."
+
+(26 Nov 2026.) Today Move on by time puts the next part's first slide straight on the screens (when picking a slide goes live), and spirit at Hands-free puts the next part live 3 seconds after a countdown or cue, without clearing to the logo first.
+- ⏳ Every move the app makes by itself from one part of the service to the next: when not sure the next part has begun (the time is up, a countdown ended, the last slide of a song), the screens go to the logo, the next part waits in Next, and the operator is asked "Has <part> started?" (Show it, Space | Not yet: what was on screen comes back). Sure only when it hears the part begin (its cue, its song's words, its scripture read); only then may a move that earned Hands-free go straight to the screens. The clock alone never puts anything on the screens. Mock-up first.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
