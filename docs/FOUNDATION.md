@@ -4,6 +4,8 @@ How every app is designed, built, secured, tested, shipped and documented. It is
 
 Give this file to any project, any person and any AI assistant. It is the starting point; a project adds its own specifics on top and never quietly drops a rule here. Where a project must break a rule, it writes down why (see [Decisions](#9-documentation-that-runs-the-project)).
 
+**Keeping it complete:** checked line by line on 26 Nov 2026 against every source in Voice Verses (the hard rules in `CLAUDE.md`, `DESIGN_SYSTEM.md`, all 37 decisions, `LESSONS.md` and the skills). When a decision, lesson or rule there applies beyond that app, it is added here in the same change.
+
 Examples from Voice Verses are marked **In Voice Verses:**. They show what a rule looked like in practice; the rule itself applies everywhere.
 
 ---
@@ -49,10 +51,10 @@ Paste this where only a short text fits:
 ```
 Follow my Foundation (FOUNDATION.md) in all work. In short:
 - Owner: record every request word for word with its status; mock-up first for any new screen and wait for my yes; recommend one option, don't list many; say plainly what is done, tested and not.
-- Design: Apple-grade, colourful never monochrome, never stark white (warm graphite / warm paper), fill every screen, colour always means something and is paired with words, one obvious primary action, things stay in the same place, structure from space and light (no boxes in boxes, few borders), show a picture of the real thing, both themes and every size checked by screenshot.
+- Design: Apple-grade, colourful never monochrome, never stark white (warm graphite / warm paper), fill every screen, colour always means something and is paired with words, one obvious primary action, things stay in the same place, structure from space and light (no boxes in boxes, few borders), show a picture of the real thing, one sign for everything automation did, research the best tools first, both themes and every size checked by screenshot.
 - Words: plain, active, from the user's side; say exactly what a control does; no jargon.
 - Accessibility: targets ≥36px, key text ≥13px, keyboard for the main actions, reduced motion respected.
-- Product: core works offline, one download with nothing else to install, no vendor lock-in, every smart feature optional with presets (bold ones off), never confidently wrong (act alone only when certain, otherwise suggest with how sure and why), automation that isn't sure goes to a safe neutral screen and asks the operator (a timer or schedule is never proof), a safe practice mode.
+- Product: core works offline, one download with nothing else to install, no vendor lock-in, the next step always prepared so the person only confirms, every smart feature optional with presets (bold ones off), what the app finds or imports reviewed by a person before it is added, outputs placed by the app (no dragging windows), trust earned per behaviour and per situation with one-tap corrections, never confidently wrong (act alone only when certain, otherwise suggest with how sure and why), automation that isn't sure goes to a safe neutral screen and asks the operator (a timer or schedule is never proof), a safe practice mode.
 - Architecture: one app of separate modules on an event bus (versioned CloudEvents, publish once where it happens), one renderer for every view of the same thing, a local API with pairing and scoped keys, no servers of our own unless needed, decisions written down.
 - Security: keys in the OS keychain, added server-side only for their host, never in a web build; sandboxed, isolated renderers; every IPC/API call checks who sent it; signed webhooks; no secrets, sound or pictures in events; no copyrighted content in public repos; never get around bot checks or paywalls.
 - Tests: the real app end to end (fake hardware, mocks), look at the screenshots, a failing test is a bug not noise, measure before guessing, run every test not just the new one, generated assets checked by machine.
@@ -80,18 +82,27 @@ The owner decides what the product is. The assistant's job is to make it excelle
 ## 2. Product principles
 
 1. **One obvious way to do the main job.** A screen has one primary action; everything else is secondary, in a menu or in the command palette (⌘K). No modes to switch between for the core task.
+   - **Prepare the next step so the only decision is yes or no.** The app always fills "next" with its best guess, so the person's job is to confirm it (Take) or change it. **In Voice Verses:** Next is always filled, so the operator's only decision is Take or not.
 2. **The core works offline.** Internet is optional: cloud features add to the app, never hold it up. Bundle what the core needs (models, data, fonts).
 3. **One download, nothing else to install.** No separate runtimes, servers or helper apps for the core. Optional extras that need a third-party runtime say plainly where to get it, and everything else keeps working without it.
 4. **It runs on the hardware people actually have:** older machines, both chip types, every desktop OS you support. Test on the slowest target that matters.
 5. **No vendor lock-in.** Any provider for a service that has alternatives (AI, speech, sync), each optional, with a local option where one exists.
 6. **Never be confidently wrong.** When the app acts by itself, it must be certain. Below certainty, it *suggests*, shows how sure it is in words ("Strong match", "Likely") and why, and lets a person decide. **In Voice Verses:** a verse goes on screen by itself only when it was said outright or matched at 99% or more; anything less is a suggestion with a preview.
 7. **Every smart feature is optional.** Give a switch per feature and presets (Essentials, Recommended, Everything). A new install gets the recommended set; features that act on their own in new ways start off. The engine receives plain flags and never reads settings itself (which also keeps it testable).
-8. **Trust is earned, per behaviour.** An automatic behaviour starts by preparing (waiting for a person to confirm), and can be promoted to act by itself only after a streak of being right, and only when the owner chooses. Any correction sends it back. One tap pauses all automation.
+8. **Trust is earned, per behaviour.** An automatic behaviour starts by preparing (waiting for a person to confirm), and can be promoted to act by itself only after a streak of being right, and only when the owner chooses. Any correction sends it back. One tap pauses all automation (and pausing keeps what was learned).
+   - **Learn each situation separately.** Habits from one context must not leak into another (**In Voice Verses:** each type of service, from Sunday services to funerals, has its own order and is learned separately).
+   - **Corrections are one tap, in the user's words** ("Wrong part", "Not now", "Never for these words"), and **"Just this once"** undoes a one-off correction exactly, so one mistake never undoes weeks of learning.
+   - **Learn by watching first:** the person's own actions are better labels than anything they would have to type or read.
 9. **A safe place to learn.** A practice mode in which the real screens work but nothing reaches the outside world (other screens, other apps, analytics, learning). Its state lives in one place and is never saved, so a crash can't leave it on. Ending it puts everything back as it was.
 10. **The app opens full, never blank.** First run shows a working sample (clearly marked, removable) and a guided set-up that finds what it can by itself and asks the person to confirm each thing.
+    - **What the app finds or imports, a person reviews before it is added.** It shows what it found, with the doubtful items left unticked (**In Voice Verses:** a chapter mentioned in passing starts unticked when sermon notes are imported), and the person confirms. A tool that guesses is never allowed to fill the library or the screens by itself.
 11. **When automation isn't sure, it goes to a safe neutral state and asks.** A schedule, a timer or a learned habit is not proof that the next thing has started. Until the app has evidence (it heard or saw the next thing begin), it shows something neutral (the logo, a holding screen), gets the next thing ready, and asks the operator ("Has Prayer started?" Show it | Not yet). "Not yet" puts back what was there. Only evidence, never the clock alone, lets an automatic step act by itself. **In Voice Verses:** the owner's rule for spirit and Move on by time.
 12. **Things that reach the outside world are deliberate.** Sound, screens, messages, webhooks: never by surprise. Ask before playing sound, keep outputs from stealing focus, and never act on another app's output when its operator took it down.
+    - **The app places its outputs; nobody drags windows.** Settings assigns each output to a display (or a video card, a network stream); the app opens it there, full screen, without taking focus, and puts it back by itself when the display is reconnected. **In Voice Verses:** hard rule 6, after the owner asked "Can't it be selected in the app?"
 13. **The user's own content is theirs.** Make it easy to import and keep what they're licensed to use, and credit it properly (title, authors, copyright, licence numbers).
+14. **Two choices that look alike stay separate settings.** One switch must not quietly decide two things people think of separately (**In Voice Verses:** "what picking a slide does" and "what a verse heard does" are two settings).
+15. **When there are several equal ways to do something, show them as equal and let the user choose.** Don't mark one "Recommended" until it has been tested in their setting; say what each needs and costs. **In Voice Verses:** the three ways into ProPresenter are shown as equal until they have been tried in the owner's booth.
+16. **Name the real thing.** Show which real device "Default" is, say when an input belongs to a video card and will be silent, and say why a choice is unavailable instead of hiding it.
 
 ---
 
@@ -111,6 +122,8 @@ The bar: **like an app Apple designed, and far easier than the established tool 
 8. **Shadows only on what floats** (the window, a palette, a card being dragged) and on purposeful glows (the ON AIR frame).
 9. **Type:** the system UI font (SF Pro on Mac, a bundled fallback such as Figtree for Windows), a display weight of 700 with slight negative tracking for titles, a good serif for long reading text, tabular numbers for times. A clear scale, kept to.
 10. **Radii are a small consistent set** (for example 16 window, 14 cards, 12 previews, 9–10 controls, pills fully round).
+11. **Automation has one consistent sign.** Everything the automation did or suggests carries the same small mark (**In Voice Verses:** spirit's warm breathing orb), never the meaning colours, so people always know what the app did by itself.
+12. **Practice looks different from the real thing:** a band with its words along the edge of the screen and a way out ("End practice"); a lesson that does affect the real world gets a red band instead.
 
 ### 3.2 Layout
 
@@ -133,9 +146,10 @@ The bar: **like an app Apple designed, and far easier than the established tool 
 
 ### 3.4 Design process
 
-1. Read `DESIGN_SYSTEM.md`, then make an HTML mock-up in `docs/design/` with realistic content, both themes, laptop and wide sizes, interactive where it matters. Publish it for the owner and wait for approval.
-2. Build to the mock-up. Screenshot the built thing in dark, light, at 1440 wide and at 3440 wide, and compare side by side.
-3. Run the design checklist before every UI PR:
+1. **Research first** for a new area: what the best tools in the field do, and what their users and reviewers say goes wrong. Write the findings as a table (source, finding, the rule it gives us) in `DESIGN_SYSTEM.md`. **In Voice Verses:** ProPresenter's seven Clear buttons became one Clear; broadcast switchers' red program and green preview became the full red and green frames with words.
+2. Read `DESIGN_SYSTEM.md`, then make an HTML mock-up in `docs/design/` with realistic content, both themes, laptop and wide sizes, interactive where it matters. Publish it for the owner and wait for approval.
+3. Build to the mock-up. Screenshot the built thing in dark, light, at 1440 wide and at 3440 wide, and compare side by side.
+4. Run the design checklist before every UI PR:
    - Tokens only (warm graphite / warm paper); no pure white, no cold grey.
    - Meaning colours only for their meaning, each with its word.
    - One primary action obvious; the rest secondary or in ⌘K.
@@ -146,7 +160,7 @@ The bar: **like an app Apple designed, and far easier than the established tool 
    - Previews use the real renderer in the output's shape.
    - Header aligned with the body.
    - Words plain, active, from the user's side.
-4. Name CSS classes specifically. A class shared by layout and content (`.now` for both a pane and a timeline segment) silently breaks layout. Give app grids `grid-template-columns: minmax(0, 1fr)` and text-holding grid children `min-width: 0`, so a long item can't widen the page. Exclude overlay layers from blanket rules like `.app > * { position: relative }`.
+5. Name CSS classes specifically. A class shared by layout and content (`.now` for both a pane and a timeline segment) silently breaks layout. Give app grids `grid-template-columns: minmax(0, 1fr)` and text-holding grid children `min-width: 0`, so a long item can't widen the page. Exclude overlay layers from blanket rules like `.app > * { position: relative }`.
 
 ---
 
@@ -311,6 +325,7 @@ The docs are the project's memory. Anyone (a person or an assistant) must be abl
 | `docs/user-guide/` | How to use every feature, with numbered screenshots, generated by a script from the real app | When the UI changes |
 | `.claude/skills/*` | Step-by-step procedures: shipping a change, testing end to end, releasing, design review, changing a sensitive engine, rebuilding | When a procedure changes |
 
+- **The spec holds every number** (thresholds, sizes, timings, keys, file names). They were tuned against real use: a rebuild copies them exactly, stage by stage (`REBUILD.md`), with a check after each stage that must pass before the next.
 - The user guide keeps a **FEATURES list** (each feature → its section) so nothing is left undocumented, and its screenshots are taken by a capture script that drives the real app with numbered markers.
 - Write docs in the same plain style as the UI.
 
