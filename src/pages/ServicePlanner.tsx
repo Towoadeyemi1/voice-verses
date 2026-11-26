@@ -248,6 +248,7 @@ const ServicePlanner = () => {
       <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] gap-6 items-start">
         <div className="space-y-6">
           <Section padded={false} className="p-3">
+            <div data-guide="calendar">
             <Calendar
               mode="single"
               selected={selectedDate}
@@ -268,6 +269,7 @@ const ServicePlanner = () => {
                 caption_label: 'text-[15px] font-semibold',
               }}
             />
+            </div>
             {!isToday && (
               <Button variant="ghost" size="sm" className="w-full mt-1" onClick={() => setSelectedDate(new Date())}>
                 Back to today
@@ -322,7 +324,7 @@ const ServicePlanner = () => {
                   const minutes = parts.reduce((t, p) => t + p.minutes, 0);
                   const items = service.sections?.reduce((t, sec) => t + sec.subsections.length, 0) ?? 0;
                   return (
-                    <div key={service.id} className="rounded-xl bg-muted/40 p-4 hover:bg-muted/60 transition">
+                    <div key={service.id} className="rounded-xl bg-muted/40 p-4 hover:bg-muted/60 transition" data-day-service>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
                         <button type="button" className="min-w-0 flex-1 text-left" onClick={() => navigate(`/service-builder/${service.id}`)}>
                           <span className="flex items-center gap-2 text-[17px] font-semibold min-w-0">

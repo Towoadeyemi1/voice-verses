@@ -34,6 +34,8 @@ export interface GuideStep {
   skip?: () => boolean;
   /** Only watched, never done by the volunteer (Let me try plays it like Show me) */
   watchOnly?: boolean;
+  /** Show me only points at it and says it (it would change something real, like planning a service); Let me try waits for the volunteer to do it */
+  tryOnly?: boolean;
   /** The page it happens on ('/' is the live screen) */
   route?: string;
 }
@@ -46,6 +48,10 @@ export interface Lesson {
   minutes: number;
   /** Practice: nothing reaches the room (default). The ProPresenter lesson will be the exception. */
   practice?: boolean;
+  /** Before the first step (e.g. note what exists, so an example made in Show me can be removed) */
+  onStart?: (mode: GuideMode) => void;
+  /** When the lesson ends, finished or left */
+  onEnd?: (mode: GuideMode, finished: boolean) => void;
 }
 
 export type GuideMode = 'show' | 'try';
