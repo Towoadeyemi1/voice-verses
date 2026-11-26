@@ -280,6 +280,10 @@ Ready-made choices for everything that takes a design or a set-up. Each is added
 - **Screens column** (`live/ScreensColumn.tsx`):
   - **When I pick a slide: Goes live | Waits in Next** (1.9.0, `lib/clickMode.ts`, key `voice-verses-click-mode`, default Waits in Next). It applies to the strip, step chips, Library verses and songs, parts of the service, ⌘K picks and moving on by time. Verses found by listening keep following Auto / Ask first.
   - Live (red frame), with Edit (Quick edit, for a slide), Logo and Clear.
+  - **One screen | Every screen** (1.19.12, approved mock-up `docs/design/all-screens.html`, `lib/liveView.ts`, keys `voice-verses-live-view` and `voice-verses-live-view-big`, default One screen): a switch beside Live (icons on a laptop, words from 1900px wide, with the number of outputs that are on).
+    - Every screen: each output (projector, stream lower third, stage monitor) live, each in its own shape, drawn by the real renderer. One is big, with its name and where it goes on it ("HDMI-SDI", "SDI", "NDI", "Browser"); the others are small with that underneath; click a small one to make it big. The lower third is drawn over a stand-in for the camera, as it is see-through.
+    - An output that is on no screen shows "Not on any screen yet" and **Choose where it goes** (Settings → Screens). Where each goes is checked every 5 seconds and on any settings change (`hooks/use-output-routes.ts`).
+    - On a laptop the small ones sit under the big one; from 1900px wide they stack beside it like a switcher's multiview, and the column widens (up to 1240px). Take stays under the screens; Next sits beside its words ("Take puts it on every screen") so everything fits the window (`.wall-fit`).
   - **Take** (Space): a raised graphite button whose arrow turns green when Next is ready.
   - Next (green frame), with Edit. If Next is the first slide of a part with its own countdown, the picture shows that countdown, as the room will see it.
   - The stream and stage screens, as chips (below 1900px) or live pictures (1900px and up).
@@ -526,6 +530,8 @@ Base components: buttons default to white on graphite, with neutral hovers; dele
 | `voice-verses-live`, `voice-verses-countdown` | What is on screen, and the running countdown (for late-opened windows) |
 | `voice-verses-send-mode` | `auto` or `preview` |
 | `voice-verses-click-mode` | `live` or `next`: what picking a slide does (1.9.0) |
+| `voice-verses-live-view` | `one` or `all`: what Live shows on the live screen (1.19.12) |
+| `voice-verses-live-view-big` | Which output is big with Every screen (`projection`, `lowerThird`, `confidence`) |
 | `voice-verses-features` | Each smart feature on or off, e.g. `{"quotes": true, "stories": false}` (1.13.0); missing ones follow Recommended |
 | `voice-verses-auto-advance` | `on` or `off`: the service moves on by time (1.9.0) |
 | `voice-verses-templates`, `voice-verses-template-assignments` | Looks and which look each output and kind uses |

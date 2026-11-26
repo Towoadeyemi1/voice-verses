@@ -502,12 +502,14 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 ## "Also the demo voice is crazy robotic"
 
 (26 Nov 2026.) The guide spoke with the computer's built-in voice (speechSynthesis), which on many computers is an old robotic one.
-- ⏳ A natural voice that works offline: a neural voice (Kokoro) through the speech engine Voice Verses already ships (sherpa-onnx), about 100 MB more in the installer. Samples to the owner first; the computer's own voice stays as the fallback (and in the web version).
+- ⏳ A natural voice that works offline, through the speech engine Voice Verses already ships (sherpa-onnx), about 100 MB more in the installer; the computer's own voice stays as the fallback (and in the web version).
+- Samples (26 Nov): Kokoro (4 voices) and Pocket. "Pocket would have been my pick." Pocket copies a voice from a short recording, so only recordings anyone may use: Kyutai's CC0 voices (donated voices, their own recordings, LibriVox readers) or CC BY with credit (Alba MacKenna). Seven sent; Caro (CC0, LibriVox) was heard word for word by Voice Verses' own recognition. 💬 Waiting on the owner's pick.
 
 ## "The part of the preview and live is great, but some could want the 3 screens rather than just one live. Is there a way to add a toggle to switch it from 1 live screen to the 3 screens or as many as added? And still look very aesthetically beautiful and awesome."
 
 (26 Nov 2026.)
-- ⏳ Mock-up first (`docs/design/all-screens.html`): a switch above Live, **One screen | Every screen**. Every screen shows each output that is on (projector, stream lower third, stage monitor, and wherever each goes) as its own live picture, with Take and Next as now.
+- ✅ Mock-up (`docs/design/all-screens.html`), approved: "The screen design is great".
+- ✅ 1.19.12 **One screen | Every screen**, a switch beside Live. Every screen shows each output that is on (projector, stream lower third, stage monitor), live and in its own shape, with where it goes; one is big and a click makes another big; on a wide monitor they sit like a switcher's multiview. An output on no screen says so, with Choose where it goes. Kept for next time. Checked by `tools/e2e/every-screen.cjs`.
 
 ## Process
 

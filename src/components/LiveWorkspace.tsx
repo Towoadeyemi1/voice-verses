@@ -81,6 +81,7 @@ import { ServicePicker, AutoAdvanceToggle, todaysServices, pickService } from '.
 import { NowPane, Step } from './live/NowPane';
 import { SuggestionBar, LiveSuggestion } from './live/SuggestionBar';
 import { ScreensColumn } from './live/ScreensColumn';
+import { loadLiveView, saveLiveView, type LiveView } from '@/lib/liveView';
 import { CommandPalette, PaletteAction } from './live/CommandPalette';
 
 /** What is loaded in the middle: a chapter of the Bible, or slides (a song, a service item). */
@@ -134,6 +135,12 @@ export const LiveWorkspace = () => {
   const [sendMode, setSendModeState] = useState<SendMode>(loadSendMode);
   /** What picking a slide does: straight to Live, or into Next first (the switch above Live) */
   const [clickMode, setClickModeState] = useState<ClickMode>(loadClickMode);
+  /** What Live shows: the projector only, or every screen that is on (kept for next time) */
+  const [liveView, setLiveViewState] = useState<LiveView>(loadLiveView);
+  const setLiveView = (view: LiveView) => {
+    setLiveViewState(view);
+    saveLiveView(view);
+  };
   /** The order of service moves on by itself when each part's time is up */
   const [autoAdvance, setAutoAdvanceState] = useState(loadAutoAdvance);
   /** Every slide as a grid filling the middle, instead of the words large */
@@ -1801,7 +1808,12 @@ export const LiveWorkspace = () => {
       )}
       </div>
 
-      <div className="relative min-h-0 grid grid-cols-[minmax(0,1fr)_clamp(380px,33vw,720px)] min-[1900px]:grid-cols-[300px_minmax(0,1fr)_clamp(560px,34vw,900px)] max-[1000px]:grid-cols-1">
+      <div
+        className={`relative min-h-0 grid grid-cols-[minmax(0,1fr)_clamp(380px,33vw,720px)] max-[1000px]:grid-cols-1 ${
+          // Every screen takes more of a wide window: the extra width goes to the screens
+          liveView === 'all' ? 'min-[1900px]:grid-cols-[300px_minmax(0,1fr)_clamp(640px,40vw,1240px)]' : 'min-[1900px]:grid-cols-[300px_minmax(0,1fr)_clamp(560px,34vw,900px)]'
+        }`}
+      >
         <aside className="hidden min-[1900px]:block min-h-0 pl-6 pb-5" aria-label="Library">{library}</aside>
 
         <NowPane
@@ -1914,6 +1926,12 @@ export const LiveWorkspace = () => {
           onEditLive={live && 'slide' in live ? () => setEditing(live.slide) : undefined}
           onEditNext={preview && 'slide' in preview ? () => setEditing(preview.slide) : undefined}
           nextCountdown={nextCountdown}
+          view={liveView}
+          onView={setLiveView}
+          onChooseScreens={() => {
+            setSettingsPane('screens');
+            setShowSettings(true);
+          }}
         />
       </div>
 

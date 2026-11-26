@@ -81,7 +81,7 @@ Everything for the service happens on this one screen. It is the same every Sund
 7. **The order of service.** Each part is as wide as its time. Click a part to load it.
 8. **spirit** shows what it will get ready next. **Pause** (or the P key) stops it doing anything by itself.
 9. **When I pick a slide:** *Goes live* shows it at once; *Waits in Next* (the usual choice) puts it in Next first.
-10. **Live** (red): what the room sees now.
+10. **Live** (red): what the room sees now. The switch beside it shows the projector only, or **every screen** (projector, stream lower third, stage monitor) at once; click a small one to make it big.
 11. **Take** (Space bar): puts Next on the screens.
 12. **Next** (green): what goes up when you press Take.
 
@@ -276,7 +276,7 @@ The booth check looks at the microphone, the screens, ProPresenter, the Bible an
 ![The booth check light](img/tools-3-booth-check.jpg)
 
 1. **Ready** (grey tick) or **n to check** (amber). Click it.
-2. Each check, with a button that takes you straight to the fix.
+2. Each check, with **Show me the fix**: the right Settings page opens with the one thing to change lit up and said in one line.
 
 ### Settings → Booth check
 
@@ -285,9 +285,18 @@ The booth check looks at the microphone, the screens, ProPresenter, the Bible an
 1. The **booth check** at the top of Settings.
 2. **Set up your booth** finds everything again.
 
+### Show me the fix
+
+![Show me the fix](img/tools-4-show-me-the-fix.jpg)
+
+1. The one thing to change, lit up on the right page.
+2. What to do, in one line (also said aloud). Listening carries on; **Esc** goes back.
+
 **Good to know**
 
-- During the service, a problem (a screen unplugged, no sound for 20 seconds) shows as an amber warning under the top bar, with its fix button.
+- During the service, a problem (a screen unplugged, no sound for 20 seconds) shows as an amber warning under the top bar, with **Show me the fix** and **Not now**.
+- Listening carries on while you fix it. When the check passes you see a tick, and you are back on the live screen 2 seconds later. **Esc** goes back at any time.
+- For the microphone, **Do it for me** listens to every input and chooses the one with the preacher’s sound.
 
 <a id="looks"></a>
 

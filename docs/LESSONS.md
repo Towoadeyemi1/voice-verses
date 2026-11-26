@@ -169,6 +169,11 @@ Check this list before debugging. Add every new mistake that cost time.
 - **The light landed where the control had been.** The fix scrolled the control into view smoothly and lit it at once, so the spotlight, the card and the pointer were placed against the old position; the card then covered the very control it was about. Wait for the scroll before lighting a control, and keep the pointer following it as the spotlight does.
 - **A fix that cleared closed Settings under the volunteer.** "Back to the live screen in 2 seconds" fired even after they had gone on to another Settings page (the features test caught it). Going somewhere else means they are doing something else: end the fix quietly and leave them where they are.
 
+## Every screen (1.19.12)
+
+- **Putting a verse in `voice-verses-live` changes the output windows, not the operator's own Live.** Storage events reach other windows only; a test of the live screen must put the verse up the way a volunteer does (Search, Return, Take).
+- **The pretend second display holds the main window to its size.** After `plugInSecondDisplay`, `setBounds` to 2560 wide did nothing. Test wide layouts before plugging in the pretend display.
+
 ## Releases
 
 - **The Mac installer for v1.19.7 was never built.** GitHub's `macos-latest` job waited 15 minutes for a Mac and was cancelled without running a step, and the same again on re-runs, while Windows built in 6 minutes and GitHub reported no outage. Nothing in the code had changed. Ask for a named image (`macos-15`) rather than `latest`, which moves to new images. A re-run uses the workflow saved with the tag, so a workflow fix needs a new release tag.
