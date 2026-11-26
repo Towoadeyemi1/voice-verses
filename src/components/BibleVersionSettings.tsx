@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BIBLE_VERSIONS, BibleVersionType } from '@/types/bibleVersion';
-import { BibleParser } from '@/lib/bibleParser';
+import { BibleParser, customBibleInfo } from '@/lib/bibleParser';
+import { readBibleFile } from '@/lib/bibleFiles';
 import { toast } from 'sonner';
 import { ApiBibleSettings } from './ApiBibleSettings';
 import { chosenApiBibles } from '@/lib/onlineBibles';
@@ -17,16 +18,24 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
   const [esvApiKey, setEsvApiKey] = useState('');
   const [nltApiKey, setNltApiKey] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  /** The church's own Bible, if one was added: its name and short name */
+  const [customInfo, setCustomInfo] = useState(customBibleInfo);
   const [isTestingEsv, setIsTestingEsv] = useState(false);
   const [isTestingNlt, setIsTestingNlt] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [apiBibles, setApiBibles] = useState(chosenApiBibles);
 
-  const handleVersionChange = (version: BibleVersionType) => {
+  const handleVersionChange = (version: BibleVersionType, quiet = false) => {
     setSelectedVersion(version);
     onVersionChange(version);
     BibleParser.setVersion(version);
-    
+    if (quiet) return;
+    // The church's own Bible goes by its own name; until one is added, choosing it just shows where to add it
+    if (version === 'custom') {
+      const own = customBibleInfo();
+      if (own) toast.success('Bible version changed', { description: `Now using ${own.name}` });
+      return;
+    }
     const versionInfo = BIBLE_VERSIONS.find(v => v.id === version);
     const apiBible = apiBibles.find((b) => `api:${b.id}` === version);
     toast.success('Bible version changed', {
@@ -38,35 +47,26 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.json')) {
-      toast.error('Invalid file type', {
-        description: 'Please upload a JSON file',
-      });
-      return;
-    }
-
     setIsUploading(true);
     try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      
-      // Basic validation
-      if (!Array.isArray(data) || !data[0]?.chapters) {
-        throw new Error('Invalid Bible JSON format');
-      }
-
-      BibleParser.setCustomBible(data);
-      handleVersionChange('custom');
-      
-      toast.success('Custom Bible uploaded', {
-        description: 'Your custom translation is now active',
+      // OSIS, USFX, Zefania, USFM (or a .zip of them) and JSON, read on this computer (1.19.15)
+      const bible = readBibleFile(file.name, new Uint8Array(await file.arrayBuffer()));
+      await BibleParser.setCustomBible(bible.books, { name: bible.name, abbreviation: bible.abbreviation });
+      setCustomInfo(customBibleInfo());
+      handleVersionChange('custom', true);
+      const left = bible.leftOut.length ? ` ${bible.leftOut.length} book${bible.leftOut.length === 1 ? '' : 's'} outside the 66 (such as the Apocrypha) were left out.` : '';
+      const missing = bible.missing.length ? ` It doesn’t have ${bible.missing.length === 66 - 27 ? 'the Old Testament' : bible.missing.length === 27 ? 'the New Testament' : `${bible.missing.length} of the 66 books`}; verses from those come from the KJV.` : '';
+      toast.success(`${bible.name} added`, {
+        description: `${bible.verses.toLocaleString()} verses, shown as ${bible.abbreviation}.${missing}${left}`,
+        duration: 9000,
       });
     } catch (error) {
-      toast.error('Upload failed', {
-        description: error instanceof Error ? error.message : 'Invalid file format',
+      toast.error('This Bible file couldn’t be added', {
+        description: error instanceof Error ? error.message : 'Voice Verses couldn’t read it.',
       });
     } finally {
       setIsUploading(false);
+      event.target.value = '';
     }
   };
 
@@ -214,15 +214,18 @@ export const BibleVersionSettings = ({ currentVersion, onVersionChange }: BibleV
       <Section title="On this computer" aside="Always works, no internet needed">
         <div className="st-choices" role="radiogroup" aria-label="Bible translation">
           {offline.map((v) => card(v.id, v.name, v.fullName))}
-          {card('custom', 'Your own', 'A Bible file you add')}
+          {card('custom', customInfo?.abbreviation && customInfo.abbreviation !== 'Custom' ? customInfo.abbreviation : 'Your own', customInfo?.name && customInfo.name !== 'Your own Bible' ? customInfo.name : 'A Bible file you add')}
         </div>
         {selectedVersion === 'custom' && (
           <List plain>
-            <Row title="Add a Bible file" desc="A JSON file in the same format as the built-in Bibles.">
+            <Row
+              title={customInfo ? 'Add a different Bible file' : 'Add a Bible file'}
+              desc="OSIS, USFX, Zefania or USFM (a file, or a .zip from eBible.org), or JSON. Only add a Bible your church may use: public domain, or licensed to you."
+            >
               <label className="st-btn">
                 <Upload />
                 {isUploading ? 'Adding…' : 'Choose file'}
-                <input id="custom-bible" type="file" accept=".json" onChange={handleFileUpload} disabled={isUploading} className="hidden" />
+                <input id="custom-bible" type="file" accept=".json,.xml,.osis,.usfx,.usfm,.sfm,.zip,.txt" onChange={handleFileUpload} disabled={isUploading} className="hidden" data-bible-file />
               </label>
             </Row>
           </List>

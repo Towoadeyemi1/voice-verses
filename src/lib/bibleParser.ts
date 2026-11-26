@@ -3,6 +3,7 @@ import { BibleVersionType } from '@/types/bibleVersion';
 import { convertBibleSuperSearchToStandard } from './bibleConverter';
 import { apiBibleFor, isApiBibleVersion, onlineChapter, reportScriptureShown } from './onlineBibles';
 import { publish } from '@/core/bus';
+import { indexedDBService } from './indexedDBService';
 
 interface BibleBook {
   abbrev: string;
@@ -35,9 +36,52 @@ const loadOfflineBible = (version: OfflineVersion): Promise<BibleBook[]> => {
 let currentVersion: BibleVersionType = 'kjv';
 let customBibleData: BibleBook[] | null = null;
 
-const getBibleData = async (version: BibleVersionType = currentVersion): Promise<BibleBook[]> => {
-  if (version === 'custom' && customBibleData) {
+// The church's own Bible file (1.19.15): the whole Bible in IndexedDB (too big for localStorage),
+// its name and short name in localStorage so every window can label it
+const CUSTOM_FILE = 'custom-bible';
+const CUSTOM_INFO = 'cornerstone-custom-bible-info';
+const LEGACY_CUSTOM = 'cornerstone-custom-bible';
+export interface CustomBibleInfo {
+  name: string;
+  abbreviation: string;
+}
+export function customBibleInfo(): CustomBibleInfo | null {
+  try {
+    const info = JSON.parse(localStorage.getItem(CUSTOM_INFO) || 'null');
+    if (info?.name) return info;
+    return localStorage.getItem(LEGACY_CUSTOM) ? { name: 'Your own Bible', abbreviation: 'Custom' } : null;
+  } catch {
+    return null;
+  }
+}
+let customLoading: Promise<BibleBook[] | null> | null = null;
+const loadCustom = (): Promise<BibleBook[] | null> => {
+  if (customBibleData) return Promise.resolve(customBibleData);
+  customLoading ??= (async () => {
+    try {
+      const blob = await indexedDBService.getFile(CUSTOM_FILE);
+      if (blob) customBibleData = JSON.parse(await blob.text());
+    } catch {
+      // Not saved here: try the older place below
+    }
+    if (!customBibleData) {
+      try {
+        const legacy = localStorage.getItem(LEGACY_CUSTOM);
+        if (legacy) customBibleData = JSON.parse(legacy);
+      } catch {
+        customBibleData = null;
+      }
+    }
+    customLoading = null;
     return customBibleData;
+  })();
+  return customLoading;
+};
+
+const getBibleData = async (version: BibleVersionType = currentVersion): Promise<BibleBook[]> => {
+  if (version === 'custom') {
+    const own = await loadCustom();
+    if (own) return own;
   }
 
   switch (version) {
@@ -187,7 +231,7 @@ export class BibleParser {
   /** The translation's short name for screens: KJV, NKJV, NLT… */
   static getVersionLabel(version: string = this.getVersion()): string {
     if (isApiBibleVersion(version)) return apiBibleFor(version)?.abbreviation ?? 'Bible';
-    if (version === 'custom') return 'Custom';
+    if (version === 'custom') return customBibleInfo()?.abbreviation || 'Custom';
     return version.toUpperCase();
   }
 
@@ -433,16 +477,20 @@ export class BibleParser {
     return currentVersion;
   }
 
-  static setCustomBible(data: BibleBook[]): void {
+  /** Keeps the church's own Bible (all 66 books) and its name; every window then labels it by its short name */
+  static async setCustomBible(data: BibleBook[], info: CustomBibleInfo = { name: 'Your own Bible', abbreviation: 'Custom' }): Promise<void> {
+    await indexedDBService.saveFile(CUSTOM_FILE, new Blob([JSON.stringify(data)], { type: 'application/json' }));
     customBibleData = data;
-    localStorage.setItem('cornerstone-custom-bible', JSON.stringify(data));
+    try {
+      localStorage.setItem(CUSTOM_INFO, JSON.stringify(info));
+      localStorage.removeItem(LEGACY_CUSTOM);
+    } catch {
+      // The name is kept for this session
+    }
   }
 
   static loadCustomBible(): void {
-    const saved = localStorage.getItem('cornerstone-custom-bible');
-    if (saved) {
-      customBibleData = JSON.parse(saved);
-    }
+    void loadCustom();
   }
 
   static initializeVersion(): void {
@@ -538,11 +586,9 @@ export class BibleParser {
       return null;
     }
 
-    if (currentVersion === 'custom' && customBibleData) {
-      return {
-        version: 'custom',
-        data: customBibleData,
-      };
+    if (currentVersion === 'custom') {
+      const own = await loadCustom();
+      if (own) return { version: 'custom', data: own };
     }
 
     return {
