@@ -94,6 +94,19 @@ All colors MUST be HSL.
   @media (min-width: 1900px) {
     .monitor-fit { --reserve: 600px; }
   }
+  /* Every screen on Live (1.19.12): the big picture, the small ones and Next fit the window together */
+  .wall-fit {
+    --reserve: 340px;
+    width: min(100%, calc((100vh - var(--reserve)) / 2.05 * var(--ratio, 1.7778)));
+    margin-inline: auto;
+  }
+  @media (min-width: 1900px) {
+    /* Like a switcher's multiview: the big one beside the others, Next under them */
+    .wall-fit {
+      --reserve: 420px;
+      width: min(100%, calc((100vh - var(--reserve)) / 1.25 * var(--ratio, 1.7778)));
+    }
+  }
 
   /* Once gold; now the calm primary: white on graphite */
   .gradient-divine {

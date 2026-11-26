@@ -275,8 +275,20 @@ const esc = async (win) => {
   await win.locator('[data-booth-check]').click();
   await win.waitForTimeout(900);
   await shot(win, 'tools-3-booth-check', [m(win.locator('[data-booth-check]'), 1, 'bl'), m(win.locator('[data-booth-check-list]'), 2, 'tl')]);
-  // Show me the fix: the right page, the one control lit up, and the line that says what to change
-  const fixBtn = win.locator('[data-booth-check-list] [data-show-fix="screens"], [data-booth-check-list] [data-show-fix]').first();
+  // Show me the fix: the right page, the one control lit up, and the line that says what to change.
+  // The booth here is ready, so the chosen input is made one that isn't connected for this picture.
+  await esc(win);
+  const sound = await win.evaluate(() => {
+    const was = localStorage.getItem('cornerstone-settings');
+    const s = JSON.parse(was || '{}');
+    localStorage.setItem('cornerstone-settings', JSON.stringify({ ...s, audioDevice: 'gone', audioDeviceName: 'Scarlett 4i4 USB' }));
+    window.dispatchEvent(new Event('settings-updated'));
+    return was;
+  });
+  await win.waitForTimeout(1500);
+  await win.locator('[data-booth-check]').click();
+  await win.waitForTimeout(1500);
+  const fixBtn = win.locator('[data-booth-check-list] [data-show-fix="mic"], [data-booth-check-list] [data-show-fix]').first();
   if (await fixBtn.count()) {
     await fixBtn.click();
     await win.locator('[data-guide-narration]').waitFor({ timeout: 6000 }).catch(() => null);
@@ -284,6 +296,12 @@ const esc = async (win) => {
     await shot(win, 'tools-4-show-me-the-fix', [m(win.locator('[data-guide-spotlight]'), 1, 'tl', false), m(win.locator('[data-guide-narration]'), 2, 'tl', false)]);
   } else missing.push('tools-4-show-me-the-fix (nothing to check)');
   await esc(win);
+  await win.evaluate((was) => {
+    if (was) localStorage.setItem('cornerstone-settings', was);
+    else localStorage.removeItem('cornerstone-settings');
+    window.dispatchEvent(new Event('settings-updated'));
+  }, sound);
+  await win.waitForTimeout(800);
 
   // ---- 7. Settings ----
   /** A Settings page: its sidebar item is 1, then its first sections (or the marks given) */

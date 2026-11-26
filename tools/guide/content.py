@@ -61,7 +61,7 @@ SECTIONS = [
                     "**The order of service.** Each part is as wide as its time. Click a part to load it.",
                     "**spirit** shows what it will get ready next. **Pause** (or the P key) stops it doing anything by itself.",
                     "**When I pick a slide:** *Goes live* shows it at once; *Waits in Next* (the usual choice) puts it in Next first.",
-                    "**Live** (red): what the room sees now.",
+                    "**Live** (red): what the room sees now. The switch beside it shows the projector only, or **every screen** (projector, stream lower third, stage monitor) at once; click a small one to make it big.",
                     "**Take** (Space bar): puts Next on the screens.",
                     "**Next** (green): what goes up when you press Take.",
                 ],
