@@ -1,0 +1,20 @@
+{
+  "name": "voice-verses",
+  "version": "1.0.0",
+  "description": "Bitfocus Companion module for Voice Verses: Stream Deck buttons for the live screen",
+  "main": "src/main.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "package": "companion-module-build"
+  },
+  "dependencies": {
+    "@companion-module/base": "~1.15.1"
+  },
+  "devDependencies": {
+    "@companion-module/tools": "^2.6.1"
+  },
+  "engines": {
+    "node": "^22.20"
+  }
+}

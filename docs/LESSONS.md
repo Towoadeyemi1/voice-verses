@@ -194,3 +194,4 @@ Check this list before debugging. Add every new mistake that cost time.
 - **Build output reached main:** `git add -A` on another branch (whose `.gitignore` didn't list `native/decklink/build/`) committed node-gyp output. Ignore build folders on `main` first, and look at `git status` before `git add -A`.
 - **"Needs both a {Verse} and a {Reference} token" with both tokens there (ProPresenter 21.4):** the check trusted one version's answer (`tokens[].name` in `/v1/messages`). Read the message itself too, accept other shapes, and when the API doesn't say, let the operator send a test verse instead of blocking them (`messageReadiness`, `tools/checks/propresenter-messages.mjs`).
 
+- **The Companion module wouldn't build as "UNLICENSED":** `companion-module-build` refuses any module whose source isn't MIT (and whose manifest isn't MIT or GPL). The module folder (`tools/companion-module/`) carries its own MIT `LICENSE`; the rest of the repository is unaffected.

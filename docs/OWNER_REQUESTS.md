@@ -88,7 +88,7 @@ All promised, none built yet. Do them in this order after design 4:
 6. ⏳ CCLI usage reporting
 7. ⏳ Verses on phones (QR code)
 8. ⏳ Live captions and translation
-9. ⏳ Stream Deck and remote control
+9. ✅ Stream Deck (1.19.16, through Bitfocus Companion: `docs/integrations/stream-deck.md`); ⏳ MIDI, OSC and a phone remote
 10. ⏳ Planning Center import
 11. ✅ 1.15.0 NDI output (see below)
 12. ⏳ Native DeckLink SDI output (see Screens)
@@ -531,6 +531,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 ## Bible files and more free translations (from "What are the items that involves development that can be done right now?", 26 Nov 2026)
 
+- ✅ 1.19.16 **Stream Deck buttons**: a Bitfocus Companion module (attached to each release as voice-verses-companion.tgz) pairs with the code from Settings → Other apps and devices; Take, Clear, Logo, Back, Forward, show a verse or put one in Next, with Take lit green while something waits in Next and Clear lit red while something is on the screens. Companion requires the module's source to be MIT, so that one folder is MIT; the rest of the app is unchanged.
 - ✅ 1.19.15 **Add a Bible file**: Settings → Bible → Your own reads OSIS, USFX, Zefania, USFM (a file, or eBible.org's .zip) and JSON on the computer, names it from the file, keeps it in the database (a whole Bible no longer fits the old place), and shows it by its short name on the screens and the live screen's translation switch. Tested on eBible.org's WEB and KJV files.
 - ⏳ Several Bibles side by side (more than one of your own), and a list of free translations to add with one click: needs a mock-up of the Bible page first.
 

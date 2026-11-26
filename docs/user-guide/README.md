@@ -510,6 +510,7 @@ A Stream Deck, a phone, or your church’s own apps (a dashboard, Planning Cente
 
 **Good to know**
 
+- **A Stream Deck:** add the Voice Verses module to Bitfocus Companion (the file **voice-verses-companion.tgz** comes with each release) and type the pairing code in its connection. Its ready-made buttons Take, Clear, show the logo, go back and forward and show a verse; Take lights green while something waits in Next, Clear red while something is on the screens. Step by step: [Stream Deck buttons](../integrations/stream-deck.md).
 - A remote **Take** does exactly what the Take button does. While you practise in Training, other apps can’t change the screens.
 - A service sent in appears in **Services** on its day, marked **From** and the app’s name, and you see a message when it arrives. Sending it again updates it. Its scriptures expected are in the sermon, so detection finds them more easily, and loading them puts the first verse in Next.
 - A service saved as a file by another app (a **service package**, .json) imports with **Services → Import**.

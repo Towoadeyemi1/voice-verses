@@ -1,0 +1,17 @@
+{
+  "$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+  "id": "voice-verses",
+  "name": "voice-verses",
+  "shortname": "Voice Verses",
+  "description": "Stream Deck buttons for the Voice Verses live screen: Take, Clear, Logo, Back, Forward, show a verse, with Live and Next lit.",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": "git+https://github.com/Towoadeyemi1/voice-verses.git",
+  "bugs": "https://github.com/Towoadeyemi1/voice-verses/issues",
+  "maintainers": [{ "name": "Voice Verses" }],
+  "legacyIds": [],
+  "runtime": { "type": "node22", "api": "nodejs-ipc", "apiVersion": "0.0.0", "entrypoint": "../src/main.js" },
+  "manufacturer": "Voice Verses",
+  "products": ["Voice Verses"],
+  "keywords": ["church", "bible", "lyrics", "presentation", "scripture"]
+}

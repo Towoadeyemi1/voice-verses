@@ -1,6 +1,6 @@
 # The Voice Verses local API
 
-For people who make apps that work with Voice Verses: a Stream Deck or Bitfocus Companion button, a phone remote, a church dashboard (such as the CCCG Dashboard), Planning Center, a captioning or streaming tool, or sermon preparation on a laptop.
+For people who make apps that work with Voice Verses: a Stream Deck or Bitfocus Companion button (a ready-made module: [Stream Deck buttons](../integrations/stream-deck.md)), a phone remote, a church dashboard (such as the CCCG Dashboard), Planning Center, a captioning or streaming tool, or sermon preparation on a laptop.
 
 The API runs inside the Voice Verses desktop app, on the church network. It works without the internet. It is off until someone in the booth turns it on in **Settings → Other apps and devices**.
 
