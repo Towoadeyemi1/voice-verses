@@ -1,5 +1,5 @@
 // More Training lessons (1.19.14): Screens and outputs, Plan a service from a template, and Teach
-// spirit a cue each play through in Show me, in practice; Show me changes nothing real (no service
+// spirit a cue (and Songs and slides, 1.19.17) each play through in Show me, in practice; Show me changes nothing real (no service
 // planned; its example cue taken out again); Let me try plans a real service and keeps the cue the
 // volunteer taught; every line said has its recording.
 const { OUT, launch, answerVoice, check, done } = require('./lib.cjs');
@@ -47,7 +47,7 @@ const { OUT, launch, answerVoice, check, done } = require('./lib.cjs');
   await win.evaluate(() => (location.hash = '#/training'));
   await win.waitForTimeout(1500);
   const listed = await win.locator('[data-lesson]').evaluateAll((els) => els.map((e) => e.dataset.lesson));
-  check('Training has the new lessons', ['screens', 'plan', 'teach-cue'].every((l) => listed.includes(l)), listed.join(','));
+  check('Training has the new lessons', ['screens', 'plan', 'teach-cue', 'songs'].every((l) => listed.includes(l)), listed.join(','));
 
   // Screens and outputs
   await start('screens');
@@ -112,6 +112,37 @@ const { OUT, launch, answerVoice, check, done } = require('./lib.cjs');
   await win.keyboard.press('Escape');
   await win.waitForTimeout(800);
   check('…and kept after the lesson', (await cues()).includes('please stand for the reading'));
+
+  // Songs and slides: Media, then a song slide by slide on the live screen, Quick edit opened and cancelled
+  const room = () => win.evaluate(() => localStorage.getItem('voice-verses-live'));
+  const songWords = () =>
+    win.evaluate(
+      () =>
+        new Promise((res) => {
+          const r = indexedDB.open('cornerstone-bible-db');
+          r.onsuccess = () => {
+            const q = r.result.transaction('media').objectStore('media').getAll();
+            q.onsuccess = () => res(JSON.stringify(q.result.filter((m) => m.type === 'song').map((m) => [m.id, m.lyrics])));
+          };
+        }),
+    );
+  const roomBefore = await room();
+  const wordsBefore = await songWords();
+  const liveKey = () => win.evaluate(() => document.querySelector('[aria-label="Slides"] [role="listitem"]:has([data-state="live"])')?.getAttribute('data-key') ?? '');
+  await start('songs');
+  check('Songs and slides starts in Media, at Add files', await until(async () => (await win.locator('[data-add-files]').count()) > 0 && /SongSelect/.test(await say()), 20000), await say());
+  await win.screenshot({ path: `${OUT}/lessons-4-media.png` });
+  check('…opens the Library on the live screen, at Songs', await until(async () => (await win.locator('[data-library-song]').count()) > 0, 40000));
+  check('…a song’s slides come along the bottom', await until(async () => (await win.locator('[aria-label="Slides"] [data-state]').count()) > 0, 30000));
+  check('…its first slide goes on Live', await until(async () => !!(await liveKey()), 20000));
+  const first = await liveKey();
+  check('…then Take moves on a slide', await until(async () => !!(await liveKey()) && (await liveKey()) !== first, 30000), `${first} → ${await liveKey()}`);
+  check('…the pencil opens Quick edit', await until(async () => (await win.locator('[data-quick-edit-dialog]').count()) === 1, 30000));
+  await win.screenshot({ path: `${OUT}/lessons-4-quick-edit.png` });
+  check('…Cancel closes it', await until(async () => (await win.locator('[data-quick-edit-dialog]').count()) === 0 && /See all slides/.test(await say()), 40000), await say());
+  check('…and it finishes', await finished('songs'));
+  check('…the room never saw it', (await room()) === roomBefore);
+  check('…and no song was changed', (await songWords()) === wordsBefore);
 
   check('every line said has its recording', missing.length === 0, missing.join(' | '));
   check('no errors in the window', errors.length === 0, errors.join(' | '));

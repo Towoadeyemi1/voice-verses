@@ -78,6 +78,7 @@ export const SlideStrip = ({
           type="button"
           onClick={() => onExpand(!expanded)}
           className="ml-auto h-9 px-3 rounded-xl text-[13px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-1.5"
+          data-see-all
           title={expanded ? 'Back to the words, large, with the slides along the bottom' : `See every ${verses ? 'verse' : 'slide'} at once`}
         >
           {expanded ? <Rows3 className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
@@ -135,7 +136,9 @@ export const SlideStrip = ({
                 <button
                   type="button"
                   onClick={() => onEdit(i)}
-                  className="absolute top-1 right-1 w-9 h-9 rounded-lg grid place-items-center bg-black/65 text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition"
+                  // Shown on the slide that is Live (a word to fix now), on the others when pointed at
+                  className={`absolute top-1 right-1 w-9 h-9 rounded-lg grid place-items-center bg-black/65 text-white ${it.state === 'live' ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100 focus-visible:opacity-100 transition`}
+                  data-quick-edit
                   title="Quick edit: change the words or the look"
                   aria-label={`Edit slide ${it.label}`}
                 >

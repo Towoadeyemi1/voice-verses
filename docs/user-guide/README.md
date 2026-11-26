@@ -739,7 +739,7 @@ Short lessons on the real screens, in practice: nothing reaches the projector, t
 2. **Show me**: Voice Verses does each step, with a pointer and a voice.
 3. **Let me try**: you do each step; it waits and checks.
 4. **Watch**: the demo, explained aloud.
-5. Lessons by who they are for: **Everyone** (your first Sunday, the demo, when something goes wrong), **Setting up** (set up your booth, screens and outputs) and **Before Sunday** (plan a service from a template, teach spirit a cue). Let me try in *Plan a service* plans a real service; delete it from the day if you don’t want it.
+5. Lessons by who they are for: **Everyone** (your first Sunday, the demo, when something goes wrong), **Setting up** (set up your booth, screens and outputs) and **Before Sunday** (plan a service from a template, songs and slides, teach spirit a cue). Let me try in *Plan a service* plans a real service; delete it from the day if you don’t want it. In *Songs and slides*, Quick edit is opened and then cancelled, so no song changes unless you press Save yourself.
 
 ### Hear the guide?
 

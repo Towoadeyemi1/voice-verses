@@ -95,10 +95,10 @@ export const LibraryPanel = ({
   };
 
   return (
-    <Tabs defaultValue="bible" className="h-full flex flex-col rounded-lg border border-border bg-card min-h-0">
+    <Tabs defaultValue="bible" className="h-full flex flex-col rounded-lg border border-border bg-card min-h-0" data-library>
       <TabsList className="grid grid-cols-3 m-2">
         <TabsTrigger value="bible" className="gap-1 text-xs"><BookOpen className="w-3.5 h-3.5" />Bible</TabsTrigger>
-        <TabsTrigger value="songs" className="gap-1 text-xs"><Music className="w-3.5 h-3.5" />Songs</TabsTrigger>
+        <TabsTrigger value="songs" className="gap-1 text-xs" data-library-tab="songs"><Music className="w-3.5 h-3.5" />Songs</TabsTrigger>
         <TabsTrigger value="service" className="gap-1 text-xs"><ListMusic className="w-3.5 h-3.5" />Service</TabsTrigger>
       </TabsList>
 
@@ -146,7 +146,7 @@ export const LibraryPanel = ({
         <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
           {filteredSongs.length === 0 && <p className="text-xs text-muted-foreground px-1">No songs. Add songs in Media → Songs.</p>}
           {filteredSongs.map((s) => (
-            <button key={s.id} onClick={() => onSong(s)} className="w-full text-left rounded px-2 py-1.5 hover:bg-muted/60">
+            <button key={s.id} onClick={() => onSong(s)} className="w-full text-left rounded px-2 py-1.5 hover:bg-muted/60" data-library-song>
               <p className="text-sm font-medium truncate">{s.name}</p>
               {s.author && <p className="text-[11px] text-muted-foreground truncate">{s.author}</p>}
             </button>

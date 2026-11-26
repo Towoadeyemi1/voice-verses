@@ -53,7 +53,7 @@ export const QuickEdit = ({
 
   return (
     <Dialog open={!!slide} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl" data-quick-edit-dialog>
         <DialogHeader>
           <DialogTitle>Quick edit</DialogTitle>
           <DialogDescription>{where}</DialogDescription>
@@ -83,7 +83,7 @@ export const QuickEdit = ({
                 {draft.verse.book} {draft.verse.chapter}:{draft.verse.verse}: “{plainVerseText(draft.verse.text).slice(0, 120)}…” The words come from the Bible, so only the look changes here. To show another verse, find it with ⌘K.
               </p>
             ) : null}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" data-quick-look>
               <p className="m-0 text-sm font-semibold">Look</p>
               <div className="flex flex-wrap gap-1.5 max-h-[188px] overflow-y-auto pr-1">
                 <button type="button" className={chipClass(!draft.templateId)} onClick={() => setDraft({ ...draft, templateId: undefined })}>
@@ -108,11 +108,11 @@ export const QuickEdit = ({
 
         <div className="flex flex-wrap items-center justify-end gap-2">
           {onDesigner && (
-            <Button variant="ghost" className="mr-auto" onClick={onDesigner}>
+            <Button variant="ghost" className="mr-auto" onClick={onDesigner} data-open-designer>
               Open the full designer
             </Button>
           )}
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} data-quick-cancel>
             Cancel
           </Button>
           <Button onClick={() => onSave(draft)}>{live ? 'Save and update the screens' : 'Save'}</Button>
