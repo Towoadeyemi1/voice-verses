@@ -4,6 +4,8 @@ How every app is designed, built, secured, tested, shipped and documented. It is
 
 Give this file to any project, any person and any AI assistant. It is the starting point; a project adds its own specifics on top and never quietly drops a rule here. Where a project must break a rule, it writes down why (see [Decisions](#9-documentation-that-runs-the-project)).
 
+**Keeping it complete:** checked line by line on 26 Nov 2026 against every source in Voice Verses (the hard rules in `CLAUDE.md`, `DESIGN_SYSTEM.md`, all 37 decisions, `LESSONS.md` and the skills). When a decision, lesson or rule there applies beyond that app, it is added here in the same change.
+
 Examples from Voice Verses are marked **In Voice Verses:**. They show what a rule looked like in practice; the rule itself applies everywhere.
 
 ---
@@ -33,7 +35,7 @@ Examples from Voice Verses are marked **In Voice Verses:**. They show what a rul
 ## 0. How to use this file
 
 **In a new project (any assistant, any person):**
-1. Copy this file into the project as `docs/FOUNDATION.md`.
+1. Copy this file into the project as `docs/FOUNDATION.md`, with `docs/foundation/foundation.css` and `docs/foundation/reference.html` (the design kit, [3.5](#35-the-design-kit-exact-values-and-how-to-build-them)).
 2. Create the files in [section 15](#15-starter-kit-files-to-copy-into-a-new-project): `CLAUDE.md` (or the assistant's instructions file), `docs/OWNER_REQUESTS.md`, `docs/DECISIONS.md`, `docs/LESSONS.md`, `docs/DESIGN_SYSTEM.md`, `docs/PRODUCT_SPEC.md`, the CI checks and the skills.
 3. Tell the assistant at the start: "Read `docs/FOUNDATION.md` and follow it."
 
@@ -49,10 +51,10 @@ Paste this where only a short text fits:
 ```
 Follow my Foundation (FOUNDATION.md) in all work. In short:
 - Owner: record every request word for word with its status; mock-up first for any new screen and wait for my yes; recommend one option, don't list many; say plainly what is done, tested and not.
-- Design: Apple-grade, colourful never monochrome, never stark white (warm graphite / warm paper), fill every screen, colour always means something and is paired with words, one obvious primary action, things stay in the same place, structure from space and light (no boxes in boxes, few borders), show a picture of the real thing, both themes and every size checked by screenshot.
+- Design (exact values and recipes in FOUNDATION.md §3.5 and foundation.css): Apple-grade, colourful never monochrome, never stark white (warm graphite / warm paper), fill every screen, colour always means something and is paired with words, one obvious primary action, things stay in the same place, structure from space and light (no boxes in boxes, few borders), show a picture of the real thing, one sign for everything automation did, research the best tools first, both themes and every size checked by screenshot.
 - Words: plain, active, from the user's side; say exactly what a control does; no jargon.
 - Accessibility: targets ≥36px, key text ≥13px, keyboard for the main actions, reduced motion respected.
-- Product: core works offline, one download with nothing else to install, no vendor lock-in, every smart feature optional with presets (bold ones off), never confidently wrong (act alone only when certain, otherwise suggest with how sure and why), automation that isn't sure goes to a safe neutral screen and asks the operator (a timer or schedule is never proof), a safe practice mode.
+- Product: core works offline, one download with nothing else to install, no vendor lock-in, the next step always prepared so the person only confirms, every smart feature optional with presets (bold ones off), what the app finds or imports reviewed by a person before it is added, outputs placed by the app (no dragging windows), trust earned per behaviour and per situation with one-tap corrections, never confidently wrong (act alone only when certain, otherwise suggest with how sure and why), automation that isn't sure goes to a safe neutral screen and asks the operator (a timer or schedule is never proof), a safe practice mode.
 - Architecture: one app of separate modules on an event bus (versioned CloudEvents, publish once where it happens), one renderer for every view of the same thing, a local API with pairing and scoped keys, no servers of our own unless needed, decisions written down.
 - Security: keys in the OS keychain, added server-side only for their host, never in a web build; sandboxed, isolated renderers; every IPC/API call checks who sent it; signed webhooks; no secrets, sound or pictures in events; no copyrighted content in public repos; never get around bot checks or paywalls.
 - Tests: the real app end to end (fake hardware, mocks), look at the screenshots, a failing test is a bug not noise, measure before guessing, run every test not just the new one, generated assets checked by machine.
@@ -80,18 +82,27 @@ The owner decides what the product is. The assistant's job is to make it excelle
 ## 2. Product principles
 
 1. **One obvious way to do the main job.** A screen has one primary action; everything else is secondary, in a menu or in the command palette (⌘K). No modes to switch between for the core task.
+   - **Prepare the next step so the only decision is yes or no.** The app always fills "next" with its best guess, so the person's job is to confirm it (Take) or change it. **In Voice Verses:** Next is always filled, so the operator's only decision is Take or not.
 2. **The core works offline.** Internet is optional: cloud features add to the app, never hold it up. Bundle what the core needs (models, data, fonts).
 3. **One download, nothing else to install.** No separate runtimes, servers or helper apps for the core. Optional extras that need a third-party runtime say plainly where to get it, and everything else keeps working without it.
 4. **It runs on the hardware people actually have:** older machines, both chip types, every desktop OS you support. Test on the slowest target that matters.
 5. **No vendor lock-in.** Any provider for a service that has alternatives (AI, speech, sync), each optional, with a local option where one exists.
 6. **Never be confidently wrong.** When the app acts by itself, it must be certain. Below certainty, it *suggests*, shows how sure it is in words ("Strong match", "Likely") and why, and lets a person decide. **In Voice Verses:** a verse goes on screen by itself only when it was said outright or matched at 99% or more; anything less is a suggestion with a preview.
 7. **Every smart feature is optional.** Give a switch per feature and presets (Essentials, Recommended, Everything). A new install gets the recommended set; features that act on their own in new ways start off. The engine receives plain flags and never reads settings itself (which also keeps it testable).
-8. **Trust is earned, per behaviour.** An automatic behaviour starts by preparing (waiting for a person to confirm), and can be promoted to act by itself only after a streak of being right, and only when the owner chooses. Any correction sends it back. One tap pauses all automation.
+8. **Trust is earned, per behaviour.** An automatic behaviour starts by preparing (waiting for a person to confirm), and can be promoted to act by itself only after a streak of being right, and only when the owner chooses. Any correction sends it back. One tap pauses all automation (and pausing keeps what was learned).
+   - **Learn each situation separately.** Habits from one context must not leak into another (**In Voice Verses:** each type of service, from Sunday services to funerals, has its own order and is learned separately).
+   - **Corrections are one tap, in the user's words** ("Wrong part", "Not now", "Never for these words"), and **"Just this once"** undoes a one-off correction exactly, so one mistake never undoes weeks of learning.
+   - **Learn by watching first:** the person's own actions are better labels than anything they would have to type or read.
 9. **A safe place to learn.** A practice mode in which the real screens work but nothing reaches the outside world (other screens, other apps, analytics, learning). Its state lives in one place and is never saved, so a crash can't leave it on. Ending it puts everything back as it was.
 10. **The app opens full, never blank.** First run shows a working sample (clearly marked, removable) and a guided set-up that finds what it can by itself and asks the person to confirm each thing.
+    - **What the app finds or imports, a person reviews before it is added.** It shows what it found, with the doubtful items left unticked (**In Voice Verses:** a chapter mentioned in passing starts unticked when sermon notes are imported), and the person confirms. A tool that guesses is never allowed to fill the library or the screens by itself.
 11. **When automation isn't sure, it goes to a safe neutral state and asks.** A schedule, a timer or a learned habit is not proof that the next thing has started. Until the app has evidence (it heard or saw the next thing begin), it shows something neutral (the logo, a holding screen), gets the next thing ready, and asks the operator ("Has Prayer started?" Show it | Not yet). "Not yet" puts back what was there. Only evidence, never the clock alone, lets an automatic step act by itself. **In Voice Verses:** the owner's rule for spirit and Move on by time.
 12. **Things that reach the outside world are deliberate.** Sound, screens, messages, webhooks: never by surprise. Ask before playing sound, keep outputs from stealing focus, and never act on another app's output when its operator took it down.
+    - **The app places its outputs; nobody drags windows.** Settings assigns each output to a display (or a video card, a network stream); the app opens it there, full screen, without taking focus, and puts it back by itself when the display is reconnected. **In Voice Verses:** hard rule 6, after the owner asked "Can't it be selected in the app?"
 13. **The user's own content is theirs.** Make it easy to import and keep what they're licensed to use, and credit it properly (title, authors, copyright, licence numbers).
+14. **Two choices that look alike stay separate settings.** One switch must not quietly decide two things people think of separately (**In Voice Verses:** "what picking a slide does" and "what a verse heard does" are two settings).
+15. **When there are several equal ways to do something, show them as equal and let the user choose.** Don't mark one "Recommended" until it has been tested in their setting; say what each needs and costs. **In Voice Verses:** the three ways into ProPresenter are shown as equal until they have been tried in the owner's booth.
+16. **Name the real thing.** Show which real device "Default" is, say when an input belongs to a video card and will be silent, and say why a choice is unavailable instead of hiding it.
 
 ---
 
@@ -111,6 +122,8 @@ The bar: **like an app Apple designed, and far easier than the established tool 
 8. **Shadows only on what floats** (the window, a palette, a card being dragged) and on purposeful glows (the ON AIR frame).
 9. **Type:** the system UI font (SF Pro on Mac, a bundled fallback such as Figtree for Windows), a display weight of 700 with slight negative tracking for titles, a good serif for long reading text, tabular numbers for times. A clear scale, kept to.
 10. **Radii are a small consistent set** (for example 16 window, 14 cards, 12 previews, 9–10 controls, pills fully round).
+11. **Automation has one consistent sign.** Everything the automation did or suggests carries the same small mark (**In Voice Verses:** spirit's warm breathing orb), never the meaning colours, so people always know what the app did by itself.
+12. **Practice looks different from the real thing:** a band with its words along the edge of the screen and a way out ("End practice"); a lesson that does affect the real world gets a red band instead.
 
 ### 3.2 Layout
 
@@ -133,9 +146,10 @@ The bar: **like an app Apple designed, and far easier than the established tool 
 
 ### 3.4 Design process
 
-1. Read `DESIGN_SYSTEM.md`, then make an HTML mock-up in `docs/design/` with realistic content, both themes, laptop and wide sizes, interactive where it matters. Publish it for the owner and wait for approval.
-2. Build to the mock-up. Screenshot the built thing in dark, light, at 1440 wide and at 3440 wide, and compare side by side.
-3. Run the design checklist before every UI PR:
+1. **Research first** for a new area: what the best tools in the field do, and what their users and reviewers say goes wrong. Write the findings as a table (source, finding, the rule it gives us) in `DESIGN_SYSTEM.md`. **In Voice Verses:** ProPresenter's seven Clear buttons became one Clear; broadcast switchers' red program and green preview became the full red and green frames with words.
+2. Read `DESIGN_SYSTEM.md`, then make an HTML mock-up in `docs/design/` with realistic content, both themes, laptop and wide sizes, interactive where it matters. Publish it for the owner and wait for approval.
+3. Build to the mock-up. Screenshot the built thing in dark, light, at 1440 wide and at 3440 wide, and compare side by side.
+4. Run the design checklist before every UI PR:
    - Tokens only (warm graphite / warm paper); no pure white, no cold grey.
    - Meaning colours only for their meaning, each with its word.
    - One primary action obvious; the rest secondary or in ⌘K.
@@ -146,7 +160,92 @@ The bar: **like an app Apple designed, and far easier than the established tool 
    - Previews use the real renderer in the output's shape.
    - Header aligned with the body.
    - Words plain, active, from the user's side.
-4. Name CSS classes specifically. A class shared by layout and content (`.now` for both a pane and a timeline segment) silently breaks layout. Give app grids `grid-template-columns: minmax(0, 1fr)` and text-holding grid children `min-width: 0`, so a long item can't widen the page. Exclude overlay layers from blanket rules like `.app > * { position: relative }`.
+5. Name CSS classes specifically. A class shared by layout and content (`.now` for both a pane and a timeline segment) silently breaks layout. Give app grids `grid-template-columns: minmax(0, 1fr)` and text-holding grid children `min-width: 0`, so a long item can't widen the page. Exclude overlay layers from blanket rules like `.app > * { position: relative }`.
+
+### 3.5 The design kit: exact values and how to build them
+
+The principles above say *what* the look is. This section says exactly *how*, so any app can reproduce it. It is in three files next to this one:
+
+- **`foundation/foundation.css`**: every token and component, both themes, plain CSS that works in any web app, Electron or framework. Use its `f-` classes, or copy the values into your own system.
+- **`foundation/reference.html`**: every part as it should look (a whole screen, a settings page, controls, floating layers, practice), in dark and light. Open it beside your build and compare.
+- This section: the values and the reasons, for building it natively (Swift, Kotlin, Flutter) or in another design system.
+
+#### Colour
+
+| Token | Dark ("warm graphite", the default) | Light ("warm paper") | Use |
+| --- | --- | --- | --- |
+| page | `#0e0d10` | `#efebe5` | Behind everything |
+| sunken | `#121114` | `#ebe6de` | Sidebars, wells, "the room" |
+| win | `#161518` | `#f7f4ef` | The window |
+| surface | `#1f1d22` | `#ffffff` | Grouped lists, cards (white only as a card on paper, never as the page) |
+| raised | `#26232a` | `#ffffff` | Hover, the chosen segment, floating cards |
+| ink / ink-2 / ink-3 | `#f4f1f6` / `#b2abb7` / `#78727e` | `#1d1b20` / `#5d5862` / `#96909b` | Text: main, secondary, captions. Only three levels |
+| line | `rgba(255,245,255,.07)` | `rgba(40,30,50,.08)` | Hairlines (few) |
+| fill / fill-2 | `rgba(255,245,255,.05)` / `.09` | `rgba(40,30,50,.05)` / `.08` | Quiet controls, hovers, tracks. Translucent, so they sit on any surface |
+| glass | `rgba(30,28,34,.72)` + blur 20px, saturate 1.5 | `rgba(250,247,242,.72)` | Toolbar and command palette only |
+| accent (brand) | `#f0b44a`, soft at 16% | `#d9961f`, soft at 15% | Selection, the app's own actions, switches when on. Small areas only |
+| live | `#ff453a` | `#ff3b30` | On air / live, always with the word |
+| next | `#30d158` | `#1fa84b` | Next / ready, always with the word |
+| warn | `#f5a524`, soft at 14% | `#c9780a` | "Needs a look". Never red or green |
+
+- The greys lean slightly warm/violet (hue about 260–280°, saturation 6–14%). Cold blue-grey looks generic; this is what makes the app feel warm.
+- **Icon squares and categories** are two-colour gradients at 135°: gold `#fbbf24→#d97706`, blue `#60a5fa→#2563eb`, violet `#a78bfa→#7c3aed`, teal `#2dd4bf→#0d9488`, indigo `#818cf8→#4f46e5`, orange `#fb923c→#ea580c`, rose `#fb7185→#e11d48`, green `#4ade80→#16a34a`, slate `#94a3b8→#475569`, pink `#f472b6→#db2777`. The automation's sign: `#f0b44a→#f472b6→#8b5cf6`.
+- **Ambient light**: two large radial gradients of the current content's two main colours behind the whole window, at 45%×60% (82%, 40%) and 35%×45% (72%, 95%), opacity 0.28 dark / 0.12 light, a 1.2 s transition when the content changes. This is where the app gets its colour.
+- Colours are worked out in code where CSS can't (`color-mix()` fails in SVG data URIs and older Safari). Blend towards the background, never between two opposite colours (that gives grey).
+
+#### Type
+
+| Role | Face | Size / weight / tracking |
+| --- | --- | --- |
+| UI | `-apple-system, "SF Pro Text", Figtree, "Segoe UI Variable Text", system-ui` (bundle Figtree for Windows) | 14px / 1.45 body; 13.5px controls; 13px descriptions |
+| Display | `"SF Pro Display", Figtree, "Segoe UI Variable Display"` | 700, −0.02em: page title 22–24px, hero 30px, card title 16–20px |
+| Reading (long text, quotes, lyrics) | `Newsreader, "New York", "Iowan Old Style", Georgia` | 34–60px on the main screen (`clamp`), 1.28–1.3 line height, −0.012em, capped at about 30ch |
+| Row title | UI | 14.5px, 600 |
+| Section title | UI | 15px, 650 |
+| Small label | UI | 11px, 700, uppercase, +0.08em |
+| Caption | UI | 12.5–13px, ink-3 |
+| Numbers | any | `font-variant-numeric: tabular-nums` for times and counts |
+| Codes and addresses | `ui-monospace, "SF Mono", Menlo` | 13px, 600 (a pairing code: 44px, +0.08em) |
+
+Never below 13px for anything a person must read; 11px only for uppercase labels. Headings use `text-wrap: balance`.
+
+#### Space, radius, depth, motion
+
+- **Spacing** (px): 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 28, 30, 40. Page padding 28px; section gap 30px; inside a section 10px; a row 12px × 16px with a 14px gap; a card 16–20px.
+- **Radius**: window 16, cards and lists 14 (hero and choice cards 16, guide card 18), monitors 12–14, controls 10, segments 8, small squares 8 (large 11), pills fully round.
+- **Depth**: only what floats has a shadow. Lift `0 1px 1px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.28)` (light: `0 1px 2px rgba(20,15,30,.05), 0 8px 28px rgba(20,15,30,.08)`); float `0 24px 64px rgba(0,0,0,.5)` plus a 1px line ring. Raised buttons get an inset top highlight (`inset 0 1px 0 rgba(255,255,255,.09)`).
+- **Motion**: 150 ms (hover, press), 200 ms (switches, segments), 300 ms (progress, crossfades), `cubic-bezier(.4, 0, .2, 1)`. Press = `scale(.985)`. Hover on a card = up 2px. Everything is still with reduced motion.
+- **Focus**: a 2px outline in the accent, 2px from the control.
+
+#### Components (the recipes; `foundation.css` has the exact CSS)
+
+| Part | Recipe |
+| --- | --- |
+| **App shell** | A full-window grid (`100dvh`, `grid-template-columns: minmax(0, 1fr)`), the ambient layer behind, a 64px glass toolbar in three columns (who / one status capsule / clock and actions). Wide windows add a library column; extra width goes to the previews |
+| **Status capsule** | A 42px pill of glass with a 1px line ring: a live level meter, a word ("Listening"), a segmented choice |
+| **Sidebar** | sunken background; groups with 11px uppercase labels; 40px nav rows with a 28px icon square; the current page tinted with the accent at 16%, weight 650; a count as a small warn pill |
+| **Icon square** | 28px (8px radius), white 16px glyph on a gradient, a 0.5px inner white line. 40px (11px radius) for a large one |
+| **Grouped rows** | One surface (radius 14) holds the rows; each row is 60px tall at least: icon, bold title (14.5/600), one plain sentence (13, ink-2), the control on the right. Hairlines start after the icon (58px in). A row needing attention fades in a warn tint from the left |
+| **Hero** | The top of a settings page: a picture of the real thing or a 64px gradient glyph, a 20px title, one line, and the main action; a soft radial accent light from the top-left corner |
+| **Buttons** | 36px tall, radius 10, 13.5/600. Quiet (fill-2) by default; **soft** (accent tint, accent text) for a row's fix; **primary** (solid accent) only for the one confirming action in a small form; **ghost** for "Not now"; **link** in the accent. Never a full-width white button |
+| **Main action** | 56px, radius 16, raised graphite (`linear-gradient(#35333b, #29272e)` with the inset highlight and a soft drop shadow), 17px/600 display face, a small icon in the meaning colour when ready, the key shown (Space). In light: paper (`#fbfaf7 → #ece8e1`). Never a big slab of the brand colour beside the live and next colours |
+| **Switch** | 46×28 track (fill-2 off, accent on), 22px white knob with a small shadow, 200 ms |
+| **Segmented control** | A fill track with 3px padding; 32px segments; the chosen one raised (raised colour, lift shadow). A coloured dot inside when the choice has a meaning colour |
+| **Choice cards** | For choices that need a sentence: surface cards, radius 16; chosen = a 2px inset accent ring, a soft radial accent light top-right, a 22px accent tick; a row of small bars can show "how much" |
+| **Status** | A grey tick in a 28px circle when fine; amber circle and words when it needs a look; pills (12/700) with words; a progress ring (conic gradient) with the number in the middle and the strength in words beside it |
+| **Live / Next monitors** | Always dark inside (they show screens), in the output's real shape, radius 14. Live: a 2px red frame and a red glow beneath (`0 18px 50px -22px`); Next: a 2px green frame. A label row above each: dot, the word, what it holds (truncated), the actions. A thin red bar along Live's bottom for progress |
+| **Timeline** | Parts as 44px tiles tinted 18% of their colour with a dot, scrolling sideways with no scrollbar; past parts at 45% opacity; the current part solid with white text; the part ready next ringed in green |
+| **Command palette** | Glass (blur 30px, saturate 1.6), radius 18, a 58px input at 18px, results as 12px-radius rows with the chosen one tinted accent and its hint right-aligned in ink-3 |
+| **Guide or question card** | Solid raised surface, radius 18, the float shadow; a kicker pill in the accent; one line at 19px/700; a note in ink-2; actions at the bottom right. Placed beside what it is about, never over it |
+| **Practice band** | Fixed along the bottom: violet diagonal stripes (`#7c3aed`/`#6d28d9`, 18px) with white words and a way out; red stripes for a lesson that touches the real world |
+| **Automation's sign** | An 18px orb in the automation gradient with a soft pink glow, breathing (scale 1.08 every 4 s); still with reduced motion, and still on busy live screens |
+
+#### Putting it into an app
+
+- **Plain CSS / any framework:** include `foundation.css`, wrap the app in `class="f-root"` (and `f-app` for a full-window app), set `data-theme="light"` on `<html>` for light, and set `--f-accent`/`--f-accent-ink`/`--f-accent-soft` to the brand.
+- **Tailwind + shadcn/ui:** map shadcn's variables to these (as HSL): `--background` = win, `--card` = surface, `--popover` = raised, `--muted` = fill, `--border` = line, `--primary` = accent, `--ring` = accent. **Keep shadcn's `--accent` as a quiet hover surface (raised/fill), not the brand:** setting it to the brand turned every menu item and hover yellow. Add `live`, `next` and `warn` as extra colours. Scope component overrides (as Voice Verses does with `.vvs`) so older parts don't leak into new ones.
+- **Native (SwiftUI, Compose, Flutter):** use the tables above as the theme: the same surfaces, inks, radii, type roles and shadows; the system font; the reading serif bundled.
+- **Check it:** open `reference.html` and your screen side by side in both themes, at 1440 and at a wide size, and run the checklist in [3.4](#34-design-process).
 
 ---
 
@@ -311,6 +410,7 @@ The docs are the project's memory. Anyone (a person or an assistant) must be abl
 | `docs/user-guide/` | How to use every feature, with numbered screenshots, generated by a script from the real app | When the UI changes |
 | `.claude/skills/*` | Step-by-step procedures: shipping a change, testing end to end, releasing, design review, changing a sensitive engine, rebuilding | When a procedure changes |
 
+- **The spec holds every number** (thresholds, sizes, timings, keys, file names). They were tuned against real use: a rebuild copies them exactly, stage by stage (`REBUILD.md`), with a check after each stage that must pass before the next.
 - The user guide keeps a **FEATURES list** (each feature → its section) so nothing is left undocumented, and its screenshots are taken by a capture script that drives the real app with numbered markers.
 - Write docs in the same plain style as the UI.
 
@@ -611,6 +711,7 @@ To give Claude this whole foundation everywhere (where Skills are available), ma
   Read FOUNDATION.md in this folder and follow it. Start with section 0's short version; read the full section for the area you are working in (design §3, writing §4, architecture §6, security §7, testing §8, docs §9, shipping §10).
   ```
 - `FOUNDATION.md`: this file.
+- `foundation.css` and `reference.html`: the design kit.
 
 Zip the folder and upload it in Claude's settings under Skills.
 
@@ -618,7 +719,7 @@ Zip the folder and upload it in Claude's settings under Skills.
 
 ## 16. Reference: the Voice Verses design tokens
 
-A worked example of [section 3](#3-design-principles), to start from and adapt.
+The tokens as Voice Verses first wrote them. The full, current set, with both themes and every component, is in [3.5](#35-the-design-kit-exact-values-and-how-to-build-them) and `foundation/foundation.css`.
 
 ```css
 /* Light ("warm paper") */

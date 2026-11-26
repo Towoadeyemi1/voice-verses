@@ -1,0 +1,279 @@
+/*
+ * Foundation design kit (from Voice Verses, 26 Nov 2026). Drop this file into any web app
+ * (plain HTML, React, Vue, Svelte, Electron, a Tailwind or shadcn project) and use the f-
+ * classes, or read the values and rebuild them in your own system. FOUNDATION.md §3 says
+ * why each choice was made; reference.html shows every part in both themes.
+ *
+ * The look: like an app Apple designed. Warm graphite in the dark, warm paper in the light,
+ * never stark white or cold grey. Colour carries meaning and always has words with it.
+ * Structure comes from space and light, not borders. One obvious main action.
+ *
+ * Theme: dark by default (set data-theme="light" on <html> for light, or remove the dark
+ * default below to follow the system). Brand colour: set --f-accent (and --f-accent-ink).
+ */
+
+/* ---------------------------------------------------------------- Tokens: dark (default) */
+:root {
+  /* Surfaces, darkest to lightest: warm graphite (a slight violet bias, never blue-grey) */
+  --f-page: #0e0d10;        /* behind everything */
+  --f-sunken: #121114;      /* sidebars, wells, "the room" */
+  --f-win: #161518;         /* the window */
+  --f-surface: #1f1d22;     /* grouped lists, cards */
+  --f-raised: #26232a;      /* hover, the chosen segment, floating cards */
+  /* Ink: three levels only */
+  --f-ink: #f4f1f6;
+  --f-ink-2: #b2abb7;       /* secondary text, descriptions */
+  --f-ink-3: #78727e;       /* captions, small labels, disabled */
+  /* Lines and fills (translucent, so they work on any surface) */
+  --f-line: rgba(255, 245, 255, .07);
+  --f-fill: rgba(255, 245, 255, .05);
+  --f-fill-2: rgba(255, 245, 255, .09);
+  --f-glass: rgba(30, 28, 34, .72);
+  /* Brand (the "team colour"): selection and the app's own actions; small areas only */
+  --f-accent: #f0b44a;
+  --f-accent-ink: #2a1d04;  /* text on a solid accent */
+  --f-accent-soft: rgba(240, 180, 74, .16);
+  /* Meaning colours: reserved, always with their words */
+  --f-live: #ff453a;        /* ON AIR / live / destructive-now */
+  --f-next: #30d158;        /* NEXT / ready to go */
+  --f-warn: #f5a524;        /* needs a look (never red or green) */
+  --f-warn-soft: rgba(245, 165, 36, .14);
+  /* Depth: only what floats gets a shadow */
+  --f-lift: 0 1px 1px rgba(0, 0, 0, .25), 0 8px 24px rgba(0, 0, 0, .28);
+  --f-float: 0 24px 64px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 245, 255, .07);
+  --f-glow: .28;            /* ambient light strength */
+  color-scheme: dark;
+
+  /* Icon squares and category colours: two-colour gradients at 135° */
+  --f-i-gold: linear-gradient(135deg, #fbbf24, #d97706);
+  --f-i-blue: linear-gradient(135deg, #60a5fa, #2563eb);
+  --f-i-violet: linear-gradient(135deg, #a78bfa, #7c3aed);
+  --f-i-teal: linear-gradient(135deg, #2dd4bf, #0d9488);
+  --f-i-indigo: linear-gradient(135deg, #818cf8, #4f46e5);
+  --f-i-orange: linear-gradient(135deg, #fb923c, #ea580c);
+  --f-i-rose: linear-gradient(135deg, #fb7185, #e11d48);
+  --f-i-green: linear-gradient(135deg, #4ade80, #16a34a);
+  --f-i-slate: linear-gradient(135deg, #94a3b8, #475569);
+  --f-i-pink: linear-gradient(135deg, #f472b6, #db2777);
+  --f-i-auto: linear-gradient(135deg, #f0b44a, #f472b6 55%, #8b5cf6); /* the automation's sign */
+
+  /* Type */
+  --f-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", Figtree, "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --f-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", Figtree, "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --f-read: Newsreader, "New York", "Iowan Old Style", Georgia, serif;   /* long reading text */
+  --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Type scale (px): label 11 · caption 12.5 · small 13 · ui 13.5 · body 14 · row title 14.5 ·
+     section 15 · card title 16-17 · page title 22-24 · hero 30 · display reading 34-60 */
+
+  /* Radius: a small set */
+  --f-r-window: 16px; --f-r-card: 14px; --f-r-monitor: 12px; --f-r-control: 10px; --f-r-small: 8px; --f-r-pill: 999px;
+  /* Spacing (px): 2 4 6 8 10 12 14 16 18 20 24 28 30 40 */
+  /* Motion: short and meaningful */
+  --f-fast: 150ms; --f-base: 200ms; --f-slow: 300ms; --f-ease: cubic-bezier(.4, 0, .2, 1);
+}
+
+/* ---------------------------------------------------------------- Tokens: light ("warm paper") */
+:root[data-theme="light"] {
+  --f-page: #efebe5; --f-sunken: #ebe6de; --f-win: #f7f4ef; --f-surface: #ffffff; --f-raised: #ffffff;
+  --f-ink: #1d1b20; --f-ink-2: #5d5862; --f-ink-3: #96909b;
+  --f-line: rgba(40, 30, 50, .08); --f-fill: rgba(40, 30, 50, .05); --f-fill-2: rgba(40, 30, 50, .08);
+  --f-glass: rgba(250, 247, 242, .72);
+  --f-accent: #d9961f; --f-accent-ink: #2a1d04; --f-accent-soft: rgba(217, 150, 31, .15);
+  --f-live: #ff3b30; --f-next: #1fa84b; --f-warn: #c9780a; --f-warn-soft: rgba(217, 140, 20, .13);
+  --f-lift: 0 1px 2px rgba(20, 15, 30, .05), 0 8px 28px rgba(20, 15, 30, .08);
+  --f-float: 0 24px 64px rgba(20, 15, 30, .18), 0 0 0 1px rgba(40, 30, 50, .08);
+  --f-glow: .12;
+  color-scheme: light;
+}
+/* To follow the system instead of defaulting to dark, use this in place of the dark default:
+   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { ...the light values... } } */
+
+/* ---------------------------------------------------------------- Base */
+.f-app, .f-root {
+  background: var(--f-win); color: var(--f-ink);
+  font: 14px/1.45 var(--f-ui); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+.f-root * { box-sizing: border-box; }
+.f-root :where(h1, h2, h3, h4) { font-family: var(--f-display); font-weight: 700; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.f-root :where(button) { font: inherit; color: inherit; }
+.f-root :where(button, a, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--f-accent); outline-offset: 2px; border-radius: var(--f-r-control); }
+.f-num { font-variant-numeric: tabular-nums; }
+.f-read { font-family: var(--f-read); }
+.f-root ::selection { background: var(--f-accent-soft); }
+.f-root * { scrollbar-color: color-mix(in srgb, var(--f-ink-3) 55%, transparent) transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .f-root *, .f-root *::before, .f-root *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------------------------------------------------------------- The app fills the window */
+/* A full-window grid; columns never grow past their content (minmax(0,1fr)), so a long item can't widen the page */
+.f-app { position: relative; height: 100vh; height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); overflow: hidden; }
+/* Ambient light: the app's colour comes from what it shows (set --f-c1 / --f-c2 from the content) */
+.f-ambient { position: absolute; inset: 0; pointer-events: none; opacity: var(--f-glow); transition: background 1.2s ease;
+  background: radial-gradient(45% 60% at 82% 40%, var(--f-c1, #ff8a3d), transparent 70%), radial-gradient(35% 45% at 72% 95%, var(--f-c2, #ffb020), transparent 70%); }
+.f-app > :not(.f-ambient) { position: relative; }
+/* Glass only where content scrolls under it: the toolbar and the command palette */
+.f-toolbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; min-height: 64px; padding: 0 24px;
+  background: var(--f-glass); backdrop-filter: blur(20px) saturate(1.5); -webkit-backdrop-filter: blur(20px) saturate(1.5); }
+.f-capsule { display: inline-flex; align-items: center; gap: 12px; height: 42px; padding: 0 6px 0 14px; border-radius: 21px; background: var(--f-glass); box-shadow: 0 0 0 1px var(--f-line); font-size: 14px; font-weight: 500; }
+
+/* ---------------------------------------------------------------- Sidebar and navigation */
+.f-sidebar { background: var(--f-sunken); padding: 18px 12px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
+.f-group { display: flex; flex-direction: column; gap: 2px; }
+.f-label { margin: 0 10px 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--f-ink-3); }
+.f-nav { display: flex; align-items: center; gap: 11px; min-height: 40px; padding: 6px 10px; border: 0; border-radius: var(--f-r-control); background: none; cursor: pointer; text-align: left; font-size: 14px; font-weight: 500; color: var(--f-ink); }
+.f-nav:hover { background: var(--f-fill); }
+.f-nav[aria-current="page"] { background: var(--f-accent-soft); font-weight: 650; }
+.f-nav .f-count { margin-left: auto; }
+/* Icon squares: white glyph on a two-colour gradient */
+.f-sq { width: 28px; height: 28px; flex: none; border-radius: 8px; display: grid; place-items: center; color: #fff; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18); background: var(--f-i-slate); }
+.f-sq svg { width: 16px; height: 16px; }
+.f-sq.lg { width: 40px; height: 40px; border-radius: 11px; } .f-sq.lg svg { width: 22px; height: 22px; }
+.f-sq.sm { width: 22px; height: 22px; border-radius: 6px; } .f-sq.sm svg { width: 13px; height: 13px; }
+
+/* ---------------------------------------------------------------- Pages, sections, grouped rows */
+.f-page { padding: 4px 28px 40px; display: flex; flex-direction: column; gap: 30px; max-width: 980px; }
+.f-pagehead { position: sticky; top: 0; z-index: 5; padding: 18px 28px 14px; background: color-mix(in srgb, var(--f-win) 85%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.f-pagehead h2 { font-size: 24px; line-height: 1.15; }
+.f-pagehead p { margin: 2px 0 0; color: var(--f-ink-2); font-size: 14px; }
+.f-section { display: flex; flex-direction: column; gap: 10px; }
+.f-section > header { display: flex; align-items: center; gap: 12px; min-height: 36px; }
+.f-section > header h3 { font-size: 15px; line-height: 1.3; font-weight: 650; letter-spacing: 0; flex: 1; }
+.f-hint { margin: 0; font-size: 13px; color: var(--f-ink-2); max-width: 66ch; }
+/* One soft surface holds a group of rows; hairlines start after the icon; no borders, no boxes inside boxes */
+.f-list { background: var(--f-surface); border-radius: var(--f-r-card); overflow: hidden; }
+.f-row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; min-height: 60px; position: relative; }
+.f-row + .f-row::before { content: ""; position: absolute; top: 0; right: 0; left: 58px; border-top: 1px solid var(--f-line); }
+.f-list.plain .f-row + .f-row::before { left: 16px; }
+.f-row .text { flex: 1; min-width: 0; }
+.f-row .t { display: block; font-size: 14.5px; font-weight: 600; }
+.f-row .d { display: block; font-size: 13px; color: var(--f-ink-2); margin-top: 1px; }
+.f-row.attention { background: linear-gradient(90deg, var(--f-warn-soft), transparent 55%); }
+.f-row.clickable { cursor: pointer; } .f-row.clickable:hover { background: var(--f-fill); }
+/* A picture of the real thing opens a page: a hero card with a soft accent light */
+.f-hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px; border-radius: 16px;
+  background: radial-gradient(70% 140% at 0% 0%, var(--f-accent-soft), transparent 60%), var(--f-surface); }
+.f-hero h4 { font-size: 20px; line-height: 1.2; }
+.f-hero .sub { margin: 3px 0 0; color: var(--f-ink-2); font-size: 13.5px; }
+.f-glyph { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; color: #fff; background: var(--f-i-orange); box-shadow: var(--f-lift); }
+.f-glyph svg { width: 32px; height: 32px; }
+.f-note { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-radius: var(--f-r-card); background: var(--f-fill); font-size: 13.5px; color: var(--f-ink-2); }
+.f-note b { color: var(--f-ink); } .f-note svg { width: 20px; height: 20px; flex: none; color: var(--f-accent); } .f-note.warn svg { color: var(--f-warn); }
+.f-well { border-radius: var(--f-r-card); background: var(--f-sunken); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------------------------------------------------------------- Controls (all ≥ 36px to hit) */
+.f-btn { min-height: 36px; padding: 0 14px; border: 0; border-radius: var(--f-r-control); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  font-size: 13.5px; font-weight: 600; white-space: nowrap; background: var(--f-fill-2); color: var(--f-ink); transition: filter var(--f-fast) var(--f-ease), background var(--f-fast) var(--f-ease); }
+.f-btn:hover:not(:disabled) { filter: brightness(1.12); }
+.f-btn:active:not(:disabled) { transform: scale(.985); }
+.f-btn:disabled { opacity: .5; cursor: default; }
+.f-btn svg { width: 16px; height: 16px; }
+.f-btn.primary { background: var(--f-accent); color: var(--f-accent-ink); }  /* only the one confirming action in a small form */
+.f-btn.soft { background: var(--f-accent-soft); color: var(--f-accent); }   /* a row's fix or main action */
+.f-btn.ghost { background: none; color: var(--f-ink-2); } .f-btn.ghost:hover:not(:disabled) { background: var(--f-fill); color: var(--f-ink); filter: none; }
+.f-btn.link { background: none; padding: 0; min-height: 32px; color: var(--f-accent); }
+.f-iconbtn { width: 36px; height: 36px; flex: none; border: 0; border-radius: var(--f-r-control); background: var(--f-fill); color: var(--f-ink-2); display: grid; place-items: center; cursor: pointer; }
+.f-iconbtn:hover { background: var(--f-fill-2); color: var(--f-ink); } .f-iconbtn svg { width: 18px; height: 18px; }
+.f-kbd { font: 600 11.5px var(--f-ui); padding: 2px 6px; border-radius: 6px; background: var(--f-fill-2); color: var(--f-ink-3); }
+
+/* The one main action: a quiet raised graphite button, its icon in the meaning colour when ready.
+   Never a large slab of the brand colour next to the live and next colours. */
+.f-main { width: 100%; height: 56px; border: 0; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+  font: 600 17px var(--f-display); letter-spacing: -.01em; color: var(--f-ink);
+  background: linear-gradient(#35333b, #29272e);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .09), 0 0 0 1px rgba(255, 255, 255, .06), 0 12px 28px -14px rgba(0, 0, 0, .9);
+  transition: transform .12s var(--f-ease), background var(--f-fast); }
+.f-main:hover { background: linear-gradient(#3b3941, #2e2c33); }
+.f-main:active { transform: scale(.985); }
+.f-main svg { width: 18px; height: 18px; color: var(--f-next); }
+.f-main .f-kbd { background: rgba(255, 255, 255, .07); }
+/* On a pale tint in the light theme, amber text needs to be darker to read well */
+:root[data-theme="light"] :is(.f-btn.soft, .f-btn.link, .f-pill.accent, .f-card .kicker, .f-palette li span) { color: color-mix(in srgb, var(--f-accent) 62%, var(--f-ink)); }
+:root[data-theme="light"] :is(.f-pill.warn, .f-ready.todo) { color: color-mix(in srgb, var(--f-warn) 75%, var(--f-ink)); }
+:root[data-theme="light"] .f-main { background: linear-gradient(#fbfaf7, #ece8e1); box-shadow: inset 0 1px 0 #fff, 0 0 0 1px var(--f-line), 0 12px 28px -16px rgba(20, 15, 30, .35); }
+
+/* Switch: the brand colour when on */
+.f-switch { position: relative; width: 46px; height: 28px; flex: none; border: 0; padding: 0; border-radius: 999px; cursor: pointer; background: var(--f-fill-2); transition: background var(--f-base); }
+.f-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform var(--f-base) var(--f-ease); }
+.f-switch[aria-checked="true"] { background: var(--f-accent); }
+.f-switch[aria-checked="true"]::after { transform: translateX(18px); }
+/* Segmented control: 2 to 4 short choices */
+.f-seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 11px; background: var(--f-fill); }
+.f-seg button { min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: none; cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--f-ink-2); display: inline-flex; align-items: center; gap: 6px; }
+.f-seg button:hover { color: var(--f-ink); }
+.f-seg button[aria-pressed="true"], .f-seg button[aria-checked="true"] { background: var(--f-raised); color: var(--f-ink); box-shadow: var(--f-lift); }
+.f-seg .dot { width: 7px; height: 7px; border-radius: 50%; }
+/* Inputs */
+.f-input { min-height: 36px; border: 0; border-radius: 9px; background: var(--f-fill-2); padding: 0 12px; font: 500 14px var(--f-ui); color: var(--f-ink); outline: none; min-width: 0; }
+.f-input:focus-visible { box-shadow: 0 0 0 2px var(--f-accent); }
+.f-input::placeholder { color: var(--f-ink-3); }
+/* Choice cards: a choice that needs a sentence; chosen = a 2px brand ring, a soft light and a tick */
+.f-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.f-choice { position: relative; border: 0; text-align: left; cursor: pointer; padding: 16px; border-radius: 16px; background: var(--f-surface); color: var(--f-ink); display: flex; flex-direction: column; gap: 6px; }
+.f-choice:hover { background: var(--f-raised); }
+.f-choice[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--f-accent); background: radial-gradient(90% 120% at 100% 0%, var(--f-accent-soft), transparent 70%), var(--f-surface); }
+.f-choice b { font-size: 16px; letter-spacing: -.01em; } .f-choice .p { font-size: 13px; color: var(--f-ink-2); }
+.f-choice .f-tick { position: absolute; top: 14px; right: 14px; width: 22px; height: 22px; border-radius: 50%; display: none; place-items: center; background: var(--f-accent); color: var(--f-accent-ink); font-size: 13px; font-weight: 800; }
+.f-choice[aria-checked="true"] .f-tick { display: grid; }
+.f-bars { margin-top: auto; padding-top: 6px; display: flex; gap: 3px; }
+.f-bars i { flex: 1; height: 4px; border-radius: 2px; background: var(--f-fill-2); } .f-bars i.on { background: var(--f-accent); }
+
+/* ---------------------------------------------------------------- Status (words + shape, never colour alone) */
+.f-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--f-fill-2); color: var(--f-ink-2); white-space: nowrap; }
+.f-pill.accent { background: var(--f-accent-soft); color: var(--f-accent); }
+.f-pill.warn { background: var(--f-warn-soft); color: var(--f-warn); }
+.f-pill.live { background: color-mix(in srgb, var(--f-live) 18%, transparent); color: var(--f-live); }
+.f-pill.next { background: color-mix(in srgb, var(--f-next) 18%, transparent); color: var(--f-next); }
+.f-mark { width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--f-fill-2); color: var(--f-ink-2); }   /* fine: a grey tick */
+.f-mark.warn { background: var(--f-warn-soft); color: var(--f-warn); }                                                                                       /* needs a look */
+.f-mark svg { width: 16px; height: 16px; }
+.f-ready { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; font-size: 13.5px; font-weight: 700; background: var(--f-fill-2); color: var(--f-ink-2); }
+.f-ready.todo { background: var(--f-warn-soft); color: var(--f-warn); }
+.f-ring { --p: .6; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; position: relative; flex: none;
+  background: conic-gradient(var(--f-accent) calc(var(--p) * 360deg), var(--f-fill-2) 0); }
+.f-ring::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--f-surface); }
+.f-ring b { position: relative; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- Live and next (program and preview) */
+.f-label-row { display: flex; align-items: center; gap: 8px; min-height: 30px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.f-label-row .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.f-label-row .detail { color: var(--f-ink-3); font-weight: 500; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.f-label-row .end { margin-left: auto; display: flex; gap: 2px; flex: none; }
+.f-monitor { position: relative; aspect-ratio: var(--f-shape, 16 / 9); border-radius: var(--f-r-card); overflow: hidden; background: #000; color: #fff; }   /* monitors stay dark in both themes */
+.f-monitor.live { box-shadow: 0 0 0 2px var(--f-live), 0 18px 50px -22px var(--f-live); }   /* the full frame, and the word "Live" beside it */
+.f-monitor.next { box-shadow: 0 0 0 2px var(--f-next); }
+.f-monitor .progress { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--f-live); transition: width var(--f-slow); }
+
+/* ---------------------------------------------------------------- Timeline of parts (sideways, tinted, current solid) */
+.f-timeline { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; }
+.f-timeline::-webkit-scrollbar { display: none; }
+.f-part { --c: #7c8ab8; flex-shrink: 0; height: 44px; padding: 0 12px; border-radius: 10px; display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 13px; font-weight: 600;
+  background: color-mix(in oklab, var(--c) 18%, transparent); color: var(--f-ink); }
+.f-part::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+.f-part small { font-size: 12px; font-weight: 500; color: var(--f-ink-3); }
+.f-part.past { opacity: .45; }
+.f-part.current { background: var(--c); color: #fff; } .f-part.current::before { background: #fff; } .f-part.current small { color: rgba(255, 255, 255, .78); }
+.f-part.ready { box-shadow: inset 0 0 0 2px var(--f-next); }
+
+/* ---------------------------------------------------------------- Floating layers */
+.f-palette { width: min(620px, calc(100vw - 32px)); border-radius: 18px; overflow: hidden; background: var(--f-glass); backdrop-filter: blur(30px) saturate(1.6); -webkit-backdrop-filter: blur(30px) saturate(1.6); box-shadow: var(--f-float); }
+.f-palette input { width: 100%; height: 58px; border: 0; background: transparent; padding: 0 22px; font: 500 18px var(--f-ui); color: var(--f-ink); outline: none; border-bottom: 1px solid var(--f-line); }
+.f-palette ul { list-style: none; margin: 0; padding: 8px; }
+.f-palette li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; font-size: 15px; cursor: pointer; }
+.f-palette li[aria-selected="true"] { background: var(--f-accent-soft); }
+.f-palette li span { margin-left: auto; color: var(--f-ink-3); font-size: 13px; }
+.f-card { border-radius: 18px; padding: 18px 20px; background: var(--f-raised); box-shadow: var(--f-float); display: flex; flex-direction: column; gap: 10px; }   /* a dialog or guide card */
+.f-card .kicker { display: inline-flex; align-self: flex-start; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--f-accent-soft); color: var(--f-accent); }
+.f-card .say { font-size: 19px; line-height: 1.3; font-weight: 700; letter-spacing: -.01em; }
+.f-card .note { font-size: 13.5px; color: var(--f-ink-2); }
+.f-card .acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+/* ---------------------------------------------------------------- Practice and automation */
+/* Practice: a striped violet band along the bottom, with its words and a way out */
+.f-practice { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; justify-content: center; gap: 14px; padding: 10px 16px; font-size: 14px; font-weight: 600; color: #fff;
+  background: repeating-linear-gradient(135deg, rgba(124, 58, 237, .92) 0 18px, rgba(109, 40, 217, .92) 18px 36px); }
+.f-practice.real { background: repeating-linear-gradient(135deg, rgba(220, 38, 38, .92) 0 18px, rgba(185, 28, 28, .92) 18px 36px); }   /* a lesson that does touch the real world */
+/* The automation's one sign: a small warm orb that breathes (still with reduced motion) */
+.f-orb { width: 18px; height: 18px; border-radius: 50%; flex: none; background: radial-gradient(circle at 35% 30%, #fff6 0, transparent 40%), var(--f-i-auto); box-shadow: 0 0 12px rgba(244, 114, 182, .35); animation: f-breathe 4s ease-in-out infinite; }
+.f-orb.still { animation: none; }
+@keyframes f-breathe { 50% { transform: scale(1.08); box-shadow: 0 0 18px rgba(244, 114, 182, .5); } }
