@@ -1720,7 +1720,7 @@ export const LiveWorkspace = () => {
       {/* Top bar: the service, the one status, the clock */}
       <header className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-6">
         <div className="flex items-center gap-2 min-w-0">
-          <button type="button" onClick={() => setShowLibrary(true)} className="min-[1900px]:hidden w-10 h-10 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" title="Library: Bible, songs and services" aria-label="Library">
+          <button type="button" onClick={() => setShowLibrary(true)} className="min-[1900px]:hidden w-10 h-10 rounded-xl grid place-items-center text-muted-foreground hover:bg-muted hover:text-foreground" title="Library: Bible, songs and services" aria-label="Library" data-guide="library">
             <PanelLeft className="w-5 h-5" />
           </button>
           <DropdownMenu>

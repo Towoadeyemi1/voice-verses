@@ -85,6 +85,8 @@ const words = (text) =>
   text
     .toLowerCase()
     .replace(/[’']/g, '')
+    // Names the recogniser hears as two words
+    .replace(/\bsong ?select\b/g, 'songselect')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
     .split(' ')

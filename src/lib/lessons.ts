@@ -6,7 +6,7 @@
  * Every lesson has its own automatic test (tools/e2e/training.cjs), so a change
  * to the screens can't break one unnoticed.
  */
-import type { GuideStep, Lesson } from '@/lib/guide';
+import { find, type GuideStep, type Lesson } from '@/lib/guide';
 import { loadSpirit, removeCue, updateSpirit } from '@/lib/spirit';
 
 /** Said when a step is done and has nothing of its own to say */
@@ -132,6 +132,102 @@ const teachCue: GuideStep[] = [
   { say: 'After ten right in a row, you can let a cue go up by itself.', watchOnly: true },
 ];
 
+// ---- Songs and slides (1.19.17) ------------------------------------------------------------
+
+// `find` is the visible one: the wide-screen Library column is in the page, hidden, on a smaller window
+/** The slide on the screens, in the strip (its key), so the next Take can be seen to move on */
+const liveSlide = () => find('[aria-label="Slides"] [role="listitem"]:has([data-state="live"])')?.getAttribute('data-key') ?? '';
+let firstLive = '';
+/** Notes the slide on Live, for the step after (true when there is one) */
+const noteLive = () => !!(firstLive = liveSlide());
+
+const songs: GuideStep[] = [
+  {
+    target: '[data-add-files]',
+    say: 'Your songs are kept in Media. To add one from SongSelect, download its words, then press Add files.',
+    why: 'On songselect.ccli.com, open the song and choose Download, then Lyrics. Its writers, copyright and CCLI number come with it. You can also drop the file on this page.',
+    watchOnly: true,
+    route: '/media-library',
+  },
+  {
+    target: '[data-edit-lyrics]',
+    say: 'Lyrics opens the song’s words. Each part, like a verse or the chorus, becomes its own slides.',
+    watchOnly: true,
+  },
+  {
+    target: '[data-guide="library"]',
+    say: 'On the live screen, open the Library.',
+    why: 'On a wide screen the Library is always open on the left.',
+    click: true,
+    route: '/',
+    skip: () => !!find('[data-library]'),
+    done: () => !!find('[data-library]'),
+  },
+  {
+    target: '[data-library-tab="songs"]',
+    say: 'Click Songs.',
+    click: true,
+    done: () => find('[data-library-tab="songs"]')?.getAttribute('data-state') === 'active',
+  },
+  {
+    target: '[data-library-song]',
+    say: 'Pick a song. Its slides appear along the bottom.',
+    click: true,
+    done: () => !!find('[aria-label="Slides"] [data-state]'),
+  },
+  {
+    target: '[data-guide="take"]',
+    say: 'Press Take to put the first slide on the screens.',
+    why: 'The Space bar does the same.',
+    click: true,
+    skip: noteLive,
+    done: noteLive,
+    doneSay: 'The first slide is on Live.',
+  },
+  {
+    target: '[data-guide="take"]',
+    say: 'Press Take again for the next slide. Each press moves on one.',
+    why: 'The Space bar does the same, so you can follow the singers without looking down.',
+    click: true,
+    done: () => !!liveSlide() && liveSlide() !== firstLive,
+    doneSay: 'The next slide is on Live.',
+  },
+  {
+    target: '[aria-label="Slides"] [role="listitem"]:has([data-state="live"]) [data-quick-edit]',
+    say: 'To fix a word, press the pencil on the slide.',
+    why: 'Quick edit works during the service too. Saving updates the screens at once.',
+    click: true,
+    done: () => !!find('[data-quick-edit-dialog]'),
+  },
+  {
+    target: '[data-quick-look]',
+    say: 'Change the words above, or pick another look here. You see the slide as the room will.',
+    watchOnly: true,
+  },
+  {
+    target: '[data-open-designer]',
+    say: 'For more, Open the full designer.',
+    watchOnly: true,
+    skip: () => !find('[data-open-designer]'),
+  },
+  {
+    target: '[data-quick-cancel]',
+    say: 'Cancel closes it, and nothing changes.',
+    watchOnly: true,
+    click: true,
+    done: () => !find('[data-quick-edit-dialog]'),
+  },
+  {
+    target: '[data-see-all]',
+    say: 'To see every slide at once, press See all slides.',
+    watchOnly: true,
+  },
+  {
+    say: 'To change how every song looks, open Looks. Change a look, and every slide that uses it changes.',
+    watchOnly: true,
+  },
+];
+
 export interface LessonCard {
   lesson: Lesson;
   group: 'everyone' | 'setting-up' | 'before-sunday';
@@ -161,6 +257,19 @@ export const LESSONS: LessonCard[] = [
   {
     group: 'before-sunday',
     lesson: {
+      id: 'songs',
+      title: 'Songs and slides',
+      desc: 'Add a song, put it on the screens slide by slide, and fix a word or its look.',
+      steps: songs,
+      minutes: 2,
+      onStart: () => {
+        firstLive = '';
+      },
+    },
+  },
+  {
+    group: 'before-sunday',
+    lesson: {
       id: 'teach-cue',
       title: 'Teach spirit a cue',
       desc: '“When the preacher says … get … ready”, and correcting it.',
@@ -181,7 +290,6 @@ export const LESSONS: LessonCard[] = [
 /** Lessons still to come, shown so the team knows what Training will cover */
 export const COMING: { group: LessonCard['group']; title: string; desc: string }[] = [
   { group: 'setting-up', title: 'ProPresenter: verses on your own slide', desc: 'One slide your team puts up and clears. Uses ProPresenter for real.' },
-  { group: 'before-sunday', title: 'Songs and slides', desc: 'Import a song, edit a slide, change its look.' },
 ];
 
 export const GROUPS: { id: LessonCard['group']; title: string; who: string }[] = [

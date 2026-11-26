@@ -170,7 +170,7 @@ const MediaLibrary = () => {
 
   const addButton = (
     <Button asChild>
-      <label className="cursor-pointer">
+      <label className="cursor-pointer" data-add-files>
         <Plus className="w-4 h-4" />
         Add files
         <input type="file" accept="image/*,video/*,.usr,.txt" multiple onChange={handleUpload} className="hidden" aria-label="Add pictures, videos or SongSelect songs" />
@@ -269,7 +269,7 @@ const MediaLibrary = () => {
                             {[item.author, `${sections.length} section${sections.length === 1 ? '' : 's'}`, item.ccliNumber && `CCLI ${item.ccliNumber}`].filter(Boolean).join(' · ')}
                           </p>
                         </div>
-                        <Button size="sm" variant="ghost" onClick={() => handleEditSong(item)}>
+                        <Button size="sm" variant="ghost" onClick={() => handleEditSong(item)} data-edit-lyrics>
                           <Pencil className="w-4 h-4" />
                           Lyrics
                         </Button>
