@@ -415,6 +415,7 @@ SECTIONS = [
                     "**Show me**: Voice Verses does each step, with a pointer and a voice.",
                     "**Let me try**: you do each step; it waits and checks.",
                     "**Watch**: the demo, explained aloud.",
+                    "Lessons by who they are for: **Everyone** (your first Sunday, the demo, when something goes wrong), **Setting up** (set up your booth, screens and outputs) and **Before Sunday** (plan a service from a template, teach spirit a cue). Let me try in *Plan a service* plans a real service; delete it from the day if you don’t want it.",
                 ],
             },
             {
