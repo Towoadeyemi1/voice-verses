@@ -16,25 +16,70 @@
       "file": "0170d2ad.mp3",
       "ms": 718
     },
+    "0255ff98": {
+      "text": "Its background is see-through, over the camera.",
+      "file": "0255ff98.mp3",
+      "ms": 2140
+    },
+    "040563a7": {
+      "text": "After ten right in a row, you can let a cue go up by itself.",
+      "file": "040563a7.mp3",
+      "ms": 2803
+    },
     "07351175": {
       "text": "Press Take to put it on the screens.",
       "file": "07351175.mp3",
       "ms": 1844
+    },
+    "08efddb5": {
+      "text": "Type words your preacher always says, such as the ushers will come forward.",
+      "file": "08efddb5.mp3",
+      "ms": 3384
     },
     "0a4951de": {
       "text": "The next verse waits in Next, in case the preacher carries on.",
       "file": "0a4951de.mp3",
       "ms": 2998
     },
+    "0c059f65": {
+      "text": "First, pick the day on the calendar.",
+      "file": "0c059f65.mp3",
+      "ms": 1333
+    },
     "0dbbec28": {
       "text": "This is the live screen.",
       "file": "0dbbec28.mp3",
       "ms": 1105
     },
+    "13f7f078": {
+      "text": "Press Teach spirit.",
+      "file": "13f7f078.mp3",
+      "ms": 831
+    },
+    "14171b6f": {
+      "text": "On the day, the live screen follows the order by itself.",
+      "file": "14171b6f.mp3",
+      "ms": 2221
+    },
+    "14ef2ae9": {
+      "text": "A new cue only puts things in Next at first.",
+      "file": "14ef2ae9.mp3",
+      "ms": 2130
+    },
+    "182c221c": {
+      "text": "Each one says what it needs.",
+      "file": "182c221c.mp3",
+      "ms": 1404
+    },
     "1a810f16": {
       "text": "When it is fixed, you are back here by yourself.",
       "file": "1a810f16.mp3",
       "ms": 2008
+    },
+    "1cfd7451": {
+      "text": "When the preacher says these words, spirit gets something ready.",
+      "file": "1cfd7451.mp3",
+      "ms": 2501
     },
     "257c5f7c": {
       "text": "Type the verse: John 3:16.",
@@ -51,10 +96,20 @@
       "file": "2da0a3c0.mp3",
       "ms": 2404
     },
+    "2f53ddd0": {
+      "text": "Every screen this computer can reach is drawn here.",
+      "file": "2f53ddd0.mp3",
+      "ms": 2292
+    },
     "32087f55": {
       "text": "New words that are in no song are offered as a new song.",
       "file": "32087f55.mp3",
       "ms": 2880
+    },
+    "35491f38": {
+      "text": "A cue is one sentence.",
+      "file": "35491f38.mp3",
+      "ms": 1347
     },
     "39ba1403": {
       "text": "You can switch it on in Settings, Features.",
@@ -70,6 +125,16 @@
       "text": "Amber means something needs a look.",
       "file": "469e4d53.mp3",
       "ms": 1663
+    },
+    "483c82df": {
+      "text": "Then choose what to get ready.",
+      "file": "483c82df.mp3",
+      "ms": 1165
+    },
+    "4c7ed236": {
+      "text": "Open Cues, in Settings under spirit.",
+      "file": "4c7ed236.mp3",
+      "ms": 1963
     },
     "4eed956f": {
       "text": "Some of what you saw is switched off for your church.",
@@ -96,10 +161,45 @@
       "file": "57185cdd.mp3",
       "ms": 545
     },
+    "58556e72": {
+      "text": "The lower third is for the stream.",
+      "file": "58556e72.mp3",
+      "ms": 1416
+    },
+    "5c76c190": {
+      "text": "Make it a template, and it becomes your own starting order.",
+      "file": "5c76c190.mp3",
+      "ms": 2692
+    },
+    "5caf41cb": {
+      "text": "Try it now.",
+      "file": "5caf41cb.mp3",
+      "ms": 745
+    },
+    "65481e41": {
+      "text": "This is your room.",
+      "file": "65481e41.mp3",
+      "ms": 959
+    },
+    "6d181467": {
+      "text": "Each output has its own card.",
+      "file": "6d181467.mp3",
+      "ms": 1698
+    },
+    "710d707c": {
+      "text": "On the live screen, Every screen shows each output at once.",
+      "file": "710d707c.mp3",
+      "ms": 2371
+    },
     "750ce980": {
       "text": "Red is Live.",
       "file": "750ce980.mp3",
       "ms": 814
+    },
+    "759a3427": {
+      "text": "The booth check light tells you if one stops.",
+      "file": "759a3427.mp3",
+      "ms": 2114
     },
     "855b2f7c": {
       "text": "Verses go up as the preacher reads them.",
@@ -111,15 +211,45 @@
       "file": "89bc4727.mp3",
       "ms": 1909
     },
+    "8acaab5c": {
+      "text": "The stage monitor shows the preacher what is on, what is next, and the time.",
+      "file": "8acaab5c.mp3",
+      "ms": 3672
+    },
+    "8ce9a719": {
+      "text": "Each type of service has a ready-made order, with a time for each part.",
+      "file": "8ce9a719.mp3",
+      "ms": 3106
+    },
     "90283f09": {
       "text": "Next, watch the demo to see listening in action.",
       "file": "90283f09.mp3",
       "ms": 2364
     },
+    "935e992c": {
+      "text": "You press Take to show them.",
+      "file": "935e992c.mp3",
+      "ms": 1312
+    },
     "961fee5c": {
       "text": "This light checks the booth every minute.",
       "file": "961fee5c.mp3",
       "ms": 1886
+    },
+    "978b2b03": {
+      "text": "The projector is for the room.",
+      "file": "978b2b03.mp3",
+      "ms": 1358
+    },
+    "98a86a23": {
+      "text": "A part of this service, or any part of a kind.",
+      "file": "98a86a23.mp3",
+      "ms": 2336
+    },
+    "9c274199": {
+      "text": "Screens and outputs is in Settings, under In the booth.",
+      "file": "9c274199.mp3",
+      "ms": 2809
     },
     "9e0480c5": {
       "text": "As the preacher reads, the words light up one by one.",
@@ -130,6 +260,16 @@
       "text": "The preacher calls a verse.",
       "file": "a1381357.mp3",
       "ms": 1257
+    },
+    "a28fb51e": {
+      "text": "Use for the day plans that day from it.",
+      "file": "a28fb51e.mp3",
+      "ms": 1682
+    },
+    "a479d99c": {
+      "text": "Choose where it goes.",
+      "file": "a479d99c.mp3",
+      "ms": 983
     },
     "a73d663d": {
       "text": "To find a verse, click Search.",
@@ -151,15 +291,50 @@
       "file": "abfba98b.mp3",
       "ms": 1997
     },
+    "b0bd0e97": {
+      "text": "The service is planned.",
+      "file": "b0bd0e97.mp3",
+      "ms": 1018
+    },
+    "b0f13fbf": {
+      "text": "These are the ways to connect a screen.",
+      "file": "b0f13fbf.mp3",
+      "ms": 1696
+    },
+    "bd4f4cc1": {
+      "text": "This is Services.",
+      "file": "bd4f4cc1.mp3",
+      "ms": 1057
+    },
+    "c62ecc46": {
+      "text": "Your plans for the day are here.",
+      "file": "c62ecc46.mp3",
+      "ms": 1406
+    },
     "c7bf230c": {
       "text": "The verse went straight up on Live, because it was said outright.",
       "file": "c7bf230c.mp3",
       "ms": 2890
     },
+    "c8d419f5": {
+      "text": "A screen, a DeckLink port, NDI, or any browser on the network.",
+      "file": "c8d419f5.mp3",
+      "ms": 3353
+    },
+    "c94a6da0": {
+      "text": "That is Screens and outputs.",
+      "file": "c94a6da0.mp3",
+      "ms": 1391
+    },
     "ca1839a0": {
       "text": "It is what the room sees right now.",
       "file": "ca1839a0.mp3",
       "ms": 1469
+    },
+    "cc0202ce": {
+      "text": "Identify screens shows a big number on each screen, so you know which is which.",
+      "file": "cc0202ce.mp3",
+      "ms": 4311
     },
     "cc17e7c1": {
       "text": "Each thing to check has Show me the fix: it opens the right page and lights up the one thing to change.",
@@ -171,6 +346,16 @@
       "file": "cebe9da7.mp3",
       "ms": 2093
     },
+    "d692e9d6": {
+      "text": "One tap teaches it.",
+      "file": "d692e9d6.mp3",
+      "ms": 1203
+    },
+    "e1eb6cb5": {
+      "text": "spirit knows it now.",
+      "file": "e1eb6cb5.mp3",
+      "ms": 827
+    },
     "e1ef4f72": {
       "text": "Watch the pointer: it shows where each thing happens.",
       "file": "e1ef4f72.mp3",
@@ -180,6 +365,16 @@
       "text": "Press Return to get it ready.",
       "file": "e2b26f57.mp3",
       "ms": 1528
+    },
+    "e3a92486": {
+      "text": "Edit opens one to add songs, verses, and files.",
+      "file": "e3a92486.mp3",
+      "ms": 2655
+    },
+    "e3f35e9d": {
+      "text": "If spirit gets it wrong, press Not this beside Next.",
+      "file": "e3f35e9d.mp3",
+      "ms": 2841
     },
     "e5309a46": {
       "text": "Everything for the service happens here.",
@@ -195,6 +390,11 @@
       "text": "John 3:16 is waiting in Next.",
       "file": "f0279fed.mp3",
       "ms": 2022
+    },
+    "f834dd23": {
+      "text": "New template starts one from nothing, or from a service you planned.",
+      "file": "f834dd23.mp3",
+      "ms": 2738
     },
     "f83a405e": {
       "text": "When the service starts, press Start listening.",

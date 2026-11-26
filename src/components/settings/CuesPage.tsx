@@ -189,7 +189,7 @@ export function CuesPage({ service }: { service?: Service | null }) {
           ) : (
             <span>spirit also learns by watching: when you move on yourself, it notes what was said just before.</span>
           )}
-          <button type="button" className="st-btn primary" onClick={teach} disabled={!phrase.trim()}>
+          <button type="button" className="st-btn primary" onClick={teach} disabled={!phrase.trim()} data-teach-cue>
             Teach spirit
           </button>
         </div>

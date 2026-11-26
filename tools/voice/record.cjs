@@ -23,7 +23,7 @@ const MANIFEST = path.join(ROOT, 'src/lib/voice-lines.json');
 const ASR = path.join(ROOT, 'resources/models/asr');
 const MODEL_NAME = 'sherpa-onnx-pocket-tts-int8-2026-01-26';
 const MODEL_DIR = process.env.VOICE_MODEL_DIR || path.join(os.homedir(), '.cache/voice-verses', MODEL_NAME);
-const TAKES = 8;
+const TAKES = Number((process.argv.find((a) => a.startsWith('--takes=')) ?? '').slice(8)) || 8;
 const all = process.argv.includes('--all');
 /** --only=<words>: record again only the sentences containing them */
 const only = (process.argv.find((a) => a.startsWith('--only=')) ?? '').slice(7).toLowerCase();
@@ -78,7 +78,7 @@ const recognizer = new sherpa.OfflineRecognizer({
 });
 
 /** Words to compare: lower case, numbers kept ("3:16" → 3 16), sound-alikes the recogniser spells its own way */
-const SAME = { versus: 'verses' };
+const SAME = { versus: 'verses', q: 'cue', queue: 'cue', qs: 'cues', queues: 'cues' };
 const NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
 NUMBERS.forEach((n, i) => (SAME[n] = String(i)));
 const words = (text) =>

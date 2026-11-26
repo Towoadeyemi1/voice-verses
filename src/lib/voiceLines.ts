@@ -21,7 +21,7 @@ export function sentencesOf(text: string): string[] {
   return text
     .replace(/\s+/g, ' ')
     .trim()
-    .split(/(?<=[.!?…])\s+(?=[A-Z0-9“"‘'])/)
+    .split(/(?<=[.!?…])\s+(?=[A-Za-z0-9“"‘'])/)
     .map((s) => s.trim())
     .filter(Boolean);
 }

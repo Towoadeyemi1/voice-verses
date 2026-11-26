@@ -157,7 +157,7 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
   function room() {
     return (
       <div className="st-page" data-screens-page>
-        <div className="st-room">
+        <div className="st-room" data-guide="room">
           <div className="st-devices" role="group" aria-label="Your screens">
             {devices.map((d) => deviceButton(d))}
           </div>
@@ -168,7 +168,7 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
                 : 'Click a screen to choose what it shows. Plug in a display or a DeckLink port and it appears here by itself.'}
             </p>
             {desktop!.screens.identify && (
-              <button type="button" className="st-btn" onClick={() => desktop!.screens.identify?.()} title="A big number on every display for a few seconds">
+              <button type="button" className="st-btn" onClick={() => desktop!.screens.identify?.()} title="A big number on every display for a few seconds" data-identify>
                 <MonitorUp />
                 Identify screens
               </button>
@@ -554,7 +554,7 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
                   )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button type="button" className="st-btn link self-start">
+                      <button type="button" className="st-btn link self-start" data-send-output={output}>
                         <Plus />
                         {none ? 'Choose where it goes' : 'Send it somewhere else too'}
                       </button>
@@ -642,7 +642,7 @@ export function ScreenSettings({ onGo }: { onGo?: (pane: Pane) => void }) {
     ];
     return (
       <Section title="Ways to connect a screen">
-        <div className="st-ways">
+        <div className="st-ways" data-guide="ways">
           {tiles.map((t) => (
             <div key={t.key} className="st-way" data-way={t.key}>
               <div className="head">

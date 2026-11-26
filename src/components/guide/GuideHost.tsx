@@ -20,6 +20,12 @@ const boxOf = (el: HTMLElement | null): Box | null => {
   return r.width || r.height ? { x: r.left - PAD, y: r.top - PAD, w: r.width + PAD * 2, h: r.height + PAD * 2 } : null;
 };
 
+/** Wholly on screen (with a little room for the card) */
+const inView = (el: HTMLElement): boolean => {
+  const r = el.getBoundingClientRect();
+  return r.top >= 60 && r.bottom <= window.innerHeight - 60 && r.left >= 0 && r.right <= window.innerWidth;
+};
+
 /** What a wrong click landed on, in the volunteer's words ("Settings", "Take") */
 const nameOf = (x: number, y: number, overlay: HTMLElement | null): string => {
   const under = document.elementsFromPoint(x, y).find((el) => !overlay?.contains(el));
@@ -131,6 +137,7 @@ export function GuideHost() {
 
   const lessonRef = useRef<Lesson | null>(null);
   lessonRef.current = lesson;
+  const modeRef = useRef<GuideMode>('show');
   const end = useCallback((finished: boolean) => {
     run.current++;
     setTrainingVoice(false);
@@ -139,6 +146,11 @@ export function GuideHost() {
     const l = lessonRef.current;
     lessonRef.current = null;
     if (l) {
+      try {
+        l.onEnd?.(modeRef.current, finished);
+      } catch {
+        // Tidying up never stops the lesson ending
+      }
       if (finished)
         saveProgress((p) => {
           const { last: _last, ...rest } = p;
@@ -176,9 +188,24 @@ export function GuideHost() {
         target.current = s.target;
         const el = s.target ? (await until(() => !!find(s.target), 6000, alive)) && find(s.target) : null;
         if (!alive()) return;
+        // A control further down the page: bring it into view first, and light it once it has arrived
+        if (el && !inView(el)) {
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          await wait(550);
+          if (!alive()) return;
+        }
         setBox(boxOf(el));
         const show = m === 'show' || s.watchOnly;
         await whilePaused();
+        if (show && s.tryOnly) {
+          // Show me only points at a step that would change something real
+          pointAt(el);
+          await wait(el ? 750 : 200);
+          await speak(s.say);
+          if (!alive()) return;
+          await wait(450);
+          continue;
+        }
         if (show) {
           pointAt(el);
           await wait(el ? 750 : 200);
@@ -228,6 +255,12 @@ export function GuideHost() {
       const l = card.lesson;
       if (l.practice !== false) setPractice(true, l.title);
       lessonRef.current = l;
+      modeRef.current = m;
+      try {
+        l.onStart?.(m);
+      } catch {
+        // A lesson runs even if its set-up couldn't
+      }
       setLesson(l);
       setMode(m);
       setPaused(false);
