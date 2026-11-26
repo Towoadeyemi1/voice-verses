@@ -105,6 +105,11 @@ jobs:
           npx esbuild tools/voice/check-lines.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/voice-lines.cjs --log-level=error
           node /tmp/voice-lines.cjs
 
+      - name: "CHECK 8c: Bible files in every format read the same"
+        run: |
+          npx esbuild tools/checks/bible-files.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/bible-files.cjs --log-level=error
+          node /tmp/bible-files.cjs
+
       - name: "CHECK 9: ProPresenter client"
         run: node tools/propresenter-check.mjs
 
