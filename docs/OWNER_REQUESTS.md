@@ -499,6 +499,16 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - ⚠ ProPresenter must not use the eGPU display.
 - ⏳ The owner's team re-patches the switcher input and tests.
 
+## "Also the demo voice is crazy robotic"
+
+(26 Nov 2026.) The guide spoke with the computer's built-in voice (speechSynthesis), which on many computers is an old robotic one.
+- ⏳ A natural voice that works offline: a neural voice (Kokoro) through the speech engine Voice Verses already ships (sherpa-onnx), about 100 MB more in the installer. Samples to the owner first; the computer's own voice stays as the fallback (and in the web version).
+
+## "The part of the preview and live is great, but some could want the 3 screens rather than just one live. Is there a way to add a toggle to switch it from 1 live screen to the 3 screens or as many as added? And still look very aesthetically beautiful and awesome."
+
+(26 Nov 2026.)
+- ⏳ Mock-up first (`docs/design/all-screens.html`): a switch above Live, **One screen | Every screen**. Every screen shows each output that is on (projector, stream lower third, stage monitor, and wherever each goes) as its own live picture, with Take and Next as now.
+
 ## Process
 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
