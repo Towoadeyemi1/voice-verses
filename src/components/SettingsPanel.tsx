@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AudioLines, BookOpen, Download, FolderSync, Image as ImageIcon, Mic, MonitorUp, Music2, Network, Radio, SlidersHorizontal, Sparkles, Workflow, X, type LucideIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,6 +19,7 @@ import { SpiritPage, useSpirit } from './settings/SpiritPage';
 import { CuesPage } from './settings/CuesPage';
 import { MovesPage } from './settings/MovesPage';
 import { DevicesPage } from './settings/DevicesPage';
+import { showMeTheFix } from '@/lib/fixGuide';
 import { UpdatesSection } from './settings/UpdatesSection';
 import { useUpdates } from '@/hooks/use-updates';
 import { MOVES, moveCanBeHandsFree, moveTrust, noticed } from '@/lib/spirit';
@@ -135,12 +136,32 @@ export const SettingsPanel = ({
     };
   }, [service, serviceIsToday, pane]);
 
-  const fix = (f: BoothFix) => {
+  // Show me the fix (1.19.11) from the Booth check page: the page, the control lit up, then back to the Booth check
+  const mounted = useRef(true);
+  useEffect(
+    () => () => {
+      // Its fix ends at the next look (a fix started on the live screen goes on)
+      mounted.current = false;
+    },
+    [],
+  );
+  const fix = (f: BoothFix, item?: { id: string }) => {
     if (f.action === 'microphone') void desktop?.microphone?.openSettings();
     else if (f.action === 'plan') {
       onClose?.();
       navigate('/service-planner');
-    } else if (f.pane) setPane(f.pane === 'network' ? 'screens' : f.pane);
+    } else if (f.pane) {
+      void showMeTheFix(f, {
+        open: (p) => setPane(p === 'network' ? 'screens' : p),
+        isOpen: () => mounted.current,
+        close: () => setPane('booth'),
+        check: async () => {
+          if (!item) return false;
+          const found = (await runBoothCheck({ service, serviceIsToday })).find((c) => c.id === item.id);
+          return !found || found.state === 'ok';
+        },
+      });
+    }
   };
 
   const todo = booth ? needsAttention(booth) : [];

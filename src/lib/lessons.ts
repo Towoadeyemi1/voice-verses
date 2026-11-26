@@ -43,8 +43,8 @@ const firstSunday: GuideStep[] = [
 
 const boothCheck: GuideStep[] = [
   { target: '[data-booth-check]', say: 'This light checks the booth every minute. Amber means something needs a look.', click: true, done: () => !!document.querySelector('[data-booth-check-list]'), route: '/' },
-  { target: '[data-booth-check-list]', say: 'Each thing to check has a button that takes you straight to it.', watchOnly: true },
-  { target: '[data-booth-check-list]', say: 'During a service, a warning appears with the same button. Fix it, and carry on.', watchOnly: true, key: 'Escape' },
+  { target: '[data-booth-check-list]', say: 'Each thing to check has Show me the fix: it opens the right page and lights up the one thing to change.', watchOnly: true },
+  { target: '[data-booth-check-list]', say: 'During a service, a warning appears with the same button. When it is fixed, you are back here by yourself.', watchOnly: true, key: 'Escape' },
 ];
 
 export interface LessonCard {
@@ -57,7 +57,7 @@ export interface LessonCard {
 export const LESSONS: LessonCard[] = [
   { group: 'everyone', lesson: { id: 'first-sunday', title: 'Your first Sunday', desc: 'Red and green, find a verse, Take, Clear, and listening.', steps: firstSunday, minutes: 3 } },
   { group: 'everyone', kind: 'demo', lesson: { id: 'demo', title: 'Watch the demo', desc: 'A short sermon and a hymn, with every step pointed out and explained aloud.', steps: [], minutes: 2 } },
-  { group: 'everyone', lesson: { id: 'booth-check', title: 'When something goes wrong', desc: 'The booth check light, and the button that fixes each thing.', steps: boothCheck, minutes: 1 } },
+  { group: 'everyone', lesson: { id: 'booth-check', title: 'When something goes wrong', desc: 'The booth check light, and Show me the fix on each thing to check.', steps: boothCheck, minutes: 1 } },
   { group: 'setting-up', kind: 'booth-setup', lesson: { id: 'booth-setup', title: 'Set up your booth', desc: 'Voice Verses finds your microphone, screens and ProPresenter; you confirm each.', steps: [], minutes: 5 } },
 ];
 

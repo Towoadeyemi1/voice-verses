@@ -275,6 +275,14 @@ const esc = async (win) => {
   await win.locator('[data-booth-check]').click();
   await win.waitForTimeout(900);
   await shot(win, 'tools-3-booth-check', [m(win.locator('[data-booth-check]'), 1, 'bl'), m(win.locator('[data-booth-check-list]'), 2, 'tl')]);
+  // Show me the fix: the right page, the one control lit up, and the line that says what to change
+  const fixBtn = win.locator('[data-booth-check-list] [data-show-fix="screens"], [data-booth-check-list] [data-show-fix]').first();
+  if (await fixBtn.count()) {
+    await fixBtn.click();
+    await win.locator('[data-guide-narration]').waitFor({ timeout: 6000 }).catch(() => null);
+    await win.waitForTimeout(1400);
+    await shot(win, 'tools-4-show-me-the-fix', [m(win.locator('[data-guide-spotlight]'), 1, 'tl', false), m(win.locator('[data-guide-narration]'), 2, 'tl', false)]);
+  } else missing.push('tools-4-show-me-the-fix (nothing to check)');
   await esc(win);
 
   // ---- 7. Settings ----

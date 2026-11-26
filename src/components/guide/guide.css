@@ -19,6 +19,10 @@
 .vv-guide .card .where { flex: 1; min-width: 0; font-size: 13px; color: var(--s-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vv-guide .card .grow { flex: 1; }
 .vv-guide .card .say { font-size: 19px; line-height: 1.35; font-weight: 700; letter-spacing: -.01em; }
+.vv-guide .card .say.done { color: var(--s-accent); display: flex; gap: 8px; align-items: flex-start; }
+.vv-guide .card .say .tick { width: 22px; height: 22px; flex: none; margin-top: 2px; }
+.vv-guide .card .note { font-size: 13.5px; color: var(--s-ink-2); }
+.vv-guide .card.narration .st-btn { align-self: flex-start; }
 .vv-guide .card .why { font-size: 14px; line-height: 1.5; color: var(--s-ink-2); }
 .vv-guide .card .why summary { cursor: pointer; color: var(--s-accent); font-weight: 600; font-size: 13.5px; width: fit-content; }
 .vv-guide .card .ok { margin: 0; font-size: 15px; font-weight: 700; color: var(--s-accent); }

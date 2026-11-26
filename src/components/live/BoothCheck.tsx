@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, CircleAlert, Loader2, RefreshCw, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, CircleAlert, Loader2, RefreshCw } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { BoothCheckItem, needsAttention, runBoothCheck, runLiveChecks } from '@/lib/boothCheck';
+import { BoothCheckItem, needsAttention, runBoothCheck, runLiveChecks, LISTENING_FIX } from '@/lib/boothCheck';
 import { Mark } from '@/components/settings/kit';
 
 export type BoothFix = NonNullable<BoothCheckItem['fix']>;
@@ -13,7 +13,7 @@ const WORD = { ok: 'Ready', warn: 'Check', problem: 'Not working' };
  * Fix button. Checks again every minute, and whenever the list is opened.
  * (Amber, never red or green: those mean On Air and Next.)
  */
-export function BoothCheckLight({ service, serviceIsToday, onFix }: { service?: { name: string } | null; serviceIsToday: boolean; onFix: (fix: BoothFix) => void }) {
+export function BoothCheckLight({ service, serviceIsToday, onFix }: { service?: { name: string } | null; serviceIsToday: boolean; onFix: (fix: BoothFix, item: BoothCheckItem) => void }) {
   const [items, setItems] = useState<BoothCheckItem[] | null>(null);
   const [checking, setChecking] = useState(false);
   const [open, setOpen] = useState(false);
@@ -97,10 +97,11 @@ export function BoothCheckLight({ service, serviceIsToday, onFix }: { service?: 
                   className="st-btn soft"
                   onClick={() => {
                     setOpen(false);
-                    onFix(item.fix!);
+                    onFix(item.fix!, item);
                   }}
+                  data-show-fix={item.id}
                 >
-                  {item.fix.label}
+                  {item.fix.pane ? 'Show me the fix' : item.fix.label}
                 </button>
               )}
             </li>
@@ -119,7 +120,7 @@ const WATCH_MS = 5_000;
  * or a screen, DeckLink port or ProPresenter has stopped. Each can be closed;
  * it comes back only if it clears and happens again.
  */
-export function Guardian({ listening, muted, lastSound, onFix }: { listening: boolean; muted: boolean; lastSound: () => number; onFix: (fix: BoothFix) => void }) {
+export function Guardian({ listening, muted, lastSound, onFix }: { listening: boolean; muted: boolean; lastSound: () => number; onFix: (fix: BoothFix, item: BoothCheckItem) => void }) {
   const [problems, setProblems] = useState<BoothCheckItem[]>([]);
   const [closed, setClosed] = useState<Set<string>>(new Set());
   const state = useRef({ listening, muted, lastSound });
@@ -135,8 +136,8 @@ export function Guardian({ listening, muted, lastSound, onFix }: { listening: bo
           id: 'silent',
           label: 'Microphone',
           state: 'problem',
-          detail: 'No sound for 20 seconds. Check the desk channel and the input in Listening settings.',
-          fix: { label: 'Listening settings', pane: 'listening' },
+          detail: 'No sound for 20 seconds. Voice Verses can’t hear the preacher, so it can’t find verses.',
+          fix: LISTENING_FIX,
         });
       if (stopped) return;
       setProblems(found);
@@ -162,12 +163,12 @@ export function Guardian({ listening, muted, lastSound, onFix }: { listening: bo
             <b className="font-semibold">{p.label}:</b> {p.detail}
           </span>
           {p.fix && (
-            <button type="button" className="st-btn soft" onClick={() => onFix(p.fix!)}>
-              {p.fix.label}
+            <button type="button" className={p.fix.pane ? 'st-btn primary' : 'st-btn soft'} onClick={() => onFix(p.fix!, p)} data-show-fix={p.id}>
+              {p.fix.pane ? 'Show me the fix' : p.fix.label}
             </button>
           )}
-          <button type="button" className="st-iconbtn" aria-label="Close this warning" title="Close this warning" onClick={() => setClosed((was) => new Set([...was, p.id]))}>
-            <X className="w-4 h-4" />
+          <button type="button" className="st-btn ghost" title="Hide this warning; it comes back if it happens again" onClick={() => setClosed((was) => new Set([...was, p.id]))}>
+            Not now
           </button>
         </div>
       ))}
