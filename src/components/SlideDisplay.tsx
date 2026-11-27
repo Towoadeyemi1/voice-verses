@@ -128,11 +128,13 @@ export const SlideDisplay = ({ slide, className = '', hideReference = false }: S
 
     case 'image':
       return (
-        <div ref={containerRef} className={`relative h-full w-full ${className}`}>
+        <div ref={containerRef} className={`relative h-full w-full bg-black ${className}`}>
+          {/* The whole picture, never cropped: an announcement or a presentation page loses no words
+              on a screen of another shape (black bars instead), and the stage sees what the room sees */}
           <img
             src={slide.imageUrl}
             alt={slide.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
           {slide.caption && (
             <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white" style={{ padding: `${Math.max(12, 32 * scale)}px` }}>
