@@ -131,6 +131,9 @@ jobs:
           npx esbuild tools/checks/import-check.ts --bundle --platform=node --alias:@=./src --outfile=/tmp/import-check.cjs --log-level=error
           node /tmp/import-check.cjs
 
+      - name: "CHECK 14: Every colour used for words reads at 4.5:1 or more"
+        run: node tools/checks/contrast-tokens.mjs
+
       - name: QA Summary
         if: success()
         run: |

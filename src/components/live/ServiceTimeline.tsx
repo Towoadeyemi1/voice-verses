@@ -117,17 +117,18 @@ export const ServiceTimeline = ({
               type="button"
               onClick={() => onPick(p.item)}
               title={`${clock(begins + p.start)} · ${p.section}: ${p.item.name}`}
-              className={`relative flex-shrink-0 h-11 rounded-[10px] px-3 flex items-center gap-2 overflow-hidden whitespace-nowrap text-[13px] font-semibold transition ${past ? 'opacity-40' : ''} ${on ? 'text-white' : 'text-foreground hover:brightness-110'}`}
-              style={{ width: Math.max(on ? 220 : 132, p.minutes * PX_PER_MINUTE), background: on ? p.color : `color-mix(in oklab, ${p.color} 16%, transparent)` }}
+              className={`relative flex-shrink-0 h-11 rounded-[10px] px-3 flex items-center gap-2 overflow-hidden whitespace-nowrap text-[13px] font-semibold transition ${on ? 'text-white' : past ? 'text-muted-foreground hover:brightness-110' : 'text-foreground hover:brightness-110'}`}
+              // Past parts are quieter by colour (a fainter tint, grey words), never by fading: their times stay readable
+              style={{ width: Math.max(on ? 220 : 132, p.minutes * PX_PER_MINUTE), background: on ? p.color : `color-mix(in oklab, ${p.color} ${past ? 7 : 16}%, transparent)` }}
             >
               {progress > 0 && (
                 <span className="absolute inset-y-0 left-0 bg-black/15 pointer-events-none" style={{ width: `${progress * 100}%` }}>
                   <span className="absolute right-0 top-1.5 bottom-1.5 w-0.5 rounded bg-white" />
                 </span>
               )}
-              <span className="relative w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: on ? '#fff' : p.color }} />
+              <span className="relative w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: on ? '#fff' : p.color, opacity: past ? 0.5 : 1 }} />
               <span className="relative truncate">{p.item.name}</span>
-              <span className={`relative text-xs font-medium tabular-nums ${on ? 'text-white/75' : 'text-muted-foreground'}`} data-time-left={timedId === p.item.id && timeLeft ? '' : undefined}>
+              <span className={`relative text-xs font-medium tabular-nums ${on ? 'text-white' : 'text-muted-foreground'}`} data-time-left={timedId === p.item.id && timeLeft ? '' : undefined}>
                 {timedId === p.item.id && timeLeft ? timeLeft : clock(begins + p.start)}
               </span>
             </button>

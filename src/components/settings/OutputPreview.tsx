@@ -23,7 +23,7 @@ export function OutputPreview({ output, className = '' }: { output: ScreenOutput
 
   if (!output)
     return (
-      <span className={`st-screen grid place-items-center aspect-video text-[11px] font-semibold text-white/40 ${className}`} aria-label="Shows nothing">
+      <span className={`st-screen grid place-items-center aspect-video text-[11px] font-semibold text-white/70 ${className}`} aria-label="Shows nothing">
         Nothing
       </span>
     );

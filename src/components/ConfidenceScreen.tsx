@@ -23,6 +23,9 @@ export interface ConfidenceSettings {
   nextVerseCount: number;
 }
 
+/** What each kind of slide is called on the stage (plain words, not the app's own names) */
+const KIND: Record<string, string> = { scripture: 'Scripture', lyrics: 'Song', announcement: 'Announcement', image: 'Picture', video: 'Video', blank: 'Blank' };
+
 export const defaultConfidenceSettings: ConfidenceSettings = {
   currentVerseFontSize: 60,
   nextVerseFontSize: 24,
@@ -69,7 +72,9 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
     const snippetOf = (slide: Slide) => {
       if (slide.type === 'scripture' && slide.verse) return plainVerseText(slide.verse.text).split(' ').slice(0, 7).join(' ') + '...';
       if (slide.type === 'lyrics' || slide.type === 'announcement') return (slide.content?.split('\n')[0] ?? '').slice(0, 50) + '...';
-      return 'Media slide';
+      if (slide.type === 'video') return 'Video';
+      if (slide.type === 'image') return 'Picture';
+      return 'A blank screen';
     };
 
     // Opened mid-service, or reloaded: catch up first, then follow changes
@@ -166,15 +171,15 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
           <div className="flex justify-between items-center mb-8 pb-4 border-b" style={{ borderColor: `${settings.textColor}20` }}>
             <div style={{ fontSize: `${settings.clockFontSize * 0.67}px` }} className="font-semibold">
               {currentSlide ? (
-                <span style={{ color: `${settings.textColor}70` }}>
-                  {currentSlide.title} <span className="opacity-50">• {currentSlide.type}</span>
+                <span style={{ color: `${settings.textColor}B3` }}>
+                  {currentSlide.title} <span>• {KIND[currentSlide.type] ?? currentSlide.type}</span>
                 </span>
               ) : currentVerse ? (
-                <span style={{ color: `${settings.textColor}70` }}>
+                <span style={{ color: `${settings.textColor}B3` }}>
                   {currentVerse.book} {currentVerse.chapter}
                 </span>
               ) : (
-                <span style={{ color: `${settings.textColor}70` }}>No content selected</span>
+                <span style={{ color: `${settings.textColor}B3` }}>No content selected</span>
               )}
             </div>
             <div className="flex items-center gap-8">
@@ -240,7 +245,7 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
             ) : (
               <div 
                 className="text-center"
-                style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: `${settings.textColor}70` }}
+                style={{ fontSize: `${settings.currentVerseFontSize * 0.67}px`, color: `${settings.textColor}B3` }}
               >
                 Waiting for content...
               </div>

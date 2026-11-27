@@ -3,7 +3,7 @@
    real thing at the top of each page. Scoped to .vvs so nothing leaks. */
 .vvs {
   --s-win: #161518; --s-surface: #1f1d22; --s-raised: #26232a; --s-sunken: #121114;
-  --s-ink: #f4f1f6; --s-ink-2: #b2abb7; --s-ink-3: #78727e;
+  --s-ink: #f4f1f6; --s-ink-2: #b2abb7; --s-ink-3: #9d97a3; /* 4.5:1 or more on every surface here (was #78727e, 3.6:1) */
   --s-line: rgba(255, 245, 255, .07); --s-fill: rgba(255, 245, 255, .05); --s-fill-2: rgba(255, 245, 255, .09);
   --s-accent: hsl(var(--primary)); --s-accent-ink: hsl(var(--primary-foreground)); --s-accent-soft: hsl(var(--primary) / .16);
   --s-warn: #f5a524; --s-warn-soft: rgba(245, 165, 36, .14);
@@ -72,7 +72,7 @@
 .vvs .st-row .text { flex: 1; min-width: 0; }
 .vvs .st-row .t { display: block; font-size: 14.5px; font-weight: 600; }
 .vvs .st-row .d { display: block; font-size: 13px; color: var(--s-ink-2); margin-top: 1px; }
-.vvs .st-row.dim .t, .vvs .st-row.dim .d { opacity: .55; }
+.vvs .st-row.dim .t, .vvs .st-row.dim .d { color: var(--s-ink-3); } /* quieter by colour, never by fading */
 .vvs .st-row.attention { background: linear-gradient(90deg, var(--s-warn-soft), transparent 55%); }
 .vvs .st-row.clickable { cursor: pointer; }
 .vvs .st-row.clickable:hover { background: var(--s-fill); }
@@ -343,7 +343,8 @@
 .vvs .sp-cue.off .p { text-decoration: line-through; color: var(--s-ink-3); }
 .vvs .sp-cue.move .p { font: 600 14.5px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", Figtree, system-ui, sans-serif; }
 .vvs .sp-cue.move .p small { color: var(--s-ink-2); font-weight: 500; font-size: 13px; }
-.vvs .sp-cue.soon .p, .vvs .sp-cue.soon .sp-record { opacity: .55; }
+.vvs .sp-cue.soon .p, .vvs .sp-cue.soon .p small { color: var(--s-ink-3); }
+.vvs .sp-cue.soon .sp-record { opacity: .55; }
 .vvs .sp-parthead { display: flex; align-items: center; gap: 10px; }
 .vvs .sp-parthead h3 { margin: 0; font-size: 15px; font-weight: 650; flex: 1; }
 .vvs .sp-heard { max-height: 360px; overflow-y: auto; }
@@ -426,7 +427,8 @@
 .vvs .tr-card p { margin: 0; font-size: 13.5px; color: var(--s-ink-2); line-height: 1.45; }
 .vvs .tr-card .meta { font-size: 13px; color: var(--s-ink-3); }
 .vvs .tr-card .acts { display: flex; gap: 6px; margin-top: auto; padding-top: 6px; flex-wrap: wrap; }
-.vvs .tr-card.soon { opacity: .6; }
+.vvs .tr-card.soon { background: transparent; box-shadow: inset 0 0 0 1px var(--s-fill-2); }
+.vvs .tr-card.soon .top b, .vvs .tr-card.soon p { color: var(--s-ink-2); }
 .vvs .tr-side { display: flex; flex-direction: column; gap: 14px; }
 .vvs .tr-box { padding: 18px; border-radius: 16px; background: var(--s-surface); display: flex; flex-direction: column; gap: 10px; }
 .vvs .tr-box > b { font-size: 15px; }

@@ -81,7 +81,7 @@ export const ServiceLogoSettings = ({ serviceId }: ServiceLogoSettingsProps) => 
         {logoUrl ? (
           <img src={logoUrl} alt="The logo" className="max-h-[70%] max-w-[70%] object-contain" />
         ) : (
-          <span className="flex flex-col items-center gap-2 text-white/40 text-[13px] font-semibold">
+          <span className="flex flex-col items-center gap-2 text-white/70 text-[13px] font-semibold">
             <ImageIcon className="w-7 h-7" />
             No logo yet
           </span>
