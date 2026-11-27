@@ -31,7 +31,7 @@ All colors MUST be HSL.
     --secondary-foreground: 280 14% 96%;
 
     --muted: 260 7% 14%;
-    --muted-foreground: 270 4% 62%;
+    --muted-foreground: 270 5% 66%; /* 4.5:1 or more on every surface, raised buttons included */
 
     --accent: 260 7% 17%;
     --accent-foreground: 280 14% 96%;
@@ -47,6 +47,8 @@ All colors MUST be HSL.
 
     /* On air and next (broadcast red and green), always with their words */
     --live: 3 100% 61%;
+    /* The same red, deep enough for white words on it (4.9:1): badges such as "Live · V1" */
+    --live-fill: 3 80% 48%;
     --next: 135 64% 50%;
 
     --success: 142 71% 45%;

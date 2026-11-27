@@ -529,7 +529,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 (26 Nov 2026, in the `Foundation` repository's `VOICE-VERSES.md`.) Three parts, in order:
 - ✅ 1.19.18 Part 1: move onto the master copy. `docs/FOUNDATION.md`, `docs/foundation/design/` (kit, fonts, contrast checker) and `.claude/skills/foundation/` synced from the master (version in `docs/foundation/VERSION`); the old kit removed; CLAUDE.md says never edit it here; Voice Verses keeps its own look (D38).
-- ⏳ Part 2: every word readable (WCAG AA measured on the real pixels, both themes, 1440 and 2560 wide).
+- ✅ 1.19.19 Part 2: every word readable. Measured on the real pixels on 56 screens (every page, every Settings page, the palette, a dialog, a lesson; 1440 and 2560 wide; the app has one theme, dark, until light mode ships): 3775 of 4020 pieces of text passed before (93.9%), 4020 of 4020 after. Fixed at the colours (Settings' quiet grey, the muted grey, white on the Live badge, nothing faded with opacity). `tools/e2e/contrast.cjs`, CI check 14, `docs/readability.md`.
 - ⏳ Part 3: a better look, mock-up first.
 
 ## "Add the repository Foundation… Bring it up to date with this project's foundation and design kit" / "Merge it and start the switch"
@@ -538,7 +538,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 ## "I do not understand this companion rubbish, and how it even got in to the development discussion we are having"
 
-(27 Nov 2026.) 💬 It came from "Stream Deck and remote control" in the list of what other presentation apps have (above), which Claude picked when told "You decide where it is best to start" because it needed nothing from the owner, without asking whether the booth has a Stream Deck or explaining it first. It is an optional add-on (1.19.16, `tools/companion-module/`) that changes nothing in the app unless a church installs it in Bitfocus Companion. Offered to remove it; ⏳ the owner's call. Lesson recorded: ask whether an add-on matters to the owner before building it.
+(27 Nov 2026.) 💬 It came from "Stream Deck and remote control" in the list of what other presentation apps have (above), which Claude picked when told "You decide where it is best to start" because it needed nothing from the owner, without asking whether the booth has a Stream Deck or explaining it first. It is an optional add-on (1.19.16, `tools/companion-module/`) that changes nothing in the app unless a church installs it in Bitfocus Companion. Offered to remove it. The owner: "Just leave it in it, I thought it has requirements affecting the app" (27 Nov 2026). ✅ Kept: the MIT licence covers only `tools/companion-module/`; nothing in the app depends on it or changes because of it. Lesson recorded: ask whether an add-on matters to the owner before building it.
 
 ## "Do you know it is safe to clear to logo first when spirit or any automation is running the service until they are sure the next segment has actually kicked off, as sometimes it might not follow the time schedule accurately. If unsure, actual user/pilot engagement should be requested."
 
@@ -556,3 +556,13 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
 - "Are all of the decisions and steps being added and created as skills, rules, etc. that can be used to recreate this app… without repeating mistakes?" ✅ 1.3.8
 - Apple Developer account: recommended (organisation) before signing and notarising. 💬 waiting on the owner
+
+## "I want the best for the stage monitor. Anyone on stage should see clearly… they should be able to see the current displayed item, and what is next if there is a next item on queue like scriptures, announcements, songs etc. … How does it manage these different media and show them the way it should and very quality?"
+
+(27 Nov 2026.) How it works today (screenshots taken 27 Nov): a verse shows its reference and the verse, fitted large; a song or announcement shows its words large and plain, white on black (not the projector's background), under its title; a picture or video shows the picture; Coming up next (gold, right) shows the next slide of the part loaded, or the next verse in the Bible; plus the clock, stage countdowns, stage messages and notes.
+- ✅ 1.19.19: every header line readable (70%, was 44%) and kinds in plain words (Song, Scripture, Picture, Video; no "Media slide").
+- 💬 "Our announcements most times are image slides or presentation slides. How will that look?" (27 Nov 2026): they were cut off wherever their shape differed from the box (always on the stage monitor; on the projector when the screen's shape differs, e.g. a 4:3 PDF page on a 16:9 projector lost its title and bottom line). ✅ 1.19.20: shown whole, on black.
+- 💬 "Why does it write picture in the coming next area instead of showing what is next?" ✅ 1.19.20: Coming up next shows the next picture itself.
+- 💬 "Do you think [the yellow Coming up next] will be visible?" Readable in colour (black on gold) but too small for the platform (20–24 px on 1080: about 1 cm on a 55" TV, readable to about 1 m; people stand 3–5 m away) and the bright panel glares in a dark room. Goes into the mock-up.
+- ✅ The owner said yes (27 Nov 2026) to: merge the readability change, ship the picture fix, and make the stage monitor mock-up.
+- ⏳ Proposed, mock-up first: the name shown once, not three times, so the words can be larger; Next named by its part (Verse 2, Chorus) and in larger type, the gold panel used fully; Next that carries on into the next part of the order of service (the next song, reading or announcement) when a part ends; sizes checked for reading from the platform.

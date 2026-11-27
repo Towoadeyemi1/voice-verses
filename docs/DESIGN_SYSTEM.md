@@ -70,12 +70,16 @@ Monitors take the projector's shape (`usePreviewStage('projection')`). The outpu
 --glass: rgba(250,247,242,.72);
 /* Dark ("warm graphite"), the default in the booth */
 --page: #0e0d10; --win: #161518; --surface: #1f1d22; --sunken: #121114;
---ink: #f4f1f6; --ink-2: #b2abb7; --ink-3: #78727e; --line: rgba(255,245,255,.07);
+--ink: #f4f1f6; --ink-2: #b2abb7; --ink-3: #9d97a3; --line: rgba(255,245,255,.07); /* ink-3 was #78727e (3.6:1), 1.19.19 */
 --glass: rgba(30,28,34,.7);
 /* Meaning (both themes) */
 --air: #ff3b30 / #ff453a (dark);   /* ON AIR */
 --next: #1fb954 / #30d158 (dark);  /* NEXT */
 --accent: the colour team's main colour; --accent-soft: the same at about 16% alpha
+/* Words on a meaning colour get their own value, separate from the fill (1.19.19) */
+--live-fill: hsl(3 80% 48%);       /* white words on red ("Live · V1"): 4.9:1; --live stays for frames and dots */
+/* Next badges carry black words on --next (7:1 and more) */
+/* The app's shadcn greys: --muted-foreground hsl(270 5% 66%) (was 62%), 4.5:1 on every surface */
 ```
 
 - **Parts of the service** (gradient `c1 → c2` at 135°):
@@ -113,6 +117,11 @@ Monitors take the projector's shape (`usePreviewStage('projection')`). The outpu
 9. Motion is short (150–300 ms) and meaningful: the word highlight, a crossfade on Take, the playhead. Respect `prefers-reduced-motion`.
 10. Glass only on the toolbar and the palette.
 11. **On the screens (outputs), motion serves the words.** Moving backgrounds are slow (cycles of 12–90 s), soft and dark enough under text, with a vignette; speed 0 makes them still. Transitions are short (0.5 s by default). Small thumbnails stand still, and so do the slide strip and grid and the Settings previews (`<StillMotion>`, 1.16.0). Live and Next always move, so the operator sees what the room will see (the owner: Next must stay a true preview). The operator's UI rule 9 (150–300 ms) is for the app itself, not the projector.
+12. **Every word readable (1.19.19, FOUNDATION §5).** Every piece of text reaches 4.5:1 against the real pixels behind it (3:1 for text 24px and up, or 18.66px bold, and for a lone symbol), measured on every screen at 1440 × 900 and 2560 × 1440 by `tools/e2e/contrast.cjs`; `tools/checks/contrast-tokens.mjs` (CI check 14) stops the fixed colours from going back. So:
+    - A colour that carries words has its own value, separate from the fill it is named after (`--live-fill` for white words on red).
+    - Things that are past, off or coming later are **quieter by colour, never by fading**: grey words (`--s-ink-3`, `--muted-foreground`) and a fainter tint, not `opacity` on the words. Past parts on the timeline keep readable times.
+    - Words on a picture of a screen (the monitors, the screen tiles) are at least 70% white.
+    - Disabled controls are exempt; past or secondary information is not.
 
 ## Settings and other settings-like pages (1.14.0)
 
