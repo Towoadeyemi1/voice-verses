@@ -1,0 +1,259 @@
+<title>Stage Monitor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+/* Mock-up for the owner (27 Nov 2026): "I want the best for the stage monitor. Anyone on stage should see
+   clearly … the current displayed item, and what is next … scriptures, announcements, songs".
+   Layout: the stage TV drawn at its real size (1920 × 1080) and scaled into the page; one switch picks a
+   moment of the service. The page around it follows the app's warm graphite / warm paper; the stage itself
+   is always black, as stage TVs are. Text: KJV and public-domain hymns only. */
+:root {
+  --bg: #efebe5; --surface: #f8f6f2; --raised: #ffffff;
+  --ink: #1d1b20; --ink-2: #5d5862; --ink-3: #6e6873;
+  --hair: rgba(40,30,50,.10); --fill: rgba(40,30,50,.06);
+  --accent: #b97a10; --accent-soft: rgba(217,150,31,.16);
+  --live: #e0291f; --next: #12873a;
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Figtree", "Segoe UI Variable Text", system-ui, sans-serif;
+  --word: "Newsreader", "New York", "Iowan Old Style", Georgia, serif;
+  /* The stage (always dark): */
+  --s-bg: #000000; --s-ink: #ffffff; --s-ink-2: #c9c4cf; --s-panel: #16151a; --s-line: rgba(255,255,255,.12);
+  --s-live: #ff453a; --s-next: #30d158; --s-gold: #f5c451;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e0d10; --surface: #161518; --raised: #1f1d22;
+  --ink: #f4f1f6; --ink-2: #b2abb7; --ink-3: #9d97a3;
+  --hair: rgba(255,245,255,.08); --fill: rgba(255,245,255,.06);
+  --accent: #f0b44a; --accent-soft: rgba(240,180,74,.16); --live: #ff453a; --next: #30d158; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e0d10; --surface: #161518; --raised: #1f1d22;
+  --ink: #f4f1f6; --ink-2: #b2abb7; --ink-3: #9d97a3;
+  --hair: rgba(255,245,255,.08); --fill: rgba(255,245,255,.06);
+  --accent: #f0b44a; --accent-soft: rgba(240,180,74,.16); --live: #ff453a; --next: #30d158; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--ui); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+header h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.02em; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--ink-2); max-width: 70ch; }
+
+.moments { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px; border-radius: 14px; background: var(--fill); width: fit-content; max-width: 100%; }
+.moments button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 10px; background: none; color: var(--ink-2); font: 600 14px var(--ui); cursor: pointer; }
+.moments button:hover { color: var(--ink); }
+.moments button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: 0 1px 2px rgba(20,15,30,.08), 0 6px 18px rgba(20,15,30,.10); }
+.moments button:focus-visible, .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tvrow { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; align-items: start; }
+@media (max-width: 900px) { .tvrow { grid-template-columns: minmax(0, 1fr); } }
+.tv { position: relative; border-radius: 14px; background: #000; padding: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.25), 0 18px 40px rgba(0,0,0,.25); }
+.tv .glass { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 4px; max-width: 100%; }
+.tv .label { position: absolute; left: 50%; bottom: -26px; transform: translateX(-50%); font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+
+/* The stage itself, 1920 × 1080, scaled to the TV */
+.stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; background: var(--s-bg); color: var(--s-ink); font-family: var(--ui); display: grid; grid-template-rows: 112px minmax(0, 1fr) auto; }
+.st-top { display: flex; align-items: center; gap: 28px; padding: 0 64px; border-bottom: 2px solid var(--s-line); }
+.st-now { display: flex; align-items: center; gap: 18px; font-size: 40px; font-weight: 700; min-width: 0; }
+.st-now .tag { font-size: 30px; font-weight: 800; letter-spacing: .06em; color: var(--s-live); display: flex; align-items: center; gap: 12px; }
+.st-now .tag::before { content: ""; width: 18px; height: 18px; border-radius: 50%; background: var(--s-live); }
+.st-now .what { color: var(--s-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-now .part { color: var(--s-ink-2); font-weight: 600; white-space: nowrap; }
+.st-time { margin-left: auto; display: flex; align-items: baseline; gap: 36px; font-variant-numeric: tabular-nums; }
+.st-time .count { font-size: 64px; font-weight: 800; color: var(--s-gold); }
+.st-time .count small { font-size: 28px; font-weight: 700; color: var(--s-ink-2); margin-right: 14px; }
+.st-time .count.over { color: #fff; background: #c81e1e; padding: 2px 18px; border-radius: 10px; }
+.st-time .clock { font-size: 56px; font-weight: 700; }
+
+.st-main { display: grid; align-content: center; padding: 36px 64px; min-height: 0; }
+.st-words { font-size: 96px; line-height: 1.22; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+.st-words.scripture { font-family: var(--word); font-weight: 500; font-size: 92px; line-height: 1.25; }
+.st-words.scripture .vn { font-family: var(--ui); font-size: 52px; font-weight: 800; color: var(--s-gold); vertical-align: 32px; margin-right: 10px; }
+.st-picture { justify-self: center; height: 640px; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; }
+.st-notes { margin-top: 34px; font-size: 44px; line-height: 1.3; color: var(--s-ink-2); border-left: 6px solid var(--s-gold); padding-left: 26px; max-width: 1500px; }
+.st-notes b { color: var(--s-ink); }
+
+.st-next { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 40px; padding: 30px 64px 40px; background: var(--s-panel); border-top: 2px solid var(--s-line); min-height: 250px; }
+.st-next .tag { align-self: start; padding-top: 10px; font-size: 30px; font-weight: 800; letter-spacing: .06em; color: var(--s-next); display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+.st-next .tag::before { content: ""; width: 18px; height: 18px; border-radius: 50%; background: var(--s-next); }
+.st-next .name { font-size: 46px; font-weight: 800; color: var(--s-ink); }
+.st-next .name span { color: var(--s-ink-2); font-weight: 600; }
+.st-next .lines { margin-top: 6px; font-size: 56px; line-height: 1.25; font-weight: 600; color: var(--s-ink); }
+.st-next .lines.scripture { font-family: var(--word); font-weight: 500; }
+.st-next .thumb { height: 180px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; }
+.st-next.none .name { color: var(--s-ink-2); font-weight: 600; }
+
+/* A designed announcement, as a church would make it (a picture slide) */
+.pic { width: 100%; height: 100%; display: grid; align-content: center; padding: 6% 7%; color: #fff; font-family: var(--ui); }
+.pic.youth { background: linear-gradient(160deg, #6b2fa0, #c23b6c); }
+.pic.youth .k { font-size: .06em; }
+.pic.baptism { background: #fafafa; color: #1e1e28; align-content: start; padding: 0; }
+.pic.baptism .bar { background: #1e4078; color: #fff; font-weight: 800; padding: 3% 5%; }
+.pic.baptism ul { margin: 0; padding: 4% 8%; display: grid; gap: .5em; }
+
+.notes { display: grid; gap: 14px; }
+.card { background: var(--surface); border-radius: 14px; padding: 18px 20px; box-shadow: 0 0 0 1px var(--hair); }
+.card h2 { margin: 0 0 8px; font-size: 16px; font-weight: 700; }
+.card p, .card li { margin: 0; color: var(--ink-2); font-size: 14px; }
+.card ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.card .dist { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.card .dist b { color: var(--ink); font-weight: 700; }
+.seg { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: var(--fill); }
+.seg button { flex: 1; min-height: 36px; border: 0; border-radius: 8px; background: none; color: var(--ink-2); font: 600 13px var(--ui); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: 0 1px 2px rgba(20,15,30,.08); }
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+@media (max-width: 700px) { .compare { grid-template-columns: minmax(0, 1fr); } }
+.compare figure { margin: 0; display: grid; gap: 10px; }
+.compare figcaption { font-size: 14px; color: var(--ink-2); }
+.compare figcaption b { color: var(--ink); }
+.foot { color: var(--ink-3); font-size: 13px; }
+
+/* Today's stage monitor, for the comparison (as it looks in 1.19.20) */
+.old { position: absolute; inset: 0; width: 1920px; height: 1080px; transform-origin: 0 0; display: grid; grid-template-columns: 1fr 448px; background: #000; color: #fff; font-family: var(--ui); }
+.old .m { padding: 32px; display: grid; grid-template-rows: auto auto 1fr; gap: 24px; }
+.old .hd { display: flex; justify-content: space-between; font-size: 24px; color: rgba(255,255,255,.7); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,.12); padding-bottom: 16px; }
+.old .hd b { color: #fff; font-size: 36px; }
+.old .t { color: #3b82f6; font-size: 40px; font-weight: 700; }
+.old .box { border: 1px solid rgba(255,255,255,.15); border-radius: 8px; display: grid; place-items: center; text-align: center; font-size: 58px; line-height: 1.5; padding: 40px; }
+.old .box small { display: block; font-size: 26px; color: #f0b44a; }
+.old .nx { background: #fbbf24; color: #000; padding: 24px; }
+.old .nx h4 { margin: 12px 0 24px; font-size: 20px; }
+.old .nx div { background: #fcd34d; border: 2px solid #f59e0b; border-radius: 8px; padding: 16px; font-size: 24px; font-weight: 700; }
+.old .nx div p { margin: 8px 0 0; font-size: 20px; font-weight: 400; }
+@media (prefers-reduced-motion: no-preference) { .stage .st-main, .stage .st-next { animation: in .35s ease both; } @keyframes in { from { opacity: .4 } to { opacity: 1 } } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>The stage monitor, readable from the platform</h1>
+    <p>What everyone on stage sees: what the room sees now, and what comes next, large enough to read from where they stand. Pick a moment of the service. The TV below is drawn at its real size, 1920 × 1080.</p>
+  </header>
+
+  <div class="moments" role="group" aria-label="A moment of the service">
+    <button type="button" data-m="song" aria-pressed="true">A hymn</button>
+    <button type="button" data-m="end">The last slide of a song</button>
+    <button type="button" data-m="verse">A reading</button>
+    <button type="button" data-m="picture">A picture announcement</button>
+    <button type="button" data-m="sermon">The sermon</button>
+  </div>
+
+  <div class="tvrow">
+    <div class="tv"><div class="glass" id="glass"><div class="stage" id="stage"></div></div><span class="label">Stage TV · 55 inch · 1920 × 1080</span></div>
+    <div class="notes">
+      <div class="card">
+        <h2 id="why-title">What changes</h2>
+        <ul id="why"></ul>
+      </div>
+      <div class="card">
+        <h2>Readable from (55-inch TV)</h2>
+        <div class="dist" id="dist"></div>
+        <p style="margin-top:8px">About 1 cm of letter height for every 1.5 m of distance, the rule for signs. People on a platform stand about 3–5 m from a stage TV.</p>
+      </div>
+      <div class="card">
+        <h2>Where Next goes</h2>
+        <div class="seg" role="group" aria-label="Where Next goes">
+          <button type="button" data-next="bottom" aria-pressed="true">Along the bottom</button>
+          <button type="button" data-next="off">Off</button>
+        </div>
+        <p style="margin-top:8px">Along the bottom, Next gets the full width, so the next lines of a song fit in big letters. A church that wants only what is on can switch it off.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="margin:28px 0 0;font-size:20px">Today and proposed, side by side</h2>
+  <div class="compare">
+    <figure><div class="tv"><div class="glass" id="glass-old"><div class="old" id="old"></div></div></div><figcaption><b>Today.</b> The name three times, Next in small letters on bright yellow, and Next says the song's name again.</figcaption></figure>
+    <figure><div class="tv"><div class="glass" id="glass-new"><div class="stage" id="stage-small"></div></div></div><figcaption><b>Proposed.</b> The name once, the words as large as they fit, Next along the bottom named by its part, on dark.</figcaption></figure>
+  </div>
+  <p class="foot">Text: Holy, Holy, Holy (Reginald Heber, public domain); Amazing Grace (John Newton, public domain); Romans 8 (KJV). The announcements are examples. The colours on stage follow the stage layouts in Settings (Classic, Large words, Preacher, Singers, High contrast); these are the Classic layout.</p>
+</div>
+
+<script>
+const M = {
+  song: {
+    now: ['Holy, Holy, Holy', 'Verse 1'], words: 'Holy, holy, holy! Lord God Almighty!<br>Early in the morning our song shall rise to Thee;',
+    next: { name: 'Verse 2', of: 'Holy, Holy, Holy', lines: 'Holy, holy, holy! All the saints adore Thee,<br>casting down their golden crowns around the glassy sea;' },
+    count: null, clock: '10:21',
+    why: ['The name is said once, at the top, with the part being sung: <b>Verse 1</b>.', 'The words fill the screen: 96 px, about 1.7 times today\'s size.', 'Next is named by its part, <b>Verse 2</b>, and shows its first lines in big letters, so singers see what is coming.', 'Next is on dark, not bright yellow: nothing glares in a dark room, and the eye stays on the words.'],
+  },
+  end: {
+    now: ['Holy, Holy, Holy', 'Verse 4'], words: 'Holy, holy, holy! Lord God Almighty!<br>God in three Persons, blessed Trinity!',
+    next: { name: 'Romans 8:28', of: 'The reading', lines: 'And we know that all things work together for good to them that love God…', scripture: true },
+    count: null, clock: '10:26',
+    why: ['On the last slide of a song, Next carries on into the <b>next part of the service</b>: here the reading.', 'Today Next goes empty at the end of each part, just when the stage needs it most.', 'Words from the Bible are set in the reading face, as on the projector.'],
+  },
+  verse: {
+    now: ['Romans 8:28', 'The reading'], verse: { n: 28, text: 'And we know that all things work together for good to them that love God, to them who are the called according to his purpose.' },
+    next: { name: 'Romans 8:29', of: 'next verse', lines: 'For whom he did foreknow, he also did predestinate to be conformed to the image of his Son…', scripture: true },
+    count: null, clock: '10:27',
+    why: ['The reference is said once, at the top. The verse number sits in the words, in gold.', 'The verse is set as large as it fits (here 92 px).', 'Next is the next verse while a passage is being read, or the next part of the service when the reading ends.'],
+  },
+  picture: {
+    now: ['Youth night', 'Notices'], picture: 'youth',
+    next: { name: 'Baptism class', of: 'Notices', picture: 'baptism' },
+    count: null, clock: '10:33',
+    why: ['A picture or presentation page is shown whole, never cut (this is in 1.19.20).', 'Next shows the next picture itself, beside its name, so whoever reads the notices knows what is coming.'],
+  },
+  sermon: {
+    now: ['Grace that changes everything', 'Sermon'], words: '<span style="color:var(--s-ink-2);font-size:64px">Point 2</span><br>His grace is enough for today',
+    notes: '<b>Notes</b> Tell the story of the lost sheep. Then Ephesians 2:8.',
+    next: { name: 'Ephesians 2:8', of: 'expected in the sermon', lines: 'For by grace are ye saved through faith; and that not of yourselves: it is the gift of God:', scripture: true },
+    count: { label: 'Sermon', time: '12:40' }, clock: '11:02',
+    why: ['The sermon countdown sits at the top right in gold, beside the clock; it turns red and counts on when the time is up.', 'The preacher\'s notes for this point sit under the words.', 'Next is the next scripture expected in the sermon, so the preacher sees it is ready.'],
+  },
+};
+
+let mode = 'song', nextOn = true;
+const esc = (s) => s; // content is written here, not typed by anyone
+
+function stageHtml(m) {
+  const main = m.picture
+    ? `<div class="st-picture">${picture(m.picture, 46)}</div>`
+    : m.verse
+      ? `<div class="st-words scripture"><span class="vn">${m.verse.n}</span>${esc(m.verse.text)}</div>`
+      : `<div class="st-words">${m.words}</div>`;
+  const count = m.count ? `<span class="count"><small>${m.count.label}</small>${m.count.time}</span>` : '';
+  const next = !nextOn ? '' : m.next
+    ? `<div class="st-next"><span class="tag">NEXT</span><div style="min-width:0"><div class="name">${m.next.name} <span>· ${m.next.of}</span></div>${m.next.lines ? `<div class="lines ${m.next.scripture ? 'scripture' : ''}">${m.next.lines}</div>` : ''}</div>${m.next.picture ? `<div class="thumb">${picture(m.next.picture, 13)}</div>` : '<span></span>'}</div>`
+    : '';
+  return `<div class="st-top"><div class="st-now"><span class="tag">NOW</span><span class="what">${m.now[0]}</span><span class="part">· ${m.now[1]}</span></div><div class="st-time">${count}<span class="clock">${m.clock}</span></div></div>
+    <div class="st-main"><div>${main}${m.notes ? `<div class="st-notes">${m.notes}</div>` : ''}</div></div>${next}`;
+}
+
+function picture(kind, size) {
+  if (kind === 'youth') return `<div class="pic youth" style="font-size:${size}px"><div style="font-size:.55em;font-weight:800;letter-spacing:.08em;color:#ffd27a">CHURCH NEWS</div><div style="font-size:2.2em;font-weight:800;line-height:1.05;margin-top:.3em">Youth Night</div><div style="font-size:1em;margin-top:.4em">Friday 7pm · Main Hall</div><div style="font-size:.65em;margin-top:.5em;opacity:.95">Everyone aged 11–18 welcome. Bring a friend!</div></div>`;
+  return `<div class="pic baptism" style="font-size:${size}px"><div class="bar">Baptism Class</div><ul><li>Starts Sunday 7 December</li><li>Four weeks, in Room 2</li><li>Sign up at the welcome desk</li></ul></div>`;
+}
+
+function oldHtml() {
+  return `<div class="m"><div class="hd"><span>Holy, Holy, Holy • Song</span><b>10:21:07 AM</b></div><div class="t">Holy, Holy, Holy</div>
+    <div class="box"><div><small>Holy, Holy, Holy<br>VERSE</small>Holy, holy, holy! Lord God Almighty!<br>Early in the morning our song shall rise to Thee;</div></div></div>
+    <div class="nx"><h4>COMING UP NEXT</h4><div>Holy, Holy, Holy<p>Holy, holy, holy! All the saints adore Thee,…</p></div></div>`;
+}
+
+const DIST = [['Words now (96 px)', '≈ 6 m'], ['Next, its lines (56 px)', '≈ 3.5 m'], ['Next, its name (46 px)', '≈ 3 m'], ['Today: Next (20–24 px)', '≈ 1–1.5 m']];
+
+function render() {
+  const m = M[mode];
+  document.getElementById('stage').innerHTML = stageHtml(m);
+  document.getElementById('why').innerHTML = m.why.map((w) => `<li>${w}</li>`).join('');
+  document.querySelectorAll('.moments button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === mode)));
+  document.querySelectorAll('.seg button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.next === 'bottom') === nextOn)));
+  fit();
+}
+
+function fit() {
+  for (const [glass, el] of [['glass', 'stage'], ['glass-old', 'old'], ['glass-new', 'stage-small']]) {
+    const g = document.getElementById(glass), s = document.getElementById(el);
+    if (g && s) s.style.transform = `scale(${g.clientWidth / 1920})`;
+  }
+}
+
+document.querySelectorAll('.moments button').forEach((b) => b.addEventListener('click', () => { mode = b.dataset.m; render(); }));
+document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => { nextOn = b.dataset.next === 'bottom'; render(); }));
+document.getElementById('dist').innerHTML = DIST.map(([a, b]) => `<b>${b}</b><span>${a}</span>`).join('');
+document.getElementById('old').innerHTML = oldHtml();
+{ const keep = nextOn; nextOn = true; document.getElementById('stage-small').innerHTML = stageHtml(M.song); nextOn = keep; }
+window.addEventListener('resize', fit);
+if (window.ResizeObserver) new ResizeObserver(fit).observe(document.getElementById('glass'));
+render();
+</script>

@@ -230,3 +230,8 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.
 - **Why:** This is the only path that works, and it keeps a human approving every public release.
+
+### D39. The stage monitor is read from the platform
+- **Context:** The owner asked for "the best for the stage monitor. Anyone on stage should see clearly … the current displayed item, and what is next". The old monitor named the item three times, put Next in 20–24 px on a bright yellow column (readable from about 1–1.5 m on a 55-inch TV; people stand 3–5 m away), named Next by the song instead of its part, and showed nothing next on the last slide of a part.
+- **Decision (approved mock-up `docs/design/stage-monitor.html`, 27 Nov 2026):** the item named once (NOW · what · its part); the words as large as they fit; Next along the bottom on a dark band, named by its part, in 46–56 px; Next carries on into the next part of the service; red NOW and green NEXT with their words, as on the live screen; the design drawn at 1920 × 1080 and scaled to any TV.
+- **Why:** Sizes follow the sign-makers' rule (about 1 cm of letter height per 1.5 m), so the words read from about 6 m and Next from about 3.5 m. A bright panel glares in a dark room and pulls the eye from the words. Scaling one 1080 design means a 720p or 4K stage TV shows the same thing.

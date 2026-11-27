@@ -823,31 +823,31 @@ export const STAGE_PRESETS: { id: string; name: string; description: string; set
     id: 'classic',
     name: 'Classic',
     description: 'The verse, what comes next and the clock.',
-    settings: { currentVerseFontSize: 60, nextVerseFontSize: 24, clockFontSize: 36, backgroundColor: '#000000', textColor: '#FFFFFF', accentColor: '#3B82F6', clockFormat: '12h', nextVerseCount: 1 },
+    settings: { currentVerseFontSize: 96, nextVerseFontSize: 56, clockFontSize: 56, backgroundColor: '#000000', textColor: '#FFFFFF', accentColor: '#F5C451', clockFormat: '12h', nextVerseCount: 1, layout: 2 },
   },
   {
     id: 'large',
     name: 'Large words',
     description: 'For a stage TV far from the pulpit: the verse as big as possible.',
-    settings: { currentVerseFontSize: 88, nextVerseFontSize: 28, clockFontSize: 32, backgroundColor: '#000000', textColor: '#FFFFFF', accentColor: '#F5C451', clockFormat: '12h', nextVerseCount: 1 },
+    settings: { currentVerseFontSize: 120, nextVerseFontSize: 56, clockFontSize: 48, backgroundColor: '#000000', textColor: '#FFFFFF', accentColor: '#F5C451', clockFormat: '12h', nextVerseCount: 1, layout: 2 },
   },
   {
     id: 'preacher',
     name: 'Preacher',
     description: 'A big clock and the countdown, with the verse underneath.',
-    settings: { currentVerseFontSize: 52, nextVerseFontSize: 24, clockFontSize: 72, backgroundColor: '#0B0D12', textColor: '#FFFFFF', accentColor: '#F59E0B', clockFormat: '12h', nextVerseCount: 1 },
+    settings: { currentVerseFontSize: 84, nextVerseFontSize: 48, clockFontSize: 96, backgroundColor: '#0B0D12', textColor: '#FFFFFF', accentColor: '#F59E0B', clockFormat: '12h', nextVerseCount: 1, layout: 2 },
   },
   {
     id: 'singers',
     name: 'Singers',
-    description: 'More of what comes next, so the band sees the following lines.',
-    settings: { currentVerseFontSize: 64, nextVerseFontSize: 34, clockFontSize: 28, backgroundColor: '#000000', textColor: '#FFFFFF', accentColor: '#22C55E', clockFormat: '12h', nextVerseCount: 2 },
+    description: 'What comes next at its largest, so the band sees the following lines.',
+    settings: { currentVerseFontSize: 96, nextVerseFontSize: 64, clockFontSize: 44, backgroundColor: '#000000', textColor: '#FFFFFF', accentColor: '#F5C451', clockFormat: '12h', nextVerseCount: 1, layout: 2 },
   },
   {
     id: 'contrast',
     name: 'High contrast',
     description: 'Yellow and white on black, for bright stages and older eyes.',
-    settings: { currentVerseFontSize: 72, nextVerseFontSize: 28, clockFontSize: 40, backgroundColor: '#000000', textColor: '#FFFFFF', accentColor: '#FFD60A', clockFormat: '24h', nextVerseCount: 1 },
+    settings: { currentVerseFontSize: 104, nextVerseFontSize: 56, clockFontSize: 60, backgroundColor: '#000000', textColor: '#FFFFFF', accentColor: '#FFD60A', clockFormat: '24h', nextVerseCount: 1, layout: 2 },
   },
 ];
 

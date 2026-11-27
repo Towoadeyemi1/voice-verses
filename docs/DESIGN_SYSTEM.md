@@ -122,6 +122,7 @@ Monitors take the projector's shape (`usePreviewStage('projection')`). The outpu
     - Things that are past, off or coming later are **quieter by colour, never by fading**: grey words (`--s-ink-3`, `--muted-foreground`) and a fainter tint, not `opacity` on the words. Past parts on the timeline keep readable times.
     - Words on a picture of a screen (the monitors, the screen tiles) are at least 70% white.
     - Disabled controls are exempt; past or secondary information is not.
+13. **The stage monitor is read from the platform (1.19.21, D39, `docs/design/stage-monitor.html`).** What is on is named once, at the top (red NOW, what it is, its part); the words fill the rest; Next runs along the bottom on a faint band (never a bright panel), named by its part (Verse 2, the next reading) in 46–56 px with its first two lines, and carries on into the next part of the service. Red NOW and green NEXT keep their words, as on the live screen. It is designed at 1920 × 1080 and scaled to the TV; sizes follow about 1 cm of letter height per 1.5 m of distance.
 
 ## Settings and other settings-like pages (1.14.0)
 

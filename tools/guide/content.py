@@ -447,7 +447,7 @@ SECTIONS = [
         "title": "14. What the room sees",
         "figures": [
             {"img": "outputs-1-projector", "plain": True, "caption": "The projector", "steps": ["Scripture, songs and slides in their look, with countdowns and alerts on top."]},
-            {"img": "outputs-2-stage", "plain": True, "caption": "The stage monitor", "steps": ["The current verse or slide, what is coming next, the clock and any stage countdown or alert."]},
+            {"img": "outputs-2-stage", "plain": True, "caption": "The stage monitor", "steps": ["**Now**, at the top: what is on the screens and its part (Romans 8:28 · Scripture, or a song and its verse), with the clock and any stage countdown. The words themselves fill the screen. **Next**, along the bottom: what comes next, named by its part (Verse 2, the next reading), large enough to read from the platform. On the last slide of a song, Next is the next part of the service."]},
             {"img": "outputs-3-lower-third", "plain": True, "caption": "The stream lower third", "steps": ["The verse on a green key colour for the stream switcher. Over NDI it goes see-through."]},
         ],
     },
@@ -622,7 +622,7 @@ SCREENS = {
         {
             "img": "outputs-2b-stage-settings",
             "caption": "The stage monitor’s own settings",
-            "steps": ["On the stage monitor, move the mouse and click the gear. **Start from a layout** (Classic, Large words, Preacher, Singers or High contrast), then change colours and sizes."],
+            "steps": ["On the stage monitor, move the mouse and click the gear. **Start from a layout** (Classic, Large words, Preacher, Singers or High contrast), then change colours and sizes. **Show what comes next** at Off shows only what is on. Sizes are for a 1920 × 1080 screen: the stage monitor scales to any TV."],
         },
     ],
     "points": [
