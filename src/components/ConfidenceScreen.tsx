@@ -23,6 +23,14 @@ export interface ConfidenceSettings {
   nextVerseCount: number;
 }
 
+/** What comes next on the stage: its name and first words, or the picture itself */
+interface NextItem {
+  ref: string;
+  snippet: string;
+  /** A picture slide (an announcement graphic, a presentation page): shown, not described */
+  picture?: string;
+}
+
 export const defaultConfidenceSettings: ConfidenceSettings = {
   currentVerseFontSize: 60,
   nextVerseFontSize: 24,
@@ -57,7 +65,7 @@ export function saveConfidenceSettings(settings: ConfidenceSettings): void {
 export const ConfidenceScreen = ({ settings, className, style }: { settings: ConfidenceSettings; className?: string; style?: CSSProperties }) => {
   const [currentSlide, setCurrentSlide] = useState<Slide | null>(null);
   const [currentVerse, setCurrentVerse] = useState<BibleVerse | null>(null);
-  const [nextItems, setNextItems] = useState<{ ref: string; snippet: string }[]>([]);
+  const [nextItems, setNextItems] = useState<NextItem[]>([]);
   /** The preacher's notes for what is on screen (stage only) */
   const [notes, setNotes] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -77,7 +85,7 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
     const handle = async (message: SyncMessage) => {
       const call = ++latest;
       let verse: BibleVerse | null = null;
-      let nextItemsList: { ref: string; snippet: string }[] = [];
+      let nextItemsList: NextItem[] = [];
 
       if (message.type === 'SLIDE_UPDATE') {
         const slide = message.data.slide ?? null;
@@ -87,7 +95,7 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
         // In a service, "next" is the next slide in the service, not the next verse in the Bible
         const index = message.data.slideIndex ?? message.data.index ?? -1;
         const upcoming = message.data.upcoming ?? message.data.allSlides?.slice(index + 1) ?? [];
-        nextItemsList = upcoming.slice(0, settings.nextVerseCount).map((next) => ({ ref: next.title, snippet: snippetOf(next) }));
+        nextItemsList = upcoming.slice(0, settings.nextVerseCount).map((next) => ({ ref: next.title, snippet: snippetOf(next), picture: next.type === 'image' ? next.imageUrl : undefined }));
       } else if (message.type === 'VERSE_UPDATE' && message.data.verse !== undefined) {
         verse = message.data.verse ?? null;
         setCurrentSlide(null);
@@ -289,9 +297,13 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
                   <div className="font-bold mb-2" style={{ fontSize: `${settings.nextVerseFontSize}px` }}>
                     {item.ref}
                   </div>
-                  <div style={{ fontSize: `${settings.nextVerseFontSize * 0.83}px`, opacity: 0.8 }}>
-                    {item.snippet}
-                  </div>
+                  {item.picture ? (
+                    <img src={item.picture} alt={item.ref} className="w-full aspect-video object-contain bg-black rounded-md" data-stage-next-picture />
+                  ) : (
+                    <div style={{ fontSize: `${settings.nextVerseFontSize * 0.83}px`, opacity: 0.8 }}>
+                      {item.snippet}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
