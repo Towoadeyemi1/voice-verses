@@ -4,15 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Foundation Design Kit</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="foundation.css">
 <style>
 /* Reference page only (not part of the kit) */
 html, body { margin: 0; }
 body { background: var(--f-page); }
-.f-root { background: var(--f-page); color: var(--f-ink); font: 14px/1.45 var(--f-ui); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+.f-root { background: var(--f-backdrop), var(--f-page); background-attachment: fixed; color: var(--f-ink); font: 14px/1.45 var(--f-ui); -webkit-font-smoothing: antialiased; min-height: 100vh; }
 .ref-top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px max(16px, env(safe-area-inset-right, 0px)) 14px max(16px, env(safe-area-inset-left, 0px)); background: var(--f-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 1px 0 var(--f-line); }
 .ref-title { display: block; font: 700 17px var(--f-display); letter-spacing: -.01em; }
 .ref-sub { font-size: 13px; color: var(--f-ink-2); }
@@ -35,8 +32,8 @@ body { background: var(--f-page); }
 .ref-now { padding: 18px 16px; }
 .ref-kick { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--f-ink-3); }
 .ref-big { margin: 8px 0 0; font-size: clamp(26px, 3vw, 40px); line-height: 1.28; max-width: 24ch; }
-.ref-then { margin: 18px 0 0; font-size: 17px; color: var(--f-ink-3); max-width: 44ch; }
-.ref-then b { font: 600 12px var(--f-ui); color: var(--f-next); margin-right: 6px; }
+.ref-then { margin: 18px 0 0; font-size: 17px; color: var(--f-ink-2); max-width: 44ch; }
+.ref-then b { font: 600 12px var(--f-ui); color: var(--f-next-text); margin-right: 6px; }
 .ref-screens { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .ref-slide { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 6px; text-align: center; padding: 0 10%; font: 400 clamp(14px, 1.6vw, 20px)/1.3 var(--f-read); background: radial-gradient(60% 70% at 50% 40%, #1d2a4d, #0a0d1a 75%); }
 .ref-slide.alt { background: radial-gradient(60% 70% at 50% 40%, #0f3a36, #050c0b 75%); font-family: var(--f-display); font-weight: 700; }
@@ -62,10 +59,11 @@ body { background: var(--f-page); }
 <header class="ref-top">
   <div>
     <b class="ref-title">Foundation design kit</b>
-    <span class="ref-sub">Every part, as it should look. From Voice Verses; for any app.</span>
+    <span class="ref-sub">Every part, as it should look. Light: Provilion’s bright look. Dark: warm graphite.</span>
   </div>
   <div class="f-seg" role="radiogroup" aria-label="Look">
-    <button role="radio" aria-checked="true" data-theme-set="dark">Dark</button>
+    <button role="radio" aria-checked="true" data-theme-set="">Device</button>
+    <button role="radio" aria-checked="false" data-theme-set="dark">Dark</button>
     <button role="radio" aria-checked="false" data-theme-set="light">Light</button>
   </div>
 </header>
@@ -155,7 +153,34 @@ body { background: var(--f-page); }
 </section>
 
 <section class="ref-block">
-  <h2>3. Controls</h2>
+  <h2>3. The one bold thing</h2>
+  <p class="f-hint">One vivid block per screen: the hero with the day's numbers, or the floating nav on a phone. Nothing else on the screen is a gradient.</p>
+  <div class="ref-grid">
+    <div class="f-bold"><h3>Good morning, Dana</h3><p class="sub">Thursday, 26 November</p>
+      <div class="f-bold-kpis"><div><b class="f-num">6</b><span>Viewings today</span></div><div><b class="f-num">3</b><span>New clients</span></div><div><b class="f-num">$12.4k</b><span>Paid this week</span></div></div>
+    </div>
+    <div style="display:grid;place-items:center;min-height:120px">
+      <nav class="f-fabnav" aria-label="Main">
+        <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9H3z"/></svg>Home</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7M17 4a4 4 0 0 1 0 8M22 21c0-3-2-6-5-7"/></svg>Clients</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H8l-4 4z"/></svg>Messages</a>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<section class="ref-block">
+  <h2>4. Cards never ghost</h2>
+  <p class="f-hint">Anything that holds content has a visible brand-tinted edge and a soft shadow, in both themes, so it never fades into the page. Inside it: no borders, no boxes in boxes. One line of text; the rest one tap away.</p>
+  <div class="ref-grid">
+    <div class="f-panel"><span class="f-label" style="margin:0">This week</span><b class="f-num" style="font:700 30px var(--f-display);letter-spacing:-.02em">$12,480</b><span class="f-hint">Paid on 9 invoices. 2 still owed.</span><details><summary class="f-btn link">How it works</summary><p class="f-hint">Money in is counted the day the payment clears, not the day the invoice is sent.</p></details></div>
+    <div class="f-panel"><span class="f-label" style="margin:0">Next step</span><span style="font-size:16px;font-weight:650">Call Sarah about the Thursday viewing</span><div class="ref-wrap"><button class="f-btn soft">Call now</button><button class="f-btn ghost">Later</button></div></div>
+  </div>
+</section>
+
+<section class="ref-block">
+  <h2>5. Controls</h2>
   <p class="f-hint">Everything at least 36px to hit. Quiet by default; the brand colour as a soft tint for a row’s action; solid only for the one confirming action.</p>
   <div class="ref-grid">
     <div class="f-well"><span class="f-label" style="margin:0">Buttons</span>
@@ -177,7 +202,7 @@ body { background: var(--f-page); }
 </section>
 
 <section class="ref-block">
-  <h2>4. Floating layers</h2>
+  <h2>6. Floating layers</h2>
   <p class="f-hint">Glass only for the command palette and the toolbar. A guide or question card is solid, beside what it is about, never over it.</p>
   <div class="ref-grid">
     <div class="f-palette"><input value="John 3:16" aria-label="Search"><ul><li aria-selected="true">John 3:16 <span>KJV · put in Next</span></li><li>Clear the screens <span>Esc</span></li><li>Show the logo <span>⌘L</span></li></ul></div>
@@ -186,9 +211,32 @@ body { background: var(--f-page); }
 </section>
 
 <section class="ref-block">
-  <h2>5. Practice</h2>
+  <h2>7. Practice</h2>
   <p class="f-hint">Practice looks different from the real thing: a striped band with its words and a way out (violet). A lesson that does touch the real world gets a red band.</p>
   <div class="ref-band"><div class="f-practice" style="position:static">Practice: nothing goes to the projector, stream or stage <button class="f-btn" style="background:rgba(0,0,0,.25);color:#fff">End practice</button></div></div>
+</section>
+
+<section class="ref-block">
+  <h2>8. States</h2>
+  <p class="f-hint">Every part has more than its happy path. Each says in words what is happening and what to do.</p>
+  <div class="ref-grid">
+    <div class="f-panel" aria-busy="true"><span class="f-label" style="margin:0">Loading</span><span class="f-sr">Loading…</span>
+      <div style="display:flex;gap:12px;align-items:center"><span class="f-skel circle"></span><div style="flex:1"><span class="f-skel title"></span><span class="f-skel line short"></span></div></div>
+      <span class="f-skel block"></span></div>
+    <div class="f-panel"><span class="f-label" style="margin:0">Empty</span>
+      <div class="f-empty"><span class="f-sq lg" style="background:var(--f-i-blue)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7"/></svg></span><b>No clients yet</b><p>New enquiries from your website and calls land here.</p><button class="f-btn soft">Add a client</button></div></div>
+    <div class="f-panel"><span class="f-label" style="margin:0">A problem</span>
+      <div class="f-problem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span class="text"><b>Your Gmail needs reconnecting</b><p>Emails go from the brokerage’s address until you do.</p></span><button class="f-btn">Reconnect</button></div>
+      <div class="f-problem bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg><span class="text"><b>Couldn’t load your clients</b><p>Check your connection, then try again.</p></span><button class="f-btn">Try again</button></div></div>
+    <div class="f-panel"><span class="f-label" style="margin:0">A field that needs fixing</span>
+      <label class="f-field"><span>Mobile number</span><input class="f-input" value="780 555 01" aria-invalid="true" aria-describedby="err-phone"><span class="err" id="err-phone">That number is one digit short.</span></label>
+      <label class="f-field"><span>Email</span><input class="f-input" value="sarah@example.com"><span class="hint">Only used for viewing reminders.</span></label></div>
+    <div class="f-panel" style="padding:0;overflow:hidden"><div class="f-list plain" style="box-shadow:none;border-radius:0">
+      <div class="f-row"><span class="text"><span class="t f-trunc" title="Alexandra Konstantinopoulou-Whitfield and family">Alexandra Konstantinopoulou-Whitfield and family</span><span class="d f-clamp2">Wants a four-bedroom bungalow near a good school in Windermere, Glenridding or Cameron Heights, with a garage big enough for two trucks and a workshop.</span></span><span class="f-pill accent">New</span></div>
+      <div class="f-row"><span class="text"><span class="t">Sarah Okafor</span><span class="d">Viewing Thursday at 4</span></span><span class="f-pill next">● Booked</span></div>
+    </div><div class="f-pager"><span class="f-num">1–50 of 212</span><span class="acts"><button class="f-btn" disabled>Previous</button><button class="f-btn">Next</button></span></div></div>
+    <div style="display:grid;place-items:center;min-height:90px"><div class="f-toast" role="status">Sarah moved to Viewing <button class="f-btn">Undo</button></div></div>
+  </div>
 </section>
 
 </main>
@@ -197,7 +245,8 @@ body { background: var(--f-page); }
 <script>
 document.querySelectorAll('[data-theme-set]').forEach((b) =>
   b.addEventListener('click', () => {
-    document.documentElement.dataset.theme = b.dataset.themeSet;
+    if (b.dataset.themeSet) document.documentElement.dataset.theme = b.dataset.themeSet;
+    else delete document.documentElement.dataset.theme;
     document.querySelectorAll('[data-theme-set]').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
   }),
 );

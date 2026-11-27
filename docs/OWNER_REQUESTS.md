@@ -523,7 +523,22 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 (26 Nov 2026.)
 - ✅ `docs/FOUNDATION.md`: every principle in a form any project can use (working with the owner, product, design, writing, accessibility, architecture, security and licensing, testing, documentation, shipping, performance, AI, teaching, lessons), with Voice Verses as worked examples, a short version for places where only a short text fits, and a starter kit (CLAUDE.md, OWNER_REQUESTS, DECISIONS, LESSONS, DESIGN_SYSTEM, CI, skills). Also packaged as a Skill (`foundation`).
 - ⚠ A session can't change the owner's Claude settings: the owner adds it (Claude Code: `~/.claude/CLAUDE.md` on each computer; Claude.ai: project knowledge, personal preferences with the short version, or the Skill).
-- Keep it current: when a rule here changes or a lesson applies beyond this app, update FOUNDATION.md too.
+- ~~Keep it current: when a rule here changes or a lesson applies beyond this app, update FOUNDATION.md too.~~ Replaced on 27 Nov 2026: the master copy is the owner's `Foundation` repository; this project keeps a synced copy and never edits it (D38).
+
+## "Give me a file or instruction to give voice verse that will let it know what to do"
+
+(26 Nov 2026, in the `Foundation` repository's `VOICE-VERSES.md`.) Three parts, in order:
+- ✅ 1.19.18 Part 1: move onto the master copy. `docs/FOUNDATION.md`, `docs/foundation/design/` (kit, fonts, contrast checker) and `.claude/skills/foundation/` synced from the master (version in `docs/foundation/VERSION`); the old kit removed; CLAUDE.md says never edit it here; Voice Verses keeps its own look (D38).
+- ⏳ Part 2: every word readable (WCAG AA measured on the real pixels, both themes, 1440 and 2560 wide).
+- ⏳ Part 3: a better look, mock-up first.
+
+## "Add the repository Foundation… Bring it up to date with this project's foundation and design kit" / "Merge it and start the switch"
+
+(26–27 Nov 2026.) ✅ The master already had every rule and every part of the kit from this project; Foundation PR #1 added the lessons since the merge (a platform can choose your licence; a generated file edited by hand; the hidden copy of a control; a scripted click a control ignores; CORS; speech checks). Merged.
+
+## "I do not understand this companion rubbish, and how it even got in to the development discussion we are having"
+
+(27 Nov 2026.) 💬 It came from "Stream Deck and remote control" in the list of what other presentation apps have (above), which Claude picked when told "You decide where it is best to start" because it needed nothing from the owner, without asking whether the booth has a Stream Deck or explaining it first. It is an optional add-on (1.19.16, `tools/companion-module/`) that changes nothing in the app unless a church installs it in Bitfocus Companion. Offered to remove it; ⏳ the owner's call. Lesson recorded: ask whether an add-on matters to the owner before building it.
 
 ## "Do you know it is safe to clear to logo first when spirit or any automation is running the service until they are sure the next segment has actually kicked off, as sometimes it might not follow the time schedule accurately. If unsure, actual user/pilot engagement should be requested."
 
