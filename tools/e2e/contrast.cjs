@@ -43,7 +43,7 @@ const SIZES = [
     totals.failing += fails.length;
     check(`${name} at ${size}: every word readable`, fails.length === 0, `${res.length - fails.length} of ${res.length} pass`);
     if (report) for (const f of fails) console.log(`      ✗ ${f.ratio.toFixed(2)} < ${f.need}  ${f.tag}${f.cls ? '.' + f.cls.split(' ')[0] : ''}  "${f.text}"`);
-    if (fails.length) await win.screenshot({ path: `${OUT}/contrast-${name.replace(/\W+/g, '-')}-${size}.png` });
+    if (fails.length || process.env.SHOTS) await win.screenshot({ path: `${OUT}/contrast-${process.env.SHOTS ?? ''}${name.replace(/\W+/g, '-')}-${size}.png` });
   };
 
   for (const [w, h] of SIZES) {

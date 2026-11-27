@@ -15,6 +15,8 @@ What was wrong, and the fix (at the colour, not the element):
 - **Words faded with opacity**: dimmed Settings rows (ProPresenter's ways, Devices), moves and cues still to come, the Training card coming soon, the calendar's days from other months, past timeline parts. Now quieter by colour (grey words, a fainter tint), never by fading.
 - **Words on pictures of screens** at 40–45% white (Nothing, No logo yet, The next verse or slide waits here): now 70%. The stage monitor's header (the slide's title and kind) went from 44% of its colour to 70%.
 
+What you can see change (2560 wide): ![Before and after](design/readable-before-after.png)
+
 | Screen | Window | Before | After |
 |---|---|---|---|
 | live screen, before anything is on | 1440×900 | 80 of 82 (98%) | 82 of 82 (100%) |
