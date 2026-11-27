@@ -219,6 +219,13 @@ Each entry records what was decided and why. Add new ones at the end. Reverse a 
   - The guide is heard only in a lesson or the demo, after "Hear the guide?" is answered Play the voice, each time. While listening to a real microphone it is silent, and Show me the fix is words only.
 - **Why:** Nothing is made during a service, so listening never competes with the voice, and the installer barely grows. The web version gets the same voice. A take the voice fumbled is caught before it ships, not in front of a volunteer. A booth computer's sound may go to the room, so it asks every time.
 
+### D38. Voice Verses keeps its own look; the foundation is a synced copy
+- **Context:** On 26 Nov 2026 the owner's foundation (first drawn from this app) was merged with Provilion's into one master copy, the owner's `Foundation` repository, with one design kit for new apps (a bright light theme and warm graphite). Voice Verses had its own, older copy and edited it directly, which is how two copies drift apart.
+- **Decision:**
+  - `docs/FOUNDATION.md`, `docs/foundation/design/` and `.claude/skills/foundation/` are copied from the master by its `sync-into-project.sh` and never edited here; a rule to change goes to the owner as a proposal for the master.
+  - Voice Verses keeps its own approved look (warm graphite in the dark, warm paper in the light), not the kit's light theme. The readability rules (FOUNDATION §5: every piece of text measured on its real pixels) apply in full.
+- **Why:** One copy can't drift. The look is approved and used in dark booths; the kit is for new apps and redesigns.
+
 ### D17. Releases are published by the owner
 - **Context:** Tag pushes from Claude sessions are blocked.
 - **Decision:** Claude merges to `main` after CI passes. The owner creates a GitHub release with a lowercase `vX.Y.Z` tag on `main`.
