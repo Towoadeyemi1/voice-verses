@@ -473,6 +473,7 @@ The autopilot that learns how a church runs its service. Approved mock-up: `docs
   - the presentation (named after the file) and a **Scripture** part for the references written on it;
   - or **Scripture** (a slide a verse, as with a service package) and **Points** (announcement slides "Point n").
   - A message says what was added; the service is saved with **Save**.
+- **Picture slides are shown whole** (1.19.20, `SlideDisplay`: `object-contain` on black), on the projector and the stage monitor: a designed announcement or a presentation page (PDF pages are pictures) loses nothing on a screen or box of another shape. The stage monitor's top line names the kind in plain words (Song, Scripture, Announcement, Picture, Video, 1.19.19), and **Coming up next shows the next picture itself** under its name (16:9, on black); words are shown for everything else.
 - **Stage notes:** when a slide goes live, `SLIDE_UPDATE.data.notes` carries its own notes, else its part's presenter notes. The stage monitor shows them under the slide ("Notes"), never the projector or stream.
 
 ## 9. Keys, AI and privacy
