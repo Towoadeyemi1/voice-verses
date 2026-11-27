@@ -166,8 +166,8 @@ export const ConfidenceScreen = ({ settings, className, style }: { settings: Con
           <div className="flex justify-between items-center mb-8 pb-4 border-b" style={{ borderColor: `${settings.textColor}20` }}>
             <div style={{ fontSize: `${settings.clockFontSize * 0.67}px` }} className="font-semibold">
               {currentSlide ? (
-                <span style={{ color: `${settings.textColor}70` }}>
-                  {currentSlide.title} <span className="opacity-50">• {currentSlide.type}</span>
+                <span style={{ color: `${settings.textColor}B3` }}>
+                  {currentSlide.title} <span>• {currentSlide.type}</span>
                 </span>
               ) : currentVerse ? (
                 <span style={{ color: `${settings.textColor}70` }}>

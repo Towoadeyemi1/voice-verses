@@ -271,7 +271,7 @@ export const ScreensColumn = ({
       <ScaledStage stage={projector} fitShape className="bg-black">
         <OutputContent live={next} output="projection" countdown={nextCountdown?.countdown} remaining={nextCountdown?.remaining ?? 0} preview />
       </ScaledStage>
-      {!next && <div className="absolute inset-0 grid place-items-center px-3 text-center text-sm text-white/45">The next verse or slide waits here</div>}
+      {!next && <div className="absolute inset-0 grid place-items-center px-3 text-center text-sm text-white/70">The next verse or slide waits here</div>}
     </div>
   );
 
@@ -360,7 +360,7 @@ export const ScreensColumn = ({
       >
         <ArrowUp className={`w-[18px] h-[18px] ${next ? 'text-[hsl(var(--next))]' : 'text-muted-foreground'}`} strokeWidth={2.4} />
         Take
-        <kbd className="font-sans text-xs font-semibold px-1.5 py-0.5 rounded-md bg-white/[0.07] text-muted-foreground">Space</kbd>
+        <kbd className="font-sans text-xs font-semibold px-1.5 py-0.5 rounded-md bg-white/[0.07] text-foreground/75">Space</kbd>
       </button>
 
       {all ? (

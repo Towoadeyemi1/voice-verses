@@ -9,10 +9,13 @@ const { OUT, launch, setBounds, seedMedia, answerVoice, check, done } = require(
 const { auditContrast } = require('../checks/check-contrast.cjs');
 
 const report = process.argv.includes('--report');
+/** ONLY=<regex>: measure only the screens whose name matches (to work on one quickly) */
+const only = process.env.ONLY ? new RegExp(process.env.ONLY, 'i') : null;
+/** SIZES=1440: only that width */
 const SIZES = [
   [1440, 900],
   [2560, 1440],
-];
+].filter(([w]) => !process.env.SIZES || process.env.SIZES.split(',').includes(String(w)));
 
 (async () => {
   const { app, win, errors } = await launch('contrast');
@@ -32,6 +35,7 @@ const SIZES = [
 
   /** Measures what is on the window now, and prints the result for this screen */
   const measure = async (name, size) => {
+    if (only && !only.test(name)) return;
     const res = await auditContrast(win);
     const fails = res.filter((r) => !r.pass).sort((a, b) => a.ratio - b.ratio);
     totals.screens++;

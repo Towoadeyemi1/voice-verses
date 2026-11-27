@@ -89,7 +89,7 @@ export const NowPane = ({
               onClick={() => onStep(i)}
               className={`min-w-9 h-9 px-2.5 rounded-full text-sm font-semibold transition ${
                 s.state === 'live'
-                  ? 'bg-[hsl(var(--live))] text-white'
+                  ? 'bg-[hsl(var(--live-fill))] text-white'
                   : s.state === 'next'
                     ? 'shadow-[inset_0_0_0_2px_hsl(var(--next))] text-foreground'
                     : s.state === 'done'

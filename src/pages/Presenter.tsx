@@ -507,7 +507,7 @@ const Presenter = () => {
                                     <ScaledStage className="aspect-video bg-black">
                                       <OutputContent live={{ slide }} output="projection" preview />
                                     </ScaledStage>
-                                    <span className={cn('absolute left-1.5 top-1.5 min-w-6 h-6 px-1.5 rounded-md text-[11px] font-bold grid place-items-center', live ? 'bg-[hsl(var(--live))] text-white' : 'bg-black/60 text-white')}>
+                                    <span className={cn('absolute left-1.5 top-1.5 min-w-6 h-6 px-1.5 rounded-md text-[11px] font-bold grid place-items-center', live ? 'bg-[hsl(var(--live-fill))] text-white' : 'bg-black/60 text-white')}>
                                       {index + 1}
                                     </span>
                                   </div>

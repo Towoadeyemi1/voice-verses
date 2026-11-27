@@ -124,7 +124,7 @@ export const SlideStrip = ({
                   )}
                   <span
                     className={`absolute top-1.5 left-1.5 h-[22px] min-w-[22px] px-1.5 rounded-md text-[12px] font-bold grid place-items-center ${
-                      it.state === 'live' ? 'bg-[hsl(var(--live))] text-white' : it.state === 'next' ? 'bg-[hsl(var(--next))] text-black' : 'bg-black/60 text-white'
+                      it.state === 'live' ? 'bg-[hsl(var(--live-fill))] text-white' : it.state === 'next' ? 'bg-[hsl(var(--next))] text-black' : 'bg-black/60 text-white'
                     }`}
                   >
                     {it.state === 'live' ? `Live · ${it.label}` : it.state === 'next' ? `Next · ${it.label}` : it.label}

@@ -529,7 +529,7 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 
 (26 Nov 2026, in the `Foundation` repository's `VOICE-VERSES.md`.) Three parts, in order:
 - ✅ 1.19.18 Part 1: move onto the master copy. `docs/FOUNDATION.md`, `docs/foundation/design/` (kit, fonts, contrast checker) and `.claude/skills/foundation/` synced from the master (version in `docs/foundation/VERSION`); the old kit removed; CLAUDE.md says never edit it here; Voice Verses keeps its own look (D38).
-- ⏳ Part 2: every word readable (WCAG AA measured on the real pixels, both themes, 1440 and 2560 wide).
+- ✅ 1.19.19 Part 2: every word readable. Measured on the real pixels on 56 screens (every page, every Settings page, the palette, a dialog, a lesson; 1440 and 2560 wide; the app has one theme, dark, until light mode ships): 3775 of 4020 pieces of text passed before (93.9%), 4020 of 4020 after. Fixed at the colours (Settings' quiet grey, the muted grey, white on the Live badge, nothing faded with opacity). `tools/e2e/contrast.cjs`, CI check 14, `docs/readability.md`.
 - ⏳ Part 3: a better look, mock-up first.
 
 ## "Add the repository Foundation… Bring it up to date with this project's foundation and design kit" / "Merge it and start the switch"
