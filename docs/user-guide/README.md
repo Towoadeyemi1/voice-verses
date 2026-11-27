@@ -417,7 +417,7 @@ Voice Verses puts each output on its screen by itself, every time. Open Settings
 
 ![The stage monitor’s own settings](img/outputs-2b-stage-settings.jpg)
 
-1. On the stage monitor, move the mouse and click the gear. **Start from a layout** (Classic, Large words, Preacher, Singers or High contrast), then change colours and sizes.
+1. On the stage monitor, move the mouse and click the gear. **Start from a layout** (Classic, Large words, Preacher, Singers or High contrast), then change colours and sizes. **Show what comes next** at Off shows only what is on. Sizes are for a 1920 × 1080 screen: the stage monitor scales to any TV.
 
 **Good to know**
 
@@ -777,7 +777,7 @@ Scripture, songs and slides in their look, with countdowns and alerts on top.
 
 ![The stage monitor](img/outputs-2-stage.jpg)
 
-The current verse or slide, what is coming next, the clock and any stage countdown or alert.
+**Now**, at the top: what is on the screens and its part (Romans 8:28 · Scripture, or a song and its verse), with the clock and any stage countdown. The words themselves fill the screen. **Next**, along the bottom: what comes next, named by its part (Verse 2, the next reading), large enough to read from the platform. On the last slide of a song, Next is the next part of the service.
 
 ### The stream lower third
 

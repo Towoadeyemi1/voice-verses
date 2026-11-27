@@ -327,11 +327,20 @@ export const LiveWorkspace = () => {
   /** Sends a slide to the screens, with the few after it for the stage monitor. */
   const broadcastSlide = (slide: Slide, c: Collection | null): number => {
     const index = c?.kind === 'slides' ? c.slides.findIndex((s) => s.id === slide.id) : -1;
+    const owner = partOf(slide.id);
     // The preacher's notes go to the stage monitor only: this slide's, else its part's
-    const notes = slide.slideNotes?.trim() || partOf(slide.id)?.item.presenterNotes?.trim() || undefined;
+    const notes = slide.slideNotes?.trim() || owner?.item.presenterNotes?.trim() || undefined;
+    const upcoming = c?.kind === 'slides' && index >= 0 ? c.slides.slice(index + 1, index + 4) : [];
+    // The last slide of a part: the stage sees the next part of the service coming (its first slides)
+    let nextPart: { name: string; slides: Slide[] } | undefined;
+    if (owner && !upcoming.length) {
+      const parts = owner.service.sections.flatMap((sec) => sec.subsections);
+      const after = parts.slice(parts.findIndex((p) => p.id === owner.item.id) + 1).find((p) => p.slides.length);
+      if (after) nextPart = { name: after.name, slides: after.slides.slice(0, 3) };
+    }
     syncService.broadcast({
       type: 'SLIDE_UPDATE',
-      data: { slide, index, slideIndex: index, upcoming: c?.kind === 'slides' && index >= 0 ? c.slides.slice(index + 1, index + 4) : [], notes, timestamp: new Date() },
+      data: { slide, index, slideIndex: index, upcoming, notes, part: owner?.item.name, nextPart, timestamp: new Date() },
     });
     return index;
   };

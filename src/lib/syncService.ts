@@ -26,6 +26,10 @@ export type SyncMessage = {
     upcoming?: Slide[];
     /** Notes for the stage monitor only: the slide's own, else its part's (1.19.7) */
     notes?: string;
+    /** The part of the service the slide belongs to ("The reading"), for the stage monitor (1.19.21) */
+    part?: string;
+    /** After the last slide of a part: the next part of the service and its first slides (1.19.21) */
+    nextPart?: { name: string; slides: Slide[] };
     logoUrl?: string;
     /** The first running countdown, or null (for screens from older versions) */
     countdown?: Countdown | null;
