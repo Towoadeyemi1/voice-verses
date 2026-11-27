@@ -13,7 +13,7 @@ What was wrong, and the fix (at the colour, not the element):
 - **The app's muted grey** (`--muted-foreground`, 62% lightness): the Space key on Take measured 3.7:1. Now 66%.
 - **White words on the red Live badge** (`Live · V1`), 3.45:1. A deeper red of the same hue for badges only (`--live-fill`, 4.9:1); the red frames and dots are unchanged.
 - **Words faded with opacity**: dimmed Settings rows (ProPresenter's ways, Devices), moves and cues still to come, the Training card coming soon, the calendar's days from other months, past timeline parts. Now quieter by colour (grey words, a fainter tint), never by fading.
-- **Words on pictures of screens** at 40–45% white (Nothing, No logo yet, The next verse or slide waits here): now 70%. The stage monitor's header (the slide's title and kind) went from 44% of its colour to 70%.
+- **Words on pictures of screens** at 40–45% white (Nothing, No logo yet, The next verse or slide waits here): now 70%. On the stage monitor, every line of the header (the slide's title and kind, the book and chapter, "No content selected") and "Waiting for content…" went from 44% of its colour to 70%, and the kind is in plain words (Song, Scripture, Picture; a picture or video coming next is named so, not "Media slide").
 
 What you can see change (2560 wide): ![Before and after](design/readable-before-after.png)
 
