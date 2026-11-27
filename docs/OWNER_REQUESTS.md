@@ -556,3 +556,9 @@ No. The full gap list and the six-phase plan are in [`ROADMAP.md`](ROADMAP.md): 
 - "Can you push and update the app?" / "I want the current app to be pushed": merge to `main` after CI passes; the owner publishes the release (lowercase `vX.Y.Z` tag). ✅ always
 - "Are all of the decisions and steps being added and created as skills, rules, etc. that can be used to recreate this app… without repeating mistakes?" ✅ 1.3.8
 - Apple Developer account: recommended (organisation) before signing and notarising. 💬 waiting on the owner
+
+## "I want the best for the stage monitor. Anyone on stage should see clearly… they should be able to see the current displayed item, and what is next if there is a next item on queue like scriptures, announcements, songs etc. … How does it manage these different media and show them the way it should and very quality?"
+
+(27 Nov 2026.) How it works today: a verse shows its reference and the verse, fitted large; a song, announcement, picture or video shows its title and a picture of the projected slide; Coming up next (gold, right) shows the next slide of the part loaded, or the next verse in the Bible; plus the clock, stage countdowns, stage messages and notes.
+- ✅ 1.19.19: every header line readable (70%, was 44%) and kinds in plain words (Song, Scripture, Picture, Video; no "Media slide").
+- ⏳ Proposed, mock-up first: songs as large plain words (current lines and the next lines) instead of a small picture of the slide; Next that carries on into the next part of the order of service (the next song, reading or announcement) when a part ends; sizes checked for reading from the platform.
