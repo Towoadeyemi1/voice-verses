@@ -1,0 +1,291 @@
+<title>Cards and States</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Mock-up for the owner (28 Nov 2026), part 3 of the foundation's VOICE-VERSES.md, "Yes, add part 3":
+   1. cards that never ghost; 2. every state designed, in words (loading, empty, a problem, a field that's
+   wrong, long names). Each proposal sits beside the app as it is now (screenshots at 1440 × 900).
+   The app has one theme today (warm graphite); light (warm paper) is shown as the rule for when light
+   mode is built. Content: the sample service's real names; songs are public-domain hymns. */
+:root {
+  /* The page itself (follows the viewer) */
+  --pg: #efebe5; --pg-ink: #1d1b20; --pg-ink-2: #5d5862; --pg-card: #f8f6f2; --pg-line: rgba(40,30,50,.10);
+  /* The app, warm graphite (its only theme today) */
+  --win: #161518; --surface: #1f1d22; --raised: #26232a; --sunken: #121114;
+  --ink: #f4f1f6; --ink-2: #b2abb7; --ink-3: #9d97a3; --line: rgba(255,245,255,.07); --fill: rgba(255,245,255,.06); --fill-2: rgba(255,245,255,.1);
+  --gold: #ffc34d; --gold-ink: #1d1505; --edge: rgba(255,195,77,.30); --shadow: 0 1px 1px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.28);
+  --warn: #f5a524; --warn-soft: rgba(245,165,36,.14); --bad: #ff6961; --bad-soft: rgba(255,105,97,.14);
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Figtree", "Segoe UI Variable Text", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --pg: #0e0d10; --pg-ink: #f4f1f6; --pg-ink-2: #b2abb7; --pg-card: #161518; --pg-line: rgba(255,245,255,.08); color-scheme: dark } }
+:root[data-theme="dark"] { --pg: #0e0d10; --pg-ink: #f4f1f6; --pg-ink-2: #b2abb7; --pg-card: #161518; --pg-line: rgba(255,245,255,.08); color-scheme: dark }
+/* The app in warm paper (light mode, when it is built) */
+.app.paper {
+  --win: #f7f4ef; --surface: #fffdf9; --raised: #ffffff; --sunken: #ebe6de;
+  --ink: #1d1b20; --ink-2: #5d5862; --ink-3: #6e6873; --line: rgba(40,30,50,.08); --fill: rgba(40,30,50,.05); --fill-2: rgba(40,30,50,.09);
+  --gold: #a86b00; --gold-ink: #ffffff; --edge: rgba(201,138,26,.30); --shadow: 0 1px 2px rgba(20,15,30,.05), 0 8px 28px rgba(20,15,30,.09);
+  --warn: #9a5b00; --warn-soft: rgba(217,140,20,.14); --bad: #c0281e; --bad-soft: rgba(224,41,31,.10);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--pg); color: var(--pg-ink); font: 15px/1.5 var(--ui); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1300px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 34px; }
+h1 { margin: 0; font-size: 28px; letter-spacing: -.02em; text-wrap: balance; }
+h2 { margin: 0; font-size: 21px; letter-spacing: -.01em; }
+h3 { margin: 0; font-size: 16px; }
+p { margin: 0; }
+.lead { color: var(--pg-ink-2); max-width: 72ch; margin-top: 6px; }
+.sec { display: grid; gap: 14px; }
+.sec > p { color: var(--pg-ink-2); max-width: 75ch; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 12px; background: var(--pg-line); }
+.seg button { min-height: 36px; padding: 0 13px; border: 0; border-radius: 9px; background: none; color: var(--pg-ink-2); font: 600 14px var(--ui); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--pg-card); color: var(--pg-ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.seg button:focus-visible, .app button:focus-visible, .app input:focus-visible { outline: 2px solid #c98a1a; outline-offset: 2px; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; }
+figcaption { font-size: 14px; color: var(--pg-ink-2); }
+figcaption b { color: var(--pg-ink); }
+.shot { width: 100%; border-radius: 12px; display: block; box-shadow: 0 0 0 1px var(--pg-line); }
+.note { background: var(--pg-card); border-radius: 12px; padding: 14px 16px; box-shadow: 0 0 0 1px var(--pg-line); font-size: 14px; color: var(--pg-ink-2); }
+.note b { color: var(--pg-ink); }
+
+/* ---- The app, drawn in its own colours ---- */
+.app { background: var(--win); color: var(--ink); border-radius: 14px; padding: 22px; font-family: var(--ui); min-width: 0; }
+.app .row { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 18px; }
+@media (max-width: 700px) { .app .row { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border-radius: 14px; padding: 18px 20px; box-shadow: 0 0 0 1px var(--line); min-width: 0; }
+.app.edges .card { box-shadow: 0 0 0 1.5px var(--edge), var(--shadow); }
+.card h4 { margin: 0 0 10px; font-size: 16px; font-weight: 700; }
+.card .muted { color: var(--ink-2); font-size: 14px; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 13px; color: var(--ink-2); }
+.cal b { display: grid; place-items: center; height: 28px; border-radius: 8px; color: var(--ink); font-weight: 500; font-size: 13px; }
+.cal b.on { box-shadow: 0 0 0 1.5px var(--ink); font-weight: 700; }
+.svc { display: grid; gap: 6px; background: var(--fill); border-radius: 12px; padding: 14px 16px; }
+.svc .t { font-weight: 700; display: flex; gap: 8px; align-items: center; min-width: 0; }
+.svc .t span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--fill-2); color: var(--ink-2); white-space: nowrap; }
+.strip { display: flex; gap: 4px; margin-top: 6px; }
+.strip i { height: 6px; border-radius: 3px; flex: 1; }
+.btn { min-height: 36px; padding: 0 14px; border: 0; border-radius: 10px; background: var(--fill-2); color: var(--ink); font: 600 14px var(--ui); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.btn.primary { background: var(--ink); color: var(--win); }
+.btn.gold { background: var(--gold); color: var(--gold-ink); }
+
+/* States */
+.state { display: grid; justify-items: center; text-align: center; gap: 8px; padding: 26px 16px; }
+.state .icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--fill-2); font-size: 20px; }
+.state.problem .icon { background: var(--warn-soft); color: var(--warn); }
+.state h5 { margin: 4px 0 0; font-size: 15px; font-weight: 700; }
+.state p { color: var(--ink-2); font-size: 14px; max-width: 42ch; }
+.state .acts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+.skel { display: grid; gap: 10px; }
+.skel i { display: block; height: 14px; border-radius: 7px; background: var(--fill-2); }
+.skel .line { display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: center; }
+.skel .line i:first-child { height: 36px; border-radius: 10px; }
+@media (prefers-reduced-motion: no-preference) { .skel i { animation: pulse 1.4s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .55 } } }
+.list { display: grid; }
+.list .it { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 9px 4px; border-top: 1px solid var(--line); }
+.list .it:first-child { border-top: 0; }
+.list .sq { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,195,77,.16); display: grid; place-items: center; font-size: 16px; }
+.app.paper .list .sq { background: rgba(201,138,26,.14); }
+.list .n { font-weight: 600; font-size: 14px; min-width: 0; }
+.list .n small { display: block; font-weight: 400; color: var(--ink-2); font-size: 13px; }
+.two { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.banner { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; background: var(--warn-soft); margin-bottom: 12px; }
+.banner b { display: block; font-size: 14px; }
+.banner span { font-size: 13px; color: var(--ink-2); }
+@media (max-width: 560px) { .banner { grid-template-columns: minmax(0, 1fr); } }
+.field { display: grid; gap: 6px; max-width: 420px; }
+.field label { font-size: 14px; font-weight: 600; }
+.field input { min-height: 40px; border-radius: 10px; border: 0; background: var(--fill-2); color: var(--ink); padding: 0 12px; font: 500 15px var(--ui); }
+.field.bad input { box-shadow: inset 0 0 0 1.5px var(--bad); }
+.field .err { font-size: 13.5px; color: var(--bad); display: flex; gap: 6px; }
+.field .hint { font-size: 13px; color: var(--ink-2); }
+.coming { display: grid; gap: 12px; }
+.coming .c { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start; }
+.coming .d { width: 40px; height: 40px; border-radius: 10px; background: var(--fill-2); display: grid; place-items: center; line-height: 1; text-align: center; }
+.coming .d b { display: block; font-size: 15px; } .coming .d small { font-size: 10.5px; font-weight: 700; color: var(--ink-2); text-transform: uppercase; }
+.coming .t { font-weight: 700; font-size: 14px; }
+.coming .s { font-size: 13px; color: var(--ink-2); }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Cards that stand out, and every state in words</h1>
+    <p class="lead">Two changes to how Voice Verses looks. The app as it is today sits beside each proposal. Nothing here changes what the room sees: only the operator's screens.</p>
+  </header>
+
+  <!-- 1. Cards -->
+  <section class="sec" aria-labelledby="c-h">
+    <h2 id="c-h">1. Cards that never blend into the page</h2>
+    <p>Each card that holds something gets a fine gold-tinted edge and a soft shadow, so it reads as one thing on the page. Inside a card nothing changes: no lines, no boxes in boxes. In the dark theme the cards already stand apart, so the edge is a choice; in the light theme (warm paper, when it is built) cream on cream would blend in without it.</p>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Theme of the app">
+        <button type="button" data-paper="0" aria-pressed="true">Dark (today)</button>
+        <button type="button" data-paper="1">Light (when built)</button>
+      </div>
+      <div class="seg" role="group" aria-label="Card edges">
+        <button type="button" data-edge="0">Without the edge</button>
+        <button type="button" data-edge="1" aria-pressed="true">With the edge</button>
+      </div>
+    </div>
+    <div class="pair">
+      <figure><img class="shot" src="states/now-services.jpg" alt="The Services page today: dark cards with a hairline edge"><figcaption><b>Now.</b> Services: the calendar, today's service, templates and ready-made orders, each on a card with a hairline.</figcaption></figure>
+      <figure>
+        <div class="app edges" id="cards">
+          <div class="row">
+            <div class="card">
+              <h4>November 2026</h4>
+              <div class="cal">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                <b>22</b><b>23</b><b>24</b><b>25</b><b>26</b><b>27</b><b class="on">28</b>
+                <b>29</b><b>30</b><b>1</b><b>2</b><b>3</b><b>4</b><b>5</b>
+              </div>
+            </div>
+            <div class="card">
+              <h4>Today · Saturday, November 28</h4>
+              <div class="svc">
+                <div class="t"><span>Sunday Celebration</span><em class="pill">Sample</em></div>
+                <div class="muted">10:00 · 13 items · about 1 h 23 min</div>
+                <div class="strip"><i style="background:#64748b"></i><i style="background:#fb923c"></i><i style="background:#a78bfa"></i><i style="background:#a78bfa"></i><i style="background:#2dd4bf"></i><i style="background:#fbbf24"></i><i style="background:#4ade80"></i><i style="background:#60a5fa;flex:4"></i><i style="background:#fb7185"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Proposed.</b> The same cards with the edge. Switch the theme and the edge above to compare.</figcaption>
+      </figure>
+    </div>
+    <div class="note"><b>My recommendation:</b> keep the dark theme as it is (its cards already stand apart) and make the edge the rule for light mode when it is built. Say if you would like the edge in dark too.</div>
+  </section>
+
+  <!-- 2. States -->
+  <section class="sec" aria-labelledby="s-h">
+    <h2 id="s-h">2. Every state in words, with the one thing to do</h2>
+    <p>Every list and panel that loads, can be empty or can go wrong shows what is happening in plain words, and offers the one button that helps. Flip each panel between its states.</p>
+
+    <!-- The library's songs -->
+    <h3>The live screen's library: Songs</h3>
+    <div class="pair">
+      <figure><img class="shot" src="states/now-library-songs-empty.jpg" alt="Today: No songs. Add songs in Media → Songs." style="max-width:340px"><figcaption><b>Now.</b> "No songs. Add songs in Media → Songs." The volunteer has to find Media themselves.</figcaption></figure>
+      <figure>
+        <div class="seg" role="group" aria-label="State of the songs list" data-panel="songs">
+          <button type="button" data-s="loading">Loading</button><button type="button" data-s="empty" aria-pressed="true">Empty</button><button type="button" data-s="problem">A problem</button><button type="button" data-s="full">Full</button>
+        </div>
+        <div class="app" style="max-width:420px"><div class="card" id="songs" aria-live="polite"></div></div>
+        <figcaption><b>Proposed.</b> Empty says what will be here and opens the way to fill it; loading shows the shape of the list, so it never says "empty" while the songs are still coming.</figcaption>
+      </figure>
+    </div>
+
+    <!-- Today's service -->
+    <h3>Services: a day</h3>
+    <div class="pair">
+      <figure><img class="shot" src="states/now-day-empty.jpg" alt="Today: Nothing planned for this day, with New service"><figcaption><b>Now.</b> Empty is already good: it says so and offers New service. While the services load it shows the same words for a moment, which is wrong.</figcaption></figure>
+      <figure>
+        <div class="seg" role="group" aria-label="State of the day" data-panel="day">
+          <button type="button" data-s="loading" aria-pressed="true">Loading</button><button type="button" data-s="empty">Empty</button><button type="button" data-s="problem">A problem</button><button type="button" data-s="full">Full</button>
+        </div>
+        <div class="app"><div class="card" id="day" aria-live="polite"></div></div>
+        <figcaption><b>Proposed.</b> Loading looks like a service on its way; a problem says what went wrong and offers Try again.</figcaption>
+      </figure>
+    </div>
+
+    <!-- Media -->
+    <h3>Media: adding a file goes wrong</h3>
+    <div class="pair">
+      <figure><img class="shot" src="states/now-media.jpg" alt="Today: the Media page with its songs"><figcaption><b>Now.</b> When a file can't be added, a message appears in the corner for a few seconds and goes; if nobody was looking, it is missed.</figcaption></figure>
+      <figure>
+        <div class="app">
+          <div class="card">
+            <div class="banner" role="alert"><span style="font-size:18px">⚠</span><div><b>“Sermon clip.mkv” wasn't added</b><span>Voice Verses plays MP4, MOV and WEBM videos. Save it as MP4 on the computer it came from, then add it again.</span></div><button class="btn" type="button">Add another file</button></div>
+            <div class="list">
+              <div class="it"><div class="sq">♪</div><div class="n">Amazing Grace<small>John Newton · 3 sections</small></div><button class="btn" type="button">Lyrics</button></div>
+              <div class="it"><div class="sq">♪</div><div class="n">Be Thou My Vision<small>Irish, translated by Mary Byrne; versed by Eleanor Hull · 2 sections</small></div><button class="btn" type="button">Lyrics</button></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Proposed.</b> The problem stays on the page until it is dealt with: what went wrong, what to do about it, and the button that does it.</figcaption>
+      </figure>
+    </div>
+
+    <!-- A field -->
+    <h3>A field that's wrong: ProPresenter's address</h3>
+    <div class="pair">
+      <div class="note"><b>Now.</b> Settings → ProPresenter → Type the address yourself: a wrong address is only found out when Connect fails, as a message in the corner.</div>
+      <figure>
+        <div class="app">
+          <div class="field bad">
+            <label for="pp">ProPresenter's address</label>
+            <input id="pp" value="192.168.1" aria-invalid="true" aria-describedby="pp-err">
+            <div class="err" id="pp-err">⚠ This address has three numbers. It needs four, like 192.168.1.20: ProPresenter shows it in Settings → Network.</div>
+          </div>
+        </div>
+        <figcaption><b>Proposed.</b> The problem in words right under the field, as soon as the address is typed, with where to find the right one.</figcaption>
+      </figure>
+    </div>
+
+    <!-- Long names -->
+    <h3>Long names</h3>
+    <div class="pair">
+      <figure><img class="shot" src="states/now-coming-up.jpg" alt="Today: Coming up, with Sample: Christmas Carols by Ca… cut off" style="max-width:340px"><figcaption><b>Now.</b> "Sample: Christmas Carols by Ca…" is cut off after one line.</figcaption></figure>
+      <figure>
+        <div class="app" style="max-width:360px">
+          <div class="card">
+            <h4>Coming up</h4>
+            <div class="coming">
+              <div class="c"><div class="d"><small>Nov</small><b>28</b></div><div><div class="t two">Sunday Celebration</div><div class="s">Saturday · 10:00</div></div></div>
+              <div class="c"><div class="d"><small>Dec</small><b>2</b></div><div><div class="t two">Midweek Bible Study</div><div class="s">Wednesday · 19:00</div></div></div>
+              <div class="c"><div class="d"><small>Dec</small><b>20</b></div><div><div class="t two" title="Christmas Carols by Candlelight with the Children's Nativity">Christmas Carols by Candlelight with the Children's Nativity</div><div class="s">Sunday · 18:00</div></div></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Proposed.</b> Names get two lines before they are shortened, and the whole name shows when pointed at.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>What stays the same</h2>
+    <p>The colours, the warm graphite, the layout and every screen the room sees. "Show me the fix" stays the model for problems during a service: these changes bring the same idea to the rest of the app.</p>
+  </section>
+</div>
+
+<script>
+const SONGS = ['Amazing Grace|John Newton', 'Be Thou My Vision|Irish, translated by Mary Byrne', 'Blessed Assurance|Fanny Crosby', 'Holy, Holy, Holy|Reginald Heber'];
+const V = {
+  songs: {
+    loading: `<div class="skel" aria-busy="true" aria-label="Loading your songs">${'<div class="line"><i></i><i style="width:70%"></i></div>'.repeat(4)}</div>`,
+    empty: `<div class="state"><div class="icon">♪</div><h5>No songs yet</h5><p>Songs you add are listed here, and the church's singing finds them.</p><div class="acts"><button class="btn primary" type="button">Add a song</button><button class="btn" type="button">From SongSelect</button></div></div>`,
+    problem: `<div class="state problem"><div class="icon">⚠</div><h5>Your songs didn't load</h5><p>This computer's storage didn't answer. Your songs are still there.</p><div class="acts"><button class="btn primary" type="button">Try again</button></div></div>`,
+    full: `<div class="list">${SONGS.map((s) => { const [t, a] = s.split('|'); return `<div class="it"><div class="sq">♪</div><div class="n">${t}<small>${a}</small></div><span></span></div>`; }).join('')}</div>`,
+  },
+  day: {
+    loading: `<h4>Today · Saturday, November 28</h4><div class="svc" aria-busy="true" aria-label="Loading today's services"><div class="skel"><i style="width:40%;height:18px"></i><i style="width:28%"></i><i style="height:6px"></i></div></div>`,
+    empty: `<h4>Today · Saturday, November 28</h4><div class="state"><h5>Nothing planned for this day</h5><p>Start a blank service, or pick an order of service below.</p><div class="acts"><button class="btn primary" type="button">New service</button></div></div>`,
+    problem: `<h4>Today · Saturday, November 28</h4><div class="state problem"><div class="icon">⚠</div><h5>Today's services didn't load</h5><p>This computer's storage didn't answer. Nothing has been lost.</p><div class="acts"><button class="btn primary" type="button">Try again</button></div></div>`,
+    full: `<h4>Today · Saturday, November 28</h4><div class="svc"><div class="t"><span>Sunday Celebration</span><em class="pill">Sample</em></div><div class="muted">10:00 · 13 items · about 1 h 23 min</div><div class="strip"><i style="background:#64748b"></i><i style="background:#fb923c"></i><i style="background:#a78bfa"></i><i style="background:#2dd4bf"></i><i style="background:#fbbf24"></i><i style="background:#60a5fa;flex:4"></i><i style="background:#fb7185"></i></div></div>`,
+  },
+};
+const state = { songs: 'empty', day: 'loading' };
+function draw() {
+  for (const k of Object.keys(state)) {
+    document.getElementById(k).innerHTML = V[k][state[k]];
+    document.querySelectorAll(`[data-panel="${k}"] button`).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === state[k])));
+  }
+}
+document.querySelectorAll('[data-panel] button').forEach((b) => b.addEventListener('click', () => { state[b.parentElement.dataset.panel] = b.dataset.s; draw(); }));
+const cards = document.getElementById('cards');
+const apps = () => document.querySelectorAll('.app');
+document.querySelectorAll('[data-paper]').forEach((b) => b.addEventListener('click', () => {
+  const paper = b.dataset.paper === '1';
+  apps().forEach((a) => a.classList.toggle('paper', paper));
+  document.querySelectorAll('[data-paper]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+}));
+document.querySelectorAll('[data-edge]').forEach((b) => b.addEventListener('click', () => {
+  cards.classList.toggle('edges', b.dataset.edge === '1');
+  document.querySelectorAll('[data-edge]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+}));
+draw();
+</script>
